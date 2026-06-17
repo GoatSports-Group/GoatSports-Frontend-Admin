@@ -1,0 +1,72 @@
+<div class="dialog-container">
+  <div class="dialog-header">
+    <h2 class="dialog-title">{{ isEditMode ? 'Chỉnh Sửa Quyền Hạn' : 'Tạo Quyền Hạn Mới' }}</h2>
+    <button mat-icon-button class="close-btn" (click)="onCancel()" aria-label="Close dialog">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <form [formGroup]="permissionForm" (ngSubmit)="onSubmit()" class="permission-form">
+    <!-- Name Field -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Tên quyền hạn (ví dụ: Xem thông tin user)</mat-label>
+      <input matInput formControlName="name" placeholder="Mô tả ngắn về quyền hạn này...">
+      <mat-error *ngIf="permissionForm.get('name')?.hasError('required')">
+        Tên quyền hạn không được để trống
+      </mat-error>
+      <mat-error *ngIf="permissionForm.get('name')?.hasError('maxlength')">
+        Tên quyền hạn tối đa 100 ký tự
+      </mat-error>
+    </mat-form-field>
+
+    <!-- API Path Field -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Đường dẫn API (ví dụ: /api/v1/users/**)</mat-label>
+      <input matInput formControlName="apiPath" placeholder="Nhập đường dẫn URL endpoint...">
+      <mat-error *ngIf="permissionForm.get('apiPath')?.hasError('required')">
+        Đường dẫn API không được để trống
+      </mat-error>
+      <mat-error *ngIf="permissionForm.get('apiPath')?.hasError('maxlength')">
+        Đường dẫn API tối đa 250 ký tự
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Row of fields for Method and Module -->
+    <div class="row-fields">
+      <!-- Method Field -->
+      <mat-form-field appearance="outline">
+        <mat-label>Phương thức (Method)</mat-label>
+        <mat-select formControlName="method">
+          <mat-option *ngFor="let method of methods" [value]="method">
+            {{ method }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="permissionForm.get('method')?.hasError('required')">
+          Phương thức bắt buộc chọn
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Module Field -->
+      <mat-form-field appearance="outline">
+        <mat-label>Nhóm chức năng (Module)</mat-label>
+        <mat-select formControlName="module">
+          <mat-option *ngFor="let module of modules" [value]="module">
+            {{ module }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="permissionForm.get('module')?.hasError('required')">
+          Nhóm chức năng bắt buộc chọn
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <!-- Actions -->
+    <div class="dialog-actions">
+      <button type="button" mat-button (click)="onCancel()" [disabled]="saving">Hủy</button>
+      <button type="submit" mat-flat-button color="primary" [disabled]="permissionForm.invalid || saving">
+        <span *ngIf="!saving">Lưu lại</span>
+        <span *ngIf="saving">Đang lưu...</span>
+      </button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,76 @@
+<div class="assign-permissions-page">
+  <div class="page-header">
+    <div class="header-title-box">
+      <div class="back-link" (click)="onCancel()">
+        <mat-icon>arrow_back</mat-icon> Quay lại danh sách
+      </div>
+      <h1>Cấu Hình Quyền Hạn: <span class="role-highlight">{{ role?.name }}</span></h1>
+      <p>Bật/tắt các quyền truy cập API được phân nhóm theo tính năng cho vai trò này.</p>
+    </div>
+
+    <div class="header-actions">
+      <button mat-button (click)="onCancel()" [disabled]="saving">Hủy bỏ</button>
+      <button mat-flat-button color="primary" class="save-btn" (click)="onSave()" [disabled]="saving || loading">
+        <mat-icon>save</mat-icon> Lưu thiết lập
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-overlay" *ngIf="loading">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Đang tải danh sách quyền hạn...</p>
+  </div>
+
+  <div class="content-body" *ngIf="!loading">
+    
+    <!-- Module Grid -->
+    <div class="modules-grid">
+      <mat-card class="module-card" *ngFor="let module of moduleKeys">
+        <mat-card-header class="module-card-header">
+          <div class="module-title-box">
+            <mat-icon class="module-icon">folder_open</mat-icon>
+            <span class="module-name">{{ module }}</span>
+          </div>
+          
+          <div class="module-header-actions">
+            <!-- Select All / Clear Checkbox -->
+            <mat-checkbox 
+              [checked]="isModuleAllSelected(module)" 
+              [indeterminate]="isModulePartiallySelected(module)"
+              (change)="toggleSelectAll(module, $event.checked)">
+              Chọn tất cả
+            </mat-checkbox>
+          </div>
+        </mat-card-header>
+
+        <mat-divider></mat-divider>
+
+        <mat-card-content class="module-card-body">
+          <div class="permissions-list">
+            <div class="permission-item" *ngFor="let item of groupedPermissions[module]">
+              <mat-checkbox [(ngModel)]="item.checked" class="permission-checkbox">
+                <div class="permission-info-box">
+                  <span class="permission-name">{{ item.permission.name }}</span>
+                  <div class="permission-endpoint-tag">
+                    <span class="method-tag" [attr.data-method]="item.permission.method">{{ item.permission.method }}</span>
+                    <span class="path-text font-mono">{{ item.permission.apiPath }}</span>
+                  </div>
+                </div>
+              </mat-checkbox>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Bottom Actions -->
+    <div class="bottom-actions">
+      <button mat-button (click)="onCancel()" [disabled]="saving">Quay lại</button>
+      <button mat-flat-button color="primary" class="save-btn" (click)="onSave()" [disabled]="saving">
+        <mat-icon>save</mat-icon> Lưu thiết lập
+      </button>
+    </div>
+
+  </div>
+</div>

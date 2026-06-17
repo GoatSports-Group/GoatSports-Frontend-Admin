@@ -1,0 +1,104 @@
+<div class="roles-container-page">
+  <div class="page-header">
+    <div class="header-title-box">
+      <h1>Quản Lý Vai Trò (Roles)</h1>
+      <p>Khai báo, cấu hình trạng thái và phân bổ quyền hạn cho từng nhóm vai trò trong GOAT Sports.</p>
+    </div>
+    <button mat-flat-button color="primary" class="add-btn" (click)="openRoleDialog()">
+      <mat-icon>add</mat-icon> Tạo Vai Trò Mới
+    </button>
+  </div>
+
+  <!-- Search & Filter Controls -->
+  <mat-card class="filter-card">
+    <mat-card-content class="filter-content">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Tìm kiếm vai trò</mat-label>
+        <input matInput [(ngModel)]="searchQuery" (keyup.enter)="loadRoles()" placeholder="Nhập tên hoặc mô tả vai trò...">
+        <button mat-icon-button matSuffix (click)="loadRoles()" aria-label="Search">
+          <mat-icon>search</mat-icon>
+        </button>
+      </mat-form-field>
+      
+      <button mat-flat-button color="primary" class="search-btn" (click)="loadRoles()">
+        <mat-icon>filter_list</mat-icon> Lọc dữ liệu
+      </button>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Table Card -->
+  <mat-card class="table-card">
+    <div class="table-progress-bar" *ngIf="loading">
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    </div>
+
+    <mat-card-content class="table-wrapper-content">
+      <!-- Empty State -->
+      <div class="empty-state" *ngIf="!loading && roles.length === 0">
+        <mat-icon class="empty-icon">admin_panel_settings</mat-icon>
+        <h3>Không tìm thấy vai trò nào</h3>
+        <p>Thử điều chỉnh từ khóa tìm kiếm hoặc bấm Tạo Vai Trò để bắt đầu.</p>
+      </div>
+
+      <div class="table-scroll" *ngIf="roles.length > 0">
+        <table mat-table [dataSource]="roles" class="roles-table">
+          
+          <!-- Role Name Column -->
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef> Tên vai trò </th>
+            <td mat-cell *matCellDef="let role" class="font-bold">
+              <span class="role-name-text">{{ role.name }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Description Column -->
+          <ng-container matColumnDef="description">
+            <th mat-header-cell *matHeaderCellDef> Mô tả </th>
+            <td mat-cell *matCellDef="let role"> {{ role.description || 'Chưa có mô tả' }} </td>
+          </ng-container>
+
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef> Trạng thái </th>
+            <td mat-cell *matCellDef="let role">
+              <span class="status-badge" [class.active]="role.active" (click)="toggleActive(role)">
+                {{ role.active ? 'Đang hoạt động' : 'Tạm ngưng' }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Permissions Count Column -->
+          <ng-container matColumnDef="permissionsCount">
+            <th mat-header-cell *matHeaderCellDef class="text-center"> Số quyền hạn </th>
+            <td mat-cell *matCellDef="let role" class="text-center">
+              <span class="permission-count-badge">
+                {{ role.permissions?.length || 0 }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef class="text-center"> Thao tác </th>
+            <td mat-cell *matCellDef="let role" class="text-center actions-cell">
+              <button mat-icon-button color="primary" matTooltip="Chỉnh sửa thông tin" (click)="openRoleDialog(role)">
+                <mat-icon>edit</mat-icon>
+              </button>
+
+              <button mat-icon-button color="accent" matTooltip="Gán quyền hạn" (click)="navigateToPermissions(role)">
+                <mat-icon>lock_open</mat-icon>
+              </button>
+
+              <button mat-icon-button color="warn" matTooltip="Xóa vai trò" (click)="deleteRole(role)" [disabled]="role.name === 'ADMIN'">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

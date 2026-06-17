@@ -1,0 +1,278 @@
+.assign-permissions-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  .header-title-box {
+    .back-link {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #718096;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 8px;
+      transition: color 0.2s ease;
+
+      mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+
+      &:hover {
+        color: #E73725;
+      }
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      color: #010000;
+      margin-bottom: 4px;
+
+      .role-highlight {
+        color: #E73725;
+      }
+    }
+    p {
+      color: #718096;
+      font-size: 14px;
+    }
+  }
+
+  .save-btn {
+    background-color: #E73725;
+    color: #ffffff;
+    font-weight: 600;
+    border-radius: 6px;
+    box-shadow: 0 4px 10px rgba(231, 55, 37, 0.2);
+    height: 44px;
+
+    &:hover {
+      background-color: #c92f1f;
+    }
+  }
+}
+
+.loading-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+  gap: 16px;
+  color: #718096;
+}
+
+.modules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 24px;
+}
+
+.module-card {
+  background-color: #ffffff;
+  border: 1px solid #E1E1E1;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+
+  .module-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background-color: #f8fafc;
+
+    .module-title-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #010000;
+
+      .module-icon {
+        color: #169A13;
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+
+      .module-name {
+        font-weight: 800;
+        font-size: 15px;
+        letter-spacing: 0.5px;
+      }
+    }
+
+    .module-header-actions {
+      ::ng-deep .mdc-checkbox {
+        padding: 4px;
+      }
+    }
+  }
+
+  .module-card-body {
+    padding: 16px 20px !important;
+  }
+}
+
+.permissions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.permission-item {
+  display: flex;
+
+  .permission-checkbox {
+    width: 100%;
+
+    ::ng-deep .mdc-form-field {
+      align-items: flex-start;
+      margin-top: 2px;
+    }
+
+    ::ng-deep .mdc-label {
+      width: 100%;
+      padding-left: 8px;
+    }
+  }
+}
+
+.permission-info-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .permission-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #2d3748;
+    line-height: 1.4;
+  }
+}
+
+.permission-endpoint-tag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  .method-tag {
+    font-size: 9px;
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: #ffffff;
+    text-transform: uppercase;
+
+    &[data-method="GET"] {
+      background-color: #169A13;
+    }
+    &[data-method="POST"] {
+      background-color: #ef6c00;
+    }
+    &[data-method="PUT"] {
+      background-color: #0288d1;
+    }
+    &[data-method="PATCH"] {
+      background-color: #8e24aa;
+    }
+    &[data-method="DELETE"] {
+      background-color: #E73725;
+    }
+  }
+
+  .path-text {
+    font-size: 11px;
+    color: #718096;
+    word-break: break-all;
+  }
+}
+
+.bottom-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 32px;
+  padding: 20px 0;
+  border-top: 1px solid #E1E1E1;
+
+  .save-btn {
+    background-color: #E73725;
+    color: #ffffff;
+    font-weight: 600;
+    border-radius: 6px;
+    height: 44px;
+
+    &:hover {
+      background-color: #c92f1f;
+    }
+  }
+}
+
+.font-mono {
+  font-family: monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  .page-header {
+    .header-title-box {
+      .back-link {
+        color: #a0aec0 !important;
+        &:hover {
+          color: #E73725 !important;
+        }
+      }
+      h1 {
+        color: #ffffff !important;
+      }
+      p {
+        color: #a0aec0 !important;
+      }
+    }
+  }
+
+  .module-card {
+    background-color: #121212 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+
+    .module-card-header {
+      background-color: #1a1a1a !important;
+      .module-title-box {
+        color: #ffffff !important;
+      }
+    }
+  }
+
+  .permission-info-box {
+    .permission-name {
+      color: #ffffff !important;
+    }
+  }
+
+  .permission-endpoint-tag {
+    .path-text {
+      color: #a0aec0 !important;
+    }
+  }
+
+  ::ng-deep .mdc-checkbox .mdc-label {
+    color: #ffffff !important;
+  }
+
+  .bottom-actions {
+    border-top-color: rgba(255, 255, 255, 0.1) !important;
+  }
+}

@@ -1,0 +1,72 @@
+<div class="admin-reviews-page">
+  
+  <div class="header-row">
+    <div class="title-group">
+      <h1>Quản Lý Đánh Giá</h1>
+      <p>Xem toàn bộ phản hồi của khách hàng về chất lượng dịch vụ của các cụm sân và xóa bình luận không phù hợp.</p>
+    </div>
+  </div>
+
+  <!-- Table Card -->
+  <div class="table-card mat-elevation-z1">
+    
+    @if (loading) {
+      <div class="table-loading">
+        <mat-spinner diameter="40" color="primary"></mat-spinner>
+        <p>Đang tải danh sách đánh giá...</p>
+      </div>
+    } @else {
+      
+      @if (reviews.length === 0) {
+        <div class="empty-table">
+          <mat-icon>rate_review</mat-icon>
+          <p>Chưa có đánh giá nào trên hệ thống.</p>
+        </div>
+      } @else {
+        <div class="table-responsive">
+          <table class="custom-admin-table">
+            <thead>
+              <tr>
+                <th>Khách Hàng</th>
+                <th>Mã Sân</th>
+                <th>Điểm Đánh Giá</th>
+                <th>Nội Dung Nhận Xét</th>
+                <th>Thời Gian</th>
+                <th class="actions-col">Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (review of reviews; track review.reviewId) {
+                <tr>
+                  <td>
+                    <div class="user-info-cell">
+                      <img [src]="review.userAvatar" [alt]="review.userFullName" class="table-avatar">
+                      <span class="bold">{{ review.userFullName }}</span>
+                    </div>
+                  </td>
+                  <td class="bold">#{{ review.venueId }}</td>
+                  <td>
+                    <div class="rating-cell">
+                      <mat-icon class="star-icon">star</mat-icon>
+                      <span>{{ review.rating }} sao</span>
+                    </div>
+                  </td>
+                  <td class="comment-col" [title]="review.comment">"{{ review.comment }}"</td>
+                  <td>{{ review.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                  <td class="actions-col">
+                    <button mat-icon-button color="warn" (click)="deleteReview(review)" matTooltip="Xóa đánh giá">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+    }
+
+  </div>
+
+</div>

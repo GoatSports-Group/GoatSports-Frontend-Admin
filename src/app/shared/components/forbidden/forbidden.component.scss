@@ -1,0 +1,58 @@
+.forbidden-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: radial-gradient(circle, #1a1a2e 0%, #161623 100%);
+  color: #ffffff;
+  font-family: 'Outfit', sans-serif;
+}
+
+.forbidden-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 48px;
+  text-align: center;
+  max-width: 480px;
+  width: 90%;
+  box-sizing: border-box;
+
+  .lock-icon {
+    font-size: 80px;
+    height: 80px;
+    width: 80px;
+    margin-bottom: 24px;
+    color: #ff4d4d;
+  }
+
+  h1 {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+    color: #ff4d4d;
+  }
+
+  p {
+    font-size: 16px;
+    color: #cccccc;
+    line-height: 1.5;
+    margin-bottom: 8px;
+  }
+
+  .role-hint {
+    font-size: 14px;
+    color: #888888;
+    margin-bottom: 32px;
+  }
+
+  .actions {
+    button {
+      padding: 8px 24px;
+      font-size: 16px;
+      border-radius: 24px;
+    }
+  }
+}
