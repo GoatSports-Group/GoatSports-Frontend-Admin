@@ -1,11 +1,11 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { BookingService } from '../../services/booking.service';
-import { Booking } from '../../../domain/entities/booking';
-import { BookingStatus } from '../../../domain/enums/booking-status.enum';
-import { SportType } from '../../../domain/enums/sport-type.enum';
+import { BookingService } from '@presentation/services/booking.service';
+import { Booking } from '@application/dto/booking/booking.dto';
+import { BookingStatus } from '@domain/enums/booking-status.enum';
+import { SportType } from '@domain/enums/sport-type.enum';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
-import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-admin-bookings',
@@ -54,8 +54,8 @@ export class BookingsComponent implements OnInit {
     // Filter by Search Query (name or phone)
     if (this.searchTerm.trim()) {
       const term = this.searchTerm.toLowerCase().trim();
-      list = list.filter(b => 
-        b.fullName.toLowerCase().includes(term) || 
+      list = list.filter(b =>
+        b.fullName.toLowerCase().includes(term) ||
         b.phone.includes(term) ||
         b.bookingId.toLowerCase().includes(term) ||
         b.venueName.toLowerCase().includes(term)

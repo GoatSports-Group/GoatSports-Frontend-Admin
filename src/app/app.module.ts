@@ -5,29 +5,27 @@ import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { ApiInterceptor } from './presentation/interceptors/api.interceptor';
-import { ForbiddenComponent } from './shared/components/forbidden/forbidden.component';
+import { ApiInterceptor } from '@presentation/interceptors/api.interceptor';
+import { ForbiddenComponent } from '@shared/components/forbidden/forbidden.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
-import {
-  AUTH_REPOSITORY_TOKEN,
-  USER_REPOSITORY_TOKEN,
-  ROLE_REPOSITORY_TOKEN,
-  PERMISSION_REPOSITORY_TOKEN,
-  BOOKING_REPOSITORY_TOKEN,
-  REVIEW_REPOSITORY_TOKEN,
-  VENUE_REPOSITORY_TOKEN
-} from './domain/repositories/tokens';
+import { AUTH_REPOSITORY_TOKEN } from '@application/ports/auth.repository';
+import { USER_REPOSITORY_TOKEN } from '@application/ports/user.repository';
+import { ROLE_REPOSITORY_TOKEN } from '@application/ports/role.repository';
+import { PERMISSION_REPOSITORY_TOKEN } from '@application/ports/permission.repository';
+import { BOOKING_REPOSITORY_TOKEN } from '@application/ports/booking.repository';
+import { REVIEW_REPOSITORY_TOKEN } from '@application/ports/review.repository';
+import { VENUE_REPOSITORY_TOKEN } from '@application/ports/venue.repository';
 
-import { AuthRepositoryImpl } from './infrastructure/repositories/auth.repository.impl';
-import { UserRepositoryImpl } from './infrastructure/repositories/user.repository.impl';
-import { RoleRepositoryImpl } from './infrastructure/repositories/role.repository.impl';
-import { PermissionRepositoryImpl } from './infrastructure/repositories/permission.repository.impl';
-import { BookingRepositoryImpl } from './infrastructure/repositories/booking.repository.impl';
-import { ReviewRepositoryImpl } from './infrastructure/repositories/review.repository.impl';
-import { VenueRepositoryImpl } from './infrastructure/repositories/venue.repository.impl';
+import { AuthRepositoryImpl } from '@infrastructure/repositories/auth.repository.impl';
+import { UserRepositoryImpl } from '@infrastructure/repositories/user.repository.impl';
+import { RoleRepositoryImpl } from '@infrastructure/repositories/role.repository.impl';
+import { PermissionRepositoryImpl } from '@infrastructure/repositories/permission.repository.impl';
+import { BookingRepositoryImpl } from '@infrastructure/repositories/booking.repository.impl';
+import { ReviewRepositoryImpl } from '@infrastructure/repositories/review.repository.impl';
+import { VenueRepositoryImpl } from '@infrastructure/repositories/venue.repository.impl';
 
 @NgModule({
   declarations: [

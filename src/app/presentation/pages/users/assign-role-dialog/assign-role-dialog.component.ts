@@ -1,11 +1,11 @@
 import { Component, Inject, OnInit, inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { User } from '../../../../domain/entities/user';
-import { Role } from '../../../../domain/entities/role';
-import { UserService } from '../../../services/user.service';
-import { RoleService } from '../../../services/role.service';
+import { User } from '@application/dto/user/user.dto';
+import { Role } from '@application/dto/role/role.dto';
+import { UserService } from '@presentation/services/user.service';
+import { RoleService } from '@presentation/services/role.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
 export interface AssignRoleDialogData {
   user: User;

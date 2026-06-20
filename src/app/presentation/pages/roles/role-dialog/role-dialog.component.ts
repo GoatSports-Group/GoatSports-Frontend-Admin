@@ -1,8 +1,8 @@
 import { Component, Inject, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { Role } from '../../../../domain/entities/role';
-import { RoleService } from '../../../services/role.service';
+import { Role } from '@application/dto/role/role.dto';
+import { RoleService } from '@presentation/services/role.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 export interface RoleDialogData {

@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
-import { VenueRepository } from '../../domain/repositories/venue.repository';
-import { Venue, TimeSlot, SportType, VenueStatus, VenueFilter, VenueSort } from '../../domain/entities/venue';
-import { BookingStatus } from '../../domain/entities/booking';
+import { VenueRepository } from '@application/ports/venue.repository';
+import { Venue, TimeSlot, SportType, VenueStatus, VenueFilter, VenueSort } from '@application/dto/venue/venue.dto';
+import { BookingStatus } from '@application/dto/booking/booking.dto';
 
 @Injectable({
   providedIn: 'root'

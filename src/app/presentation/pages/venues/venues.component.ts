@@ -1,11 +1,11 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { VenueService } from '../../services/venue.service';
-import { Venue } from '../../../domain/entities/venue';
-import { SportType } from '../../../domain/enums/sport-type.enum';
-import { VenueStatus } from '../../../domain/enums/venue-status.enum';
+import { VenueService } from '@presentation/services/venue.service';
+import { Venue } from '@application/dto/venue/venue.dto';
+import { SportType } from '@domain/enums/sport-type.enum';
+import { VenueStatus } from '@domain/enums/venue-status.enum';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
-import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-admin-venues',

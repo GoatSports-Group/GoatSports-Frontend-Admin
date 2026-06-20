@@ -1,10 +1,10 @@
 import { Component, OnInit, ViewChild, inject } from '@angular/core';
-import { UserService } from '../../services/user.service';
-import { User } from '../../../domain/entities/user';
+import { UserService } from '@presentation/services/user.service';
+import { User } from '@application/dto/user/user.dto';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
-import { AssignRoleDialogComponent } from './assign-role-dialog/assign-role-dialog.component';
+import { AssignRoleDialogComponent } from '@presentation/pages/users/assign-role-dialog/assign-role-dialog.component';
 
 @Component({
   selector: 'app-users',
@@ -18,10 +18,10 @@ export class UsersComponent implements OnInit {
 
   users: User[] = [];
   displayedColumns: string[] = ['fullName', 'username', 'email', 'role', 'status', 'createdAt', 'actions'];
-  
+
   loading = false;
   searchQuery = '';
-  
+
   // Paging metadata
   totalItems = 0;
   pageSize = 10;

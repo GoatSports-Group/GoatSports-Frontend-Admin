@@ -1,11 +1,11 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { RoleService } from '../../services/role.service';
-import { Role } from '../../../domain/entities/role';
+import { RoleService } from '@presentation/services/role.service';
+import { Role } from '@application/dto/role/role.dto';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RoleDialogComponent } from './role-dialog/role-dialog.component';
-import { ConfirmDialogComponent, ConfirmDialogData } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-roles',
@@ -76,7 +76,7 @@ export class RolesComponent implements OnInit {
 
     confirmRef.afterClosed().subscribe(confirmed => {
       if (confirmed) {
-        const req = role.active 
+        const req = role.active
           ? this.roleAdminService.deactivateRole(role.roleId)
           : this.roleAdminService.activateRole(role.roleId);
 

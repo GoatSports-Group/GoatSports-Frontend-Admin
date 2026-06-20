@@ -1,9 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { RoleRepository } from '../../domain/repositories/role.repository';
-import { RoleApi } from '../api/role.api';
-import { BaseResponse } from '../../domain/entities/base';
-import { Role, RoleCreateRequest, RoleUpdateRequest, RoleListResult } from '../../domain/entities/role';
+import { RoleRepository } from '@application/ports/role.repository';
+import { RoleApi } from '@infrastructure/api/role.api';
+import { BaseResponse } from '@application/dto/base/base-response';
+import { Role, RoleCreateRequest, RoleUpdateRequest, RoleListResult } from '@application/dto/role/role.dto';
 
 @Injectable({
   providedIn: 'root'

@@ -1,9 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { BaseResponse } from '../../domain/entities/base';
-import { User, UserListResult } from '../../domain/entities/user';
-import { GetUsersUseCase } from '../../application/user/get-users.usecase';
-import { AssignRoleUseCase } from '../../application/user/assign-role.usecase';
+import { BaseResponse } from '@application/dto/base/base-response';
+import { User, UserListResult } from '@application/dto/user/user.dto';
+import { GetUsersUseCase } from '@application/usecase/user/get-users.usecase';
+import { AssignRoleUseCase } from '@application/usecase/user/assign-role.usecase';
 
 @Injectable({
   providedIn: 'root'

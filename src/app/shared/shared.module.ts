@@ -26,9 +26,9 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 // Shared Components
-import { StarRatingComponent } from './components/star-rating/star-rating.component';
-import { LoadingSkeletonComponent } from './components/loading-skeleton/loading-skeleton.component';
-import { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dialog.component';
+import { StarRatingComponent } from '@shared/components/star-rating/star-rating.component';
+import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/loading-skeleton.component';
+import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
 const MATERIAL_MODULES = [
   MatToolbarModule,

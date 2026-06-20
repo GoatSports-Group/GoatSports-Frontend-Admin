@@ -1,8 +1,8 @@
 import { Component, Inject, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { Permission } from '../../../../domain/entities/permission';
-import { PermissionService } from '../../../services/permission.service';
+import { Permission } from '@application/dto/permission/permission.dto';
+import { PermissionService } from '@presentation/services/permission.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 export interface PermissionDialogData {
@@ -154,8 +154,8 @@ export class PermissionDialogComponent implements OnInit {
 
   methods: string[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
   modules: string[] = [
-    'USER', 'ROLE', 'PERMISSION', 'VENUE', 'BOOKING', 
-    'POST', 'COMMENT', 'CHAT', 'MATCH', 'PAYMENT', 
+    'USER', 'ROLE', 'PERMISSION', 'VENUE', 'BOOKING',
+    'POST', 'COMMENT', 'CHAT', 'MATCH', 'PAYMENT',
     'REPORT', 'ANALYTICS', 'OTHER'
   ];
 

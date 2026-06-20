@@ -1,11 +1,11 @@
 import { Component, OnInit, ViewChild, inject } from '@angular/core';
-import { PermissionService } from '../../services/permission.service';
-import { Permission } from '../../../domain/entities/permission';
+import { PermissionService } from '@presentation/services/permission.service';
+import { Permission } from '@application/dto/permission/permission.dto';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { PermissionDialogComponent } from './permission-dialog/permission-dialog.component';
-import { ConfirmDialogComponent, ConfirmDialogData } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-permissions',

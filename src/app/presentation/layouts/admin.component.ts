@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from '../services/auth.service';
-import { User } from '../../domain/entities/user';
+import { AuthService } from '@presentation/services/auth.service';
+import { User } from '@application/dto/user/user.dto';
 import { HttpClient } from '@angular/common/http';
 import { Subscription, interval, of } from 'rxjs';
 import { startWith, switchMap, catchError, map } from 'rxjs/operators';

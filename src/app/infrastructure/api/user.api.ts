@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { BaseResponse } from '../../domain/entities/base';
-import { User, UserListResult } from '../../domain/entities/user';
+import { BaseResponse } from '@application/dto/base/base-response';
+import { User, UserListResult } from '@application/dto/user/user.dto';
 
 @Injectable({
   providedIn: 'root'

@@ -1,9 +1,9 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { ReviewService } from '../../services/review.service';
-import { Review } from '../../../domain/entities/review';
+import { ReviewService } from '@presentation/services/review.service';
+import { Review } from '@application/dto/review/review.dto';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
-import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-admin-reviews',

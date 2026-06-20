@@ -1,10 +1,10 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import { RoleService } from '../../../services/role.service';
-import { PermissionService } from '../../../services/permission.service';
-import { Role } from '../../../../domain/entities/role';
-import { Permission } from '../../../../domain/entities/permission';
+import { RoleService } from '@presentation/services/role.service';
+import { PermissionService } from '@presentation/services/permission.service';
+import { Role } from '@application/dto/role/role.dto';
+import { Permission } from '@application/dto/permission/permission.dto';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 interface PermissionSelection {
@@ -32,7 +32,7 @@ export class AssignPermissionsComponent implements OnInit {
   role?: Role;
   groupedPermissions: GroupedPermissions = {};
   moduleKeys: string[] = [];
-  
+
   loading = true;
   saving = false;
 
@@ -47,7 +47,7 @@ export class AssignPermissionsComponent implements OnInit {
 
   loadData(): void {
     this.loading = true;
-    
+
     forkJoin({
       roleResponse: this.roleAdminService.getRoleById(this.roleId),
       permissionsResponse: this.permissionAdminService.getPermissions(0, 1000)
@@ -55,7 +55,7 @@ export class AssignPermissionsComponent implements OnInit {
       next: (res) => {
         this.role = res.roleResponse.data;
         const allPermissions = res.permissionsResponse.data?.result || [];
-        
+
         // Map role's current permissions into a lookup set
         const activePermissionIds = new Set(this.role?.permissions?.map(p => p.permissionId) || []);
 
@@ -82,7 +82,7 @@ export class AssignPermissionsComponent implements OnInit {
     allPermissions.forEach(permission => {
       // Normalize module name to uppercase for clean grouping
       const moduleName = (permission.module || 'OTHER').toUpperCase().trim();
-      
+
       if (!grouped[moduleName]) {
         grouped[moduleName] = [];
       }

@@ -1,14 +1,14 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { BaseResponse } from '../../domain/entities/base';
-import { Role, RoleCreateRequest, RoleUpdateRequest, RoleListResult } from '../../domain/entities/role';
-import { GetRolesUseCase } from '../../application/role/get-roles.usecase';
-import { GetRoleByIdUseCase } from '../../application/role/get-role-by-id.usecase';
-import { CreateRoleUseCase } from '../../application/role/create-role.usecase';
-import { UpdateRoleUseCase } from '../../application/role/update-role.usecase';
-import { DeleteRoleUseCase } from '../../application/role/delete-role.usecase';
-import { ActivateRoleUseCase } from '../../application/role/activate-role.usecase';
-import { DeactivateRoleUseCase } from '../../application/role/deactivate-role.usecase';
+import { BaseResponse } from '@application/dto/base/base-response';
+import { Role, RoleCreateRequest, RoleUpdateRequest, RoleListResult } from '@application/dto/role/role.dto';
+import { GetRolesUseCase } from '@application/usecase/role/get-roles.usecase';
+import { GetRoleByIdUseCase } from '@application/usecase/role/get-role-by-id.usecase';
+import { CreateRoleUseCase } from '@application/usecase/role/create-role.usecase';
+import { UpdateRoleUseCase } from '@application/usecase/role/update-role.usecase';
+import { DeleteRoleUseCase } from '@application/usecase/role/delete-role.usecase';
+import { ActivateRoleUseCase } from '@application/usecase/role/activate-role.usecase';
+import { DeactivateRoleUseCase } from '@application/usecase/role/deactivate-role.usecase';
 
 @Injectable({
   providedIn: 'root'
