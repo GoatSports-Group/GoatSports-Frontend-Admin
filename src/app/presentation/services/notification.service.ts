@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, NgZone } from '@angular/core';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { Notification, NotificationStatus } from '@application/dto/notification/notification.dto';
 import { GetNotificationsUseCase } from '@application/usecase/notification/get-notifications.usecase';
@@ -18,6 +18,7 @@ export class NotificationService {
   private wsService = inject(WEBSOCKET_SERVICE_TOKEN);
   private authService = inject(AuthService);
   private snackBar = inject(MatSnackBar);
+  private ngZone = inject(NgZone);
 
   private notificationsSubject = new BehaviorSubject<Notification[]>([]);
   public notifications$: Observable<Notification[]> = this.notificationsSubject.asObservable();
@@ -34,14 +35,20 @@ export class NotificationService {
 
   private monitorUserSession(): void {
     this.userSubscription = this.authService.currentUser$.subscribe(user => {
-      if (user && (user.role?.name === 'ADMIN' || user.role?.name === 'Người quản trị')) {
-        console.log('User is Admin. Initializing Notification Service...');
-        this.loadInitialData();
-        this.connectWebSocket();
-      } else {
-        this.disconnectWebSocket();
-        this.clearNotifications();
+      console.log('[NotificationService] monitorUserSession user:', user);
+      if (user) {
+        const roleName = user.role?.name?.toUpperCase();
+        console.log('[NotificationService] roleName:', roleName);
+        if (roleName === 'ADMIN') {
+          console.log('[NotificationService] User is Admin. Initializing Notification Service...');
+          this.loadInitialData();
+          this.connectWebSocket();
+          return;
+        }
       }
+      console.log('[NotificationService] Not Admin or not logged in. Disconnecting WebSocket.');
+      this.disconnectWebSocket();
+      this.clearNotifications();
     });
   }
 
@@ -59,7 +66,9 @@ export class NotificationService {
 
     this.wsSubscription = this.wsService.notifications$.subscribe({
       next: (notification) => {
-        this.handleRealTimeNotification(notification);
+        this.ngZone.run(() => {
+          this.handleRealTimeNotification(notification);
+        });
       },
       error: (err) => {
         console.error('Error in WebSocket notification channel:', err);
