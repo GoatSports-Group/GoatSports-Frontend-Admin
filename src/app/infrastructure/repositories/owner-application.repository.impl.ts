@@ -12,30 +12,38 @@ export class OwnerApplicationRepositoryImpl implements OwnerApplicationRepositor
   private ownerApplicationApi = inject(OwnerApplicationApi);
 
   submit(formData: FormData): Observable<OwnerApplication> {
-    return this.ownerApplicationApi.submit(formData);
+    return this.ownerApplicationApi.submit(formData).pipe(
+      map(response => response.data)
+    );
   }
 
   getMyApplications(): Observable<OwnerApplication[]> {
     return this.ownerApplicationApi.getMyApplications().pipe(
-      map(response => response.result || [])
+      map(response => response.data?.result || [])
     );
   }
 
   getAllApplications(): Observable<OwnerApplication[]> {
     return this.ownerApplicationApi.getAllApplications().pipe(
-      map(response => response.result || [])
+      map(response => response.data?.result || [])
     );
   }
 
   getApplicationDetail(id: string): Observable<OwnerApplication> {
-    return this.ownerApplicationApi.getApplicationDetail(id);
+    return this.ownerApplicationApi.getApplicationDetail(id).pipe(
+      map(response => response.data)
+    );
   }
 
   approve(id: string): Observable<OwnerApplication> {
-    return this.ownerApplicationApi.approve(id);
+    return this.ownerApplicationApi.approve(id).pipe(
+      map(response => response.data)
+    );
   }
 
   reject(id: string, rejectReason: string): Observable<OwnerApplication> {
-    return this.ownerApplicationApi.reject(id, rejectReason);
+    return this.ownerApplicationApi.reject(id, rejectReason).pipe(
+      map(response => response.data)
+    );
   }
 }

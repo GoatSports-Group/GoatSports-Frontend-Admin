@@ -79,6 +79,36 @@
       </div>
 
       <div class="topbar-right">
+        <!-- Notification Bell -->
+        <button mat-icon-button [matMenuTriggerFor]="notifMenu" class="notif-btn" aria-label="Thông báo">
+          <mat-icon [matBadge]="notificationService.unreadCount$ | async"
+            [matBadgeHidden]="(notificationService.unreadCount$ | async) === 0" matBadgeColor="warn" class="notif-icon">
+            notifications
+          </mat-icon>
+        </button>
+        <mat-menu #notifMenu="matMenu" xPosition="before" class="custom-notif-menu">
+          <div class="notif-menu-header">
+            <h3>Thông báo ({{ notificationService.unreadCount$ | async }})</h3>
+          </div>
+          <mat-divider></mat-divider>
+          <div class="notif-items-list">
+            @if ((notificationService.notifications$ | async)?.length === 0) {
+            <div class="notif-empty">Không có thông báo nào</div>
+            } @else {
+            @for (notif of notificationService.notifications$ | async; track notif.notificationId) {
+            <button mat-menu-item (click)="onNotificationClick(notif)" [class.unread]="notif.status === 'UNREAD'"
+              class="notif-item">
+              <div class="notif-item-content">
+                <span class="notif-title">{{ notif.title }}</span>
+                <p class="notif-desc">{{ notif.content }}</p>
+                <span class="notif-time">{{ notif.createdAt | date:'dd/MM HH:mm' }}</span>
+              </div>
+            </button>
+            }
+            }
+          </div>
+        </mat-menu>
+
         <div class="status-indicator" [class.offline]="!isOnline">
           <span class="status-dot"></span>
           <span class="status-label">{{ isOnline ? 'Kết nối ổn định' : 'Mất kết nối' }}</span>

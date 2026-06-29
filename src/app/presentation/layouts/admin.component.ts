@@ -69,4 +69,14 @@ export class AdminComponent implements OnInit, OnDestroy {
       ? `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(this.userProfile.fullName)}`
       : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80';
   }
+
+  onNotificationClick(notification: any) {
+    this.notificationService.markAsRead(notification.notificationId).subscribe({
+      next: () => {
+        if (notification.type === 'OWNER_APPLICATION') {
+          this.router.navigate(['/owner-applications']);
+        }
+      }
+    });
+  }
 }
