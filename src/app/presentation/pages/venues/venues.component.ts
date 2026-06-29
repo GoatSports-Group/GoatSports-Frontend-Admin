@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { VenueService } from '@presentation/services/venue.service';
-import { Venue, SportType, VenueStatus } from '@application/dto/venue/venue.dto';
+import { Venue, SportType, VenueStatus, SPORT_TYPE_OPTIONS } from '@application/dto/venue/venue.dto';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
@@ -150,14 +150,7 @@ export class VenuesComponent implements OnInit {
   }
 
   getSportTypeLabel(type: string): string {
-    switch (type) {
-      case 'soccer': return 'Bóng đá';
-      case 'badminton': return 'Cầu lông';
-      case 'tennis': return 'Tennis';
-      case 'pickleball': return 'Pickleball';
-      case 'basketball': return 'Bóng rổ';
-      case 'volleyball': return 'Bóng chuyền';
-      default: return type;
-    }
+    const key = type.toUpperCase();
+    return SPORT_TYPE_OPTIONS.find(o => o.value === key || o.value === type)?.label || type;
   }
 }

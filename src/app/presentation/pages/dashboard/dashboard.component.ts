@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { BookingService } from '@presentation/services/booking.service';
-import { Booking, BookingStatus } from '@application/dto/booking/booking.dto';
+import { Booking, BookingStatus, BOOKING_STATUS_OPTIONS } from '@application/dto/booking/booking.dto';
+import { SPORT_TYPE_OPTIONS } from '@application/dto/venue/venue.dto';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
@@ -59,7 +60,7 @@ export class DashboardOverviewComponent implements OnInit {
   }
 
   getStatusLabel(status: BookingStatus): string {
-    return status;
+    return BOOKING_STATUS_OPTIONS.find(o => o.value === status)?.label || status;
   }
 
   getStatusClass(status: BookingStatus): string {
@@ -73,14 +74,7 @@ export class DashboardOverviewComponent implements OnInit {
   }
 
   getSportTypeLabel(type: string): string {
-    switch (type) {
-      case 'soccer': return 'Bóng đá';
-      case 'badminton': return 'Cầu lông';
-      case 'tennis': return 'Tennis';
-      case 'pickleball': return 'Pickleball';
-      case 'basketball': return 'Bóng rổ';
-      case 'volleyball': return 'Bóng chuyền';
-      default: return type;
-    }
+    const key = type.toUpperCase();
+    return SPORT_TYPE_OPTIONS.find(o => o.value === key || o.value === type)?.label || type;
   }
 }

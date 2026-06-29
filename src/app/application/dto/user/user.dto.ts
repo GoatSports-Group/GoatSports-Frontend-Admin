@@ -11,3 +11,5 @@ export interface UserListResult {
   meta: UserListMeta;
   result: import('@domain/entity/user').User[];
 }
+
+export { RoleEnum, ROLE_ENUM_OPTIONS } from '@domain/enums/role.enum';

@@ -1,8 +1,8 @@
-import { SportType } from '@domain/enums/sport-type.enum';
-import { VenueStatus } from '@domain/enums/venue-status.enum';
+import { SportType, SPORT_TYPE_OPTIONS } from '@domain/enums/sport-type.enum';
+import { VenueStatus, VENUE_STATUS_OPTIONS } from '@domain/enums/venue-status.enum';
 
 export { Venue, TimeSlot } from '@domain/entity/venue';
-export { SportType, VenueStatus };
+export { SportType, SPORT_TYPE_OPTIONS, VenueStatus, VENUE_STATUS_OPTIONS };
 
 export interface VenueFilter {
   sportType?: string;

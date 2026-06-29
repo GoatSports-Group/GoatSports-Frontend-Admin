@@ -3,7 +3,7 @@ import { GetAllOwnerApplicationsUseCase } from '@application/usecase/owner-appli
 import { GetOwnerApplicationDetailUseCase } from '@application/usecase/owner-application/get-owner-application-detail.usecase';
 import { ApproveOwnerApplicationUseCase } from '@application/usecase/owner-application/approve-owner-application.usecase';
 import { RejectOwnerApplicationUseCase } from '@application/usecase/owner-application/reject-owner-application.usecase';
-import { OwnerApplication, OwnerApplicationStatus, BusinessType, DocumentType } from '@application/dto/owner-application/owner-application.dto';
+import { OwnerApplication, OWNER_APPLICATION_STATUS_OPTIONS, BUSINESS_TYPE_OPTIONS, DOCUMENT_TYPE_OPTIONS, OwnerApplicationStatus, BusinessType, DocumentType } from '@application/dto/owner-application/owner-application.dto';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RejectReasonDialogComponent } from '@presentation/pages/owner-applications/owner-application-dialog/reject-reason-dialog.component';
@@ -20,6 +20,9 @@ export class OwnerApplicationsComponent implements OnInit {
   private rejectUseCase = inject(RejectOwnerApplicationUseCase);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
+  readonly OwnerApplicationStatusOp = OWNER_APPLICATION_STATUS_OPTIONS;
+  readonly BusinessTypeOp = BUSINESS_TYPE_OPTIONS;
+  readonly DocumentTypeOp = DOCUMENT_TYPE_OPTIONS;
 
   applications: OwnerApplication[] = [];
   filteredApplications: OwnerApplication[] = [];
@@ -31,20 +34,19 @@ export class OwnerApplicationsComponent implements OnInit {
 
   filterStatus: 'ALL' | OwnerApplicationStatus = 'ALL';
   searchQuery = '';
+  readonly OwnerApplicationStatus = OwnerApplicationStatus;
 
-  statusTranslations = {
-    [OwnerApplicationStatus.PENDING]: 'Chờ xác nhận',
-    [OwnerApplicationStatus.APPROVED]: 'Đã chấp nhận',
-    [OwnerApplicationStatus.REJECTED]: 'Đã từ chối',
-    [OwnerApplicationStatus.CANCELLED]: 'Đã hủy'
-  };
+  getStatusLabel(status: OwnerApplicationStatus): string {
+    return OWNER_APPLICATION_STATUS_OPTIONS.find(o => o.value === status)?.label || status;
+  }
 
-  documentTypeTranslations = {
-    [DocumentType.ID_CARD_FRONT]: 'CCCD Mặt trước',
-    [DocumentType.ID_CARD_BACK]: 'CCCD Mặt sau',
-    [DocumentType.BUSINESS_LICENSE]: 'Giấy phép hoạt động',
-    [DocumentType.VENUE_IMAGE]: 'Ảnh chụp sân thực tế'
-  };
+  getDocumentTypeLabel(type: DocumentType): string {
+    return DOCUMENT_TYPE_OPTIONS.find(o => o.value === type)?.label || type;
+  }
+
+  getBusinessTypeLabel(type: BusinessType): string {
+    return BUSINESS_TYPE_OPTIONS.find(o => o.value === type)?.label || type;
+  }
 
   ngOnInit() {
     this.loadApplications();
@@ -189,25 +191,6 @@ export class OwnerApplicationsComponent implements OnInit {
         });
       }
     });
-  }
-
-  getStatusClass(status: OwnerApplicationStatus): string {
-    switch (status) {
-      case OwnerApplicationStatus.PENDING:
-        return 'status-pending';
-      case OwnerApplicationStatus.APPROVED:
-        return 'status-approved';
-      case OwnerApplicationStatus.REJECTED:
-        return 'status-rejected';
-      case OwnerApplicationStatus.CANCELLED:
-        return 'status-cancelled';
-      default:
-        return '';
-    }
-  }
-
-  getBusinessTypeLabel(type: BusinessType): string {
-    return type === BusinessType.COMPANY ? 'Công ty' : 'Cá nhân';
   }
 
   isImage(url: string): boolean {
