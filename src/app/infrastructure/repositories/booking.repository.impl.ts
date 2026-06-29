@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
-import { BookingRepository } from '@application/ports/booking.repository';
+import { BookingRepository } from '@application/ports/persistence/booking.repository';
 import { Booking, BookingStatus } from '@application/dto/booking/booking.dto';
 import { SportType } from '@application/dto/venue/venue.dto';
 

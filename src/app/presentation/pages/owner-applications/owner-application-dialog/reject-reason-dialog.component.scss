@@ -1,0 +1,28 @@
+.dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  color: #b91c1c;
+  margin-top: 1rem;
+}
+.dialog-desc {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin-bottom: 1.25rem;
+  line-height: 1.5;
+}
+.dialog-content {
+  min-width: 320px;
+  max-width: 480px;
+}
+.reason-field {
+  width: 100%;
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem 1.5rem 1.5rem;
+}

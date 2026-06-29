@@ -1,4 +1,4 @@
-import { PermissionRepository, PERMISSION_REPOSITORY_TOKEN } from '@application/ports/permission.repository';
+import { PermissionRepository, PERMISSION_REPOSITORY_TOKEN } from '@application/ports/persistence/permission.repository';
 import { Inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { BaseResponse } from '@application/dto/base/base-response';
@@ -9,7 +9,7 @@ import { BaseResponse } from '@application/dto/base/base-response';
 export class DeletePermissionUseCase {
   constructor(
     @Inject(PERMISSION_REPOSITORY_TOKEN) private permissionRepository: PermissionRepository
-  ) {}
+  ) { }
 
   execute(id: string): Observable<BaseResponse<void>> {
     return this.permissionRepository.deletePermission(id);

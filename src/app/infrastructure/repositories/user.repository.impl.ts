@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { UserRepository } from '@application/ports/user.repository';
+import { UserRepository } from '@application/ports/persistence/user.repository';
 import { UserApi } from '@infrastructure/api/user.api';
 import { BaseResponse } from '@application/dto/base/base-response';
 import { User, UserListResult } from '@application/dto/user/user.dto';

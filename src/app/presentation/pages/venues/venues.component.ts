@@ -1,8 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { VenueService } from '@presentation/services/venue.service';
-import { Venue } from '@application/dto/venue/venue.dto';
-import { SportType } from '@domain/enums/sport-type.enum';
-import { VenueStatus } from '@domain/enums/venue-status.enum';
+import { Venue, SportType, VenueStatus } from '@application/dto/venue/venue.dto';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';

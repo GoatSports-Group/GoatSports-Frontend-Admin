@@ -5,6 +5,7 @@ import { User } from '@application/dto/user/user.dto';
 import { HttpClient } from '@angular/common/http';
 import { Subscription, interval, of } from 'rxjs';
 import { startWith, switchMap, catchError, map } from 'rxjs/operators';
+import { NotificationService } from '@presentation/services/notification.service';
 
 @Component({
   selector: 'app-admin',
@@ -15,6 +16,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   public authService = inject(AuthService);
   private router = inject(Router);
   private http = inject(HttpClient);
+  public notificationService = inject(NotificationService);
   private apiBase = import.meta.env.NG_APP_API_URL;
 
   userProfile: User | null = null;
@@ -25,7 +27,6 @@ export class AdminComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.userProfile = this.authService.currentUser;
 
-    // Periodically check connection status to backend
     this.statusSub = interval(15000)
       .pipe(
         startWith(0),

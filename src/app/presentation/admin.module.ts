@@ -16,6 +16,7 @@ import { PermissionDialogComponent } from '@presentation/pages/permissions/permi
 import { VenuesComponent } from '@presentation/pages/venues/venues.component';
 import { BookingsComponent } from '@presentation/pages/bookings/bookings.component';
 import { ReviewsComponent } from '@presentation/pages/reviews/reviews.component';
+import { OwnerApplicationsComponent } from '@presentation/pages/owner-applications/owner-applications.component';
 
 @NgModule({
   declarations: [
@@ -30,7 +31,8 @@ import { ReviewsComponent } from '@presentation/pages/reviews/reviews.component'
     PermissionDialogComponent,
     VenuesComponent,
     BookingsComponent,
-    ReviewsComponent
+    ReviewsComponent,
+    OwnerApplicationsComponent
   ],
   imports: [
     CommonModule,

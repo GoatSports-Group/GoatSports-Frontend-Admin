@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
-import { VenueRepository } from '@application/ports/venue.repository';
+import { VenueRepository } from '@application/ports/persistence/venue.repository';
 import { Venue, TimeSlot, SportType, VenueStatus, VenueFilter, VenueSort } from '@application/dto/venue/venue.dto';
 import { BookingStatus } from '@application/dto/booking/booking.dto';
 
@@ -184,8 +184,8 @@ export class VenueRepositoryImpl implements VenueRepository {
     if (filter) {
       if (filter.searchTerm) {
         const term = filter.searchTerm.toLowerCase().trim();
-        list = list.filter(v => 
-          v.name.toLowerCase().includes(term) || 
+        list = list.filter(v =>
+          v.name.toLowerCase().includes(term) ||
           v.address.toLowerCase().includes(term) ||
           v.description.toLowerCase().includes(term)
         );
@@ -194,13 +194,13 @@ export class VenueRepositoryImpl implements VenueRepository {
         const sportTypeLower = filter.sportType.toLowerCase();
         list = list.filter(v => {
           const vTypeLower = v.sportType.toLowerCase();
-          return vTypeLower === sportTypeLower || 
-                 (sportTypeLower === 'soccer' && v.sportType === SportType.SOCCER) ||
-                 (sportTypeLower === 'badminton' && v.sportType === SportType.BADMINTON) ||
-                 (sportTypeLower === 'tennis' && v.sportType === SportType.TENNIS) ||
-                 (sportTypeLower === 'pickleball' && v.sportType === SportType.PICKLEBALL) ||
-                 (sportTypeLower === 'basketball' && v.sportType === SportType.BASKETBALL) ||
-                 (sportTypeLower === 'volleyball' && v.sportType === SportType.VOLLEYBALL);
+          return vTypeLower === sportTypeLower ||
+            (sportTypeLower === 'soccer' && v.sportType === SportType.SOCCER) ||
+            (sportTypeLower === 'badminton' && v.sportType === SportType.BADMINTON) ||
+            (sportTypeLower === 'tennis' && v.sportType === SportType.TENNIS) ||
+            (sportTypeLower === 'pickleball' && v.sportType === SportType.PICKLEBALL) ||
+            (sportTypeLower === 'basketball' && v.sportType === SportType.BASKETBALL) ||
+            (sportTypeLower === 'volleyball' && v.sportType === SportType.VOLLEYBALL);
         });
       }
       if (filter.minPrice !== undefined) {
@@ -259,9 +259,9 @@ export class VenueRepositoryImpl implements VenueRepository {
       const endStr = (hour + 1) < 10 ? `0${hour + 1}:00` : `${hour + 1}:00`;
       const timeRange = `${startStr} - ${endStr}`;
 
-      const isBooked = bookings.some((b: any) => 
-        b.venueId === venueId && 
-        b.bookingDate === dateStr && 
+      const isBooked = bookings.some((b: any) =>
+        b.venueId === venueId &&
+        b.bookingDate === dateStr &&
         b.timeSlot === timeRange &&
         b.status !== BookingStatus.CANCELLED
       );

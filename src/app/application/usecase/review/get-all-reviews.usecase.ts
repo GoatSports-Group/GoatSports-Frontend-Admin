@@ -1,4 +1,4 @@
-import { ReviewRepository, REVIEW_REPOSITORY_TOKEN } from '@application/ports/review.repository';
+import { ReviewRepository, REVIEW_REPOSITORY_TOKEN } from '@application/ports/persistence/review.repository';
 import { Inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Review } from '@application/dto/review/review.dto';
@@ -9,7 +9,7 @@ import { Review } from '@application/dto/review/review.dto';
 export class GetAllReviewsUseCase {
   constructor(
     @Inject(REVIEW_REPOSITORY_TOKEN) private reviewRepository: ReviewRepository
-  ) {}
+  ) { }
 
   execute(): Observable<Review[]> {
     return this.reviewRepository.getAllReviews();

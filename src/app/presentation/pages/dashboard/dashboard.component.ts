@@ -1,7 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { BookingService } from '@presentation/services/booking.service';
-import { Booking } from '@application/dto/booking/booking.dto';
-import { BookingStatus } from '@domain/enums/booking-status.enum';
+import { Booking, BookingStatus } from '@application/dto/booking/booking.dto';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({

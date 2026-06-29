@@ -1,4 +1,4 @@
-import { VenueRepository, VENUE_REPOSITORY_TOKEN } from '@application/ports/venue.repository';
+import { VenueRepository, VENUE_REPOSITORY_TOKEN } from '@application/ports/persistence/venue.repository';
 import { Inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -8,7 +8,7 @@ import { Observable } from 'rxjs';
 export class DeleteVenueUseCase {
   constructor(
     @Inject(VENUE_REPOSITORY_TOKEN) private venueRepository: VenueRepository
-  ) {}
+  ) { }
 
   execute(id: string): Observable<boolean> {
     return this.venueRepository.deleteVenue(id);

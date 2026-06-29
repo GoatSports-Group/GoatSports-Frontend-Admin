@@ -1,4 +1,4 @@
-import { VenueRepository, VENUE_REPOSITORY_TOKEN } from '@application/ports/venue.repository';
+import { VenueRepository, VENUE_REPOSITORY_TOKEN } from '@application/ports/persistence/venue.repository';
 import { Inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Venue, VenueFilter, VenueSort } from '@application/dto/venue/venue.dto';
@@ -9,7 +9,7 @@ import { Venue, VenueFilter, VenueSort } from '@application/dto/venue/venue.dto'
 export class GetVenuesUseCase {
   constructor(
     @Inject(VENUE_REPOSITORY_TOKEN) private venueRepository: VenueRepository
-  ) {}
+  ) { }
 
   execute(filter?: VenueFilter, sort?: VenueSort): Observable<Venue[]> {
     return this.venueRepository.getVenues(filter, sort);

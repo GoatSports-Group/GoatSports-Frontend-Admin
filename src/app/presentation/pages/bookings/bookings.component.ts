@@ -1,8 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { BookingService } from '@presentation/services/booking.service';
-import { Booking } from '@application/dto/booking/booking.dto';
-import { BookingStatus } from '@domain/enums/booking-status.enum';
-import { SportType } from '@domain/enums/sport-type.enum';
+import { Booking, BookingStatus } from '@application/dto/booking/booking.dto';
+import { SportType } from '@application/dto/venue/venue.dto';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';

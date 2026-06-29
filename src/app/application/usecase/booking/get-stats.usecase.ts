@@ -1,4 +1,4 @@
-import { BookingRepository, BOOKING_REPOSITORY_TOKEN } from '@application/ports/booking.repository';
+import { BookingRepository, BOOKING_REPOSITORY_TOKEN } from '@application/ports/persistence/booking.repository';
 import { Inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -8,7 +8,7 @@ import { Observable } from 'rxjs';
 export class GetStatsUseCase {
   constructor(
     @Inject(BOOKING_REPOSITORY_TOKEN) private bookingRepository: BookingRepository
-  ) {}
+  ) { }
 
   execute(): Observable<{ totalVenues: number; totalBookings: number; totalRevenue: number; bookingsToday: number }> {
     return this.bookingRepository.getStats();

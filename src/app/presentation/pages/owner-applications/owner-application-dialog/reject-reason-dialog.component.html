@@ -1,0 +1,16 @@
+<h2 mat-dialog-title class="dialog-title">
+  <mat-icon color="warn">warning</mat-icon> Từ Chối Đơn Đăng Ký
+</h2>
+<mat-dialog-content class="dialog-content">
+  <p class="dialog-desc">Vui lòng nhập lý do từ chối đơn đăng ký kinh doanh này. Lý do sẽ được gửi tới email của người đăng ký.</p>
+  <mat-form-field appearance="outline" class="reason-field">
+    <mat-label>Lý do từ chối</mat-label>
+    <textarea matInput [(ngModel)]="rejectReason" required rows="4" placeholder="Ví dụ: Tài liệu đính kèm bị mờ, mã số thuế không hợp lệ..."></textarea>
+  </mat-form-field>
+</mat-dialog-content>
+<mat-dialog-actions class="dialog-actions">
+  <button mat-button (click)="onCancel()">Hủy Bỏ</button>
+  <button mat-raised-button color="warn" [disabled]="!rejectReason.trim()" (click)="onSubmit()">
+    Xác Nhận Từ Chối
+  </button>
+</mat-dialog-actions>

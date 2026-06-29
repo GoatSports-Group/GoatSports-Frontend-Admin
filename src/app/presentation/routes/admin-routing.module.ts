@@ -9,6 +9,7 @@ import { PermissionsComponent } from '@presentation/pages/permissions/permission
 import { VenuesComponent } from '@presentation/pages/venues/venues.component';
 import { BookingsComponent } from '@presentation/pages/bookings/bookings.component';
 import { ReviewsComponent } from '@presentation/pages/reviews/reviews.component';
+import { OwnerApplicationsComponent } from '@presentation/pages/owner-applications/owner-applications.component';
 
 const routes: Routes = [
   {
@@ -19,6 +20,7 @@ const routes: Routes = [
       { path: 'venues', component: VenuesComponent },
       { path: 'bookings', component: BookingsComponent },
       { path: 'reviews', component: ReviewsComponent },
+      { path: 'owner-applications', component: OwnerApplicationsComponent },
       { path: 'users', component: UsersComponent },
       { path: 'roles', component: RolesComponent },
       { path: 'roles/:id/permissions', component: AssignPermissionsComponent },

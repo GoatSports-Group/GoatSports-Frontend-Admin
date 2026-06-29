@@ -1,0 +1,212 @@
+<div class="admin-dashboard-container">
+  <!-- Sidebar Panel: List & Filters -->
+  <div class="sidebar-panel">
+    <div class="sidebar-header">
+      <h2>Duyệt Đơn Đối Tác</h2>
+      <span class="count-badge">{{ filteredApplications.length }} đơn đăng ký</span>
+    </div>
+
+    <!-- Search & Filter Controls -->
+    <div class="controls-box">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Tìm tên, email, SĐT...</mat-label>
+        <input matInput [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange()" placeholder="Tìm kiếm nhanh...">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+
+      <div class="filter-chips">
+        <button class="chip-btn" [class.active]="filterStatus === 'ALL'" (click)="onFilterStatusChange('ALL')">Tất cả</button>
+        <button class="chip-btn" [class.active]="filterStatus === 'PENDING'" (click)="onFilterStatusChange('PENDING')">Chờ duyệt</button>
+        <button class="chip-btn" [class.active]="filterStatus === 'APPROVED'" (click)="onFilterStatusChange('APPROVED')">Đã duyệt</button>
+        <button class="chip-btn" [class.active]="filterStatus === 'REJECTED'" (click)="onFilterStatusChange('REJECTED')">Bị từ chối</button>
+      </div>
+    </div>
+
+    <!-- List -->
+    <div class="list-wrapper">
+      @if (loadingList) {
+        <div class="list-loading">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Đang tải danh sách...</p>
+        </div>
+      } @else if (filteredApplications.length === 0) {
+        <div class="list-empty">
+          <mat-icon>search_off</mat-icon>
+          <p>Không tìm thấy hồ sơ nào phù hợp</p>
+        </div>
+      } @else {
+        <div class="list-items">
+          @for (app of filteredApplications; track app.ownerApplicationId) {
+            <div class="list-item-card" 
+                 [class.active]="selectedApplication?.ownerApplicationId === app.ownerApplicationId"
+                 (click)="selectApplication(app)">
+               <div class="item-header">
+                 <span class="item-business">{{ app.businessName }}</span>
+                 <span class="status-dot" [ngClass]="getStatusClass(app.status)"></span>
+               </div>
+               <div class="item-details">
+                 <span class="item-name">{{ app.fullName }}</span>
+                 <span class="item-date">{{ app.reviewedAt ? (app.reviewedAt | date:'dd/MM/yyyy HH:mm') : 'Mới nộp' }}</span>
+               </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Detail Panel: Document Review & Actions -->
+  <div class="detail-panel">
+    @if (selectedApplication) {
+      @if (loadingDetail) {
+        <div class="detail-loading">
+          <mat-spinner diameter="50"></mat-spinner>
+          <p>Đang tải tài liệu chi tiết...</p>
+        </div>
+      } @else {
+        <div class="detail-scrollable">
+          <!-- Detail Header Banner -->
+          <div class="detail-header-card">
+            <div class="header-info">
+              <h1>{{ selectedApplication.businessName }}</h1>
+              <p class="business-type">{{ getBusinessTypeLabel(selectedApplication.businessType) }} | Mã số thuế: {{ selectedApplication.taxCode }}</p>
+            </div>
+            <span class="status-pill" [ngClass]="getStatusClass(selectedApplication.status)">
+              {{ statusTranslations[selectedApplication.status] }}
+            </span>
+          </div>
+
+          <!-- Reject Alert Box -->
+          @if (selectedApplication.status === 'REJECTED') {
+            <div class="reject-banner">
+              <mat-icon>warning</mat-icon>
+              <div class="reject-content">
+                <h3>Đơn đăng ký bị từ chối</h3>
+                <p><strong>Lý do từ chối: </strong>{{ selectedApplication.rejectReason || 'Không có lý do chi tiết.' }}</p>
+              </div>
+            </div>
+          }
+
+          <!-- Grid of Info Columns -->
+          <div class="detail-grid-layout">
+            <!-- Col 1: Rep Info -->
+            <mat-card class="info-card">
+              <mat-card-header>
+                <mat-icon mat-card-avatar color="primary">person</mat-icon>
+                <mat-card-title>Người Đại Diện</mat-card-title>
+              </mat-card-header>
+              <mat-card-content class="info-card-content">
+                <div class="card-row">
+                  <span class="lbl">Họ và tên:</span>
+                  <span class="val">{{ selectedApplication.fullName }}</span>
+                </div>
+                <div class="card-row">
+                  <span class="lbl">Số điện thoại:</span>
+                  <span class="val">{{ selectedApplication.phone }}</span>
+                </div>
+                <div class="card-row">
+                  <span class="lbl">Email liên hệ:</span>
+                  <span class="val">{{ selectedApplication.email }}</span>
+                </div>
+                <div class="card-row">
+                  <span class="lbl">Số CCCD:</span>
+                  <span class="val">{{ selectedApplication.identityNumber }}</span>
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <!-- Col 2: Address Info -->
+            <mat-card class="info-card">
+              <mat-card-header>
+                <mat-icon mat-card-avatar color="primary">place</mat-icon>
+                <mat-card-title>Địa Chỉ Đăng Ký</mat-card-title>
+              </mat-card-header>
+              <mat-card-content class="info-card-content">
+                <div class="card-row">
+                  <span class="lbl">Số nhà, đường:</span>
+                  <span class="val">{{ selectedApplication.address.address }}</span>
+                </div>
+                <div class="card-row">
+                  <span class="lbl">Phường / Xã:</span>
+                  <span class="val">{{ selectedApplication.address.ward }}</span>
+                </div>
+                <div class="card-row">
+                  <span class="lbl">Quận / Huyện:</span>
+                  <span class="val">{{ selectedApplication.address.district }}</span>
+                </div>
+                <div class="card-row">
+                  <span class="lbl">Tỉnh / Thành phố:</span>
+                  <span class="val">{{ selectedApplication.address.province }}</span>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+
+          <!-- Section: Attached Documents -->
+          <h2 class="sub-section-title"><mat-icon>cloud_done</mat-icon> Tài Liệu Đính Kèm</h2>
+          
+          @if (!selectedApplication.documents || selectedApplication.documents.length === 0) {
+            <div class="no-docs-card">
+              <mat-icon>error_outline</mat-icon> Không có tài liệu hoặc giấy tờ đính kèm.
+            </div>
+          } @else {
+            <div class="docs-gallery-grid">
+              @for (doc of selectedApplication.documents; track doc.ownerApplicationDocumentId) {
+                <mat-card class="doc-card">
+                  <mat-card-header class="doc-card-hdr">
+                    <mat-card-title class="doc-type-title">{{ documentTypeTranslations[doc.documentType] || doc.documentType }}</mat-card-title>
+                  </mat-card-header>
+                  <mat-card-content class="doc-card-body">
+                    @if (isImage(doc.fileUrl)) {
+                      <div class="img-preview-box">
+                        <img [src]="doc.fileUrl" alt="Tài liệu đính kèm" class="img-preview-element">
+                      </div>
+                    } @else {
+                      <div class="file-icon-box">
+                        <mat-icon>description</mat-icon>
+                        <span>File tài liệu đính kèm</span>
+                      </div>
+                    }
+                  </mat-card-content>
+                  <mat-card-actions class="doc-card-actions">
+                    <a mat-button color="primary" [href]="doc.fileUrl" target="_blank" class="btn-download">
+                      <mat-icon>open_in_new</mat-icon> Mở tài liệu
+                    </a>
+                  </mat-card-actions>
+                </mat-card>
+              }
+            </div>
+          }
+
+          <!-- Review Action Controls -->
+          @if (selectedApplication.status === 'PENDING') {
+            <div class="review-actions-panel">
+              <div class="panel-desc">
+                <mat-icon>info</mat-icon>
+                <span>Hồ sơ này đang ở trạng thái chờ duyệt. Vui lòng kiểm tra kỹ tính chính xác của tài liệu trước khi phê duyệt.</span>
+              </div>
+              <div class="action-buttons-row">
+                <button mat-button class="btn-action-reject" (click)="reject(selectedApplication)" [disabled]="processingAction">
+                  Từ Chối Hồ Sơ
+                </button>
+                <button mat-raised-button color="primary" class="btn-action-approve" (click)="approve(selectedApplication)" [disabled]="processingAction">
+                  @if (processingAction) {
+                    <mat-spinner diameter="20" class="btn-spinner"></mat-spinner> Đang xử lý...
+                  } @else {
+                    <mat-icon>check</mat-icon> Phê Duyệt Hồ Sơ
+                  }
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    } @else {
+      <div class="detail-empty">
+        <mat-icon>assignment_turned_in</mat-icon>
+        <h2>Chọn một hồ sơ đăng ký để bắt đầu duyệt</h2>
+        <p>Hồ sơ của các đối tác muốn tham gia hệ thống GOAT Sports sẽ hiển thị tại cột bên trái.</p>
+      </div>
+    }
+  </div>
+</div>

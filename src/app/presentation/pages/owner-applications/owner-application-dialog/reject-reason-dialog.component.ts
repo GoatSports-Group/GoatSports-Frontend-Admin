@@ -1,0 +1,36 @@
+import { Component, inject } from '@angular/core';
+import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { FormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+
+@Component({
+  selector: 'app-reject-reason-dialog',
+  standalone: true,
+  imports: [
+    MatDialogModule,
+    FormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule
+  ],
+  templateUrl: './reject-reason-dialog.component.html',
+  styleUrls: ['./reject-reason-dialog.component.scss']
+})
+export class RejectReasonDialogComponent {
+  private dialogRef = inject(MatDialogRef<RejectReasonDialogComponent>);
+  rejectReason = '';
+
+  onCancel() {
+    this.dialogRef.close(null);
+  }
+
+  onSubmit() {
+    if (this.rejectReason.trim()) {
+      this.dialogRef.close(this.rejectReason.trim());
+    }
+  }
+}

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { PermissionRepository } from '@application/ports/permission.repository';
+import { PermissionRepository } from '@application/ports/persistence/permission.repository';
 import { PermissionApi } from '../api/permission.api';
 import { BaseResponse } from '@application/dto/base/base-response';
 import { Permission, PermissionListResult } from '@application/dto/permission/permission.dto';

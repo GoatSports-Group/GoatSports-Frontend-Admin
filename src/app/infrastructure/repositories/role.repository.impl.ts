@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { RoleRepository } from '@application/ports/role.repository';
+import { RoleRepository } from '@application/ports/persistence/role.repository';
 import { RoleApi } from '@infrastructure/api/role.api';
 import { BaseResponse } from '@application/dto/base/base-response';
 import { Role, RoleCreateRequest, RoleUpdateRequest, RoleListResult } from '@application/dto/role/role.dto';
