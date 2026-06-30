@@ -1,8 +1,8 @@
 import { PermissionRepository, PERMISSION_REPOSITORY_TOKEN } from '@application/ports/persistence/permission.repository';
 import { Inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { BaseResponse } from '@application/dto/base/base-response';
-import { PermissionListResult } from '@application/dto/permission/permission.dto';
+import { Permission } from '@domain/entity/permission';
+import { PageFilter } from '@application/dto/page.filter';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +12,7 @@ export class GetPermissionsUseCase {
     @Inject(PERMISSION_REPOSITORY_TOKEN) private permissionRepository: PermissionRepository
   ) { }
 
-  execute(page: number, size: number, search?: string): Observable<BaseResponse<PermissionListResult>> {
-    return this.permissionRepository.getPermissions(page, size, search);
+  execute(filter: PageFilter): Observable<Permission[]> {
+    return this.permissionRepository.getPermissions(filter);
   }
 }

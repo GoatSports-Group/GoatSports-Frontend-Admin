@@ -7,6 +7,7 @@ import { MarkNotificationReadUseCase } from '@application/usecase/notification/m
 import { WEBSOCKET_SERVICE_TOKEN } from '@application/ports/websocket.service';
 import { AuthService } from './auth.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { PageFilter } from '@application/dto/page.filter';
 
 @Injectable({
   providedIn: 'root'
@@ -35,25 +36,18 @@ export class NotificationService {
 
   private monitorUserSession(): void {
     this.userSubscription = this.authService.currentUser$.subscribe(user => {
-      console.log('[NotificationService] monitorUserSession user:', user);
       if (user) {
-        const roleName = user.role?.name?.toUpperCase();
-        console.log('[NotificationService] roleName:', roleName);
-        if (roleName === 'ADMIN') {
-          console.log('[NotificationService] User is Admin. Initializing Notification Service...');
-          this.loadInitialData();
-          this.connectWebSocket();
-          return;
-        }
+        this.loadInitialData();
+        this.connectWebSocket();
+        return;
       }
-      console.log('[NotificationService] Not Admin or not logged in. Disconnecting WebSocket.');
       this.disconnectWebSocket();
       this.clearNotifications();
     });
   }
 
   private loadInitialData(): void {
-    this.fetchNotifications().subscribe();
+    this.fetchNotifications({ page: 1, size: 10 }).subscribe();
     this.fetchUnreadCount().subscribe();
   }
 
@@ -104,9 +98,9 @@ export class NotificationService {
     });
   }
 
-  public fetchNotifications(): Observable<Notification[]> {
+  public fetchNotifications(filter: PageFilter): Observable<Notification[]> {
     return new Observable<Notification[]>(subscriber => {
-      this.getNotificationsUseCase.execute().subscribe({
+      this.getNotificationsUseCase.execute(filter).subscribe({
         next: (notifications) => {
           notifications.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
           this.notificationsSubject.next(notifications);

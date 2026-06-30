@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { AuthRepository } from '@application/ports/persistence/auth.repository';
 import { AuthApi } from '@infrastructure/api/auth.api';
 import { BaseResponse } from '@application/dto/base/base-response';
@@ -11,15 +11,21 @@ import { User } from '@application/dto/user/user.dto';
 export class AuthRepositoryImpl implements AuthRepository {
   private authApi = inject(AuthApi);
 
-  logout(): Observable<BaseResponse<void>> {
-    return this.authApi.logout();
+  logout(): Observable<void> {
+    return this.authApi.logout().pipe(
+      map(response => response.data)
+    );
   }
 
-  refresh(): Observable<BaseResponse<User>> {
-    return this.authApi.refresh();
+  refresh(): Observable<User> {
+    return this.authApi.refresh().pipe(
+      map(response => response.data)
+    );
   }
 
-  getCurrentUser(): Observable<BaseResponse<User>> {
-    return this.authApi.getCurrentUser();
+  getCurrentUser(): Observable<User> {
+    return this.authApi.getCurrentUser().pipe(
+      map(response => response.data)
+    );
   }
 }

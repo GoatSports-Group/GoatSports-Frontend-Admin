@@ -4,6 +4,7 @@ import { map } from 'rxjs/operators';
 import { OwnerApplicationRepository } from '@application/ports/persistence/owner-application.repository';
 import { OwnerApplication } from '@domain/entity/owner-application';
 import { OwnerApplicationApi } from '@infrastructure/api/owner-application.api';
+import { PageFilter } from '@application/dto/page.filter';
 
 @Injectable({
   providedIn: 'root'
@@ -11,20 +12,8 @@ import { OwnerApplicationApi } from '@infrastructure/api/owner-application.api';
 export class OwnerApplicationRepositoryImpl implements OwnerApplicationRepository {
   private ownerApplicationApi = inject(OwnerApplicationApi);
 
-  submit(formData: FormData): Observable<OwnerApplication> {
-    return this.ownerApplicationApi.submit(formData).pipe(
-      map(response => response.data)
-    );
-  }
-
-  getMyApplications(): Observable<OwnerApplication[]> {
-    return this.ownerApplicationApi.getMyApplications().pipe(
-      map(response => response.data?.result || [])
-    );
-  }
-
-  getAllApplications(): Observable<OwnerApplication[]> {
-    return this.ownerApplicationApi.getAllApplications().pipe(
+  getAllApplications(filter: PageFilter): Observable<OwnerApplication[]> {
+    return this.ownerApplicationApi.getAllApplications(filter).pipe(
       map(response => response.data?.result || [])
     );
   }
@@ -45,5 +34,9 @@ export class OwnerApplicationRepositoryImpl implements OwnerApplicationRepositor
     return this.ownerApplicationApi.reject(id, rejectReason).pipe(
       map(response => response.data)
     );
+  }
+
+  getFileUrl(key: string): Observable<string> {
+    return this.ownerApplicationApi.getFileUrl(key);
   }
 }

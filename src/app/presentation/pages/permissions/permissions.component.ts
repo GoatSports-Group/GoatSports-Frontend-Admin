@@ -6,6 +6,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { PermissionDialogComponent } from './permission-dialog/permission-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
+import { buildRsqlSearch } from '@shared/utils/api.helper';
 
 @Component({
   selector: 'app-permissions',
@@ -22,7 +23,6 @@ export class PermissionsComponent implements OnInit {
   loading = false;
   searchQuery = '';
 
-  // Pagination
   totalItems = 0;
   pageSize = 10;
   pageIndex = 0;
@@ -35,11 +35,18 @@ export class PermissionsComponent implements OnInit {
 
   loadPermissions(): void {
     this.loading = true;
-    this.permissionAdminService.getPermissions(this.pageIndex, this.pageSize, this.searchQuery).subscribe({
-      next: (response) => {
-        const data = response?.data;
-        this.permissions = data?.result || [];
-        this.totalItems = data?.meta?.total || 0;
+    this.permissionAdminService.getPermissions({
+      page: this.pageIndex,
+      size: this.pageSize,
+      filter: buildRsqlSearch(this.searchQuery, ['name', 'apiPath', 'method', 'module'])
+    }).subscribe({
+      next: (permissions) => {
+        this.permissions = permissions;
+        if (permissions.length < this.pageSize) {
+          this.totalItems = this.pageIndex * this.pageSize + permissions.length;
+        } else {
+          this.totalItems = (this.pageIndex + 2) * this.pageSize;
+        }
         this.loading = false;
       },
       error: (err) => {

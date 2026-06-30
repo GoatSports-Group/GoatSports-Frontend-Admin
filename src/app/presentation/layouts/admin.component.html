@@ -26,20 +26,8 @@
         <mat-icon>dashboard</mat-icon> Tổng quan
       </a>
 
-      <a routerLink="./venues" routerLinkActive="active" class="menu-item">
-        <mat-icon>sports</mat-icon> Quản lý Sân
-      </a>
-
       <a routerLink="./owner-applications" routerLinkActive="active" class="menu-item">
         <mat-icon>assignment_ind</mat-icon> Chủ Sân
-      </a>
-
-      <a routerLink="./bookings" routerLinkActive="active" class="menu-item">
-        <mat-icon>calendar_today</mat-icon> Lịch Đặt Sân
-      </a>
-
-      <a routerLink="./reviews" routerLinkActive="active" class="menu-item">
-        <mat-icon>rate_review</mat-icon> Đánh Giá Sân
       </a>
 
       <a routerLink="./users" routerLinkActive="active" class="menu-item">
@@ -82,7 +70,8 @@
         <!-- Notification Bell -->
         <button mat-icon-button [matMenuTriggerFor]="notifMenu" class="notif-btn" aria-label="Thông báo">
           <mat-icon [matBadge]="notificationService.unreadCount$ | async"
-            [matBadgeHidden]="(notificationService.unreadCount$ | async) === 0" matBadgeColor="warn" class="notif-icon">
+            [matBadgeHidden]="(notificationService.unreadCount$ | async) === 0" matBadgeColor="warn" class="notif-icon"
+            aria-hidden="false">
             notifications
           </mat-icon>
         </button>
@@ -91,7 +80,7 @@
             <h3>Thông báo ({{ notificationService.unreadCount$ | async }})</h3>
           </div>
           <mat-divider></mat-divider>
-          <div class="notif-items-list">
+          <div class="notif-items-list" (scroll)="onNotificationScroll($event)">
             @if ((notificationService.notifications$ | async)?.length === 0) {
             <div class="notif-empty">Không có thông báo nào</div>
             } @else {

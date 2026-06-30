@@ -15,14 +15,14 @@
       </mat-form-field>
 
       <div class="filter-chips">
-        <button class="chip-btn" [class.active]="filterStatus === 'ALL'" (click)="onFilterStatusChange('ALL')">Tất
-          cả</button>
-        <button class="chip-btn" [class.active]="filterStatus === OwnerApplicationStatus.PENDING"
-          (click)="onFilterStatusChange(OwnerApplicationStatus.PENDING)">Chờ duyệt</button>
-        <button class="chip-btn" [class.active]="filterStatus === OwnerApplicationStatus.APPROVED"
-          (click)="onFilterStatusChange(OwnerApplicationStatus.APPROVED)">Đã duyệt</button>
-        <button class="chip-btn" [class.active]="filterStatus === OwnerApplicationStatus.REJECTED"
-          (click)="onFilterStatusChange(OwnerApplicationStatus.REJECTED)">Bị từ chối</button>
+        <button class="chip-btn" [class.active]="filterStatus === 'ALL'" (click)="onFilterStatusChange('ALL')">
+          Tất cả
+        </button>
+        @for (opt of OwnerApplicationStatusOp; track opt.value) {
+        <button class="chip-btn" [class.active]="filterStatus === opt.value" (click)="onFilterStatusChange(opt.value)">
+          {{ opt.label }}
+        </button>
+        }
       </div>
     </div>
 
@@ -56,6 +56,17 @@
       </div>
       }
     </div>
+
+    <!-- Paginator -->
+    <mat-paginator
+      [length]="totalItems"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="[5, 10, 15]"
+      [pageIndex]="pageIndex"
+      (page)="onPageChange($event)"
+      showFirstLastButtons
+      class="sidebar-paginator">
+    </mat-paginator>
   </div>
 
   <!-- Detail Panel: Document Review & Actions -->
@@ -154,30 +165,12 @@
         <mat-icon>error_outline</mat-icon> Không có tài liệu hoặc giấy tờ đính kèm.
       </div>
       } @else {
-      <div class="docs-gallery-grid">
+      <div class="docs-btn-row">
         @for (doc of selectedApplication.documents; track doc.ownerApplicationDocumentId) {
-        <mat-card class="doc-card">
-          <mat-card-header class="doc-card-hdr">
-            <mat-card-title class="doc-type-title">{{ getDocumentTypeLabel(doc.documentType) }}</mat-card-title>
-          </mat-card-header>
-          <mat-card-content class="doc-card-body">
-            @if (isImage(doc.fileUrl)) {
-            <div class="img-preview-box">
-              <img [src]="doc.fileUrl" alt="Tài liệu đính kèm" class="img-preview-element">
-            </div>
-            } @else {
-            <div class="file-icon-box">
-              <mat-icon>description</mat-icon>
-              <span>File tài liệu đính kèm</span>
-            </div>
-            }
-          </mat-card-content>
-          <mat-card-actions class="doc-card-actions">
-            <a mat-button color="primary" [href]="doc.fileUrl" target="_blank" class="btn-download">
-              <mat-icon>open_in_new</mat-icon> Mở tài liệu
-            </a>
-          </mat-card-actions>
-        </mat-card>
+        <button mat-stroked-button color="primary" class="doc-btn" (click)="viewDocument(doc)">
+          <mat-icon>visibility</mat-icon>
+          Xem {{ getDocumentTypeLabel(doc.documentType) }}
+        </button>
         }
       </div>
       }
@@ -198,9 +191,14 @@
           <button mat-raised-button color="primary" class="btn-action-approve" (click)="approve(selectedApplication)"
             [disabled]="processingAction">
             @if (processingAction) {
-            <mat-spinner diameter="20" class="btn-spinner"></mat-spinner> Đang xử lý...
+              <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
             } @else {
-            <mat-icon>check</mat-icon> Phê Duyệt Hồ Sơ
+              <mat-icon>check</mat-icon>
+            }
+            @if (processingAction) {
+              Đang xử lý...
+            } @else {
+              Phê Duyệt Hồ Sơ
             }
           </button>
         </div>

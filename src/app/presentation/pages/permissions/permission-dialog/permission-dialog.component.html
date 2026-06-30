@@ -49,13 +49,9 @@
       <!-- Module Field -->
       <mat-form-field appearance="outline">
         <mat-label>Nhóm chức năng (Module)</mat-label>
-        <mat-select formControlName="module">
-          <mat-option *ngFor="let module of modules" [value]="module">
-            {{ module }}
-          </mat-option>
-        </mat-select>
+        <input matInput formControlName="module" placeholder="Ví dụ: USER, ROLE, VENUE...">
         <mat-error *ngIf="permissionForm.get('module')?.hasError('required')">
-          Nhóm chức năng bắt buộc chọn
+          Nhóm chức năng bắt buộc nhập
         </mat-error>
       </mat-form-field>
     </div>

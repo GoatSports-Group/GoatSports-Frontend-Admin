@@ -1,9 +1,9 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { PermissionRepository } from '@application/ports/persistence/permission.repository';
 import { PermissionApi } from '../api/permission.api';
-import { BaseResponse } from '@application/dto/base/base-response';
-import { Permission, PermissionListResult } from '@application/dto/permission/permission.dto';
+import { PageFilter } from '@application/dto/page.filter';
+import { Permission } from '@domain/entity/permission';
 
 @Injectable({
   providedIn: 'root'
@@ -11,23 +11,33 @@ import { Permission, PermissionListResult } from '@application/dto/permission/pe
 export class PermissionRepositoryImpl implements PermissionRepository {
   private permissionApi = inject(PermissionApi);
 
-  getPermissions(page: number, size: number, search?: string): Observable<BaseResponse<PermissionListResult>> {
-    return this.permissionApi.getPermissions(page, size, search);
+  getPermissions(filter: PageFilter): Observable<Permission[]> {
+    return this.permissionApi.getPermissions(filter).pipe(
+      map(response => response.data?.result || [])
+    );
   }
 
-  getPermissionById(id: string): Observable<BaseResponse<Permission>> {
-    return this.permissionApi.getPermissionById(id);
+  getPermissionById(id: string): Observable<Permission> {
+    return this.permissionApi.getPermissionById(id).pipe(
+      map(response => response.data)
+    );
   }
 
-  createPermission(payload: Partial<Permission>): Observable<BaseResponse<Permission>> {
-    return this.permissionApi.createPermission(payload);
+  createPermission(payload: Partial<Permission>): Observable<Permission> {
+    return this.permissionApi.createPermission(payload).pipe(
+      map(response => response.data)
+    );
   }
 
-  updatePermission(payload: Permission): Observable<BaseResponse<Permission>> {
-    return this.permissionApi.updatePermission(payload);
+  updatePermission(payload: Permission): Observable<Permission> {
+    return this.permissionApi.updatePermission(payload).pipe(
+      map(response => response.data)
+    );
   }
 
-  deletePermission(id: string): Observable<BaseResponse<void>> {
-    return this.permissionApi.deletePermission(id);
+  deletePermission(id: string): Observable<void> {
+    return this.permissionApi.deletePermission(id).pipe(
+      map(response => response.data)
+    );
   }
 }

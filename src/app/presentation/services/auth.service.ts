@@ -1,7 +1,5 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, tap } from 'rxjs';
-import { Router } from '@angular/router';
-import { BaseResponse } from '@application/dto/base/base-response';
 import { User } from '@application/dto/user/user.dto';
 import { SessionStateService } from '@presentation/services/session-state.service';
 import { LogoutUseCase } from '@application/usecase/auth/logout.usecase';
@@ -13,7 +11,6 @@ import { GetCurrentUserUseCase } from '@application/usecase/auth/get-current-use
 })
 export class AuthService {
   private sessionStateService = inject(SessionStateService);
-  private router = inject(Router);
 
   private logoutUseCase = inject(LogoutUseCase);
   private refreshTokenUseCase = inject(RefreshTokenUseCase);
@@ -29,7 +26,7 @@ export class AuthService {
     this.loadSession();
   }
 
-  logout(): Observable<BaseResponse<void>> {
+  logout(): Observable<void> {
     return this.logoutUseCase.execute().pipe(
       tap({
         next: () => this.performLogout(),
@@ -38,23 +35,23 @@ export class AuthService {
     );
   }
 
-  refresh(): Observable<BaseResponse<User>> {
+  refresh(): Observable<User> {
     return this.refreshTokenUseCase.execute().pipe(
       tap({
         next: response => {
-          const userProfile = response?.data;
+          const userProfile = response;
           this.sessionStateService.setCurrentUser(userProfile);
         },
-        error: () => {}
+        error: () => { }
       })
     );
   }
 
-  getCurrentUser(): Observable<BaseResponse<User>> {
+  getCurrentUser(): Observable<User> {
     return this.getCurrentUserUseCase.execute().pipe(
       tap({
         next: response => {
-          const userProfile = response?.data;
+          const userProfile = response;
           this.sessionStateService.setCurrentUser(userProfile);
         },
         error: () => {
@@ -83,8 +80,7 @@ export class AuthService {
     this.clearSession();
 
     const authUrl = import.meta.env.NG_APP_AUTH_API_URL;
-    const adminUrl = import.meta.env.NG_APP_ADMIN_API_URL;
-    window.location.href = `${authUrl}/login?redirect=${adminUrl}/admin`;
+    window.location.href = `${authUrl}/login`;
   }
 
   private loadSession() {

@@ -6,6 +6,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RoleDialogComponent } from './role-dialog/role-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
+import { PageEvent } from '@angular/material/paginator';
+import { buildRsqlSearch } from '@shared/utils/api.helper';
 
 @Component({
   selector: 'app-roles',
@@ -23,15 +25,30 @@ export class RolesComponent implements OnInit {
   loading = false;
   searchQuery = '';
 
+  totalItems = 0;
+  pageSize = 10;
+  pageIndex = 0;
+
   ngOnInit(): void {
     this.loadRoles();
   }
 
   loadRoles(): void {
     this.loading = true;
-    this.roleAdminService.getRoles(0, 100, this.searchQuery).subscribe({
-      next: (response) => {
-        this.roles = response?.data?.result || [];
+    this.roleAdminService.getRoles({
+      page: this.pageIndex,
+      size: this.pageSize,
+      filter: buildRsqlSearch(this.searchQuery, ['name', 'description'])
+    }).subscribe({
+      next: (roles) => {
+        this.roles = roles;
+
+        if (roles.length < this.pageSize) {
+          this.totalItems = this.pageIndex * this.pageSize + roles.length;
+        } else {
+          this.totalItems = (this.pageIndex + 2) * this.pageSize;
+        }
+
         this.loading = false;
       },
       error: (err) => {
@@ -45,6 +62,17 @@ export class RolesComponent implements OnInit {
         });
       }
     });
+  }
+
+  onSearch(): void {
+    this.pageIndex = 0;
+    this.loadRoles();
+  }
+
+  onPageChange(event: PageEvent): void {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.loadRoles();
   }
 
   openRoleDialog(role?: Role): void {

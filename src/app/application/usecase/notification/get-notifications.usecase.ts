@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { NotificationRepository, NOTIFICATION_REPOSITORY_TOKEN } from '@application/ports/persistence/notification.repository';
 import { Notification } from '@domain/entity/notification';
+import { PageFilter } from '@application/dto/page.filter';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +12,7 @@ export class GetNotificationsUseCase {
     @Inject(NOTIFICATION_REPOSITORY_TOKEN) private repository: NotificationRepository
   ) { }
 
-  execute(): Observable<Notification[]> {
-    return this.repository.getNotifications();
+  execute(filter: PageFilter): Observable<Notification[]> {
+    return this.repository.getNotifications(filter);
   }
 }

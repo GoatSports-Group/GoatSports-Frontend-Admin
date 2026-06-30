@@ -1,9 +1,10 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { RoleRepository } from '@application/ports/persistence/role.repository';
 import { RoleApi } from '@infrastructure/api/role.api';
-import { BaseResponse } from '@application/dto/base/base-response';
-import { Role, RoleCreateRequest, RoleUpdateRequest, RoleListResult } from '@application/dto/role/role.dto';
+import { RoleCreateRequest, RoleUpdateRequest } from '@application/dto/role/role.dto';
+import { Role } from "@domain/entity/role"
+import { PageFilter } from '@application/dto/page.filter';
 
 @Injectable({
   providedIn: 'root'
@@ -11,31 +12,45 @@ import { Role, RoleCreateRequest, RoleUpdateRequest, RoleListResult } from '@app
 export class RoleRepositoryImpl implements RoleRepository {
   private roleApi = inject(RoleApi);
 
-  getRoles(page: number, size: number, search?: string): Observable<BaseResponse<RoleListResult>> {
-    return this.roleApi.getRoles(page, size, search);
+  getRoles(filter: PageFilter): Observable<Role[]> {
+    return this.roleApi.getRoles(filter).pipe(
+      map(response => response.data?.result || [])
+    );
   }
 
-  getRoleById(id: string): Observable<BaseResponse<Role>> {
-    return this.roleApi.getRoleById(id);
+  getRoleById(id: string): Observable<Role> {
+    return this.roleApi.getRoleById(id).pipe(
+      map(response => response.data)
+    );
   }
 
-  createRole(payload: RoleCreateRequest): Observable<BaseResponse<Role>> {
-    return this.roleApi.createRole(payload);
+  createRole(payload: RoleCreateRequest): Observable<Role> {
+    return this.roleApi.createRole(payload).pipe(
+      map(response => response.data)
+    );
   }
 
-  updateRole(payload: RoleUpdateRequest): Observable<BaseResponse<Role>> {
-    return this.roleApi.updateRole(payload);
+  updateRole(payload: RoleUpdateRequest): Observable<Role> {
+    return this.roleApi.updateRole(payload).pipe(
+      map(response => response.data)
+    );
   }
 
-  deleteRole(id: string): Observable<BaseResponse<void>> {
-    return this.roleApi.deleteRole(id);
+  deleteRole(id: string): Observable<void> {
+    return this.roleApi.deleteRole(id).pipe(
+      map(response => response.data)
+    );
   }
 
-  activateRole(id: string): Observable<BaseResponse<Role>> {
-    return this.roleApi.activateRole(id);
+  activateRole(id: string): Observable<Role> {
+    return this.roleApi.activateRole(id).pipe(
+      map(response => response.data)
+    );
   }
 
-  deactivateRole(id: string): Observable<BaseResponse<Role>> {
-    return this.roleApi.deactivateRole(id);
+  deactivateRole(id: string): Observable<Role> {
+    return this.roleApi.deactivateRole(id).pipe(
+      map(response => response.data)
+    );
   }
 }

@@ -1,0 +1,41 @@
+<div class="preview-dialog-container">
+  <div class="dialog-header">
+    <h2 class="dialog-title">{{ data.title }}</h2>
+    <button mat-icon-button class="close-btn" (click)="close()" aria-label="Close dialog">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="dialog-body">
+    @if (loading) {
+      <div class="loading-box">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Đang tải tài liệu...</p>
+      </div>
+    } @else if (error) {
+      <div class="error-box">
+        <mat-icon color="warn">error</mat-icon>
+        <p>Không thể xem trước tài liệu này trực tiếp.</p>
+      </div>
+    } @else {
+      @if (isImageFile) {
+        <div class="image-viewer">
+          <img [src]="resolvedUrl" alt="Tài liệu" class="preview-img">
+        </div>
+      } @else {
+        <div class="pdf-viewer">
+          <iframe [src]="resolvedUrl" class="preview-iframe" width="100%" height="550px"></iframe>
+        </div>
+      }
+    }
+  </div>
+
+  <div class="dialog-actions">
+    @if (downloadUrl) {
+      <a mat-flat-button color="primary" [href]="downloadUrl" target="_blank" class="view-btn">
+        <mat-icon>open_in_new</mat-icon> Mở tab mới / Tải xuống
+      </a>
+    }
+    <button mat-button (click)="close()" class="cancel-btn">Đóng</button>
+  </div>
+</div>

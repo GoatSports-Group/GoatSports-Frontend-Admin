@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { BaseResponse } from '@application/dto/base/base-response';
-import { Permission, PermissionListResult } from '@application/dto/permission/permission.dto';
+import { Permission } from '@domain/entity/permission';
+import { PageFilter } from '@application/dto/page.filter';
 import { GetPermissionsUseCase } from '@application/usecase/permission/get-permissions.usecase';
 import { GetPermissionByIdUseCase } from '@application/usecase/permission/get-permission-by-id.usecase';
 import { CreatePermissionUseCase } from '@application/usecase/permission/create-permission.usecase';
@@ -18,23 +18,23 @@ export class PermissionService {
   private updatePermissionUseCase = inject(UpdatePermissionUseCase);
   private deletePermissionUseCase = inject(DeletePermissionUseCase);
 
-  getPermissions(page: number = 0, size: number = 200, search?: string): Observable<BaseResponse<PermissionListResult>> {
-    return this.getPermissionsUseCase.execute(page, size, search);
+  getPermissions(filter: PageFilter): Observable<Permission[]> {
+    return this.getPermissionsUseCase.execute(filter);
   }
 
-  getPermissionById(id: string): Observable<BaseResponse<Permission>> {
+  getPermissionById(id: string): Observable<Permission> {
     return this.getPermissionByIdUseCase.execute(id);
   }
 
-  createPermission(payload: Partial<Permission>): Observable<BaseResponse<Permission>> {
+  createPermission(payload: Partial<Permission>): Observable<Permission> {
     return this.createPermissionUseCase.execute(payload);
   }
 
-  updatePermission(payload: Permission): Observable<BaseResponse<Permission>> {
+  updatePermission(payload: Permission): Observable<Permission> {
     return this.updatePermissionUseCase.execute(payload);
   }
 
-  deletePermission(id: string): Observable<BaseResponse<void>> {
+  deletePermission(id: string): Observable<void> {
     return this.deletePermissionUseCase.execute(id);
   }
 }

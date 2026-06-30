@@ -1,8 +1,8 @@
 import { UserRepository, USER_REPOSITORY_TOKEN } from '@application/ports/persistence/user.repository';
 import { Inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { BaseResponse } from '@application/dto/base/base-response';
-import { UserListResult } from '@application/dto/user/user.dto';
+import { User } from '@domain/entity/user';
+import { PageFilter } from '@application/dto/page.filter';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +12,7 @@ export class GetUsersUseCase {
     @Inject(USER_REPOSITORY_TOKEN) private userRepository: UserRepository
   ) { }
 
-  execute(page: number, size: number, search?: string): Observable<BaseResponse<UserListResult>> {
-    return this.userRepository.getUsers(page, size, search);
+  execute(filter: PageFilter): Observable<User[]> {
+    return this.userRepository.getUsers(filter);
   }
 }

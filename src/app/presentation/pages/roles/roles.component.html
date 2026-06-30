@@ -14,13 +14,13 @@
     <mat-card-content class="filter-content">
       <mat-form-field appearance="outline" class="search-field">
         <mat-label>Tìm kiếm vai trò</mat-label>
-        <input matInput [(ngModel)]="searchQuery" (keyup.enter)="loadRoles()" placeholder="Nhập tên hoặc mô tả vai trò...">
-        <button mat-icon-button matSuffix (click)="loadRoles()" aria-label="Search">
+        <input matInput [(ngModel)]="searchQuery" (keyup.enter)="onSearch()" placeholder="Nhập tên hoặc mô tả vai trò...">
+        <button mat-icon-button matSuffix (click)="onSearch()" aria-label="Search">
           <mat-icon>search</mat-icon>
         </button>
       </mat-form-field>
       
-      <button mat-flat-button color="primary" class="search-btn" (click)="loadRoles()">
+      <button mat-flat-button color="primary" class="search-btn" (click)="onSearch()">
         <mat-icon>filter_list</mat-icon> Lọc dữ liệu
       </button>
     </mat-card-content>
@@ -100,5 +100,15 @@
         </table>
       </div>
     </mat-card-content>
+
+    <!-- Paginator -->
+    <mat-paginator 
+      [length]="totalItems"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="[5, 10, 20, 50]"
+      [pageIndex]="pageIndex"
+      (page)="onPageChange($event)"
+      showFirstLastButtons>
+    </mat-paginator>
   </mat-card>
 </div>

@@ -1,8 +1,8 @@
 import { RoleRepository, ROLE_REPOSITORY_TOKEN } from '@application/ports/persistence/role.repository';
 import { Inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { BaseResponse } from '@application/dto/base/base-response';
-import { RoleListResult } from '@application/dto/role/role.dto';
+import { Role } from '@domain/entity/role';
+import { PageFilter } from '@application/dto/page.filter';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +12,7 @@ export class GetRolesUseCase {
     @Inject(ROLE_REPOSITORY_TOKEN) private roleRepository: RoleRepository
   ) { }
 
-  execute(page: number, size: number, search?: string): Observable<BaseResponse<RoleListResult>> {
-    return this.roleRepository.getRoles(page, size, search);
+  execute(filter: PageFilter): Observable<Role[]> {
+    return this.roleRepository.getRoles(filter);
   }
 }

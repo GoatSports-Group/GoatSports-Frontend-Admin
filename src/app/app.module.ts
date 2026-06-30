@@ -15,9 +15,6 @@ import { AUTH_REPOSITORY_TOKEN } from '@application/ports/persistence/auth.repos
 import { USER_REPOSITORY_TOKEN } from '@application/ports/persistence/user.repository';
 import { ROLE_REPOSITORY_TOKEN } from '@application/ports/persistence/role.repository';
 import { PERMISSION_REPOSITORY_TOKEN } from '@application/ports/persistence/permission.repository';
-import { BOOKING_REPOSITORY_TOKEN } from '@application/ports/persistence/booking.repository';
-import { REVIEW_REPOSITORY_TOKEN } from '@application/ports/persistence/review.repository';
-import { VENUE_REPOSITORY_TOKEN } from '@application/ports/persistence/venue.repository';
 import { OWNER_APPLICATION_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-application.repository';
 import { NOTIFICATION_REPOSITORY_TOKEN } from '@application/ports/persistence/notification.repository';
 import { WEBSOCKET_SERVICE_TOKEN } from '@application/ports/websocket.service';
@@ -26,12 +23,10 @@ import { AuthRepositoryImpl } from '@infrastructure/repositories/auth.repository
 import { UserRepositoryImpl } from '@infrastructure/repositories/user.repository.impl';
 import { RoleRepositoryImpl } from '@infrastructure/repositories/role.repository.impl';
 import { PermissionRepositoryImpl } from '@infrastructure/repositories/permission.repository.impl';
-import { BookingRepositoryImpl } from '@infrastructure/repositories/booking.repository.impl';
-import { ReviewRepositoryImpl } from '@infrastructure/repositories/review.repository.impl';
-import { VenueRepositoryImpl } from '@infrastructure/repositories/venue.repository.impl';
 import { OwnerApplicationRepositoryImpl } from '@infrastructure/repositories/owner-application.repository.impl';
 import { NotificationRepositoryImpl } from '@infrastructure/repositories/notification.repository.impl';
 import { StompWebSocketService } from '@infrastructure/websocket/stomp-websocket.service';
+import { IMAGE_CONFIG } from '@angular/common';
 
 @NgModule({
   declarations: [
@@ -58,12 +53,16 @@ import { StompWebSocketService } from '@infrastructure/websocket/stomp-websocket
     { provide: USER_REPOSITORY_TOKEN, useClass: UserRepositoryImpl },
     { provide: ROLE_REPOSITORY_TOKEN, useClass: RoleRepositoryImpl },
     { provide: PERMISSION_REPOSITORY_TOKEN, useClass: PermissionRepositoryImpl },
-    { provide: BOOKING_REPOSITORY_TOKEN, useClass: BookingRepositoryImpl },
-    { provide: REVIEW_REPOSITORY_TOKEN, useClass: ReviewRepositoryImpl },
-    { provide: VENUE_REPOSITORY_TOKEN, useClass: VenueRepositoryImpl },
     { provide: OWNER_APPLICATION_REPOSITORY_TOKEN, useClass: OwnerApplicationRepositoryImpl },
     { provide: NOTIFICATION_REPOSITORY_TOKEN, useClass: NotificationRepositoryImpl },
-    { provide: WEBSOCKET_SERVICE_TOKEN, useClass: StompWebSocketService }
+    { provide: WEBSOCKET_SERVICE_TOKEN, useClass: StompWebSocketService },
+    {
+      provide: IMAGE_CONFIG,
+      useValue: {
+        disableImageSizeWarning: true,
+        disableImageLazyLoadWarning: true
+      }
+    }
   ],
   bootstrap: [AppComponent]
 })

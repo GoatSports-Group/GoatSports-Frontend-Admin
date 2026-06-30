@@ -1,8 +1,7 @@
 import { RoleRepository, ROLE_REPOSITORY_TOKEN } from '@application/ports/persistence/role.repository';
 import { Inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { BaseResponse } from '@application/dto/base/base-response';
-import { Role } from '@application/dto/role/role.dto';
+import { Role } from '@domain/entity/role';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +11,7 @@ export class DeactivateRoleUseCase {
     @Inject(ROLE_REPOSITORY_TOKEN) private roleRepository: RoleRepository
   ) { }
 
-  execute(id: string): Observable<BaseResponse<Role>> {
+  execute(id: string): Observable<Role> {
     return this.roleRepository.deactivateRole(id);
   }
 }

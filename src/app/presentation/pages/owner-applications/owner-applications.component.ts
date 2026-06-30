@@ -7,6 +7,10 @@ import { OwnerApplication, OWNER_APPLICATION_STATUS_OPTIONS, BUSINESS_TYPE_OPTIO
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RejectReasonDialogComponent } from '@presentation/pages/owner-applications/owner-application-dialog/reject-reason-dialog.component';
+import { PageEvent } from '@angular/material/paginator';
+import { buildRsqlSearch } from '@shared/utils/api.helper';
+import { GetFileUrlUseCase } from '@application/usecase/owner-application/get-file-url.usecase';
+import { DocumentPreviewDialogComponent } from '@presentation/pages/owner-applications/document-preview-dialog/document-preview-dialog.component';
 
 @Component({
   selector: 'app-admin-owner-applications',
@@ -18,13 +22,15 @@ export class OwnerApplicationsComponent implements OnInit {
   private getDetailUseCase = inject(GetOwnerApplicationDetailUseCase);
   private approveUseCase = inject(ApproveOwnerApplicationUseCase);
   private rejectUseCase = inject(RejectOwnerApplicationUseCase);
+  private getFileUrlUseCase = inject(GetFileUrlUseCase);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
+
+  readonly OwnerApplicationStatus = OwnerApplicationStatus;
   readonly OwnerApplicationStatusOp = OWNER_APPLICATION_STATUS_OPTIONS;
   readonly BusinessTypeOp = BUSINESS_TYPE_OPTIONS;
   readonly DocumentTypeOp = DOCUMENT_TYPE_OPTIONS;
 
-  applications: OwnerApplication[] = [];
   filteredApplications: OwnerApplication[] = [];
   selectedApplication: OwnerApplication | null = null;
 
@@ -32,21 +38,12 @@ export class OwnerApplicationsComponent implements OnInit {
   loadingDetail = false;
   processingAction = false;
 
-  filterStatus: 'ALL' | OwnerApplicationStatus = 'ALL';
+  filterStatus: string = 'ALL';
   searchQuery = '';
-  readonly OwnerApplicationStatus = OwnerApplicationStatus;
 
-  getStatusLabel(status: OwnerApplicationStatus): string {
-    return OWNER_APPLICATION_STATUS_OPTIONS.find(o => o.value === status)?.label || status;
-  }
-
-  getDocumentTypeLabel(type: DocumentType): string {
-    return DOCUMENT_TYPE_OPTIONS.find(o => o.value === type)?.label || type;
-  }
-
-  getBusinessTypeLabel(type: BusinessType): string {
-    return BUSINESS_TYPE_OPTIONS.find(o => o.value === type)?.label || type;
-  }
+  totalItems = 0;
+  pageSize = 10;
+  pageIndex = 0;
 
   ngOnInit() {
     this.loadApplications();
@@ -54,17 +51,29 @@ export class OwnerApplicationsComponent implements OnInit {
 
   loadApplications() {
     this.loadingList = true;
-    this.getAllUseCase.execute().subscribe({
+    const filterQuery = this.buildFilterQuery();
+
+    this.getAllUseCase.execute({
+      page: this.pageIndex,
+      size: this.pageSize,
+      filter: filterQuery
+    }).subscribe({
       next: (data) => {
-        this.applications = this.sortApplications(data);
-        this.applyFilters();
+        this.filteredApplications = this.sortApplications(data);
+
+        if (data.length < this.pageSize) {
+          this.totalItems = this.pageIndex * this.pageSize + data.length;
+        } else {
+          this.totalItems = (this.pageIndex + 2) * this.pageSize;
+        }
+
         this.loadingList = false;
 
-        const pending = this.filteredApplications.find(a => a.status === OwnerApplicationStatus.PENDING);
-        if (pending) {
-          this.selectApplication(pending);
-        } else if (this.filteredApplications.length > 0) {
-          this.selectApplication(this.filteredApplications[0]);
+        const firstApp = this.filteredApplications.length > 0 ? this.filteredApplications[0] : null;
+        if (firstApp) {
+          this.selectApplication(firstApp);
+        } else {
+          this.selectedApplication = null;
         }
       },
       error: (err) => {
@@ -77,6 +86,20 @@ export class OwnerApplicationsComponent implements OnInit {
     });
   }
 
+  buildFilterQuery(): string {
+    const parts: string[] = [];
+
+    if (this.filterStatus && this.filterStatus !== 'ALL') {
+      parts.push(`status : '${this.filterStatus}'`);
+    }
+
+    const searchPart = buildRsqlSearch(this.searchQuery, ['fullName', 'email', 'phone']);
+    if (searchPart) {
+      parts.push(`(${searchPart})`);
+    }
+    return parts.join(' and ');
+  }
+
   sortApplications(list: OwnerApplication[]): OwnerApplication[] {
     return [...list].sort((a, b) => {
       if (a.status === OwnerApplicationStatus.PENDING && b.status !== OwnerApplicationStatus.PENDING) {
@@ -87,6 +110,35 @@ export class OwnerApplicationsComponent implements OnInit {
       }
       return 0;
     });
+  }
+
+  onPageChange(event: PageEvent): void {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.loadApplications();
+  }
+
+  onFilterStatusChange(status: string) {
+    this.filterStatus = status;
+    this.pageIndex = 0;
+    this.loadApplications();
+  }
+
+  onSearchChange() {
+    this.pageIndex = 0;
+    this.loadApplications();
+  }
+
+  getStatusLabel(status: OwnerApplicationStatus): string {
+    return OWNER_APPLICATION_STATUS_OPTIONS.find(o => o.value === status)?.label || status;
+  }
+
+  getDocumentTypeLabel(type: DocumentType): string {
+    return DOCUMENT_TYPE_OPTIONS.find(o => o.value === type)?.label || type;
+  }
+
+  getBusinessTypeLabel(type: BusinessType): string {
+    return BUSINESS_TYPE_OPTIONS.find(o => o.value === type)?.label || type;
   }
 
   selectApplication(app: OwnerApplication) {
@@ -104,30 +156,6 @@ export class OwnerApplicationsComponent implements OnInit {
     });
   }
 
-  applyFilters() {
-    this.filteredApplications = this.applications.filter(app => {
-      const matchesStatus = this.filterStatus === 'ALL' || app.status === this.filterStatus;
-      const query = this.searchQuery.toLowerCase().trim();
-      const matchesSearch = !query ||
-        app.fullName.toLowerCase().includes(query) ||
-        app.businessName.toLowerCase().includes(query) ||
-        app.email.toLowerCase().includes(query) ||
-        app.phone.includes(query) ||
-        app.taxCode.includes(query);
-
-      return matchesStatus && matchesSearch;
-    });
-  }
-
-  onFilterStatusChange(status: 'ALL' | OwnerApplicationStatus) {
-    this.filterStatus = status;
-    this.applyFilters();
-  }
-
-  onSearchChange() {
-    this.applyFilters();
-  }
-
   approve(app: OwnerApplication) {
     if (this.processingAction) return;
 
@@ -138,10 +166,9 @@ export class OwnerApplicationsComponent implements OnInit {
           duration: 5000
         });
 
-        this.applications = this.sortApplications(
-          this.applications.map(a => a.ownerApplicationId === app.ownerApplicationId ? updatedApp : a)
+        this.filteredApplications = this.sortApplications(
+          this.filteredApplications.map(a => a.ownerApplicationId === app.ownerApplicationId ? updatedApp : a)
         );
-        this.applyFilters();
         this.selectedApplication = updatedApp;
         this.processingAction = false;
       },
@@ -173,10 +200,9 @@ export class OwnerApplicationsComponent implements OnInit {
               duration: 5000
             });
 
-            this.applications = this.sortApplications(
-              this.applications.map(a => a.ownerApplicationId === app.ownerApplicationId ? updatedApp : a)
+            this.filteredApplications = this.sortApplications(
+              this.filteredApplications.map(a => a.ownerApplicationId === app.ownerApplicationId ? updatedApp : a)
             );
-            this.applyFilters();
             this.selectedApplication = updatedApp;
             this.processingAction = false;
           },
@@ -202,5 +228,37 @@ export class OwnerApplicationsComponent implements OnInit {
       cleanUrl.endsWith('.webp') ||
       cleanUrl.endsWith('.gif') ||
       url.startsWith('data:image');
+  }
+
+  openDocument(fileUrlOrKey: string): void {
+    if (fileUrlOrKey.startsWith('http://') || fileUrlOrKey.startsWith('https://') || fileUrlOrKey.startsWith('data:image')) {
+      window.open(fileUrlOrKey, '_blank');
+      return;
+    }
+
+    this.getFileUrlUseCase.execute(fileUrlOrKey).subscribe({
+      next: (presignedUrl) => {
+        if (presignedUrl) {
+          window.open(presignedUrl, '_blank');
+        } else {
+          this.snackBar.open('Không thể sinh link tải file!', 'Đóng', { duration: 3000 });
+        }
+      },
+      error: (err) => {
+        console.error(err);
+        this.snackBar.open('Có lỗi xảy ra khi lấy link file!', 'Đóng', { duration: 3000 });
+      }
+    });
+  }
+
+  viewDocument(doc: any): void {
+    this.dialog.open(DocumentPreviewDialogComponent, {
+      width: '800px',
+      disableClose: false,
+      data: {
+        title: this.getDocumentTypeLabel(doc.documentType),
+        fileUrl: doc.fileUrl
+      }
+    });
   }
 }

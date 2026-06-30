@@ -5,6 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { AssignRoleDialogComponent } from '@presentation/pages/users/assign-role-dialog/assign-role-dialog.component';
+import { buildRsqlSearch } from '@shared/utils/api.helper';
 
 @Component({
   selector: 'app-users',
@@ -22,7 +23,6 @@ export class UsersComponent implements OnInit {
   loading = false;
   searchQuery = '';
 
-  // Paging metadata
   totalItems = 0;
   pageSize = 10;
   pageIndex = 0;
@@ -35,11 +35,18 @@ export class UsersComponent implements OnInit {
 
   loadUsers(): void {
     this.loading = true;
-    this.userAdminService.getUsers(this.pageIndex, this.pageSize, this.searchQuery).subscribe({
-      next: (response) => {
-        const data = response?.data;
-        this.users = data?.result || [];
-        this.totalItems = data?.meta?.total || 0;
+    this.userAdminService.getUsers({
+      page: this.pageIndex,
+      size: this.pageSize,
+      filter: buildRsqlSearch(this.searchQuery, ['fullName', 'username', 'email'])
+    }).subscribe({
+      next: (users) => {
+        this.users = users;
+        if (users.length < this.pageSize) {
+          this.totalItems = this.pageIndex * this.pageSize + users.length;
+        } else {
+          this.totalItems = (this.pageIndex + 2) * this.pageSize;
+        }
         this.loading = false;
       },
       error: (err) => {

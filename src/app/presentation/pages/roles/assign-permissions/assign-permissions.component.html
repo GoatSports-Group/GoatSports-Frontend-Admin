@@ -5,7 +5,7 @@
         <mat-icon>arrow_back</mat-icon> Quay lại danh sách
       </div>
       <h1>Cấu Hình Quyền Hạn: <span class="role-highlight">{{ role?.name }}</span></h1>
-      <p>Bật/tắt các quyền truy cập API được phân nhóm theo tính năng cho vai trò này.</p>
+      <p>Bật/tắt các quyền truy cập API được gán cho vai trò này.</p>
     </div>
 
     <div class="header-actions">
@@ -16,61 +16,114 @@
     </div>
   </div>
 
-  <!-- Loading State -->
-  <div class="loading-overlay" *ngIf="loading">
-    <mat-spinner diameter="50"></mat-spinner>
-    <p>Đang tải danh sách quyền hạn...</p>
-  </div>
-
-  <div class="content-body" *ngIf="!loading">
-    
-    <!-- Module Grid -->
-    <div class="modules-grid">
-      <mat-card class="module-card" *ngFor="let module of moduleKeys">
-        <mat-card-header class="module-card-header">
-          <div class="module-title-box">
-            <mat-icon class="module-icon">folder_open</mat-icon>
-            <span class="module-name">{{ module }}</span>
-          </div>
-          
-          <div class="module-header-actions">
-            <!-- Select All / Clear Checkbox -->
-            <mat-checkbox 
-              [checked]="isModuleAllSelected(module)" 
-              [indeterminate]="isModulePartiallySelected(module)"
-              (change)="toggleSelectAll(module, $event.checked)">
-              Chọn tất cả
-            </mat-checkbox>
-          </div>
-        </mat-card-header>
-
-        <mat-divider></mat-divider>
-
-        <mat-card-content class="module-card-body">
-          <div class="permissions-list">
-            <div class="permission-item" *ngFor="let item of groupedPermissions[module]">
-              <mat-checkbox [(ngModel)]="item.checked" class="permission-checkbox">
-                <div class="permission-info-box">
-                  <span class="permission-name">{{ item.permission.name }}</span>
-                  <div class="permission-endpoint-tag">
-                    <span class="method-tag" [attr.data-method]="item.permission.method">{{ item.permission.method }}</span>
-                    <span class="path-text font-mono">{{ item.permission.apiPath }}</span>
-                  </div>
-                </div>
-              </mat-checkbox>
-            </div>
-          </div>
-        </mat-card-content>
-      </mat-card>
-    </div>
-
-    <!-- Bottom Actions -->
-    <div class="bottom-actions">
-      <button mat-button (click)="onCancel()" [disabled]="saving">Quay lại</button>
-      <button mat-flat-button color="primary" class="save-btn" (click)="onSave()" [disabled]="saving">
-        <mat-icon>save</mat-icon> Lưu thiết lập
+  <!-- Search & Filter Controls -->
+  <mat-card class="filter-card">
+    <mat-card-content class="filter-content">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Tìm kiếm quyền hạn</mat-label>
+        <input matInput [(ngModel)]="searchQuery" (keyup.enter)="onSearch()" placeholder="Nhập tên, api path, method, module...">
+        <button mat-icon-button matSuffix (click)="onSearch()" aria-label="Search">
+          <mat-icon>search</mat-icon>
+        </button>
+      </mat-form-field>
+      
+      <button mat-flat-button color="primary" class="search-btn" (click)="onSearch()">
+        <mat-icon>filter_list</mat-icon> Lọc dữ liệu
       </button>
+
+      <span class="selection-badge">
+        <mat-icon>check_circle</mat-icon> {{ selectedPermissionIds.size }} quyền hạn được chọn
+      </span>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Table Card -->
+  <mat-card class="table-card">
+    <div class="table-progress-bar" *ngIf="loading">
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
     </div>
 
+    <mat-card-content class="table-wrapper-content">
+      <!-- Empty State -->
+      <div class="empty-state" *ngIf="!loading && permissions.length === 0">
+        <mat-icon class="empty-icon">security</mat-icon>
+        <h3>Không tìm thấy quyền hạn nào</h3>
+        <p>Thử điều chỉnh từ khóa tìm kiếm để bắt đầu.</p>
+      </div>
+
+      <div class="table-scroll" *ngIf="permissions.length > 0">
+        <table mat-table [dataSource]="permissions" class="permissions-table">
+          
+          <!-- Checkbox Column -->
+          <ng-container matColumnDef="select">
+            <th mat-header-cell *matHeaderCellDef class="checkbox-cell">
+              <mat-checkbox 
+                (change)="toggleAllOnPage($event.checked)"
+                [checked]="isAllOnPageSelected()"
+                [indeterminate]="isSomeOnPageSelected()">
+              </mat-checkbox>
+            </th>
+            <td mat-cell *matCellDef="let row" class="checkbox-cell">
+              <mat-checkbox 
+                (click)="$event.stopPropagation()"
+                (change)="togglePermission(row.permissionId, $event.checked)"
+                [checked]="isPermissionSelected(row.permissionId)">
+              </mat-checkbox>
+            </td>
+          </ng-container>
+
+          <!-- Permission Name Column -->
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef> Tên quyền hạn </th>
+            <td mat-cell *matCellDef="let p" class="font-bold">
+              {{ p.name }}
+            </td>
+          </ng-container>
+
+          <!-- API Path Column -->
+          <ng-container matColumnDef="apiPath">
+            <th mat-header-cell *matHeaderCellDef> Đường dẫn API </th>
+            <td mat-cell *matCellDef="let p" class="font-mono path-cell"> {{ p.apiPath }} </td>
+          </ng-container>
+
+          <!-- Method Column -->
+          <ng-container matColumnDef="method">
+            <th mat-header-cell *matHeaderCellDef class="text-center"> Phương thức </th>
+            <td mat-cell *matCellDef="let p" class="text-center">
+              <span class="method-tag" [attr.data-method]="p.method">{{ p.method }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Module Column -->
+          <ng-container matColumnDef="module">
+            <th mat-header-cell *matHeaderCellDef class="text-center"> Nhóm (Module) </th>
+            <td mat-cell *matCellDef="let p" class="text-center">
+              <span class="module-badge">{{ p.module || 'OTHER' }}</span>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="togglePermission(row.permissionId, !isPermissionSelected(row.permissionId))" class="clickable-row"></tr>
+        </table>
+      </div>
+    </mat-card-content>
+
+    <!-- Paginator -->
+    <mat-paginator 
+      [length]="totalItems"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="[5, 10, 20, 50]"
+      [pageIndex]="pageIndex"
+      (page)="onPageChange($event)"
+      showFirstLastButtons>
+    </mat-paginator>
+  </mat-card>
+
+  <!-- Bottom Actions -->
+  <div class="bottom-actions" *ngIf="!loading">
+    <button mat-button (click)="onCancel()" [disabled]="saving">Quay lại</button>
+    <button mat-flat-button color="primary" class="save-btn" (click)="onSave()" [disabled]="saving">
+      <mat-icon>save</mat-icon> Lưu thiết lập
+    </button>
   </div>
 </div>

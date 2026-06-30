@@ -13,10 +13,8 @@ import { RoleDialogComponent } from '@presentation/pages/roles/role-dialog/role-
 import { AssignPermissionsComponent } from '@presentation/pages/roles/assign-permissions/assign-permissions.component';
 import { PermissionsComponent } from '@presentation/pages/permissions/permissions.component';
 import { PermissionDialogComponent } from '@presentation/pages/permissions/permission-dialog/permission-dialog.component';
-import { VenuesComponent } from '@presentation/pages/venues/venues.component';
-import { BookingsComponent } from '@presentation/pages/bookings/bookings.component';
-import { ReviewsComponent } from '@presentation/pages/reviews/reviews.component';
 import { OwnerApplicationsComponent } from '@presentation/pages/owner-applications/owner-applications.component';
+import { DocumentPreviewDialogComponent } from '@presentation/pages/owner-applications/document-preview-dialog/document-preview-dialog.component';
 
 @NgModule({
   declarations: [
@@ -29,10 +27,8 @@ import { OwnerApplicationsComponent } from '@presentation/pages/owner-applicatio
     AssignPermissionsComponent,
     PermissionsComponent,
     PermissionDialogComponent,
-    VenuesComponent,
-    BookingsComponent,
-    ReviewsComponent,
-    OwnerApplicationsComponent
+    OwnerApplicationsComponent,
+    DocumentPreviewDialogComponent
   ],
   imports: [
     CommonModule,

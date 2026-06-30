@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { BaseResponse } from '@application/dto/base/base-response';
-import { User, UserListResult } from '@application/dto/user/user.dto';
+import { User } from '@domain/entity/user';
+import { PageFilter } from '@application/dto/page.filter';
 import { GetUsersUseCase } from '@application/usecase/user/get-users.usecase';
 import { AssignRoleUseCase } from '@application/usecase/user/assign-role.usecase';
 
@@ -12,11 +12,11 @@ export class UserService {
   private getUsersUseCase = inject(GetUsersUseCase);
   private assignRoleUseCase = inject(AssignRoleUseCase);
 
-  getUsers(page: number = 0, size: number = 10, search?: string): Observable<BaseResponse<UserListResult>> {
-    return this.getUsersUseCase.execute(page, size, search);
+  getUsers(filter: PageFilter): Observable<User[]> {
+    return this.getUsersUseCase.execute(filter);
   }
 
-  assignRole(userId: string, roleId: string): Observable<BaseResponse<User>> {
+  assignRole(userId: string, roleId: string): Observable<User> {
     return this.assignRoleUseCase.execute(userId, roleId);
   }
 }

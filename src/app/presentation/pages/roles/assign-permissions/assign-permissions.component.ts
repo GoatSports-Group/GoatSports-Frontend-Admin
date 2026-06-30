@@ -6,15 +6,8 @@ import { PermissionService } from '@presentation/services/permission.service';
 import { Role } from '@application/dto/role/role.dto';
 import { Permission } from '@application/dto/permission/permission.dto';
 import { MatSnackBar } from '@angular/material/snack-bar';
-
-interface PermissionSelection {
-  permission: Permission;
-  checked: boolean;
-}
-
-interface GroupedPermissions {
-  [module: string]: PermissionSelection[];
-}
+import { PageEvent } from '@angular/material/paginator';
+import { buildRsqlSearch } from '@shared/utils/api.helper';
 
 @Component({
   selector: 'app-assign-permissions',
@@ -30,96 +23,121 @@ export class AssignPermissionsComponent implements OnInit {
 
   roleId = '';
   role?: Role;
-  groupedPermissions: GroupedPermissions = {};
-  moduleKeys: string[] = [];
+  permissions: Permission[] = [];
+  selectedPermissionIds = new Set<string>();
 
+  displayedColumns: string[] = ['select', 'name', 'apiPath', 'method', 'module'];
   loading = true;
   saving = false;
+  searchQuery = '';
+
+  totalItems = 0;
+  pageSize = 10;
+  pageIndex = 0;
 
   ngOnInit(): void {
     this.roleId = this.route.snapshot.paramMap.get('id') || '';
     if (this.roleId) {
-      this.loadData();
+      this.loadRoleAndPermissions();
     } else {
       this.router.navigate(['/admin/roles']);
     }
   }
 
-  loadData(): void {
+  loadRoleAndPermissions(): void {
     this.loading = true;
 
-    forkJoin({
-      roleResponse: this.roleAdminService.getRoleById(this.roleId),
-      permissionsResponse: this.permissionAdminService.getPermissions(0, 1000)
-    }).subscribe({
-      next: (res) => {
-        this.role = res.roleResponse.data;
-        const allPermissions = res.permissionsResponse.data?.result || [];
+    if (!this.role) {
+      forkJoin({
+        role: this.roleAdminService.getRoleById(this.roleId),
+        permissionsPage: this.permissionAdminService.getPermissions({
+          page: this.pageIndex,
+          size: this.pageSize,
+          filter: buildRsqlSearch(this.searchQuery, ['name', 'apiPath', 'method', 'module'])
+        })
+      }).subscribe({
+        next: (res) => {
+          this.role = res.role;
+          this.selectedPermissionIds = new Set(this.role?.permissions?.map(p => p.permissionId) || []);
+          this.permissions = res.permissionsPage || [];
 
-        // Map role's current permissions into a lookup set
-        const activePermissionIds = new Set(this.role?.permissions?.map(p => p.permissionId) || []);
-
-        this.groupPermissions(allPermissions, activePermissionIds);
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('Failed to load role or permission details:', err);
-        this.loading = false;
-        this.snackBar.open('Không thể tải thông tin vai trò hoặc quyền hạn!', 'Đóng', {
-          duration: 5000,
-          horizontalPosition: 'end',
-          verticalPosition: 'top',
-          panelClass: ['snackbar-error']
-        });
-        this.router.navigate(['/admin/roles']);
-      }
-    });
-  }
-
-  private groupPermissions(allPermissions: Permission[], activePermissionIds: Set<string>): void {
-    const grouped: GroupedPermissions = {};
-
-    allPermissions.forEach(permission => {
-      // Normalize module name to uppercase for clean grouping
-      const moduleName = (permission.module || 'OTHER').toUpperCase().trim();
-
-      if (!grouped[moduleName]) {
-        grouped[moduleName] = [];
-      }
-
-      grouped[moduleName].push({
-        permission,
-        checked: activePermissionIds.has(permission.permissionId)
+          if (this.permissions.length < this.pageSize) {
+            this.totalItems = this.pageIndex * this.pageSize + this.permissions.length;
+          } else {
+            this.totalItems = (this.pageIndex + 2) * this.pageSize;
+          }
+          this.loading = false;
+        },
+        error: (err) => this.handleLoadError(err)
       });
-    });
-
-    // Sort permissions within each module by name
-    Object.keys(grouped).forEach(key => {
-      grouped[key].sort((a, b) => a.permission.name.localeCompare(b.permission.name));
-    });
-
-    this.groupedPermissions = grouped;
-    // Sort modules alphabetically so they display nicely
-    this.moduleKeys = Object.keys(grouped).sort();
-  }
-
-  toggleSelectAll(module: string, selectAll: boolean): void {
-    const list = this.groupedPermissions[module];
-    if (list) {
-      list.forEach(item => item.checked = selectAll);
+    } else {
+      this.permissionAdminService.getPermissions({
+        page: this.pageIndex,
+        size: this.pageSize,
+        filter: buildRsqlSearch(this.searchQuery, ['name', 'apiPath', 'method', 'module'])
+      }).subscribe({
+        next: (permissions) => {
+          this.permissions = permissions;
+          if (permissions.length < this.pageSize) {
+            this.totalItems = this.pageIndex * this.pageSize + permissions.length;
+          } else {
+            this.totalItems = (this.pageIndex + 2) * this.pageSize;
+          }
+          this.loading = false;
+        },
+        error: (err) => this.handleLoadError(err)
+      });
     }
   }
 
-  isModuleAllSelected(module: string): boolean {
-    const list = this.groupedPermissions[module];
-    return list ? list.every(item => item.checked) : false;
+  handleLoadError(err: any): void {
+    console.error('Failed to load role or permission details:', err);
+    this.loading = false;
+    this.snackBar.open('Không thể tải thông tin vai trò hoặc quyền hạn!', 'Đóng', {
+      duration: 5000,
+      horizontalPosition: 'end',
+      verticalPosition: 'top',
+      panelClass: ['snackbar-error']
+    });
+    this.router.navigate(['/admin/roles']);
   }
 
-  isModulePartiallySelected(module: string): boolean {
-    const list = this.groupedPermissions[module];
-    if (!list) return false;
-    const selectedCount = list.filter(item => item.checked).length;
-    return selectedCount > 0 && selectedCount < list.length;
+  onSearch(): void {
+    this.pageIndex = 0;
+    this.loadRoleAndPermissions();
+  }
+
+  onPageChange(event: PageEvent): void {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.loadRoleAndPermissions();
+  }
+
+  isPermissionSelected(permissionId: string): boolean {
+    return this.selectedPermissionIds.has(permissionId);
+  }
+
+  togglePermission(permissionId: string, checked: boolean): void {
+    if (checked) {
+      this.selectedPermissionIds.add(permissionId);
+    } else {
+      this.selectedPermissionIds.delete(permissionId);
+    }
+  }
+
+  toggleAllOnPage(checked: boolean): void {
+    this.permissions.forEach(p => {
+      this.togglePermission(p.permissionId, checked);
+    });
+  }
+
+  isAllOnPageSelected(): boolean {
+    return this.permissions.length > 0 && this.permissions.every(p => this.isPermissionSelected(p.permissionId));
+  }
+
+  isSomeOnPageSelected(): boolean {
+    const selectedCount = this.permissions.filter(p => this.isPermissionSelected(p.permissionId)).length;
+    return selectedCount > 0 && selectedCount < this.permissions.length;
   }
 
   onSave(): void {
@@ -127,22 +145,12 @@ export class AssignPermissionsComponent implements OnInit {
 
     this.saving = true;
 
-    // Collect all checked permission IDs
-    const selectedPermissionIds: string[] = [];
-    this.moduleKeys.forEach(module => {
-      this.groupedPermissions[module].forEach(item => {
-        if (item.checked) {
-          selectedPermissionIds.push(item.permission.permissionId);
-        }
-      });
-    });
-
     const payload = {
       roleId: this.role.roleId,
       name: this.role.name,
       description: this.role.description,
       active: this.role.active,
-      permissionIds: selectedPermissionIds
+      permissionIds: Array.from(this.selectedPermissionIds)
     };
 
     this.roleAdminService.updateRole(payload).subscribe({

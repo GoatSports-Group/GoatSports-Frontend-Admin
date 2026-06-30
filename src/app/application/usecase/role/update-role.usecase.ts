@@ -1,8 +1,8 @@
 import { RoleRepository, ROLE_REPOSITORY_TOKEN } from '@application/ports/persistence/role.repository';
 import { Inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { BaseResponse } from '@application/dto/base/base-response';
-import { Role, RoleUpdateRequest } from '@application/dto/role/role.dto';
+import { RoleUpdateRequest } from '@application/dto/role/role.dto';
+import { Role } from '@domain/entity/role';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +12,7 @@ export class UpdateRoleUseCase {
     @Inject(ROLE_REPOSITORY_TOKEN) private roleRepository: RoleRepository
   ) { }
 
-  execute(payload: RoleUpdateRequest): Observable<BaseResponse<Role>> {
+  execute(payload: RoleUpdateRequest): Observable<Role> {
     return this.roleRepository.updateRole(payload);
   }
 }

@@ -1,8 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { BaseResponse } from '@application/dto/base/base-response';
-import { Role, RoleCreateRequest, RoleUpdateRequest, RoleListResult } from '@application/dto/role/role.dto';
+import { BaseListResponse, BaseResponse } from '@application/dto/base/base-response';
+import { Role, RoleCreateRequest, RoleUpdateRequest } from '@application/dto/role/role.dto';
+import { PageFilter } from '@application/dto/page.filter';
+import { buildPageParams } from '@shared/utils/api.helper';
 
 @Injectable({
   providedIn: 'root'
@@ -11,18 +13,9 @@ export class RoleApi {
   private http = inject(HttpClient);
   private apiBase = import.meta.env.NG_APP_API_URL;
 
-  getRoles(page: number, size: number, search?: string): Observable<BaseResponse<RoleListResult>> {
-    let params = new HttpParams()
-      .set('page', page.toString())
-      .set('size', size.toString());
-
-    if (search && search.trim() !== '') {
-      const cleanSearch = search.trim().replace(/'/g, "\\'");
-      const filterVal = `name ~ '*${cleanSearch}*' or description ~ '*${cleanSearch}*'`;
-      params = params.set('filter', filterVal);
-    }
-
-    return this.http.get<BaseResponse<RoleListResult>>(`${this.apiBase}/auth-service/api/v1/admin/roles`, { params });
+  getRoles(filter: PageFilter): Observable<BaseResponse<BaseListResponse<Role>>> {
+    const params = buildPageParams(filter);
+    return this.http.get<BaseResponse<BaseListResponse<Role>>>(`${this.apiBase}/auth-service/api/v1/admin/roles`, { params });
   }
 
   getRoleById(id: string): Observable<BaseResponse<Role>> {

@@ -1,299 +1,59 @@
-.dashboard-wrapper {
+.dev-container {
   display: flex;
-  flex-direction: column;
-  gap: 30px;
-}
-
-.dashboard-header-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
-
-  .header-text {
-    h1 {
-      font-size: 28px;
-      font-weight: 800;
-      color: #010000;
-      margin-bottom: 6px;
-    }
-
-    p {
-      color: #718096;
-      font-size: 14px;
-    }
-  }
-
-  .refresh-btn {
-    background-color: var(--primary);
-    color: #ffffff;
-    font-weight: 600;
-    border-radius: 6px;
-    box-shadow: 0 4px 10px rgba(5, 150, 105, 0.2);
-
-    &:hover {
-      background-color: var(--primary-hover);
-    }
-  }
-}
-
-.loading-overlay {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
-  padding: 60px 0;
-  gap: 16px;
-  color: #718096;
+  align-items: center;
+  min-height: calc(100vh - 160px);
+  padding: 20px;
 }
 
-.error-container {
+.dev-card {
+  background: #ffffff;
+  border: 1px solid #E1E1E1;
+  border-radius: 16px;
+  padding: 40px;
+  text-align: center;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
   display: flex;
+  flex-direction: column;
   align-items: center;
-  padding: 24px;
-  background-color: #fff;
-  border-left: 5px solid var(--danger);
-  border-radius: 8px;
-  gap: 20px;
+  gap: 16px;
 
-  .error-icon {
-    font-size: 40px;
-    width: 40px;
-    height: 40px;
-    color: var(--danger);
+  .dev-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: #E73725;
   }
 
-  .error-text {
-    flex: 1;
+  h1 {
+    font-size: 24px;
+    font-weight: 800;
+    color: #010000;
+    margin: 0;
+  }
 
-    h2 {
-      font-size: 18px;
-      color: #010000;
-      margin-bottom: 4px;
+  p {
+    font-size: 14px;
+    color: #718096;
+    line-height: 1.6;
+    margin: 0;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .dev-card {
+    background: #121212;
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+
+    h1 {
+      color: #ffffff;
     }
 
     p {
-      color: #718096;
-      font-size: 14px;
-    }
-  }
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 24px;
-}
-
-.stat-card {
-  background-color: #ffffff;
-  border-radius: 12px;
-  border: 1px solid #E1E1E1;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  overflow: hidden;
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
-  }
-
-  .stat-card-body {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 24px 20px 12px 20px;
-  }
-
-  .card-left {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-
-    .card-label {
-      font-size: 13px;
-      font-weight: 600;
-      color: #718096;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .card-value {
-      font-size: 26px;
-      font-weight: 800;
-      color: #010000;
-    }
-  }
-
-  .card-right {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 54px;
-    height: 54px;
-    border-radius: 12px;
-
-    mat-icon {
-      font-size: 28px;
-      width: 28px;
-      height: 28px;
-    }
-  }
-
-  // Icons Color Schemes
-  .icon-users {
-    background-color: var(--primary-light);
-    color: var(--primary);
-  }
-
-  .icon-roles {
-    background-color: var(--accent-light);
-    color: var(--accent);
-  }
-
-  .icon-permissions {
-    background-color: #e0f2fe;
-    color: #0369a1;
-  }
-
-  .icon-active-roles {
-    background-color: #fef3c7;
-    color: #d97706;
-  }
-
-  .card-footer {
-    padding: 12px 20px;
-    background-color: #fafbfc;
-    border-top: 1px solid #f0f2f5;
-
-    .footer-trend {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      font-weight: 500;
-      color: #718096;
-
-      mat-icon {
-        font-size: 16px;
-        width: 16px;
-        height: 16px;
-        color: var(--primary);
-      }
-    }
-  }
-}
-
-.info-section-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 24px;
-}
-
-.info-card {
-  background-color: #ffffff;
-  border-radius: 12px;
-  border: 1px solid #E1E1E1;
-  padding: 0;
-
-  .info-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.5rem 1.5rem 0.5rem 1.5rem !important;
-
-    mat-card-title {
-      font-size: 1.15rem !important;
-      font-weight: 800 !important;
-      color: #0f172a;
-      margin: 0 !important;
-    }
-  }
-
-  .info-card-content {
-    padding: 0 1.5rem 1.5rem 1.5rem !important;
-  }
-
-  .empty-text {
-    padding: 2rem;
-    text-align: center;
-    color: var(--text-muted);
-  }
-}
-
-.table-responsive {
-  width: 100%;
-  overflow-x: auto;
-}
-
-/* Custom Admin Table */
-.custom-admin-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-
-  th {
-    background-color: #f8fafc;
-    color: #0f172a;
-    font-weight: 700;
-    font-size: 0.82rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 0.85rem 1rem;
-    border-bottom: 2px solid var(--border-color);
-  }
-
-  td {
-    padding: 0.85rem 1rem;
-    font-size: 0.85rem;
-    color: #334155;
-    border-bottom: 1px solid var(--border-color);
-    vertical-align: middle;
-
-    &.bold {
-      font-weight: 700;
-      color: #0f172a;
-    }
-
-    &.color-primary {
-      color: var(--primary);
-    }
-  }
-
-  tr:hover td {
-    background-color: #f8fafc;
-  }
-
-  /* Status Badges */
-  .status-badge {
-    display: inline-block;
-    padding: 0.25rem 0.6rem;
-    border-radius: 99px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    white-space: nowrap;
-
-    &.status-pending {
-      background-color: #fef3c7;
-      color: #d97706;
-    }
-
-    &.status-confirmed {
-      background-color: var(--primary-light);
-      color: var(--primary);
-    }
-
-    &.status-completed {
-      background-color: #e0f2fe;
-      color: #0369a1;
-    }
-
-    &.status-cancelled {
-      background-color: #fee2e2;
-      color: #b91c1c;
+      color: #a0aec0;
     }
   }
 }

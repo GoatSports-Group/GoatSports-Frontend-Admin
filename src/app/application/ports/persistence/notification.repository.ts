@@ -1,9 +1,10 @@
 import { InjectionToken } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Notification } from '@domain/entity/notification';
+import { PageFilter } from '@application/dto/page.filter';
 
 export interface NotificationRepository {
-  getNotifications(): Observable<Notification[]>;
+  getNotifications(filter: PageFilter): Observable<Notification[]>;
   getUnreadCount(): Observable<number>;
   markAsRead(id: string): Observable<Notification>;
 }

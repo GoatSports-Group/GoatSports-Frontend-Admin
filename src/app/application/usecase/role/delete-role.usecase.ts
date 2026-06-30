@@ -1,7 +1,6 @@
 import { RoleRepository, ROLE_REPOSITORY_TOKEN } from '@application/ports/persistence/role.repository';
 import { Inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { BaseResponse } from '@application/dto/base/base-response';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +10,7 @@ export class DeleteRoleUseCase {
     @Inject(ROLE_REPOSITORY_TOKEN) private roleRepository: RoleRepository
   ) { }
 
-  execute(id: string): Observable<BaseResponse<void>> {
+  execute(id: string): Observable<void> {
     return this.roleRepository.deleteRole(id);
   }
 }

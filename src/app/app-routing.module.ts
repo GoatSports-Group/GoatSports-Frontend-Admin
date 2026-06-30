@@ -1,12 +1,12 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { AdminGuard } from './presentation/guards/admin.guard';
-import { ForbiddenComponent } from './shared/components/forbidden/forbidden.component';
+import { AdminGuard } from '@presentation/guards/admin.guard';
+import { ForbiddenComponent } from '@shared/components/forbidden/forbidden.component';
 
 const routes: Routes = [
   {
     path: 'admin',
-    loadChildren: () => import('./presentation/admin.module').then(m => m.AdminModule),
+    loadChildren: () => import('@presentation/admin.module').then(m => m.AdminModule),
     canActivate: [AdminGuard]
   },
   {

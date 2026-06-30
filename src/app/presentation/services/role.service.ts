@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { BaseResponse } from '@application/dto/base/base-response';
-import { Role, RoleCreateRequest, RoleUpdateRequest, RoleListResult } from '@application/dto/role/role.dto';
+import { Role, RoleCreateRequest, RoleUpdateRequest } from '@application/dto/role/role.dto';
+import { PageFilter } from '@application/dto/page.filter';
 import { GetRolesUseCase } from '@application/usecase/role/get-roles.usecase';
 import { GetRoleByIdUseCase } from '@application/usecase/role/get-role-by-id.usecase';
 import { CreateRoleUseCase } from '@application/usecase/role/create-role.usecase';
@@ -22,31 +22,31 @@ export class RoleService {
   private activateRoleUseCase = inject(ActivateRoleUseCase);
   private deactivateRoleUseCase = inject(DeactivateRoleUseCase);
 
-  getRoles(page: number = 0, size: number = 100, search?: string): Observable<BaseResponse<RoleListResult>> {
-    return this.getRolesUseCase.execute(page, size, search);
+  getRoles(filter: PageFilter): Observable<Role[]> {
+    return this.getRolesUseCase.execute(filter);
   }
 
-  getRoleById(id: string): Observable<BaseResponse<Role>> {
+  getRoleById(id: string): Observable<Role> {
     return this.getRoleByIdUseCase.execute(id);
   }
 
-  createRole(payload: RoleCreateRequest): Observable<BaseResponse<Role>> {
+  createRole(payload: RoleCreateRequest): Observable<Role> {
     return this.createRoleUseCase.execute(payload);
   }
 
-  updateRole(payload: RoleUpdateRequest): Observable<BaseResponse<Role>> {
+  updateRole(payload: RoleUpdateRequest): Observable<Role> {
     return this.updateRoleUseCase.execute(payload);
   }
 
-  deleteRole(id: string): Observable<BaseResponse<void>> {
+  deleteRole(id: string): Observable<void> {
     return this.deleteRoleUseCase.execute(id);
   }
 
-  activateRole(id: string): Observable<BaseResponse<Role>> {
+  activateRole(id: string): Observable<Role> {
     return this.activateRoleUseCase.execute(id);
   }
 
-  deactivateRole(id: string): Observable<BaseResponse<Role>> {
+  deactivateRole(id: string): Observable<Role> {
     return this.deactivateRoleUseCase.execute(id);
   }
 }

@@ -1,0 +1,110 @@
+.preview-dialog-container {
+  padding: 16px 20px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  max-width: 95vw;
+}
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #E1E1E1;
+  padding-bottom: 12px;
+}
+.dialog-title {
+  font-weight: 800;
+  font-size: 18px;
+  margin: 0;
+  color: #0f172a;
+}
+.close-btn {
+  color: #718096 !important;
+}
+.dialog-body {
+  flex: 1;
+  overflow: auto;
+  min-height: 400px;
+  min-width: 600px;
+  width: 750px;
+  max-width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  padding: 12px;
+  box-sizing: border-box;
+}
+.loading-box, .error-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #64748b;
+}
+.image-viewer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.preview-img {
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.pdf-viewer {
+  width: 100%;
+  height: 550px;
+}
+.preview-iframe {
+  border: none;
+  border-radius: 4px;
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+  border-top: 1px solid #E1E1E1;
+  padding-top: 12px;
+}
+.view-btn {
+  background-color: #E73725 !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(231, 55, 37, 0.2);
+}
+.cancel-btn {
+  color: #4a5568 !important;
+  font-weight: 600;
+}
+@media (prefers-color-scheme: dark) {
+  .preview-dialog-container {
+    background-color: #121212;
+    color: #ffffff;
+  }
+  .dialog-header {
+    border-bottom-color: rgba(255,255,255,0.1);
+  }
+  .dialog-title {
+    color: #ffffff;
+  }
+  .dialog-body {
+    background-color: #1a1a1a;
+    border-color: rgba(255,255,255,0.1);
+  }
+  .dialog-actions {
+    border-top-color: rgba(255,255,255,0.1);
+  }
+  .cancel-btn {
+    color: #cbd5e0 !important;
+  }
+}

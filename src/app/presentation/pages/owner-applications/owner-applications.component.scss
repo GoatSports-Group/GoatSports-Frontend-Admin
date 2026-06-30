@@ -434,96 +434,38 @@
   gap: 0.5rem;
 }
 
-.docs-gallery-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
+.docs-btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
   margin-bottom: 2rem;
 
-  @media (min-width: 768px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.doc-card {
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.02);
-
-  .doc-card-hdr {
-    background-color: #f8fafc;
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid #f1f5f9;
-
-    .doc-type-title {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #475569;
-    }
-  }
-
-  .doc-card-body {
-    padding: 1rem;
+  .doc-btn {
     display: flex;
-    justify-content: center;
     align-items: center;
-    background: #f1f5f9;
-    min-height: 180px;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    background-color: white;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    height: 42px;
+    cursor: pointer;
 
-    .img-preview-box {
-      width: 100%;
-      height: 180px;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 4px;
-      background: white;
-
-      .img-preview-element {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;
-        transition: transform 0.2s;
-
-        &:hover {
-          transform: scale(1.05);
-        }
-      }
+    mat-icon {
+      font-size: 1.25rem;
+      width: 1.25rem;
+      height: 1.25rem;
+      color: #3b82f6;
     }
 
-    .file-icon-box {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.5rem;
-      color: #64748b;
-
-      mat-icon {
-        font-size: 3rem;
-        width: 3rem;
-        height: 3rem;
-      }
-
-      span {
-        font-size: 0.8rem;
-        font-weight: 600;
-      }
-    }
-  }
-
-  .doc-card-actions {
-    padding: 0.5rem 1rem;
-    background: white;
-    border-top: 1px solid #f1f5f9;
-    display: flex;
-    justify-content: flex-end;
-
-    .btn-download {
-      font-size: 0.8rem;
-      font-weight: 600;
-      height: 36px;
+    &:hover {
+      background-color: #f1f5f9;
+      color: #0f172a;
+      border-color: #94a3b8;
     }
   }
 }
@@ -584,6 +526,33 @@
 
     .btn-spinner {
       margin-right: 0.5rem;
+    }
+  }
+}
+
+.sidebar-paginator {
+  border-top: 1px solid #e2e8f0;
+  background: white;
+  font-size: 0.8rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sidebar-paginator {
+    background-color: #121212 !important;
+    color: #ffffff !important;
+    border-top-color: rgba(255, 255, 255, 0.1) !important;
+    
+    ::ng-deep {
+      .mat-mdc-paginator-container {
+        color: #ffffff !important;
+      }
+      .mat-mdc-icon-button {
+        color: #ffffff !important;
+        
+        &[disabled] {
+          color: rgba(255, 255, 255, 0.3) !important;
+        }
+      }
     }
   }
 }

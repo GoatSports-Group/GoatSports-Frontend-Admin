@@ -1,9 +1,9 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { UserRepository } from '@application/ports/persistence/user.repository';
 import { UserApi } from '@infrastructure/api/user.api';
-import { BaseResponse } from '@application/dto/base/base-response';
-import { User, UserListResult } from '@application/dto/user/user.dto';
+import { User } from '@domain/entity/user';
+import { PageFilter } from '@application/dto/page.filter';
 
 @Injectable({
   providedIn: 'root'
@@ -11,11 +11,15 @@ import { User, UserListResult } from '@application/dto/user/user.dto';
 export class UserRepositoryImpl implements UserRepository {
   private userApi = inject(UserApi);
 
-  getUsers(page: number, size: number, search?: string): Observable<BaseResponse<UserListResult>> {
-    return this.userApi.getUsers(page, size, search);
+  getUsers(filter: PageFilter): Observable<User[]> {
+    return this.userApi.getUsers(filter).pipe(
+      map(response => response.data?.result || [])
+    );
   }
 
-  assignRole(userId: string, roleId: string): Observable<BaseResponse<User>> {
-    return this.userApi.assignRole(userId, roleId);
+  assignRole(userId: string, roleId: string): Observable<User> {
+    return this.userApi.assignRole(userId, roleId).pipe(
+      map(response => response.data)
+    );
   }
 }
