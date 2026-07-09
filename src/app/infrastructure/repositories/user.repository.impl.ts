@@ -22,4 +22,12 @@ export class UserRepositoryImpl implements UserRepository {
       map(response => response.data)
     );
   }
+
+  exportUsersReport(format: string): Observable<Blob> {
+    return this.userApi.exportUsersReport(format);
+  }
+
+  exportUserDetailReport(userId: string, format: string): Observable<Blob> {
+    return this.userApi.exportUserDetailReport(userId, format);
+  }
 }

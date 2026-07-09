@@ -22,4 +22,18 @@ export class UserApi {
     const payload = { userId, roleId };
     return this.http.put<BaseResponse<User>>(`${this.apiBase}/auth-service/api/v1/admin/users/role`, payload);
   }
+
+  exportUsersReport(format: string): Observable<Blob> {
+    return this.http.get(`${this.apiBase}/report-service/api/v1/reports/export/users`, {
+      params: new HttpParams().set('format', format),
+      responseType: 'blob'
+    });
+  }
+
+  exportUserDetailReport(userId: string, format: string): Observable<Blob> {
+    return this.http.get(`${this.apiBase}/report-service/api/v1/reports/export/users/${userId}`, {
+      params: new HttpParams().set('format', format),
+      responseType: 'blob'
+    });
+  }
 }

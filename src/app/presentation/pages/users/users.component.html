@@ -4,6 +4,19 @@
       <h1>Quản Lý Thành Viên</h1>
       <p>Tra cứu thông tin, quản lý trạng thái và phân vai trò cho các thành viên trong hệ thống.</p>
     </div>
+    <div class="header-actions">
+      <button mat-flat-button color="primary" class="export-menu-btn" [matMenuTriggerFor]="exportListMenu">
+        <mat-icon>download</mat-icon> Xuất báo cáo danh sách
+      </button>
+      <mat-menu #exportListMenu="matMenu">
+        <button mat-menu-item (click)="exportUsersReport('pdf')">
+          <mat-icon>picture_as_pdf</mat-icon> Xuất bản PDF
+        </button>
+        <button mat-menu-item (click)="exportUsersReport('xlsx')">
+          <mat-icon>table_chart</mat-icon> Xuất bản Excel (XLSX)
+        </button>
+      </mat-menu>
+    </div>
   </div>
 
   <!-- Search & Filter Controls -->
@@ -96,9 +109,22 @@
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef class="text-center"> Thao tác </th>
             <td mat-cell *matCellDef="let user" class="text-center">
-              <button mat-stroked-button color="primary" class="action-btn" (click)="openAssignRoleDialog(user)">
-                <mat-icon>manage_accounts</mat-icon> Gán vai trò
-              </button>
+              <div class="actions-cell-wrapper">
+                <button mat-stroked-button color="primary" class="action-btn" (click)="openAssignRoleDialog(user)">
+                  <mat-icon>manage_accounts</mat-icon> Gán vai trò
+                </button>
+                <button mat-icon-button color="accent" [matMenuTriggerFor]="exportUserMenu" aria-label="Export user report">
+                  <mat-icon>download</mat-icon>
+                </button>
+                <mat-menu #exportUserMenu="matMenu">
+                  <button mat-menu-item (click)="exportUserDetailReport(user, 'pdf')">
+                    <mat-icon>picture_as_pdf</mat-icon> Xuất chi tiết PDF
+                  </button>
+                  <button mat-menu-item (click)="exportUserDetailReport(user, 'xlsx')">
+                    <mat-icon>table_chart</mat-icon> Xuất chi tiết Excel (XLSX)
+                  </button>
+                </mat-menu>
+              </div>
             </td>
           </ng-container>
 

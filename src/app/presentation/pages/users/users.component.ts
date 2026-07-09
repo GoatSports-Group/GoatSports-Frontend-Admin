@@ -89,4 +89,68 @@ export class UsersComponent implements OnInit {
   getFallbackAvatar(user: User): string {
     return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.fullName || user.username)}`;
   }
+
+  exportUsersReport(format: 'pdf' | 'xlsx'): void {
+    this.loading = true;
+    this.userAdminService.exportUsersReport(format).subscribe({
+      next: (blob) => {
+        const file = new Blob([blob], { type: format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const fileURL = URL.createObjectURL(file);
+        const a = document.createElement('a');
+        a.href = fileURL;
+        a.download = `danh_sach_nguoi_dung.${format}`;
+        a.click();
+        URL.revokeObjectURL(fileURL);
+        this.loading = false;
+        this.snackBar.open('Xuất báo cáo danh sách người dùng thành công!', 'Đóng', {
+          duration: 3000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top',
+          panelClass: ['snackbar-success']
+        });
+      },
+      error: (err) => {
+        console.error('Failed to export users report:', err);
+        this.loading = false;
+        this.snackBar.open('Không thể xuất báo cáo danh sách người dùng!', 'Đóng', {
+          duration: 4000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top',
+          panelClass: ['snackbar-error']
+        });
+      }
+    });
+  }
+
+  exportUserDetailReport(user: User, format: 'pdf' | 'xlsx'): void {
+    this.loading = true;
+    this.userAdminService.exportUserDetailReport(user.userId, format).subscribe({
+      next: (blob) => {
+        const file = new Blob([blob], { type: format === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const fileURL = URL.createObjectURL(file);
+        const a = document.createElement('a');
+        a.href = fileURL;
+        a.download = `chi_tiet_nguoi_dung_${user.username}.${format}`;
+        a.click();
+        URL.revokeObjectURL(fileURL);
+        this.loading = false;
+        this.snackBar.open(`Xuất báo cáo chi tiết người dùng ${user.fullName} thành công!`, 'Đóng', {
+          duration: 3000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top',
+          panelClass: ['snackbar-success']
+        });
+      },
+      error: (err) => {
+        console.error('Failed to export user detail report:', err);
+        this.loading = false;
+        this.snackBar.open('Không thể xuất báo cáo chi tiết người dùng!', 'Đóng', {
+          duration: 4000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top',
+          panelClass: ['snackbar-error']
+        });
+      }
+    });
+  }
 }

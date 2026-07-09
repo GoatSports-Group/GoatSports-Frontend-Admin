@@ -5,6 +5,12 @@
 }
 
 .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+
   .header-title-box {
     h1 {
       font-size: 26px;
@@ -15,6 +21,24 @@
     p {
       color: #718096;
       font-size: 14px;
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .export-menu-btn {
+      height: 44px !important;
+      font-weight: 600 !important;
+      border-radius: 6px !important;
+      background-color: #059669 !important; /* grass green */
+      color: #ffffff !important;
+      
+      &:hover {
+        background-color: #047857 !important;
+      }
     }
   }
 }
@@ -305,6 +329,21 @@
     
     &[disabled] {
       color: rgba(255, 255, 255, 0.3) !important;
+    }
+  }
+}
+
+.actions-cell-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  ::ng-deep .mat-mdc-icon-button {
+    color: #0ea5e9 !important; /* energetic blue */
+    
+    &:hover {
+      background-color: rgba(14, 165, 233, 0.08) !important;
     }
   }
 }
