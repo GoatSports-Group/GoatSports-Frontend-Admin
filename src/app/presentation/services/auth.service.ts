@@ -84,13 +84,20 @@ export class AuthService {
   }
 
   private loadSession() {
-    this.refresh().subscribe({
+    this.getCurrentUser().subscribe({
       next: () => {
         this.sessionStateService.setSessionReady(true);
       },
       error: () => {
-        this.clearSession();
-        this.sessionStateService.setSessionReady(true);
+        this.refresh().subscribe({
+          next: () => {
+            this.sessionStateService.setSessionReady(true);
+          },
+          error: () => {
+            this.clearSession();
+            this.sessionStateService.setSessionReady(true);
+          }
+        });
       }
     });
   }
