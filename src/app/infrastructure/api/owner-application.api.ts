@@ -42,7 +42,7 @@ export class OwnerApplicationApi {
   }
 
   getFileUrl(key: string): Observable<string> {
-    return this.http.get(`${this.apiBase}/venue-service/api/v1/files`, {
+    return this.http.get(`${this.apiBase}/storage-service/api/v1/files`, {
       params: { key },
       responseType: 'text'
     });
