@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Subject, Observable } from 'rxjs';
-import { Notification } from '@domain/entity/notification';
+import { Notification } from '@domain/entities/notification';
 import { WebSocketService } from '@application/ports/websocket.service';
 
 class StompFrame {

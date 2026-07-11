@@ -1,4 +1,4 @@
-export { Role } from '@domain/entity/role';
+export { Role } from '@domain/entities/role';
 
 export interface RoleCreateRequest {
   name: string;

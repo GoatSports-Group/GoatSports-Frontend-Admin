@@ -3,7 +3,7 @@ import { map, Observable } from 'rxjs';
 import { RoleRepository } from '@application/ports/persistence/role.repository';
 import { RoleApi } from '@infrastructure/api/role.api';
 import { RoleCreateRequest, RoleUpdateRequest } from '@application/dto/role/role.dto';
-import { Role } from "@domain/entity/role"
+import { Role } from "@domain/entities/role"
 import { PageFilter } from '@application/dto/page.filter';
 
 @Injectable({

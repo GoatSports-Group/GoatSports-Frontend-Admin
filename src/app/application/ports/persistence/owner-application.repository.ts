@@ -1,6 +1,6 @@
 import { InjectionToken } from '@angular/core';
 import { Observable } from 'rxjs';
-import { OwnerApplication } from '@domain/entity/owner-application';
+import { OwnerApplication } from '@domain/entities/owner-application';
 import { PageFilter } from '@application/dto/page.filter';
 
 export interface OwnerApplicationRepository {

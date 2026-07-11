@@ -1,4 +1,4 @@
-import { Permission } from '@domain/entity/permission';
+import { Permission } from '@domain/entities/permission';
 
 export interface Role {
   roleId: string;

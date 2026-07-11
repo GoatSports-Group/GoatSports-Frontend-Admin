@@ -3,7 +3,7 @@ import { map, Observable } from 'rxjs';
 import { PermissionRepository } from '@application/ports/persistence/permission.repository';
 import { PermissionApi } from '../api/permission.api';
 import { PageFilter } from '@application/dto/page.filter';
-import { Permission } from '@domain/entity/permission';
+import { Permission } from '@domain/entities/permission';
 
 @Injectable({
   providedIn: 'root'

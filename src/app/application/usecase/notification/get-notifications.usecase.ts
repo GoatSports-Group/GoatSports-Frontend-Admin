@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { NotificationRepository, NOTIFICATION_REPOSITORY_TOKEN } from '@application/ports/persistence/notification.repository';
-import { Notification } from '@domain/entity/notification';
+import { Notification } from '@domain/entities/notification';
 import { PageFilter } from '@application/dto/page.filter';
 
 @Injectable({

@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { OwnerApplication } from '@domain/entity/owner-application';
+import { OwnerApplication } from '@domain/entities/owner-application';
 import { BaseListResponse, BaseResponse } from '@application/dto/base/base-response';
 import { PageFilter } from '@application/dto/page.filter';
 import { buildPageParams } from '@shared/utils/api.helper';

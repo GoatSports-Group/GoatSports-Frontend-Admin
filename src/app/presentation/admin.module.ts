@@ -4,7 +4,7 @@ import { SharedModule } from '@shared/shared.module';
 import { AdminRoutingModule } from '@presentation/routes/admin-routing.module';
 
 // Layout & Components
-import { AdminComponent } from '@presentation/layouts/admin.component';
+import { AdminComponent } from '@shared/layouts/admin/admin.component';
 import { DashboardOverviewComponent } from '@presentation/pages/dashboard/dashboard.component';
 import { UsersComponent } from '@presentation/pages/users/users.component';
 import { AssignRoleDialogComponent } from '@presentation/pages/users/assign-role-dialog/assign-role-dialog.component';

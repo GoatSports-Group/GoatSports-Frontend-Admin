@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { OwnerApplicationRepository } from '@application/ports/persistence/owner-application.repository';
-import { OwnerApplication } from '@domain/entity/owner-application';
+import { OwnerApplication } from '@domain/entities/owner-application';
 import { OwnerApplicationApi } from '@infrastructure/api/owner-application.api';
 import { PageFilter } from '@application/dto/page.filter';
 

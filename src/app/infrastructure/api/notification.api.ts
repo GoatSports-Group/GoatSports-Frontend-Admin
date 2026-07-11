@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Notification } from '@domain/entity/notification';
+import { Notification } from '@domain/entities/notification';
 import { BaseListResponse, BaseResponse } from '@application/dto/base/base-response';
 import { PageFilter } from '@application/dto/page.filter';
 import { buildPageParams } from '@shared/utils/api.helper';

@@ -1,1 +1,1 @@
-export { Permission } from '@domain/entity/permission';
+export { Permission } from '@domain/entities/permission';

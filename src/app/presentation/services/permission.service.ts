@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Permission } from '@domain/entity/permission';
+import { Permission } from '@domain/entities/permission';
 import { PageFilter } from '@application/dto/page.filter';
 import { GetPermissionsUseCase } from '@application/usecase/permission/get-permissions.usecase';
 import { GetPermissionByIdUseCase } from '@application/usecase/permission/get-permission-by-id.usecase';

@@ -1,0 +1,111 @@
+<mat-sidenav-container class="admin-container" autosize>
+
+  <!-- Left Sidebar Panel -->
+  <mat-sidenav #sidenav mode="side" opened class="admin-sidebar mat-elevation-z2">
+    <div class="sidebar-header">
+      <a class="logo-wrapper">
+        <img src="assets/images/goat.png" alt="GOAT Sports Logo" class="logo-img">
+        <span class="logo-text">GOAT <span class="logo-accent">SPORTS</span></span>
+      </a>
+    </div>
+
+    <!-- Admin profile box -->
+    <div class="admin-profile" *ngIf="userProfile">
+      <img [src]="userProfile.avatarUrl || fallbackAvatar" alt="Admin Avatar" class="admin-avatar">
+      <div class="admin-meta">
+        <strong class="admin-name">{{ userProfile.fullName }}</strong>
+        <span class="admin-email">{{ userProfile.email }}</span>
+      </div>
+    </div>
+
+    <mat-divider class="sidebar-divider"></mat-divider>
+
+    <!-- Navigation links -->
+    <div class="sidebar-menu">
+      <a routerLink="./dashboard" routerLinkActive="active" class="menu-item">
+        <mat-icon>dashboard</mat-icon> Tổng quan
+      </a>
+
+      <a routerLink="./owner-applications" routerLinkActive="active" class="menu-item">
+        <mat-icon>assignment_ind</mat-icon> Chủ Sân
+      </a>
+
+      <a routerLink="./users" routerLinkActive="active" class="menu-item">
+        <mat-icon>people</mat-icon> Người dùng
+      </a>
+
+      <a routerLink="./roles" routerLinkActive="active" class="menu-item">
+        <mat-icon>admin_panel_settings</mat-icon> Vai trò
+      </a>
+
+      <a routerLink="./permissions" routerLinkActive="active" class="menu-item">
+        <mat-icon>vpn_key</mat-icon> Quyền hạn
+      </a>
+
+      <mat-divider class="menu-divider"></mat-divider>
+
+      <a (click)="logout()" class="menu-item logout-link">
+        <mat-icon>logout</mat-icon> Đăng xuất
+      </a>
+    </div>
+  </mat-sidenav>
+
+  <!-- Right Content View Area -->
+  <mat-sidenav-content class="admin-content-wrapper">
+
+    <!-- Topbar Header -->
+    <header class="admin-topbar mat-elevation-z1">
+      <div class="topbar-left">
+        <button mat-icon-button class="mobile-toggle" (click)="sidenav.toggle()" aria-label="Toggle Sidenav">
+          <mat-icon>menu</mat-icon>
+        </button>
+        <span class="topbar-title">Hệ Thống Quản Trị GOAT Sports</span>
+      </div>
+
+      <div class="topbar-right">
+        <!-- Notification Bell -->
+        <button mat-icon-button [matMenuTriggerFor]="notifMenu" class="notif-btn" aria-label="Thông báo">
+          <mat-icon [matBadge]="notificationService.unreadCount$ | async"
+            [matBadgeHidden]="(notificationService.unreadCount$ | async) === 0" matBadgeColor="warn" class="notif-icon"
+            aria-hidden="false">
+            notifications
+          </mat-icon>
+        </button>
+        <mat-menu #notifMenu="matMenu" xPosition="before" class="custom-notif-menu">
+          <div class="notif-menu-header">
+            <h3>Thông báo ({{ notificationService.unreadCount$ | async }})</h3>
+          </div>
+          <mat-divider></mat-divider>
+          <div class="notif-items-list" (scroll)="onNotificationScroll($event)">
+            @if ((notificationService.notifications$ | async)?.length === 0) {
+            <div class="notif-empty">Không có thông báo nào</div>
+            } @else {
+            @for (notif of notificationService.notifications$ | async; track notif.notificationId) {
+            <button mat-menu-item (click)="onNotificationClick(notif)" [class.unread]="notif.status === 'UNREAD'"
+              class="notif-item">
+              <div class="notif-item-content">
+                <span class="notif-title">{{ notif.title }}</span>
+                <p class="notif-desc">{{ notif.content }}</p>
+                <span class="notif-time">{{ notif.createdAt | date:'dd/MM HH:mm' }}</span>
+              </div>
+            </button>
+            }
+            }
+          </div>
+        </mat-menu>
+
+        <div class="status-indicator" [class.offline]="!isOnline">
+          <span class="status-dot"></span>
+          <span class="status-label">{{ isOnline ? 'Kết nối ổn định' : 'Mất kết nối' }}</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Inner Router Outlet -->
+    <main class="admin-main-content">
+      <router-outlet></router-outlet>
+    </main>
+
+  </mat-sidenav-content>
+
+</mat-sidenav-container>

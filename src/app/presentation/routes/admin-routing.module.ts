@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { AdminComponent } from '@presentation/layouts/admin.component';
+import { AdminComponent } from '@shared/layouts/admin/admin.component';
 import { DashboardOverviewComponent } from '@presentation/pages/dashboard/dashboard.component';
 import { UsersComponent } from '@presentation/pages/users/users.component';
 import { RolesComponent } from '@presentation/pages/roles/roles.component';

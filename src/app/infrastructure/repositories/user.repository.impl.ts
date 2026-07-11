@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { UserRepository } from '@application/ports/persistence/user.repository';
 import { UserApi } from '@infrastructure/api/user.api';
-import { User } from '@domain/entity/user';
+import { User } from '@domain/entities/user';
 import { PageFilter } from '@application/dto/page.filter';
 
 @Injectable({

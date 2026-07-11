@@ -1,7 +1,7 @@
 import { UserRepository, USER_REPOSITORY_TOKEN } from '@application/ports/persistence/user.repository';
 import { Inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { User } from '@domain/entity/user';
+import { User } from '@domain/entities/user';
 import { PageFilter } from '@application/dto/page.filter';
 
 @Injectable({

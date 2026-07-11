@@ -2,7 +2,7 @@ import { RoleRepository, ROLE_REPOSITORY_TOKEN } from '@application/ports/persis
 import { Inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { RoleUpdateRequest } from '@application/dto/role/role.dto';
-import { Role } from '@domain/entity/role';
+import { Role } from '@domain/entities/role';
 
 @Injectable({
   providedIn: 'root'

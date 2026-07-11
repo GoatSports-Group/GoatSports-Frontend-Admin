@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { BaseListResponse, BaseResponse } from '@application/dto/base/base-response';
-import { User } from '@domain/entity/user';
+import { User } from '@domain/entities/user';
 import { PageFilter } from '@application/dto/page.filter';
 import { buildPageParams } from '@shared/utils/api.helper';
 

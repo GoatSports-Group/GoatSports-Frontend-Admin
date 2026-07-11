@@ -1,7 +1,7 @@
 import { RoleRepository, ROLE_REPOSITORY_TOKEN } from '@application/ports/persistence/role.repository';
 import { Inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Role } from '@domain/entity/role';
+import { Role } from '@domain/entities/role';
 import { PageFilter } from '@application/dto/page.filter';
 
 @Injectable({

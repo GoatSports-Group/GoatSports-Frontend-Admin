@@ -1,6 +1,6 @@
 import { InjectionToken } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Notification } from '@domain/entity/notification';
+import { Notification } from '@domain/entities/notification';
 import { PageFilter } from '@application/dto/page.filter';
 
 export interface NotificationRepository {
