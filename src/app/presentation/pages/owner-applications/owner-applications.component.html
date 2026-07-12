@@ -2,7 +2,7 @@
   <!-- Sidebar Panel: List & Filters -->
   <div class="sidebar-panel">
     <div class="sidebar-header">
-      <h2>Duyệt Đơn Đối Tác</h2>
+      <h2 class="athletic-title">Duyệt Đơn Đối Tác</h2>
       <span class="count-badge">{{ filteredApplications.length }} đơn đăng ký</span>
     </div>
 
@@ -80,9 +80,9 @@
     } @else {
     <div class="detail-scrollable">
       <!-- Detail Header Banner -->
-      <div class="detail-header-card">
+      <div class="detail-header-card neo-card">
         <div class="header-info">
-          <h1>{{ selectedApplication.businessName }}</h1>
+          <h1 class="athletic-title">{{ selectedApplication.businessName }}</h1>
           <p class="business-type">{{ getBusinessTypeLabel(selectedApplication.businessType) }} | Mã số thuế: {{
             selectedApplication.taxCode }}</p>
         </div>
@@ -105,7 +105,7 @@
       <!-- Grid of Info Columns -->
       <div class="detail-grid-layout">
         <!-- Col 1: Rep Info -->
-        <mat-card class="info-card">
+        <mat-card class="info-card neo-card">
           <mat-card-header>
             <mat-icon mat-card-avatar color="primary">person</mat-icon>
             <mat-card-title>Người Đại Diện</mat-card-title>
@@ -131,7 +131,7 @@
         </mat-card>
 
         <!-- Col 2: Address Info -->
-        <mat-card class="info-card">
+        <mat-card class="info-card neo-card">
           <mat-card-header>
             <mat-icon mat-card-avatar color="primary">place</mat-icon>
             <mat-card-title>Địa Chỉ Đăng Ký</mat-card-title>
@@ -184,11 +184,11 @@
             duyệt.</span>
         </div>
         <div class="action-buttons-row">
-          <button mat-button class="btn-action-reject" (click)="reject(selectedApplication)"
+          <button mat-button class="btn-action-reject neo-btn" (click)="reject(selectedApplication)"
             [disabled]="processingAction">
             Từ Chối Hồ Sơ
           </button>
-          <button mat-raised-button color="primary" class="btn-action-approve" (click)="approve(selectedApplication)"
+          <button mat-raised-button color="primary" class="btn-action-approve neo-btn" (click)="approve(selectedApplication)"
             [disabled]="processingAction">
             @if (processingAction) {
               <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>

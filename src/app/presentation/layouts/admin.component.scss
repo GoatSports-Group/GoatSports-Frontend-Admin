@@ -40,7 +40,7 @@
       color: #ffffff;
 
       .logo-accent {
-        color: #169A13;
+        color: var(--accent);
       }
     }
   }
@@ -69,7 +69,7 @@
     height: 48px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid #169A13;
+    border: 2px solid var(--primary);
   }
 
   .admin-meta {
@@ -132,10 +132,10 @@
     }
 
     &.active {
-      background-color: #E73725;
+      background-color: var(--primary);
       color: #ffffff;
       font-weight: 600;
-      box-shadow: 0 4px 12px rgba(231, 55, 37, 0.3);
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
 
       mat-icon {
         color: #ffffff;

@@ -110,47 +110,37 @@
 
 /* Global Design System & Variables */
 :root {
-  --primary: #059669;
-  /* Sporty grass green */
-  --primary-hover: #047857;
-  --primary-light: #ecfdf5;
-  /* Light green background */
-
-  --accent: #0284c7;
-  /* Dynamic blue for AI & CTA */
-  --accent-hover: #0369a1;
-  --accent-light: #f0f9ff;
-  /* Light blue background */
-
-  --success: #2e7d32;
-  --warning: #ff9800;
-  --danger: #d32f2f;
-  --info: #0288d1;
-
-  --text-dark: #2d3748;
-  /* High contrast dark text */
-  --text-muted: #718096;
-  /* Soft gray for captions */
-  --text-light: #ffffff;
-
-  --bg-body: #f7fafc;
-  /* Off-white page background */
-  --bg-card: #ffffff;
-  --border-color: #e2e8f0;
-  /* Soft borders */
+  --primary: #059669;          /* Sporty grass green */
+  --primary-hover: #047857;    /* Deeper green for active states */
+  --primary-light: #f0fdf4;    /* Mint background */
+  --accent: #0ea5e9;           /* Cyber energetic blue */
+  --accent-hover: #0284c7;     /* Deeper blue */
+  --accent-light: #f0f9ff;     /* Sky blue tint */
+  --success: #10b981;          /* Modern success mint-green */
+  --warning: #f59e0b;          /* Amber warning */
+  --danger: #ef4444;           /* Neon-ish danger red */
+  --info: #06b6d4;             /* Electric cyan info */
+  --text-dark: #0f172a;        /* Slate-900 */
+  --text-muted: #64748b;       /* Slate-500 secondary labels */
+  --text-light: #ffffff;       /* High-contrast white */
+  --bg-body: #f8fafc;          /* Slate-50 ultra-clean premium canvas */
+  --bg-card: #ffffff;          /* Pure white container card */
+  --border-color: #cbd5e1;     /* Slate-300 sharp, thin boundary line */
 
   --font-heading: 'Be Vietnam Pro', sans-serif;
   --font-body: 'Be Vietnam Pro', sans-serif;
 
-  --border-radius: 12px;
-  --border-radius-sm: 8px;
-  --border-radius-lg: 20px;
+  --border-radius: 14px;       /* radius_md */
+  --border-radius-sm: 6px;     /* radius_sm */
+  --border-radius-lg: 24px;    /* radius_lg */
 
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.02);
-  --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.08);
+  --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 12px 30px -10px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 30px 60px -15px rgba(15, 23, 42, 0.12);
+  --shadow-glow-primary: 0 0 20px 0 rgba(5, 150, 105, 0.25);
 
-  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); /* ease_out_expo */
+  --transition-spring: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); /* spring_snappy */
 }
 
 /* Reset and base styles */
@@ -520,5 +510,174 @@ mat-error,
     font-weight: 500;
     color: #4b5563;
     letter-spacing: 0.5px;
+  }
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  &::-webkit-scrollbar-track {
+    background: var(--bg-body);
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 99px;
+    &:hover {
+      background: var(--primary);
+    }
+  }
+}
+
+/* UI/UX PRO MAX - MODERN SPORTS SYSTEM */
+.athletic-title {
+  font-family: var(--font-heading) !important;
+  text-transform: uppercase !important;
+  font-weight: 900 !important;
+  font-style: italic !important;
+  letter-spacing: -0.5px !important;
+}
+
+.athletic-skew {
+  display: inline-block;
+  transform: skewX(-8deg);
+  
+  & > * {
+    transform: skewX(8deg);
+    display: inline-block;
+  }
+}
+
+/* Custom table wrapper */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background-color: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th.mat-mdc-header-cell {
+      background-color: var(--bg-body);
+      color: var(--text-dark);
+      font-weight: 700;
+      font-family: var(--font-heading);
+      font-size: 0.9rem;
+      padding: 1rem;
+    }
+
+    td.mat-mdc-cell {
+      padding: 1rem;
+      color: var(--text-dark);
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+  }
+}
+
+/* Neubrutalism Sports System Utilities (UI/UX Pro Max) */
+.neo-card {
+  background-color: var(--bg-card) !important;
+  border: 3px solid var(--text-dark) !important;
+  box-shadow: 6px 6px 0px var(--text-dark) !important;
+  border-radius: 12px !important;
+  transition: var(--transition-spring) !important;
+
+  &:hover {
+    transform: translate(-3px, -3px) !important;
+    box-shadow: 9px 9px 0px var(--text-dark) !important;
+    border-color: var(--primary) !important;
+  }
+
+  &:active {
+    transform: translate(3px, 3px) !important;
+    box-shadow: 3px 3px 0px var(--text-dark) !important;
+  }
+}
+
+.neo-btn {
+  border: 3px solid var(--text-dark) !important;
+  box-shadow: 4px 4px 0px var(--text-dark) !important;
+  border-radius: 8px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  font-style: italic !important;
+  transition: var(--transition-spring) !important;
+
+  &:hover:not([disabled]) {
+    transform: translate(-2px, -2px) !important;
+    box-shadow: 6px 6px 0px var(--text-dark) !important;
+    background-color: var(--primary) !important;
+    color: white !important;
+  }
+
+  &:active:not([disabled]) {
+    transform: translate(2px, 2px) !important;
+    box-shadow: 2px 2px 0px var(--text-dark) !important;
+  }
+  
+  &[disabled] {
+    opacity: 0.6 !important;
+    box-shadow: none !important;
+  }
+}
+
+.neo-badge {
+  border: 2px solid var(--text-dark) !important;
+  background-color: var(--accent-light) !important;
+  color: var(--accent) !important;
+  font-weight: 800 !important;
+  padding: 4px 12px !important;
+  border-radius: 99px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  font-style: italic !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+body.dark, body[data-theme="dark"] {
+  .neo-card {
+    border-color: var(--primary) !important;
+    box-shadow: 6px 6px 0px var(--primary) !important;
+    
+    &:hover {
+      box-shadow: 9px 9px 0px var(--primary) !important;
+      border-color: var(--accent) !important;
+    }
+    
+    &:active {
+      box-shadow: 3px 3px 0px var(--primary) !important;
+    }
+  }
+  
+  .neo-btn {
+    border-color: var(--primary) !important;
+    box-shadow: 4px 4px 0px var(--primary) !important;
+    color: var(--text-dark) !important;
+    
+    &:hover:not([disabled]) {
+      box-shadow: 6px 6px 0px var(--primary) !important;
+      background-color: var(--primary-hover) !important;
+      color: white !important;
+    }
+    
+    &:active:not([disabled]) {
+      box-shadow: 2px 2px 0px var(--primary) !important;
+    }
+  }
+  
+  .neo-badge {
+    border-color: var(--primary) !important;
+    background-color: var(--primary-light) !important;
+    color: var(--primary) !important;
   }
 }
