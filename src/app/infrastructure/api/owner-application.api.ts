@@ -27,17 +27,17 @@ export class OwnerApplicationApi {
     );
   }
 
-  approve(id: string): Observable<BaseResponse<OwnerApplication>> {
-    return this.http.post<BaseResponse<OwnerApplication>>(
-      `${this.apiBase}/venue-service/api/v1/admin/owner-applications/${id}/approve`,
-      {}
+  approve(id: string): Observable<BaseResponse<void>> {
+    return this.http.post<BaseResponse<void>>(
+      `${this.apiBase}/workflow-service/api/v1/workflows/owner-applications/${id}/complete-review`,
+      { approved: true }
     );
   }
 
-  reject(id: string, rejectReason: string): Observable<BaseResponse<OwnerApplication>> {
-    return this.http.post<BaseResponse<OwnerApplication>>(
-      `${this.apiBase}/venue-service/api/v1/admin/owner-applications/${id}/reject`,
-      { rejectReason }
+  reject(id: string, rejectReason: string): Observable<BaseResponse<void>> {
+    return this.http.post<BaseResponse<void>>(
+      `${this.apiBase}/workflow-service/api/v1/workflows/owner-applications/${id}/complete-review`,
+      { approved: false, rejectReason }
     );
   }
 

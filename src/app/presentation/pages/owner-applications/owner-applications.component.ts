@@ -161,10 +161,15 @@ export class OwnerApplicationsComponent implements OnInit {
 
     this.processingAction = true;
     this.approveUseCase.execute(app.ownerApplicationId).subscribe({
-      next: (updatedApp) => {
+      next: () => {
         this.snackBar.open(`Đã phê duyệt đơn đăng ký của ${app.fullName} thành công!`, 'Đóng', {
           duration: 5000
         });
+
+        const updatedApp: OwnerApplication = {
+          ...app,
+          status: OwnerApplicationStatus.APPROVED
+        };
 
         this.filteredApplications = this.sortApplications(
           this.filteredApplications.map(a => a.ownerApplicationId === app.ownerApplicationId ? updatedApp : a)
@@ -195,10 +200,16 @@ export class OwnerApplicationsComponent implements OnInit {
       if (reason) {
         this.processingAction = true;
         this.rejectUseCase.execute(app.ownerApplicationId, reason).subscribe({
-          next: (updatedApp) => {
+          next: () => {
             this.snackBar.open(`Đã từ chối đơn đăng ký của ${app.fullName}.`, 'Đóng', {
               duration: 5000
             });
+
+            const updatedApp: OwnerApplication = {
+              ...app,
+              status: OwnerApplicationStatus.REJECTED,
+              rejectReason: reason
+            };
 
             this.filteredApplications = this.sortApplications(
               this.filteredApplications.map(a => a.ownerApplicationId === app.ownerApplicationId ? updatedApp : a)

@@ -24,15 +24,15 @@ export class OwnerApplicationRepositoryImpl implements OwnerApplicationRepositor
     );
   }
 
-  approve(id: string): Observable<OwnerApplication> {
+  approve(id: string): Observable<void> {
     return this.ownerApplicationApi.approve(id).pipe(
-      map(response => response.data)
+      map(() => undefined)
     );
   }
 
-  reject(id: string, rejectReason: string): Observable<OwnerApplication> {
+  reject(id: string, rejectReason: string): Observable<void> {
     return this.ownerApplicationApi.reject(id, rejectReason).pipe(
-      map(response => response.data)
+      map(() => undefined)
     );
   }
 
