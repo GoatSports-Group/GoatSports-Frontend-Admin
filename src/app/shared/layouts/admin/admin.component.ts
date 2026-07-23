@@ -9,9 +9,10 @@ import { startWith, switchMap, catchError, map } from 'rxjs/operators';
 import { NotificationService } from '@presentation/services/notification.service';
 
 @Component({
-  selector: 'app-admin',
-  templateUrl: './admin.component.html',
-  styleUrls: ['./admin.component.scss']
+    selector: 'app-admin',
+    templateUrl: './admin.component.html',
+    styleUrls: ['./admin.component.scss'],
+    standalone: false
 })
 export class AdminComponent implements OnInit, OnDestroy {
   public authService = inject(AuthService);

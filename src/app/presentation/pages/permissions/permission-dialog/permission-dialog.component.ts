@@ -10,9 +10,10 @@ export interface PermissionDialogData {
 }
 
 @Component({
-  selector: 'app-permission-dialog',
-  templateUrl: './permission-dialog.component.html',
-  styleUrls: ['./permission-dialog.component.scss']
+    selector: 'app-permission-dialog',
+    templateUrl: './permission-dialog.component.html',
+    styleUrls: ['./permission-dialog.component.scss'],
+    standalone: false
 })
 export class PermissionDialogComponent implements OnInit {
   private fb = inject(FormBuilder);

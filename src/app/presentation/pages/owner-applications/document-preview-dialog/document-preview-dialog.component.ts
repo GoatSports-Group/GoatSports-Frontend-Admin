@@ -9,9 +9,10 @@ export interface DocumentPreviewDialogData {
 }
 
 @Component({
-  selector: 'app-document-preview-dialog',
-  templateUrl: './document-preview-dialog.component.html',
-  styleUrls: ['./document-preview-dialog.component.scss']
+    selector: 'app-document-preview-dialog',
+    templateUrl: './document-preview-dialog.component.html',
+    styleUrls: ['./document-preview-dialog.component.scss'],
+    standalone: false
 })
 export class DocumentPreviewDialogComponent implements OnInit {
   private getFileUrlUseCase = inject(GetFileUrlUseCase);

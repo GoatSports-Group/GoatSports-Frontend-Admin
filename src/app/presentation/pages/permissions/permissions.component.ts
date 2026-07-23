@@ -9,9 +9,10 @@ import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/co
 import { buildRsqlSearch } from '@shared/utils/api.helper';
 
 @Component({
-  selector: 'app-permissions',
-  templateUrl: './permissions.component.html',
-  styleUrls: ['./permissions.component.scss']
+    selector: 'app-permissions',
+    templateUrl: './permissions.component.html',
+    styleUrls: ['./permissions.component.scss'],
+    standalone: false
 })
 export class PermissionsComponent implements OnInit {
   private permissionAdminService = inject(PermissionService);

@@ -10,9 +10,10 @@ import { PageEvent } from '@angular/material/paginator';
 import { buildRsqlSearch } from '@shared/utils/api.helper';
 
 @Component({
-  selector: 'app-assign-permissions',
-  templateUrl: './assign-permissions.component.html',
-  styleUrls: ['./assign-permissions.component.scss']
+    selector: 'app-assign-permissions',
+    templateUrl: './assign-permissions.component.html',
+    styleUrls: ['./assign-permissions.component.scss'],
+    standalone: false
 })
 export class AssignPermissionsComponent implements OnInit {
   private route = inject(ActivatedRoute);

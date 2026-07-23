@@ -12,9 +12,10 @@ export interface AssignRoleDialogData {
 }
 
 @Component({
-  selector: 'app-assign-role-dialog',
-  templateUrl: './assign-role-dialog.component.html',
-  styleUrls: ['./assign-role-dialog.component.scss']
+    selector: 'app-assign-role-dialog',
+    templateUrl: './assign-role-dialog.component.html',
+    styleUrls: ['./assign-role-dialog.component.scss'],
+    standalone: false
 })
 export class AssignRoleDialogComponent implements OnInit {
   private roleAdminService = inject(RoleService);

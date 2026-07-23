@@ -10,9 +10,10 @@ export interface RoleDialogData {
 }
 
 @Component({
-  selector: 'app-role-dialog',
-  templateUrl: './role-dialog.component.html',
-  styleUrls: ['./role-dialog.component.scss']
+    selector: 'app-role-dialog',
+    templateUrl: './role-dialog.component.html',
+    styleUrls: ['./role-dialog.component.scss'],
+    standalone: false
 })
 export class RoleDialogComponent implements OnInit {
   private fb = inject(FormBuilder);

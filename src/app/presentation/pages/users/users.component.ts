@@ -8,9 +8,10 @@ import { AssignRoleDialogComponent } from '@presentation/pages/users/assign-role
 import { buildRsqlSearch } from '@shared/utils/api.helper';
 
 @Component({
-  selector: 'app-users',
-  templateUrl: './users.component.html',
-  styleUrls: ['./users.component.scss']
+    selector: 'app-users',
+    templateUrl: './users.component.html',
+    styleUrls: ['./users.component.scss'],
+    standalone: false
 })
 export class UsersComponent implements OnInit {
   private userAdminService = inject(UserService);

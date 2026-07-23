@@ -7,18 +7,17 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
 @Component({
-  selector: 'app-reject-reason-dialog',
-  standalone: true,
-  imports: [
-    MatDialogModule,
-    FormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule
-  ],
-  templateUrl: './reject-reason-dialog.component.html',
-  styleUrls: ['./reject-reason-dialog.component.scss']
+    selector: 'app-reject-reason-dialog',
+    imports: [
+        MatDialogModule,
+        FormsModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatButtonModule,
+        MatIconModule
+    ],
+    templateUrl: './reject-reason-dialog.component.html',
+    styleUrls: ['./reject-reason-dialog.component.scss']
 })
 export class RejectReasonDialogComponent {
   private dialogRef = inject(MatDialogRef<RejectReasonDialogComponent>);
