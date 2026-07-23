@@ -11,34 +11,46 @@
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Tên vai trò (ví dụ: MODERATOR)</mat-label>
       <input matInput formControlName="name" placeholder="Nhập tên viết hoa không dấu cách...">
-      <mat-error *ngIf="roleForm.get('name')?.hasError('required')">
-        Tên vai trò không được để trống
-      </mat-error>
-      <mat-error *ngIf="roleForm.get('name')?.hasError('maxlength')">
-        Tên vai trò tối đa 100 ký tự
-      </mat-error>
+      @if (roleForm.get('name')?.hasError('required')) {
+        <mat-error>
+          Tên vai trò không được để trống
+        </mat-error>
+      }
+      @if (roleForm.get('name')?.hasError('maxlength')) {
+        <mat-error>
+          Tên vai trò tối đa 100 ký tự
+        </mat-error>
+      }
     </mat-form-field>
 
     <!-- Description Field -->
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Mô tả chi tiết</mat-label>
       <textarea matInput formControlName="description" rows="3" placeholder="Ghi chú về trách nhiệm và quyền hạn..."></textarea>
-      <mat-error *ngIf="roleForm.get('description')?.hasError('maxlength')">
-        Mô tả tối đa 250 ký tự
-      </mat-error>
+      @if (roleForm.get('description')?.hasError('maxlength')) {
+        <mat-error>
+          Mô tả tối đa 250 ký tự
+        </mat-error>
+      }
     </mat-form-field>
 
     <!-- Active status toggle (Only in edit mode) -->
-    <div *ngIf="isEditMode" class="status-toggle-box">
-      <mat-checkbox formControlName="active">Kích hoạt hoạt động</mat-checkbox>
-    </div>
+    @if (isEditMode) {
+      <div class="status-toggle-box">
+        <mat-checkbox formControlName="active">Kích hoạt hoạt động</mat-checkbox>
+      </div>
+    }
 
     <!-- Actions -->
     <div class="dialog-actions">
       <button type="button" mat-button (click)="onCancel()" [disabled]="saving">Hủy</button>
       <button type="submit" mat-flat-button color="primary" [disabled]="roleForm.invalid || saving">
-        <span *ngIf="!saving">Lưu lại</span>
-        <span *ngIf="saving">Đang lưu...</span>
+        @if (!saving) {
+          <span>Lưu lại</span>
+        }
+        @if (saving) {
+          <span>Đang lưu...</span>
+        }
       </button>
     </div>
   </form>

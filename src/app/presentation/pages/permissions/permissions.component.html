@@ -19,7 +19,7 @@
           <mat-icon>search</mat-icon>
         </button>
       </mat-form-field>
-      
+
       <button mat-flat-button color="primary" class="search-btn" (click)="onSearch()">
         <mat-icon>filter_list</mat-icon> Lọc dữ liệu
       </button>
@@ -28,79 +28,78 @@
 
   <!-- Table Card -->
   <mat-card class="table-card">
-    <div class="table-progress-bar" *ngIf="loading">
-      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-    </div>
+    @if (loading) {
+      <div class="table-progress-bar">
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      </div>
+    }
 
     <mat-card-content class="table-wrapper-content">
       <!-- Empty State -->
-      <div class="empty-state" *ngIf="!loading && permissions.length === 0">
-        <mat-icon class="empty-icon">vpn_key</mat-icon>
-        <h3>Không tìm thấy quyền hạn nào</h3>
-        <p>Thử điều chỉnh từ khóa tìm kiếm hoặc bấm Tạo Quyền Mới.</p>
-      </div>
+      @if (!loading && permissions.length === 0) {
+        <div class="empty-state">
+          <mat-icon class="empty-icon">vpn_key</mat-icon>
+          <h3>Không tìm thấy quyền hạn nào</h3>
+          <p>Thử điều chỉnh từ khóa tìm kiếm hoặc bấm Tạo Quyền Mới.</p>
+        </div>
+      }
 
-      <div class="table-scroll" *ngIf="permissions.length > 0">
-        <table mat-table [dataSource]="permissions" class="permissions-table">
-          
-          <!-- Name Column -->
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef> Tên quyền hạn </th>
-            <td mat-cell *matCellDef="let permission" class="font-bold">
-              {{ permission.name }}
-            </td>
-          </ng-container>
-
-          <!-- API Path Column -->
-          <ng-container matColumnDef="apiPath">
-            <th mat-header-cell *matHeaderCellDef> API Path </th>
-            <td mat-cell *matCellDef="let permission" class="font-mono path-cell">
-              {{ permission.apiPath }}
-            </td>
-          </ng-container>
-
-          <!-- Method Column -->
-          <ng-container matColumnDef="method">
-            <th mat-header-cell *matHeaderCellDef> Method </th>
-            <td mat-cell *matCellDef="let permission">
-              <span class="method-tag-chip" [attr.data-method]="permission.method">
-                {{ permission.method }}
-              </span>
-            </td>
-          </ng-container>
-
-          <!-- Module Column -->
-          <ng-container matColumnDef="module">
-            <th mat-header-cell *matHeaderCellDef> Module </th>
-            <td mat-cell *matCellDef="let permission">
-              <span class="module-badge">
-                {{ permission.module | uppercase }}
-              </span>
-            </td>
-          </ng-container>
-
-          <!-- Actions Column -->
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef class="text-center"> Thao tác </th>
-            <td mat-cell *matCellDef="let permission" class="text-center actions-cell">
-              <button mat-icon-button color="primary" matTooltip="Chỉnh sửa" (click)="openPermissionDialog(permission)">
-                <mat-icon>edit</mat-icon>
-              </button>
-
-              <button mat-icon-button color="warn" matTooltip="Xóa quyền hạn" (click)="deletePermission(permission)">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-        </table>
-      </div>
+      @if (permissions.length > 0) {
+        <div class="table-scroll">
+          <table mat-table [dataSource]="permissions" class="permissions-table">
+            <!-- Name Column -->
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef> Tên quyền hạn </th>
+              <td mat-cell *matCellDef="let permission" class="font-bold">
+                {{ permission.name }}
+              </td>
+            </ng-container>
+            <!-- API Path Column -->
+            <ng-container matColumnDef="apiPath">
+              <th mat-header-cell *matHeaderCellDef> API Path </th>
+              <td mat-cell *matCellDef="let permission" class="font-mono path-cell">
+                {{ permission.apiPath }}
+              </td>
+            </ng-container>
+            <!-- Method Column -->
+            <ng-container matColumnDef="method">
+              <th mat-header-cell *matHeaderCellDef> Method </th>
+              <td mat-cell *matCellDef="let permission">
+                <span class="method-tag-chip" [attr.data-method]="permission.method">
+                  {{ permission.method }}
+                </span>
+              </td>
+            </ng-container>
+            <!-- Module Column -->
+            <ng-container matColumnDef="module">
+              <th mat-header-cell *matHeaderCellDef> Module </th>
+              <td mat-cell *matCellDef="let permission">
+                <span class="module-badge">
+                  {{ permission.module | uppercase }}
+                </span>
+              </td>
+            </ng-container>
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef class="text-center"> Thao tác </th>
+              <td mat-cell *matCellDef="let permission" class="text-center actions-cell">
+                <button mat-icon-button color="primary" matTooltip="Chỉnh sửa" (click)="openPermissionDialog(permission)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" matTooltip="Xóa quyền hạn" (click)="deletePermission(permission)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+        </div>
+      }
     </mat-card-content>
 
     <!-- Paginator -->
-    <mat-paginator 
+    <mat-paginator
       [length]="totalItems"
       [pageSize]="pageSize"
       [pageSizeOptions]="[5, 10, 20, 50]"

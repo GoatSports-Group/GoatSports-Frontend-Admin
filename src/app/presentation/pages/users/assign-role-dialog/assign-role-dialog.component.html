@@ -6,37 +6,50 @@
     </button>
   </div>
 
-  <div class="loading-spinner-box" *ngIf="loading">
-    <mat-spinner diameter="35"></mat-spinner>
-  </div>
-
-  <div class="dialog-body" *ngIf="!loading">
-    <!-- User Card Summary -->
-    <div class="user-summary">
-      <img [src]="user.avatarUrl || getFallbackAvatar()" alt="User Avatar" class="user-avatar">
-      <div class="user-details">
-        <span class="user-name">{{ user.fullName || user.username }}</span>
-        <span class="user-email">{{ user.email }}</span>
-      </div>
+  @if (loading) {
+    <div class="loading-spinner-box">
+      <mat-spinner diameter="35"></mat-spinner>
     </div>
+  }
 
-    <!-- Role Selection Dropdown -->
-    <p>Chọn vai trò mới cho thành viên này:</p>
-    <mat-form-field appearance="outline" class="role-select-field">
-      <mat-label>Vai trò (Role)</mat-label>
-      <mat-select [(value)]="selectedRoleId">
-        <mat-option *ngFor="let role of roles" [value]="role.roleId" [disabled]="!role.active">
-          {{ role.name }} <span *ngIf="!role.active"> (Bị tắt)</span>
-        </mat-option>
+  @if (!loading) {
+    <div class="dialog-body">
+      <!-- User Card Summary -->
+      <div class="user-summary">
+        <img [src]="user.avatarUrl || getFallbackAvatar()" alt="User Avatar" class="user-avatar">
+        <div class="user-details">
+          <span class="user-name">{{ user.fullName || user.username }}</span>
+          <span class="user-email">{{ user.email }}</span>
+        </div>
+      </div>
+      <!-- Role Selection Dropdown -->
+      <p>Chọn vai trò mới cho thành viên này:</p>
+      <mat-form-field appearance="outline" class="role-select-field">
+        <mat-label>Vai trò (Role)</mat-label>
+        <mat-select [(value)]="selectedRoleId">
+          @for (role of roles; track role) {
+            <mat-option [value]="role.roleId" [disabled]="!role.active">
+              {{ role.name }} @if (!role.active) {
+              <span> (Bị tắt)</span>
+            }
+          </mat-option>
+        }
       </mat-select>
     </mat-form-field>
   </div>
+}
 
-  <div class="dialog-actions" *ngIf="!loading">
+@if (!loading) {
+  <div class="dialog-actions">
     <button mat-button (click)="onCancel()" [disabled]="saving">Hủy bỏ</button>
     <button mat-flat-button color="primary" (click)="onSave()" [disabled]="saving || !selectedRoleId">
-      <span *ngIf="!saving">Lưu lại</span>
-      <span *ngIf="saving">Đang lưu...</span>
+      @if (!saving) {
+        <span>Lưu lại</span>
+      }
+      @if (saving) {
+        <span>Đang lưu...</span>
+      }
     </button>
   </div>
+}
 </div>

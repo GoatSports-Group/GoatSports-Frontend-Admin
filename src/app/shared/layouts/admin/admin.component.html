@@ -10,13 +10,15 @@
     </div>
 
     <!-- Admin profile box -->
-    <div class="admin-profile" *ngIf="userProfile">
-      <img [src]="userProfile.avatarUrl || fallbackAvatar" alt="Admin Avatar" class="admin-avatar">
-      <div class="admin-meta">
-        <strong class="admin-name">{{ userProfile.fullName }}</strong>
-        <span class="admin-email">{{ userProfile.email }}</span>
+    @if (userProfile) {
+      <div class="admin-profile">
+        <img [src]="userProfile.avatarUrl || fallbackAvatar" alt="Admin Avatar" class="admin-avatar">
+        <div class="admin-meta">
+          <strong class="admin-name">{{ userProfile.fullName }}</strong>
+          <span class="admin-email">{{ userProfile.email }}</span>
+        </div>
       </div>
-    </div>
+    }
 
     <mat-divider class="sidebar-divider"></mat-divider>
 
@@ -78,18 +80,18 @@
           <mat-divider></mat-divider>
           <div class="notif-items-list" (scroll)="onNotificationScroll($event)">
             @if ((notificationService.notifications$ | async)?.length === 0) {
-            <div class="notif-empty">Không có thông báo nào</div>
+              <div class="notif-empty">Không có thông báo nào</div>
             } @else {
-            @for (notif of notificationService.notifications$ | async; track notif.notificationId) {
-            <button mat-menu-item (click)="onNotificationClick(notif)" [class.unread]="notif.status === 'UNREAD'"
-              class="notif-item">
-              <div class="notif-item-content">
-                <span class="notif-title">{{ notif.title }}</span>
-                <p class="notif-desc">{{ notif.content }}</p>
-                <span class="notif-time">{{ notif.createdAt | date:'dd/MM HH:mm' }}</span>
-              </div>
-            </button>
-            }
+              @for (notif of notificationService.notifications$ | async; track notif.notificationId) {
+                <button mat-menu-item (click)="onNotificationClick(notif)" [class.unread]="notif.status === 'UNREAD'"
+                  class="notif-item">
+                  <div class="notif-item-content">
+                    <span class="notif-title">{{ notif.title }}</span>
+                    <p class="notif-desc">{{ notif.content }}</p>
+                    <span class="notif-time">{{ notif.createdAt | date:'dd/MM HH:mm' }}</span>
+                  </div>
+                </button>
+              }
             }
           </div>
         </mat-menu>
