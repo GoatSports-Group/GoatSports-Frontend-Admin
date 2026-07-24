@@ -5,13 +5,14 @@ import { Notification } from '@domain/entities/notification';
 import { BaseListResponse, BaseResponse } from '@application/dto/base/base-response';
 import { PageFilter } from '@application/dto/page.filter';
 import { buildPageParams } from '@shared/utils/api.helper';
+import { environment } from "@environments/environment"
 
 @Injectable({
   providedIn: 'root'
 })
 export class NotificationApi {
   private http = inject(HttpClient);
-  private apiBase = import.meta.env.NG_APP_API_URL;
+  private apiBase = environment.apiUrl;
 
   getNotifications(filter: PageFilter): Observable<BaseResponse<BaseListResponse<Notification>>> {
     const params = buildPageParams(filter);

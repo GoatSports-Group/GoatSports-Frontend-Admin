@@ -5,13 +5,14 @@ import { BaseListResponse, BaseResponse } from '@application/dto/base/base-respo
 import { Role, RoleCreateRequest, RoleUpdateRequest } from '@application/dto/role/role.dto';
 import { PageFilter } from '@application/dto/page.filter';
 import { buildPageParams } from '@shared/utils/api.helper';
+import { environment } from "@environments/environment"
 
 @Injectable({
   providedIn: 'root'
 })
 export class RoleApi {
   private http = inject(HttpClient);
-  private apiBase = import.meta.env.NG_APP_API_URL;
+  private apiBase = environment.apiUrl;
 
   getRoles(filter: PageFilter): Observable<BaseResponse<BaseListResponse<Role>>> {
     const params = buildPageParams(filter);

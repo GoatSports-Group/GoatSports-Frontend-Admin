@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { filter, map, take } from 'rxjs/operators';
 import { AuthService } from '@presentation/services/auth.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { environment } from "@environments/environment"
 
 @Injectable({
   providedIn: 'root'
@@ -19,8 +20,8 @@ export class AdminGuard implements CanActivate {
       take(1),
       map(() => {
         if (!this.authService.isAuthenticated) {
-          const adminUrl = import.meta.env.NG_APP_ADMIN_API_URL;
-          const authUrl = import.meta.env.NG_APP_AUTH_API_URL;
+          const adminUrl = environment.adminApiUrl;
+          const authUrl = environment.authApiUrl;
           const redirectUrl = encodeURIComponent(`${adminUrl}/admin`);
           window.location.href = `${authUrl}/login?redirect=${redirectUrl}`;
           return false;

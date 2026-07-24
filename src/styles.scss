@@ -1,3 +1,8 @@
+/* Angular Material Prebuilt Theme And Tailwindcss */
+@use '@angular/material/prebuilt-themes/cyan-orange.css';
+@use 'material-icons/iconfont/material-icons.scss';
+@use "tailwindcss";
+
 /* Import Fonts */
 @font-face {
   font-family: 'Be Vietnam Pro';
@@ -5,102 +10,119 @@
   font-weight: 100;
   font-style: normal;
 }
+
 @font-face {
   font-family: 'Be Vietnam Pro';
   src: url('./assets/fonts/Be_Vietnam_Pro/BeVietnamPro-ThinItalic.ttf') format('truetype');
   font-weight: 100;
   font-style: italic;
 }
+
 @font-face {
   font-family: 'Be Vietnam Pro';
   src: url('./assets/fonts/Be_Vietnam_Pro/BeVietnamPro-ExtraLight.ttf') format('truetype');
   font-weight: 200;
   font-style: normal;
 }
+
 @font-face {
   font-family: 'Be Vietnam Pro';
   src: url('./assets/fonts/Be_Vietnam_Pro/BeVietnamPro-ExtraLightItalic.ttf') format('truetype');
   font-weight: 200;
   font-style: italic;
 }
+
 @font-face {
   font-family: 'Be Vietnam Pro';
   src: url('./assets/fonts/Be_Vietnam_Pro/BeVietnamPro-Light.ttf') format('truetype');
   font-weight: 300;
   font-style: normal;
 }
+
 @font-face {
   font-family: 'Be Vietnam Pro';
   src: url('./assets/fonts/Be_Vietnam_Pro/BeVietnamPro-LightItalic.ttf') format('truetype');
   font-weight: 300;
   font-style: italic;
 }
+
 @font-face {
   font-family: 'Be Vietnam Pro';
   src: url('./assets/fonts/Be_Vietnam_Pro/BeVietnamPro-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
 }
+
 @font-face {
   font-family: 'Be Vietnam Pro';
   src: url('./assets/fonts/Be_Vietnam_Pro/BeVietnamPro-Italic.ttf') format('truetype');
   font-weight: 400;
   font-style: italic;
 }
+
 @font-face {
   font-family: 'Be Vietnam Pro';
   src: url('./assets/fonts/Be_Vietnam_Pro/BeVietnamPro-Medium.ttf') format('truetype');
   font-weight: 500;
   font-style: normal;
 }
+
 @font-face {
   font-family: 'Be Vietnam Pro';
   src: url('./assets/fonts/Be_Vietnam_Pro/BeVietnamPro-MediumItalic.ttf') format('truetype');
   font-weight: 500;
   font-style: italic;
 }
+
 @font-face {
   font-family: 'Be Vietnam Pro';
   src: url('./assets/fonts/Be_Vietnam_Pro/BeVietnamPro-SemiBold.ttf') format('truetype');
   font-weight: 600;
   font-style: normal;
 }
+
 @font-face {
   font-family: 'Be Vietnam Pro';
   src: url('./assets/fonts/Be_Vietnam_Pro/BeVietnamPro-SemiBoldItalic.ttf') format('truetype');
   font-weight: 600;
   font-style: italic;
 }
+
 @font-face {
   font-family: 'Be Vietnam Pro';
   src: url('./assets/fonts/Be_Vietnam_Pro/BeVietnamPro-Bold.ttf') format('truetype');
   font-weight: 700;
   font-style: normal;
 }
+
 @font-face {
   font-family: 'Be Vietnam Pro';
   src: url('./assets/fonts/Be_Vietnam_Pro/BeVietnamPro-BoldItalic.ttf') format('truetype');
   font-weight: 700;
   font-style: italic;
 }
+
 @font-face {
   font-family: 'Be Vietnam Pro';
   src: url('./assets/fonts/Be_Vietnam_Pro/BeVietnamPro-ExtraBold.ttf') format('truetype');
   font-weight: 800;
   font-style: normal;
 }
+
 @font-face {
   font-family: 'Be Vietnam Pro';
   src: url('./assets/fonts/Be_Vietnam_Pro/BeVietnamPro-ExtraBoldItalic.ttf') format('truetype');
   font-weight: 800;
   font-style: italic;
 }
+
 @font-face {
   font-family: 'Be Vietnam Pro';
   src: url('./assets/fonts/Be_Vietnam_Pro/BeVietnamPro-Black.ttf') format('truetype');
   font-weight: 900;
   font-style: normal;
 }
+
 @font-face {
   font-family: 'Be Vietnam Pro';
   src: url('./assets/fonts/Be_Vietnam_Pro/BeVietnamPro-BlackItalic.ttf') format('truetype');
@@ -110,37 +132,58 @@
 
 /* Global Design System & Variables */
 :root {
-  --primary: #059669;          /* Sporty grass green */
-  --primary-hover: #047857;    /* Deeper green for active states */
-  --primary-light: #f0fdf4;    /* Mint background */
-  --accent: #0ea5e9;           /* Cyber energetic blue */
-  --accent-hover: #0284c7;     /* Deeper blue */
-  --accent-light: #f0f9ff;     /* Sky blue tint */
-  --success: #10b981;          /* Modern success mint-green */
-  --warning: #f59e0b;          /* Amber warning */
-  --danger: #ef4444;           /* Neon-ish danger red */
-  --info: #06b6d4;             /* Electric cyan info */
-  --text-dark: #0f172a;        /* Slate-900 */
-  --text-muted: #64748b;       /* Slate-500 secondary labels */
-  --text-light: #ffffff;       /* High-contrast white */
-  --bg-body: #f8fafc;          /* Slate-50 ultra-clean premium canvas */
-  --bg-card: #ffffff;          /* Pure white container card */
-  --border-color: #cbd5e1;     /* Slate-300 sharp, thin boundary line */
+  --primary: #059669;
+  /* Sporty grass green */
+  --primary-hover: #047857;
+  /* Deeper green for active states */
+  --primary-light: #f0fdf4;
+  /* Mint background */
+  --accent: #0ea5e9;
+  /* Cyber energetic blue */
+  --accent-hover: #0284c7;
+  /* Deeper blue */
+  --accent-light: #f0f9ff;
+  /* Sky blue tint */
+  --success: #10b981;
+  /* Modern success mint-green */
+  --warning: #f59e0b;
+  /* Amber warning */
+  --danger: #ef4444;
+  /* Neon-ish danger red */
+  --info: #06b6d4;
+  /* Electric cyan info */
+  --text-dark: #0f172a;
+  /* Slate-900 */
+  --text-muted: #64748b;
+  /* Slate-500 secondary labels */
+  --text-light: #ffffff;
+  /* High-contrast white */
+  --bg-body: #f8fafc;
+  /* Slate-50 ultra-clean premium canvas */
+  --bg-card: #ffffff;
+  /* Pure white container card */
+  --border-color: #cbd5e1;
+  /* Slate-300 sharp, thin boundary line */
 
   --font-heading: 'Be Vietnam Pro', sans-serif;
   --font-body: 'Be Vietnam Pro', sans-serif;
 
-  --border-radius: 14px;       /* radius_md */
-  --border-radius-sm: 6px;     /* radius_sm */
-  --border-radius-lg: 24px;    /* radius_lg */
+  --border-radius: 14px;
+  /* radius_md */
+  --border-radius-sm: 6px;
+  /* radius_sm */
+  --border-radius-lg: 24px;
+  /* radius_lg */
 
   --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
   --shadow-md: 0 12px 30px -10px rgba(15, 23, 42, 0.08);
   --shadow-lg: 0 30px 60px -15px rgba(15, 23, 42, 0.12);
   --shadow-glow-primary: 0 0 20px 0 rgba(5, 150, 105, 0.25);
 
-  --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); /* ease_out_expo */
-  --transition-spring: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); /* spring_snappy */
+  --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  /* ease_out_expo */
+  --transition-spring: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* spring_snappy */
 }
 
 /* Reset and base styles */
@@ -254,6 +297,7 @@ a {
   .mat-mdc-select-value {
     color: var(--text-dark) !important;
   }
+
   --mat-form-field-outlined-input-text-placeholder-color: var(--text-muted);
   --mat-form-field-filled-input-text-placeholder-color: var(--text-muted);
 
@@ -289,6 +333,7 @@ a {
   }
 
   &.mat-focused {
+
     .mdc-notched-outline__leading,
     .mdc-notched-outline__notch,
     .mdc-notched-outline__trailing {
@@ -380,10 +425,6 @@ mat-icon[color="primary"] {
   }
 }
 
-/* Angular Material Prebuilt Theme */
-@import '@angular/material/prebuilt-themes/cyan-orange.css';
-@import 'material-icons/iconfont/material-icons.css';
-
 /* Make validation errors high contrast and bold red */
 mat-error,
 .mat-mdc-form-field-error {
@@ -399,6 +440,7 @@ mat-error,
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -409,6 +451,7 @@ mat-error,
     opacity: 0;
     transform: translateY(25px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -420,6 +463,7 @@ mat-error,
     opacity: 0;
     transform: scale(0.96);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -430,9 +474,11 @@ mat-error,
   0% {
     box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.4);
   }
+
   70% {
     box-shadow: 0 0 0 10px rgba(5, 150, 105, 0);
   }
+
   100% {
     box-shadow: 0 0 0 0 rgba(5, 150, 105, 0);
   }
@@ -468,6 +514,7 @@ mat-error,
 /* Hover effects upgrades */
 .hover-scale {
   transition: var(--transition-smooth) !important;
+
   &:hover {
     transform: translateY(-4px) scale(1.02) !important;
     box-shadow: var(--shadow-lg) !important;
@@ -476,6 +523,7 @@ mat-error,
 
 .hover-glow {
   transition: var(--transition-smooth) !important;
+
   &:hover {
     box-shadow: 0 10px 20px rgba(5, 150, 105, 0.12) !important;
     border-color: rgba(5, 150, 105, 0.25) !important;
@@ -484,6 +532,7 @@ mat-error,
 
 .hover-btn-pulse {
   transition: var(--transition-smooth) !important;
+
   &:hover {
     animation: pulseGlow 1.5s infinite;
     transform: translateY(-1px);
@@ -519,12 +568,15 @@ mat-error,
     width: 8px;
     height: 8px;
   }
+
   &::-webkit-scrollbar-track {
     background: var(--bg-body);
   }
+
   &::-webkit-scrollbar-thumb {
     background: var(--border-color);
     border-radius: 99px;
+
     &:hover {
       background: var(--primary);
     }
@@ -543,8 +595,8 @@ mat-error,
 .athletic-skew {
   display: inline-block;
   transform: skewX(-8deg);
-  
-  & > * {
+
+  &>* {
     transform: skewX(8deg);
     display: inline-block;
   }
@@ -622,7 +674,7 @@ mat-error,
     transform: translate(2px, 2px) !important;
     box-shadow: 2px 2px 0px var(--text-dark) !important;
   }
-  
+
   &[disabled] {
     opacity: 0.6 !important;
     box-shadow: none !important;
@@ -644,37 +696,38 @@ mat-error,
   gap: 4px !important;
 }
 
-body.dark, body[data-theme="dark"] {
+body.dark,
+body[data-theme="dark"] {
   .neo-card {
     border-color: var(--primary) !important;
     box-shadow: 6px 6px 0px var(--primary) !important;
-    
+
     &:hover {
       box-shadow: 9px 9px 0px var(--primary) !important;
       border-color: var(--accent) !important;
     }
-    
+
     &:active {
       box-shadow: 3px 3px 0px var(--primary) !important;
     }
   }
-  
+
   .neo-btn {
     border-color: var(--primary) !important;
     box-shadow: 4px 4px 0px var(--primary) !important;
     color: var(--text-dark) !important;
-    
+
     &:hover:not([disabled]) {
       box-shadow: 6px 6px 0px var(--primary) !important;
       background-color: var(--primary-hover) !important;
       color: white !important;
     }
-    
+
     &:active:not([disabled]) {
       box-shadow: 2px 2px 0px var(--primary) !important;
     }
   }
-  
+
   .neo-badge {
     border-color: var(--primary) !important;
     background-color: var(--primary-light) !important;

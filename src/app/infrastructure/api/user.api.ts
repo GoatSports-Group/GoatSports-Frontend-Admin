@@ -5,13 +5,14 @@ import { BaseListResponse, BaseResponse } from '@application/dto/base/base-respo
 import { User } from '@domain/entities/user';
 import { PageFilter } from '@application/dto/page.filter';
 import { buildPageParams } from '@shared/utils/api.helper';
+import { environment } from "@environments/environment"
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserApi {
   private http = inject(HttpClient);
-  private apiBase = import.meta.env.NG_APP_API_URL;
+  private apiBase = environment.apiUrl;
 
   getUsers(filter: PageFilter): Observable<BaseResponse<BaseListResponse<User>>> {
     const params = buildPageParams(filter);
