@@ -1,112 +1,133 @@
-<div class="roles-container-page">
-  <div class="page-header">
-    <div class="header-title-box">
-      <h1>Quản Lý Vai Trò (Roles)</h1>
-      <p>Khai báo, cấu hình trạng thái và phân bổ quyền hạn cho từng nhóm vai trò trong GOAT Sports.</p>
+<div class="flex flex-col gap-6 animate-fade-in relative z-10">
+
+  <!-- Page Header -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/80 pb-5">
+    <div>
+      <h1 class="font-display text-2xl font-black text-slate-900 uppercase tracking-tight">Quản Lý Vai Trò (Roles)</h1>
+      <p class="text-xs font-semibold text-slate-500 mt-1">Khai báo, cấu hình trạng thái và phân bổ quyền hạn cho từng nhóm vai trò trong GOAT Sports.</p>
     </div>
-    <button mat-flat-button color="primary" class="add-btn" (click)="openRoleDialog()">
-      <mat-icon>add</mat-icon> Tạo Vai Trò Mới
+    
+    <button (click)="openRoleDialog()"
+            class="w-full md:w-auto bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-extrabold text-xs px-5 h-11 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 cursor-pointer font-display">
+      <mat-icon class="text-sm">add</mat-icon> Tạo Vai Trò Mới
     </button>
   </div>
 
   <!-- Search & Filter Controls -->
-  <mat-card class="filter-card">
-    <mat-card-content class="filter-content">
-      <mat-form-field appearance="outline" class="search-field">
-        <mat-label>Tìm kiếm vai trò</mat-label>
-        <input matInput [(ngModel)]="searchQuery" (keyup.enter)="onSearch()" placeholder="Nhập tên hoặc mô tả vai trò...">
-        <button mat-icon-button matSuffix (click)="onSearch()" aria-label="Search">
-          <mat-icon>search</mat-icon>
-        </button>
-      </mat-form-field>
+  <div class="bg-white/85 border border-slate-200/80 backdrop-blur-xl rounded-[24px] p-4 shadow-xl shadow-slate-950/5 flex flex-col md:flex-row items-center gap-4">
+    <div class="relative w-full flex-1">
+      <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+        <mat-icon class="text-slate-400">search</mat-icon>
+      </span>
+      <input type="text" 
+             [(ngModel)]="searchQuery" 
+             (keyup.enter)="onSearch()"
+             placeholder="Tìm kiếm vai trò theo tên hoặc mô tả..." 
+             class="w-full h-[46px] bg-slate-50/80 border border-slate-200/80 rounded-2xl pl-11 pr-4 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all">
+    </div>
+    
+    <button (click)="onSearch()" 
+            class="w-full md:w-auto bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs px-6 h-[46px] rounded-2xl flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-md font-display">
+      <mat-icon class="text-sm">filter_list</mat-icon> Lọc dữ liệu
+    </button>
+  </div>
 
-      <button mat-flat-button color="primary" class="search-btn" (click)="onSearch()">
-        <mat-icon>filter_list</mat-icon> Lọc dữ liệu
-      </button>
-    </mat-card-content>
-  </mat-card>
-
-  <!-- Table Card -->
-  <mat-card class="table-card">
-    @if (loading) {
-      <div class="table-progress-bar">
-        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  <!-- Loading State -->
+  @if (loading) {
+    <div class="flex flex-col items-center justify-center py-20 bg-white/85 border border-slate-200/80 backdrop-blur-xl rounded-[24px] shadow-xl">
+      <mat-spinner diameter="40" color="accent"></mat-spinner>
+      <p class="text-xs font-extrabold text-slate-400 uppercase tracking-wider font-display mt-4">Đang tải danh sách vai trò...</p>
+    </div>
+  } @else {
+    
+    <!-- Empty State -->
+    @if (roles.length === 0) {
+      <div class="flex flex-col items-center justify-center py-20 text-center bg-white/85 border border-slate-200/80 backdrop-blur-xl rounded-[24px] shadow-xl">
+        <mat-icon class="text-5xl text-slate-300 mb-4">admin_panel_settings</mat-icon>
+        <h3 class="text-base font-extrabold text-slate-900 font-display">Không tìm thấy vai trò nào</h3>
+        <p class="text-xs text-slate-500 mt-1 max-w-sm font-medium">Thử điều chỉnh từ khóa tìm kiếm hoặc nhấn nút Tạo Vai Trò để bắt đầu.</p>
       </div>
+    } @else {
+      
+      <!-- Roles Cards Grid (3 Columns) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (role of roles; track role.roleId) {
+          <div class="bg-white/85 border border-slate-200/80 backdrop-blur-xl rounded-[24px] p-5 shadow-xl shadow-slate-950/5 hover:border-emerald-400 hover:shadow-2xl transition-all flex flex-col justify-between gap-5 relative overflow-hidden group">
+            
+            <!-- Card Header -->
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
+                  <mat-icon>admin_panel_settings</mat-icon>
+                </div>
+                <div class="flex flex-col">
+                  <span class="font-display text-sm font-black text-slate-900 uppercase tracking-wider">{{ role.name }}</span>
+                  <span class="text-[10px] text-slate-400 font-mono font-medium">ID: {{ role.roleId.substring(0, 8) }}...</span>
+                </div>
+              </div>
+
+              <!-- Active Status Badge -->
+              <button (click)="toggleActive(role)"
+                      [ngClass]="role.active ? 'bg-emerald-50 border-emerald-200 text-emerald-700 font-extrabold' : 'bg-slate-100 border-slate-200 text-slate-500 font-semibold'"
+                      class="border px-3 py-1 rounded-full text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-xs">
+                {{ role.active ? 'Đang hoạt động' : 'Tạm ngưng' }}
+              </button>
+            </div>
+
+            <!-- Card Body / Description -->
+            <div class="flex flex-col gap-3">
+              <p class="text-xs text-slate-600 font-medium leading-relaxed min-h-[40px] line-clamp-2">
+                {{ role.description || 'Không có mô tả chi tiết cho vai trò này.' }}
+              </p>
+              
+              <div class="flex items-center gap-2">
+                <span class="bg-slate-100 border border-slate-200/80 text-slate-700 text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider">
+                  {{ role.permissions?.length || 0 }} quyền hạn
+                </span>
+              </div>
+            </div>
+
+            <!-- Card Footer / Actions -->
+            <div class="border-t border-slate-100 pt-4 mt-1 flex items-center justify-between">
+              <div class="flex items-center gap-1.5">
+                <button (click)="openRoleDialog(role)"
+                        matTooltip="Chỉnh sửa vai trò"
+                        class="w-8 h-8 rounded-xl flex items-center justify-center border border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all cursor-pointer">
+                  <mat-icon class="text-sm !w-4 !h-4">edit</mat-icon>
+                </button>
+                <button (click)="deleteRole(role)"
+                        [disabled]="role.name === 'ADMIN'"
+                        matTooltip="Xóa vai trò"
+                        class="w-8 h-8 rounded-xl flex items-center justify-center border border-slate-200 text-slate-500 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 transition-all disabled:opacity-30 cursor-pointer">
+                  <mat-icon class="text-sm !w-4 !h-4">delete</mat-icon>
+                </button>
+              </div>
+
+              <button (click)="navigateToPermissions(role)"
+                      class="px-3.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 hover:bg-emerald-600 hover:text-white text-emerald-700 font-extrabold text-xs transition-all flex items-center gap-1 cursor-pointer shadow-xs">
+                <mat-icon class="text-xs !w-3.5 !h-3.5">lock_open</mat-icon> Phân quyền
+              </button>
+            </div>
+
+          </div>
+        }
+      </div>
+
+      <!-- Paginator Footer -->
+      @if (totalItems > pageSize) {
+        <div class="bg-white/85 border border-slate-200/80 backdrop-blur-xl rounded-[24px] p-2 shadow-xl mt-4">
+          <mat-paginator
+            [length]="totalItems"
+            [pageSize]="pageSize"
+            [pageSizeOptions]="[6, 12, 24]"
+            [pageIndex]="pageIndex"
+            (page)="onPageChange($event)"
+            showFirstLastButtons
+            class="!bg-transparent text-slate-600">
+          </mat-paginator>
+        </div>
+      }
     }
+  }
 
-    <mat-card-content class="table-wrapper-content">
-      <!-- Empty State -->
-      @if (!loading && roles.length === 0) {
-        <div class="empty-state">
-          <mat-icon class="empty-icon">admin_panel_settings</mat-icon>
-          <h3>Không tìm thấy vai trò nào</h3>
-          <p>Thử điều chỉnh từ khóa tìm kiếm hoặc bấm Tạo Vai Trò để bắt đầu.</p>
-        </div>
-      }
-
-      @if (roles.length > 0) {
-        <div class="table-scroll">
-          <table mat-table [dataSource]="roles" class="roles-table">
-            <!-- Role Name Column -->
-            <ng-container matColumnDef="name">
-              <th mat-header-cell *matHeaderCellDef> Tên vai trò </th>
-              <td mat-cell *matCellDef="let role" class="font-bold">
-                <span class="role-name-text">{{ role.name }}</span>
-              </td>
-            </ng-container>
-            <!-- Description Column -->
-            <ng-container matColumnDef="description">
-              <th mat-header-cell *matHeaderCellDef> Mô tả </th>
-              <td mat-cell *matCellDef="let role"> {{ role.description || 'Chưa có mô tả' }} </td>
-            </ng-container>
-            <!-- Status Column -->
-            <ng-container matColumnDef="status">
-              <th mat-header-cell *matHeaderCellDef> Trạng thái </th>
-              <td mat-cell *matCellDef="let role">
-                <span class="status-badge" [class.active]="role.active" (click)="toggleActive(role)">
-                  {{ role.active ? 'Đang hoạt động' : 'Tạm ngưng' }}
-                </span>
-              </td>
-            </ng-container>
-            <!-- Permissions Count Column -->
-            <ng-container matColumnDef="permissionsCount">
-              <th mat-header-cell *matHeaderCellDef class="text-center"> Số quyền hạn </th>
-              <td mat-cell *matCellDef="let role" class="text-center">
-                <span class="permission-count-badge">
-                  {{ role.permissions?.length || 0 }}
-                </span>
-              </td>
-            </ng-container>
-            <!-- Actions Column -->
-            <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef class="text-center"> Thao tác </th>
-              <td mat-cell *matCellDef="let role" class="text-center actions-cell">
-                <button mat-icon-button color="primary" matTooltip="Chỉnh sửa thông tin" (click)="openRoleDialog(role)">
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button mat-icon-button color="accent" matTooltip="Gán quyền hạn" (click)="navigateToPermissions(role)">
-                  <mat-icon>lock_open</mat-icon>
-                </button>
-                <button mat-icon-button color="warn" matTooltip="Xóa vai trò" (click)="deleteRole(role)" [disabled]="role.name === 'ADMIN'">
-                  <mat-icon>delete</mat-icon>
-                </button>
-              </td>
-            </ng-container>
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-          </table>
-        </div>
-      }
-    </mat-card-content>
-
-    <!-- Paginator -->
-    <mat-paginator
-      [length]="totalItems"
-      [pageSize]="pageSize"
-      [pageSizeOptions]="[5, 10, 20, 50]"
-      [pageIndex]="pageIndex"
-      (page)="onPageChange($event)"
-      showFirstLastButtons>
-    </mat-paginator>
-  </mat-card>
 </div>

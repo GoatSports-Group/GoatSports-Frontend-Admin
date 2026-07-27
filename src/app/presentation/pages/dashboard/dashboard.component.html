@@ -1,7 +1,337 @@
-<div class="dev-container">
-  <div class="dev-card">
-    <mat-icon class="dev-icon">construction</mat-icon>
-    <h1>Chức năng đang phát triển</h1>
-    <p>Trang Tổng quan đang được thiết lập và sẽ sớm ra mắt trong phiên bản tiếp theo.</p>
+<div class="space-y-6 relative z-10">
+
+  <!-- ═══════════════════════════════════════════
+       1. HERO WELCOME & WEATHER BANNER
+  ═══════════════════════════════════════════ -->
+  <div class="relative overflow-hidden rounded-[28px] border border-emerald-500/20 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 p-6 md:p-8 shadow-xl shadow-emerald-500/10 text-white">
+    <!-- Ambient Overlay Grid Pattern -->
+    <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent"></div>
+
+    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      
+      <!-- Welcome Headline -->
+      <div class="space-y-3 max-w-xl">
+        <div class="flex items-center gap-3">
+          <span class="inline-flex items-center gap-1.5 rounded-full bg-white/20 border border-white/30 px-3 py-1 text-xs font-black text-white backdrop-blur-md">
+            <span class="h-2 w-2 rounded-full bg-white animate-pulse"></span>
+            Hệ Thống Live
+          </span>
+          <span class="text-xs font-semibold text-emerald-100">{{ currentDate | date:'EEEE, dd MMMM yyyy' }}</span>
+        </div>
+
+        <h1 class="font-display text-2xl md:text-3xl font-black tracking-tight text-white">
+          Xin chào, {{ adminName }}! ⚽
+        </h1>
+        
+        <p class="text-xs md:text-sm text-emerald-50 leading-relaxed font-medium">
+          Trung tâm điều hành GoatSports Admin. Theo dõi các đơn đăng ký chủ sân, người dùng mới và hiệu suất lấp đầy các cơ sở thể thao.
+        </p>
+
+        <!-- Quick Action CTA Buttons -->
+        <div class="pt-2 flex flex-wrap items-center gap-3">
+          <a routerLink="/owner-applications" 
+             class="inline-flex items-center gap-2 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 text-xs font-black shadow-lg transition-all hover:scale-[1.02] font-display">
+            <mat-icon class="!w-4 !h-4 text-sm">assignment_ind</mat-icon>
+            Duyệt Chủ Sân
+            @if (pendingApps() > 0) {
+              <span class="ml-1 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-black text-white">{{ pendingApps() }}</span>
+            }
+          </a>
+
+          <a routerLink="/users" 
+             class="inline-flex items-center gap-2 rounded-2xl border border-white/30 bg-white/10 hover:bg-white/20 text-white px-5 py-2.5 text-xs font-extrabold backdrop-blur-md transition-all font-display">
+            <mat-icon class="!w-4 !h-4 text-sm">people</mat-icon>
+            Quản Lý Người Dùng
+          </a>
+        </div>
+      </div>
+
+      <!-- Real-time Weather Widget -->
+      <div class="shrink-0 rounded-2xl border border-white/30 bg-white/15 p-5 backdrop-blur-md flex items-center gap-4 min-w-[240px] shadow-lg">
+        <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-white border border-white/30">
+          <mat-icon class="!w-7 !h-7 text-2xl">{{ weather().icon }}</mat-icon>
+        </div>
+        <div>
+          <span class="text-[10px] uppercase font-black tracking-widest text-emerald-100 font-display">TP. Hồ Chí Minh</span>
+          <div class="flex items-baseline gap-1">
+            <span class="font-display text-2xl font-black text-white">{{ weather().temp }}°C</span>
+          </div>
+          <span class="text-xs text-white font-extrabold">{{ weather().description }}</span>
+        </div>
+      </div>
+
+    </div>
   </div>
+
+  <!-- ═══════════════════════════════════════════
+       2. KPI METRIC CARDS GRID (4 Columns)
+  ═══════════════════════════════════════════ -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    <app-metric-card
+      title="Tổng Người Dùng"
+      [value]="totalUsers()"
+      icon="group"
+      trendText="+12%"
+      [isPositiveTrend]="true"
+      description="Tài khoản người chơi & quản lý"
+      colorScheme="emerald">
+    </app-metric-card>
+
+    <app-metric-card
+      title="Đơn Chủ Sân Chờ Duyệt"
+      [value]="pendingApps()"
+      icon="pending_actions"
+      trendText="Ưu tiên cao"
+      [isPositiveTrend]="false"
+      description="Yêu cầu xét duyệt tư cách"
+      colorScheme="amber">
+    </app-metric-card>
+
+    <app-metric-card
+      title="Sân Đang Hoạt Động"
+      [value]="approvedApps()"
+      icon="sports_soccer"
+      trendText="+8%"
+      [isPositiveTrend]="true"
+      description="Cơ sở đã được xác minh"
+      colorScheme="cyan">
+    </app-metric-card>
+
+    <app-metric-card
+      title="Hồ Sơ Đã Từ Chối"
+      [value]="rejectedApps()"
+      icon="do_not_disturb_on"
+      description="Không đủ điều kiện kinh doanh"
+      colorScheme="rose">
+    </app-metric-card>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       3. MAIN CONTENT DUAL COLUMN LAYOUT
+  ═══════════════════════════════════════════ -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- LEFT COLUMN (2 Cols): Pending Applications Queue & Recent Users -->
+    <div class="lg:col-span-2 space-y-6">
+
+      <!-- Card 1: Pending Owner Applications Queue -->
+      <div class="rounded-[24px] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-950/5">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+          <div class="flex items-center gap-3">
+            <div class="flex h-9 w-9 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 border border-amber-200">
+              <mat-icon class="!w-5 !h-5 text-lg">assignment_ind</mat-icon>
+            </div>
+            <div>
+              <h2 class="text-sm font-black text-slate-900 font-display">Yêu Cầu Đăng Ký Chủ Sân</h2>
+              <p class="text-[11px] font-semibold text-slate-500">Danh sách các cơ sở thể thao chờ xác minh</p>
+            </div>
+          </div>
+
+          <a routerLink="/owner-applications" 
+             class="text-xs font-extrabold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 font-display">
+            Xem tất cả
+            <mat-icon class="!w-4 !h-4 text-xs">arrow_forward</mat-icon>
+          </a>
+        </div>
+
+        <!-- Table Container -->
+        <div class="mt-4 overflow-x-auto">
+          @if (loading()) {
+            <div class="flex items-center justify-center py-12">
+              <mat-spinner diameter="32" color="accent"></mat-spinner>
+            </div>
+          } @else if (upcomingSurveys().length === 0) {
+            <div class="p-10 text-center text-xs text-slate-400 space-y-2">
+              <mat-icon class="!w-10 !h-10 text-emerald-500 opacity-60">check_circle_outline</mat-icon>
+              <p class="font-bold text-slate-600">Tất cả đơn đăng ký chủ sân đã được xử lý hoàn tất!</p>
+            </div>
+          } @else {
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="border-b border-slate-200 text-[11px] uppercase font-black tracking-wider text-slate-500 bg-slate-50 font-display">
+                  <th class="py-3.5 px-4">Tên Cơ Sở / Chủ Sân</th>
+                  <th class="py-3.5 px-4">SĐT Liên Hệ</th>
+                  <th class="py-3.5 px-4">Ngày Gửi</th>
+                  <th class="py-3.5 px-4">Trạng Thái</th>
+                  <th class="py-3.5 px-4 text-right">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                @for (app of upcomingSurveys(); track app.ownerApplicationId) {
+                  <tr class="hover:bg-slate-50 transition-colors group">
+                    <td class="py-3.5 px-4">
+                      <div class="flex items-center gap-3">
+                        <div class="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 font-black uppercase text-xs border border-emerald-200 shadow-xs font-display">
+                          {{ app.businessName ? app.businessName.charAt(0) : 'S' }}
+                        </div>
+                        <div>
+                          <strong class="block text-xs font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">{{ app.businessName }}</strong>
+                          <span class="text-[11px] font-medium text-slate-500">{{ app.fullName }}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3.5 px-4 text-slate-700 font-mono font-semibold">{{ app.phone || 'N/A' }}</td>
+                    <td class="py-3.5 px-4 text-slate-500 font-medium">{{ (app.reviewedAt | date:'dd/MM/yyyy') || 'Vừa gửi' }}</td>
+                    <td class="py-3.5 px-4">
+                      <app-status-badge status="pending" text="Chờ duyệt"></app-status-badge>
+                    </td>
+                    <td class="py-3.5 px-4 text-right">
+                      <a routerLink="/owner-applications" 
+                         class="inline-flex items-center gap-1 rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-extrabold text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all shadow-xs">
+                        Xử lý
+                      </a>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </div>
+      </div>
+
+      <!-- Card 2: Recent Registered Users -->
+      <div class="rounded-[24px] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-950/5">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+          <div class="flex items-center gap-3">
+            <div class="flex h-9 w-9 items-center justify-center rounded-2xl bg-sky-50 text-sky-600 border border-sky-200">
+              <mat-icon class="!w-5 !h-5 text-lg">people</mat-icon>
+            </div>
+            <div>
+              <h2 class="text-sm font-black text-slate-900 font-display">Thành Viên Mới Gia Nhập</h2>
+              <p class="text-[11px] font-semibold text-slate-500">Tài khoản vừa đăng ký tài khoản thành viên</p>
+            </div>
+          </div>
+
+          <a routerLink="/users" class="text-xs font-extrabold text-sky-600 hover:text-sky-700 flex items-center gap-1 font-display">
+            Quản lý
+            <mat-icon class="!w-4 !h-4 text-xs">arrow_forward</mat-icon>
+          </a>
+        </div>
+
+        <div class="mt-4 divide-y divide-slate-100">
+          @for (user of recentUsers(); track user.userId) {
+            <div class="py-3 flex items-center justify-between gap-4 hover:bg-slate-50 px-3 rounded-2xl transition-colors">
+              <div class="flex items-center gap-3">
+                <img [src]="user.avatarUrl || getFallbackAvatar(user)" [alt]="user.fullName" class="h-9 w-9 rounded-2xl object-cover ring-1 ring-slate-200 shadow-xs">
+                <div>
+                  <strong class="block text-xs font-extrabold text-slate-900">{{ user.fullName || user.username }}</strong>
+                  <span class="text-[11px] text-slate-500 font-mono">{{ user.email }}</span>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <span class="hidden sm:inline-block text-[11px] text-slate-500 font-mono font-medium">&#64;{{ user.username }}</span>
+                <app-status-badge [status]="user.status === 'ACTIVE' ? 'active' : 'inactive'" [text]="user.status || 'ACTIVE'"></app-status-badge>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN (1 Col): Sports Load & Operations Calendar -->
+    <div class="space-y-6">
+
+      <!-- Card 1: Sports Court Occupancy Rate -->
+      <div class="rounded-[24px] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-950/5">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+          <div class="flex items-center gap-3">
+            <div class="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200">
+              <mat-icon class="!w-5 !h-5 text-lg">sports_score</mat-icon>
+            </div>
+            <div>
+              <h2 class="text-sm font-black text-slate-900 font-display">Tải Trọng Sân Thể Thao</h2>
+              <p class="text-[11px] font-semibold text-slate-500">Tỷ lệ đặt sân theo bộ môn</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+          <!-- Sport 1: Football -->
+          <div class="space-y-1.5">
+            <div class="flex justify-between text-xs">
+              <span class="font-bold text-slate-800 flex items-center gap-2">⚽ Bóng Đá</span>
+              <span class="font-black text-emerald-600">84%</span>
+            </div>
+            <div class="h-2 w-full rounded-full bg-slate-100 overflow-hidden border border-slate-200/60">
+              <div class="h-full rounded-full bg-emerald-500 shadow-sm" style="width: 84%"></div>
+            </div>
+          </div>
+
+          <!-- Sport 2: Badminton -->
+          <div class="space-y-1.5">
+            <div class="flex justify-between text-xs">
+              <span class="font-bold text-slate-800 flex items-center gap-2">🏸 Cầu Lông</span>
+              <span class="font-black text-sky-600">76%</span>
+            </div>
+            <div class="h-2 w-full rounded-full bg-slate-100 overflow-hidden border border-slate-200/60">
+              <div class="h-full rounded-full bg-sky-500 shadow-sm" style="width: 76%"></div>
+            </div>
+          </div>
+
+          <!-- Sport 3: Tennis -->
+          <div class="space-y-1.5">
+            <div class="flex justify-between text-xs">
+              <span class="font-bold text-slate-800 flex items-center gap-2">🎾 Tennis</span>
+              <span class="font-black text-amber-600">58%</span>
+            </div>
+            <div class="h-2 w-full rounded-full bg-slate-100 overflow-hidden border border-slate-200/60">
+              <div class="h-full rounded-full bg-amber-500 shadow-sm" style="width: 58%"></div>
+            </div>
+          </div>
+
+          <!-- Sport 4: Pickleball -->
+          <div class="space-y-1.5">
+            <div class="flex justify-between text-xs">
+              <span class="font-bold text-slate-800 flex items-center gap-2">🏓 Pickleball</span>
+              <span class="font-black text-purple-600">92%</span>
+            </div>
+            <div class="h-2 w-full rounded-full bg-slate-100 overflow-hidden border border-slate-200/60">
+              <div class="h-full rounded-full bg-purple-500 shadow-sm" style="width: 92%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Interactive Operations Calendar -->
+      <div class="rounded-[24px] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-950/5">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+          <div class="flex items-center gap-3">
+            <div class="flex h-9 w-9 items-center justify-center rounded-2xl bg-sky-50 text-sky-600 border border-sky-200">
+              <mat-icon class="!w-5 !h-5 text-lg">calendar_today</mat-icon>
+            </div>
+            <div>
+              <h2 class="text-sm font-black text-slate-900 font-display">Lịch Vận Hành System</h2>
+              <p class="text-[11px] font-semibold text-slate-500">{{ currentDate | date:'MMMM yyyy' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <!-- Calendar Days of Week Header -->
+          <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-black uppercase text-slate-400 mb-2 font-display">
+            <span>CN</span><span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span>
+          </div>
+
+          <!-- Calendar Grid -->
+          <div class="grid grid-cols-7 gap-1 text-center text-xs font-bold">
+            @for (blank of calendarOffsetCells; track $index) {
+              <div class="h-8 w-8"></div>
+            }
+            @for (day of calendarDays; track day) {
+              <div 
+                class="flex h-8 w-8 items-center justify-center rounded-xl transition-all"
+                [ngClass]="day === currentDay ? 'bg-emerald-600 text-white font-black shadow-md shadow-emerald-600/30 scale-105' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'">
+                {{ day }}
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
 </div>

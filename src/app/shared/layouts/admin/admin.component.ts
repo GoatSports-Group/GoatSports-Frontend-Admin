@@ -1,28 +1,51 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
-import { Router } from '@angular/router';
-import { AuthService } from '@presentation/services/auth.service';
-import { User } from '@application/dto/user/user.dto';
-import { Notification, NotificationType } from '@application/dto/notification/notification.dto';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
+import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Subscription, interval, of } from 'rxjs';
 import { startWith, switchMap, catchError, map } from 'rxjs/operators';
+
+import { AuthService } from '@presentation/services/auth.service';
 import { NotificationService } from '@presentation/services/notification.service';
+import { User } from '@application/dto/user/user.dto';
+import { Notification, NotificationType } from '@application/dto/notification/notification.dto';
+
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatBadgeModule } from '@angular/material/badge';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatSidenavModule } from '@angular/material/sidenav';
 
 @Component({
-    selector: 'app-admin',
-    templateUrl: './admin.component.html',
-    styleUrls: ['./admin.component.scss'],
-    standalone: false
+  selector: 'app-admin',
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    MatIconModule,
+    MatMenuModule,
+    MatBadgeModule,
+    MatButtonModule,
+    MatDividerModule,
+    MatSidenavModule
+  ],
+  templateUrl: './admin.component.html',
+  styleUrl: './admin.component.scss'
 })
 export class AdminComponent implements OnInit, OnDestroy {
   public authService = inject(AuthService);
+  public notificationService = inject(NotificationService);
   private router = inject(Router);
   private http = inject(HttpClient);
-  public notificationService = inject(NotificationService);
   private apiBase = import.meta.env.NG_APP_API_URL;
 
+  // Signals state management
+  sidebarCollapsed = signal(false);
+  isOnline = signal(true);
+  searchQuery = signal('');
+
   userProfile: User | null = null;
-  isOnline = true;
   clientUrl = import.meta.env.NG_APP_CLIENT_API_URL;
   private statusSub?: Subscription;
 
@@ -35,27 +58,28 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.statusSub = interval(10000)
       .pipe(
         startWith(0),
-        switchMap(() => this.http.get(`${this.apiBase}/auth-service/api/v1/auth/me`).pipe(
-          map(() => true),
-          catchError((err: any) => {
-            const isReachable = err.status !== 0;
-            return of(isReachable);
-          })
-        ))
-      ).subscribe({
-        next: (connected) => {
-          this.isOnline = connected;
-        },
-        error: () => {
-          this.isOnline = false;
-        }
+        switchMap(() =>
+          this.http.get(`${this.apiBase}/auth-service/api/v1/auth/me`).pipe(
+            map(() => true),
+            catchError((err: any) => {
+              const isReachable = err.status !== 0;
+              return of(isReachable);
+            })
+          )
+        )
+      )
+      .subscribe({
+        next: (connected) => this.isOnline.set(connected),
+        error: () => this.isOnline.set(false)
       });
   }
 
   ngOnDestroy() {
-    if (this.statusSub) {
-      this.statusSub.unsubscribe();
-    }
+    this.statusSub?.unsubscribe();
+  }
+
+  toggleSidebar() {
+    this.sidebarCollapsed.update(v => !v);
   }
 
   logout() {
@@ -98,18 +122,12 @@ export class AdminComponent implements OnInit, OnDestroy {
         if (notifications.length > 0 || page === 1) {
           this.notificationPage = page;
           if (page > 1) {
-            setTimeout(() => {
-              scrollElement.scrollTop = 10;
-            }, 50);
+            setTimeout(() => { scrollElement.scrollTop = 10; }, 50);
           } else {
             setTimeout(() => {
               scrollElement.scrollTop = scrollElement.scrollHeight - scrollElement.clientHeight - 10;
             }, 50);
           }
-        } else {
-          setTimeout(() => {
-            scrollElement.scrollTop = scrollElement.scrollHeight - scrollElement.clientHeight - 10;
-          }, 50);
         }
         this.isNotificationLoading = false;
       },

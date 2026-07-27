@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { SharedModule } from '@shared/shared.module';
 import { AdminRoutingModule } from '@presentation/routes/admin-routing.module';
 
-// Layout & Components
+// Layout & Standalone Components
 import { AdminComponent } from '@shared/layouts/admin/admin.component';
 import { DashboardOverviewComponent } from '@presentation/pages/dashboard/dashboard.component';
 import { UsersComponent } from '@presentation/pages/users/users.component';
@@ -15,11 +15,10 @@ import { PermissionsComponent } from '@presentation/pages/permissions/permission
 import { PermissionDialogComponent } from '@presentation/pages/permissions/permission-dialog/permission-dialog.component';
 import { OwnerApplicationsComponent } from '@presentation/pages/owner-applications/owner-applications.component';
 import { DocumentPreviewDialogComponent } from '@presentation/pages/owner-applications/document-preview-dialog/document-preview-dialog.component';
+import { StatusBadgeComponent } from '@shared/components/ui/status-badge.component';
 
 @NgModule({
   declarations: [
-    AdminComponent,
-    DashboardOverviewComponent,
     UsersComponent,
     AssignRoleDialogComponent,
     RolesComponent,
@@ -33,7 +32,10 @@ import { DocumentPreviewDialogComponent } from '@presentation/pages/owner-applic
   imports: [
     CommonModule,
     SharedModule,
-    AdminRoutingModule
+    AdminRoutingModule,
+    AdminComponent,
+    DashboardOverviewComponent,
+    StatusBadgeComponent
   ]
 })
 export class AdminModule { }

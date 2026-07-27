@@ -1,217 +1,263 @@
-<div class="admin-dashboard-container">
+<div class="flex flex-col lg:flex-row h-full gap-6 animate-fade-in relative z-10">
+
   <!-- Sidebar Panel: List & Filters -->
-  <div class="sidebar-panel">
-    <div class="sidebar-header">
-      <h2 class="athletic-title">Duyệt Đơn Đối Tác</h2>
-      <span class="count-badge">{{ filteredApplications.length }} đơn đăng ký</span>
+  <div class="w-full lg:w-[380px] flex flex-col bg-white/85 border border-slate-200/80 backdrop-blur-xl rounded-[24px] shadow-xl shadow-slate-950/5 overflow-hidden">
+    
+    <!-- Sidebar Header -->
+    <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+      <h2 class="font-display text-base font-black uppercase text-slate-900 tracking-tight">Duyệt Đơn Đối Tác</h2>
+      <span class="bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10.5px] font-extrabold px-3 py-1 rounded-full">
+        {{ filteredApplications.length }} hồ sơ
+      </span>
     </div>
 
     <!-- Search & Filter Controls -->
-    <div class="controls-box">
-      <mat-form-field appearance="outline" class="search-field">
-        <mat-label>Tìm tên, email, SĐT...</mat-label>
-        <input matInput [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange()" placeholder="Tìm kiếm nhanh...">
-        <mat-icon matSuffix>search</mat-icon>
-      </mat-form-field>
+    <div class="p-4 border-b border-slate-100 flex flex-col gap-3">
+      <!-- Search Input -->
+      <div class="relative w-full">
+        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <mat-icon class="text-slate-400 text-sm">search</mat-icon>
+        </span>
+        <input type="text" 
+               [(ngModel)]="searchQuery" 
+               (ngModelChange)="onSearchChange()" 
+               placeholder="Tìm tên, email, SĐT..." 
+               class="w-full h-[40px] bg-slate-50/80 border border-slate-200/80 rounded-2xl pl-9 pr-4 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all">
+      </div>
 
-      <div class="filter-chips">
-        <button class="chip-btn" [class.active]="filterStatus === 'ALL'" (click)="onFilterStatusChange('ALL')">
+      <!-- Filter status chips -->
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+        <button (click)="onFilterStatusChange('ALL')"
+                [ngClass]="filterStatus === 'ALL' ? 'bg-slate-900 text-white font-extrabold shadow-md' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200/60 font-bold'"
+                class="px-3 py-1.5 rounded-xl text-[10.5px] transition-all cursor-pointer whitespace-nowrap">
           Tất cả
         </button>
         @for (opt of OwnerApplicationStatusOp; track opt.value) {
-        <button class="chip-btn" [class.active]="filterStatus === opt.value" (click)="onFilterStatusChange(opt.value)">
-          {{ opt.label }}
-        </button>
+          <button (click)="onFilterStatusChange(opt.value)"
+                  [ngClass]="filterStatus === opt.value ? 'bg-slate-900 text-white font-extrabold shadow-md' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200/60 font-bold'"
+                  class="px-3 py-1.5 rounded-xl text-[10.5px] transition-all cursor-pointer whitespace-nowrap">
+            {{ opt.label }}
+          </button>
         }
       </div>
     </div>
 
-    <!-- List -->
-    <div class="list-wrapper">
+    <!-- List of applications -->
+    <div class="flex-1 overflow-y-auto divide-y divide-slate-100">
       @if (loadingList) {
-      <div class="list-loading">
-        <mat-spinner diameter="40"></mat-spinner>
-        <p>Đang tải danh sách...</p>
-      </div>
-      } @else if (filteredApplications.length === 0) {
-      <div class="list-empty">
-        <mat-icon>search_off</mat-icon>
-        <p>Không tìm thấy hồ sơ nào phù hợp</p>
-      </div>
-      } @else {
-      <div class="list-items">
-        @for (app of filteredApplications; track app.ownerApplicationId) {
-        <div class="list-item-card" [class.active]="selectedApplication?.ownerApplicationId === app.ownerApplicationId"
-          (click)="selectApplication(app)">
-          <div class="item-header">
-            <span class="item-business">{{ app.businessName }}</span>
-            <span class="status-dot" [ngClass]="getStatusLabel(app.status)"></span>
-          </div>
-          <div class="item-details">
-            <span class="item-name">{{ app.fullName }}</span>
-            <span class="item-date">{{ app.reviewedAt ? (app.reviewedAt | date:'dd/MM/yyyy HH:mm') : 'Mới nộp' }}</span>
-          </div>
+        <div class="flex flex-col items-center justify-center py-16 gap-3">
+          <mat-spinner diameter="30" color="accent"></mat-spinner>
+          <p class="text-xs font-extrabold text-slate-400 uppercase tracking-wider font-display">Đang tải danh sách...</p>
         </div>
+      } @else if (filteredApplications.length === 0) {
+        <div class="flex flex-col items-center justify-center py-16 text-center text-slate-400 gap-2">
+          <mat-icon class="text-3xl opacity-60">search_off</mat-icon>
+          <p class="text-xs font-semibold text-slate-500">Không tìm thấy hồ sơ nào phù hợp</p>
+        </div>
+      } @else {
+        @for (app of filteredApplications; track app.ownerApplicationId) {
+          <div (click)="selectApplication(app)"
+               [ngClass]="selectedApplication?.ownerApplicationId === app.ownerApplicationId ? 'bg-emerald-50/60 border-l-4 border-emerald-600' : 'hover:bg-slate-50/80 border-l-4 border-transparent'"
+               class="p-4 flex flex-col gap-2 transition-all cursor-pointer">
+            <div class="flex items-start justify-between gap-3">
+              <span class="font-extrabold text-slate-900 text-[13px] line-clamp-1 flex-1 leading-snug">{{ app.businessName }}</span>
+              <span class="w-2.5 h-2.5 rounded-full mt-1.5 shrink-0"
+                    [ngClass]="{
+                      'bg-emerald-500 shadow-sm': app.status === 'APPROVED',
+                      'bg-amber-500 shadow-sm': app.status === 'PENDING',
+                      'bg-rose-500 shadow-sm': app.status === 'REJECTED'
+                    }">
+              </span>
+            </div>
+            
+            <div class="flex justify-between items-center text-[11px] text-slate-500 font-semibold">
+              <span class="truncate max-w-[150px]">{{ app.fullName }}</span>
+              <span class="font-mono text-slate-400">{{ app.reviewedAt ? (app.reviewedAt | date:'dd/MM/yyyy HH:mm') : 'Mới nộp' }}</span>
+            </div>
+          </div>
         }
-      </div>
       }
     </div>
 
     <!-- Paginator -->
-    <mat-paginator
-      [length]="totalItems"
-      [pageSize]="pageSize"
-      [pageSizeOptions]="[5, 10, 15]"
-      [pageIndex]="pageIndex"
-      (page)="onPageChange($event)"
-      showFirstLastButtons
-      class="sidebar-paginator">
-    </mat-paginator>
+    <div class="border-t border-slate-100 p-1.5 bg-slate-50/50">
+      <mat-paginator
+        [length]="totalItems"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[5, 10, 15]"
+        [pageIndex]="pageIndex"
+        (page)="onPageChange($event)"
+        showFirstLastButtons
+        class="!bg-transparent text-slate-600">
+      </mat-paginator>
+    </div>
   </div>
 
   <!-- Detail Panel: Document Review & Actions -->
-  <div class="detail-panel">
+  <div class="flex-1 bg-white/85 border border-slate-200/80 backdrop-blur-xl rounded-[24px] shadow-xl shadow-slate-950/5 overflow-hidden flex flex-col">
     @if (selectedApplication) {
-    @if (loadingDetail) {
-    <div class="detail-loading">
-      <mat-spinner diameter="50"></mat-spinner>
-      <p>Đang tải tài liệu chi tiết...</p>
-    </div>
-    } @else {
-    <div class="detail-scrollable">
-      <!-- Detail Header Banner -->
-      <div class="detail-header-card neo-card">
-        <div class="header-info">
-          <h1 class="athletic-title">{{ selectedApplication.businessName }}</h1>
-          <p class="business-type">{{ getBusinessTypeLabel(selectedApplication.businessType) }} | Mã số thuế: {{
-            selectedApplication.taxCode }}</p>
+      @if (loadingDetail) {
+        <div class="flex-1 flex flex-col items-center justify-center gap-3">
+          <mat-spinner diameter="40" color="accent"></mat-spinner>
+          <p class="text-sm font-extrabold text-slate-400 uppercase tracking-wider font-display">Đang tải tài liệu chi tiết...</p>
         </div>
-        <span class="status-pill">
-          {{ getStatusLabel(selectedApplication.status) }}
-        </span>
-      </div>
-
-      <!-- Reject Alert Box -->
-      @if (selectedApplication.status === 'REJECTED') {
-      <div class="reject-banner">
-        <mat-icon>warning</mat-icon>
-        <div class="reject-content">
-          <h3>Đơn đăng ký bị từ chối</h3>
-          <p><strong>Lý do từ chối: </strong>{{ selectedApplication.rejectReason || 'Không có lý do chi tiết.' }}</p>
-        </div>
-      </div>
-      }
-
-      <!-- Grid of Info Columns -->
-      <div class="detail-grid-layout">
-        <!-- Col 1: Rep Info -->
-        <mat-card class="info-card neo-card">
-          <mat-card-header>
-            <mat-icon mat-card-avatar color="primary">person</mat-icon>
-            <mat-card-title>Người Đại Diện</mat-card-title>
-          </mat-card-header>
-          <mat-card-content class="info-card-content">
-            <div class="card-row">
-              <span class="lbl">Họ và tên:</span>
-              <span class="val">{{ selectedApplication.fullName }}</span>
-            </div>
-            <div class="card-row">
-              <span class="lbl">Số điện thoại:</span>
-              <span class="val">{{ selectedApplication.phone }}</span>
-            </div>
-            <div class="card-row">
-              <span class="lbl">Email liên hệ:</span>
-              <span class="val">{{ selectedApplication.email }}</span>
-            </div>
-            <div class="card-row">
-              <span class="lbl">Số CCCD:</span>
-              <span class="val">{{ selectedApplication.identityNumber }}</span>
-            </div>
-          </mat-card-content>
-        </mat-card>
-
-        <!-- Col 2: Address Info -->
-        <mat-card class="info-card neo-card">
-          <mat-card-header>
-            <mat-icon mat-card-avatar color="primary">place</mat-icon>
-            <mat-card-title>Địa Chỉ Đăng Ký</mat-card-title>
-          </mat-card-header>
-          <mat-card-content class="info-card-content">
-            <div class="card-row">
-              <span class="lbl">Số nhà, đường:</span>
-              <span class="val">{{ selectedApplication.address.address }}</span>
-            </div>
-            <div class="card-row">
-              <span class="lbl">Phường / Xã:</span>
-              <span class="val">{{ selectedApplication.address.ward }}</span>
-            </div>
-            <div class="card-row">
-              <span class="lbl">Quận / Huyện:</span>
-              <span class="val">{{ selectedApplication.address.district }}</span>
-            </div>
-            <div class="card-row">
-              <span class="lbl">Tỉnh / Thành phố:</span>
-              <span class="val">{{ selectedApplication.address.province }}</span>
-            </div>
-          </mat-card-content>
-        </mat-card>
-      </div>
-
-      <!-- Section: Attached Documents -->
-      <h2 class="sub-section-title"><mat-icon>cloud_done</mat-icon> Tài Liệu Đính Kèm</h2>
-
-      @if (!selectedApplication.documents || selectedApplication.documents.length === 0) {
-      <div class="no-docs-card">
-        <mat-icon>error_outline</mat-icon> Không có tài liệu hoặc giấy tờ đính kèm.
-      </div>
       } @else {
-      <div class="docs-btn-row">
-        @for (doc of selectedApplication.documents; track doc.ownerApplicationDocumentId) {
-        <button mat-stroked-button color="primary" class="doc-btn" (click)="viewDocument(doc)">
-          <mat-icon>visibility</mat-icon>
-          Xem {{ getDocumentTypeLabel(doc.documentType) }}
-        </button>
-        }
-      </div>
-      }
+        <div class="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
+          
+          <!-- Detail Header Banner -->
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/80 border border-slate-200/80 rounded-2xl p-5 shadow-xs">
+            <div>
+              <h1 class="font-display text-xl font-black text-slate-900 uppercase tracking-tight">{{ selectedApplication.businessName }}</h1>
+              <p class="text-xs font-bold text-slate-500 mt-1.5">
+                {{ getBusinessTypeLabel(selectedApplication.businessType) }} 
+                <span class="mx-1.5 text-slate-300">|</span> 
+                Mã số thuế: <span class="font-mono text-slate-800 font-extrabold">{{ selectedApplication.taxCode }}</span>
+              </p>
+            </div>
+            
+            <span class="inline-flex items-center px-3 py-1.5 rounded-full text-[10.5px] font-extrabold uppercase tracking-wider border shrink-0"
+                  [ngClass]="{
+                    'bg-emerald-50 text-emerald-700 border-emerald-200': selectedApplication.status === 'APPROVED',
+                    'bg-amber-50 text-amber-700 border-amber-200': selectedApplication.status === 'PENDING',
+                    'bg-rose-50 text-rose-700 border-rose-200': selectedApplication.status === 'REJECTED'
+                  }">
+              {{ selectedApplication.status === 'APPROVED' ? 'Đã duyệt' : (selectedApplication.status === 'PENDING' ? 'Chờ duyệt' : 'Từ chối') }}
+            </span>
+          </div>
 
-      <!-- Review Action Controls -->
-      @if (selectedApplication.status === 'PENDING') {
-      <div class="review-actions-panel">
-        <div class="panel-desc">
-          <mat-icon>info</mat-icon>
-          <span>Hồ sơ này đang ở trạng thái chờ duyệt. Vui lòng kiểm tra kỹ tính chính xác của tài liệu trước khi phê
-            duyệt.</span>
+          <!-- Reject Alert Box -->
+          @if (selectedApplication.status === 'REJECTED') {
+            <div class="flex items-start gap-3 bg-rose-50 border-l-4 border-rose-500 rounded-r-2xl p-4 border border-rose-200">
+              <mat-icon class="text-rose-600 shrink-0 mt-0.5">warning</mat-icon>
+              <div class="flex flex-col gap-1">
+                <h3 class="text-sm font-extrabold text-rose-950">Đơn đăng ký bị từ chối</h3>
+                <p class="text-xs text-rose-800 leading-relaxed font-semibold">
+                  <strong>Lý do từ chối: </strong>{{ selectedApplication.rejectReason || 'Không có lý do chi tiết.' }}
+                </p>
+              </div>
+            </div>
+          }
+
+          <!-- Grid of Info Columns -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <!-- Rep Info -->
+            <div class="border border-slate-200/80 rounded-2xl p-4 bg-slate-50/50 shadow-xs">
+              <div class="flex items-center gap-2 border-b border-slate-200/80 pb-3 mb-3">
+                <mat-icon class="text-emerald-600 text-sm">person</mat-icon>
+                <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wide font-display">Người Đại Diện</h3>
+              </div>
+              <div class="flex flex-col gap-2.5 text-xs font-semibold">
+                <div class="flex justify-between border-b border-slate-200/50 pb-1.5">
+                  <span class="text-slate-500">Họ và tên:</span>
+                  <span class="text-slate-900 font-extrabold">{{ selectedApplication.fullName }}</span>
+                </div>
+                <div class="flex justify-between border-b border-slate-200/50 pb-1.5">
+                  <span class="text-slate-500">Số điện thoại:</span>
+                  <span class="text-slate-900 font-extrabold font-mono">{{ selectedApplication.phone }}</span>
+                </div>
+                <div class="flex justify-between border-b border-slate-200/50 pb-1.5">
+                  <span class="text-slate-500">Email liên hệ:</span>
+                  <span class="text-slate-900 font-extrabold">{{ selectedApplication.email }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-500">Số CCCD:</span>
+                  <span class="text-slate-900 font-extrabold font-mono">{{ selectedApplication.identityNumber }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Address Info -->
+            <div class="border border-slate-200/80 rounded-2xl p-4 bg-slate-50/50 shadow-xs">
+              <div class="flex items-center gap-2 border-b border-slate-200/80 pb-3 mb-3">
+                <mat-icon class="text-emerald-600 text-sm">place</mat-icon>
+                <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wide font-display">Địa Chỉ Đăng Ký</h3>
+              </div>
+              <div class="flex flex-col gap-2.5 text-xs font-semibold">
+                <div class="flex justify-between border-b border-slate-200/50 pb-1.5">
+                  <span class="text-slate-500">Số nhà, đường:</span>
+                  <span class="text-slate-900 font-extrabold">{{ selectedApplication.address.address }}</span>
+                </div>
+                <div class="flex justify-between border-b border-slate-200/50 pb-1.5">
+                  <span class="text-slate-500">Phường / Xã:</span>
+                  <span class="text-slate-900 font-extrabold">{{ selectedApplication.address.ward }}</span>
+                </div>
+                <div class="flex justify-between border-b border-slate-200/50 pb-1.5">
+                  <span class="text-slate-500">Quận / Huyện:</span>
+                  <span class="text-slate-900 font-extrabold">{{ selectedApplication.address.district }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-500">Tỉnh / Thành phố:</span>
+                  <span class="text-slate-900 font-extrabold">{{ selectedApplication.address.province }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section: Attached Documents -->
+          <div class="flex flex-col gap-3">
+            <h3 class="font-display text-xs font-black uppercase text-slate-900 tracking-wider flex items-center gap-1.5">
+              <mat-icon class="text-sm text-emerald-600">cloud_done</mat-icon> Tài Liệu Đính Kèm
+            </h3>
+            
+            @if (!selectedApplication.documents || selectedApplication.documents.length === 0) {
+              <div class="border border-dashed border-slate-300 rounded-2xl p-4 text-center text-xs font-bold text-slate-400">
+                <mat-icon class="text-lg align-middle mr-1.5">error_outline</mat-icon> Không có tài liệu hoặc giấy tờ đính kèm.
+              </div>
+            } @else {
+              <div class="flex flex-wrap gap-2.5">
+                @for (doc of selectedApplication.documents; track doc.ownerApplicationDocumentId) {
+                  <button (click)="viewDocument(doc)"
+                          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl border border-slate-200 bg-slate-50/80 hover:border-emerald-400 hover:bg-emerald-50/60 text-xs font-extrabold text-slate-800 transition-all cursor-pointer shadow-xs">
+                    <mat-icon class="text-sm !w-4 !h-4 text-emerald-600">visibility</mat-icon>
+                    Xem {{ getDocumentTypeLabel(doc.documentType) }}
+                  </button>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Review Action Controls -->
+          @if (selectedApplication.status === 'PENDING') {
+            <div class="border border-slate-200/80 rounded-2xl p-5 bg-slate-50/80 flex flex-col gap-4 mt-auto shadow-xs">
+              <div class="flex items-start gap-2 text-xs font-semibold text-slate-600 leading-relaxed">
+                <mat-icon class="text-emerald-600 text-sm shrink-0 mt-0.5">info</mat-icon>
+                <span>Hồ sơ đang ở trạng thái chờ duyệt. Vui lòng đối chiếu kỹ thông tin và giấy tờ đính kèm trước khi ra quyết định phê duyệt.</span>
+              </div>
+              
+              <div class="flex items-center justify-end gap-3 border-t border-slate-200/80 pt-4">
+                <button (click)="reject(selectedApplication)"
+                        [disabled]="processingAction"
+                        class="px-5 h-11 rounded-2xl border border-rose-200 text-rose-600 hover:bg-rose-50 font-extrabold text-sm transition-all cursor-pointer disabled:opacity-50">
+                  Từ Chối Hồ Sơ
+                </button>
+                
+                <button (click)="approve(selectedApplication)"
+                        [disabled]="processingAction"
+                        class="px-6 h-11 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-extrabold text-sm flex items-center justify-center gap-1.5 transition-all shadow-lg shadow-emerald-500/20 cursor-pointer disabled:opacity-70">
+                  @if (processingAction) {
+                    <mat-spinner diameter="18" class="btn-spinner mr-1"></mat-spinner>
+                    Đang xử lý...
+                  } @else {
+                    <mat-icon class="text-sm !w-4 !h-4">check</mat-icon>
+                    Phê Duyệt Hồ Sơ
+                  }
+                </button>
+              </div>
+            </div>
+          }
         </div>
-        <div class="action-buttons-row">
-          <button mat-button class="btn-action-reject neo-btn" (click)="reject(selectedApplication)"
-            [disabled]="processingAction">
-            Từ Chối Hồ Sơ
-          </button>
-          <button mat-raised-button color="primary" class="btn-action-approve neo-btn" (click)="approve(selectedApplication)"
-            [disabled]="processingAction">
-            @if (processingAction) {
-              <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
-            } @else {
-              <mat-icon>check</mat-icon>
-            }
-            @if (processingAction) {
-              Đang xử lý...
-            } @else {
-              Phê Duyệt Hồ Sơ
-            }
-          </button>
+      }
+    } @else {
+      <!-- Empty Detail View -->
+      <div class="flex-1 flex flex-col items-center justify-center text-center p-8 gap-4">
+        <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 text-slate-400 shadow-inner">
+          <mat-icon class="text-3xl">assignment_turned_in</mat-icon>
+        </div>
+        <div class="max-w-sm">
+          <h2 class="text-base font-extrabold text-slate-900 font-display">Chọn hồ sơ đối tác cần duyệt</h2>
+          <p class="text-xs text-slate-500 mt-1.5 leading-relaxed font-medium">Hồ sơ của các chủ sân muốn tham gia kinh doanh trên nền tảng GOAT Sports sẽ xuất hiện tại danh sách bên trái.</p>
         </div>
       </div>
-      }
-    </div>
-    }
-    } @else {
-    <div class="detail-empty">
-      <mat-icon>assignment_turned_in</mat-icon>
-      <h2>Chọn một hồ sơ đăng ký để bắt đầu duyệt</h2>
-      <p>Hồ sơ của các đối tác muốn tham gia hệ thống GOAT Sports sẽ hiển thị tại cột bên trái.</p>
-    </div>
     }
   </div>
 </div>

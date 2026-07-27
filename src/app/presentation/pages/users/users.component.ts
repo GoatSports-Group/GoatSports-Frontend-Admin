@@ -25,6 +25,7 @@ export class UsersComponent implements OnInit {
   searchQuery = '';
 
   totalItems = 0;
+  get totalElements(): number { return this.totalItems; }
   pageSize = 10;
   pageIndex = 0;
 

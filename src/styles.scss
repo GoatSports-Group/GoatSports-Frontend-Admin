@@ -3,6 +3,37 @@
 @use 'material-icons/iconfont/material-icons.scss';
 @use "tailwindcss";
 
+:root {
+  --font-heading: 'Be Vietnam Pro', sans-serif;
+  --font-body: 'Be Vietnam Pro', sans-serif;
+}
+
+@theme {
+  --font-sans: 'Be Vietnam Pro', sans-serif;
+  --font-display: 'Be Vietnam Pro', sans-serif;
+
+  --color-primary: #059669;
+  --color-primary-hover: #047857;
+  --color-primary-light: #f0fdf4;
+
+  --color-accent: #0ea5e9;
+  --color-accent-hover: #0284c7;
+  --color-accent-light: #f0f9ff;
+
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #06b6d4;
+
+  --color-text-dark: #0f172a;
+  --color-text-muted: #64748b;
+  --color-text-light: #ffffff;
+
+  --color-bg-body: #f8fafc;
+  --color-bg-card: #ffffff;
+  --color-border-color: #e2e8f0;
+}
+
 /* Import Fonts */
 @font-face {
   font-family: 'Be Vietnam Pro';
@@ -130,77 +161,31 @@
   font-style: italic;
 }
 
-/* Global Design System & Variables */
-:root {
-  --primary: #059669;
-  /* Sporty grass green */
-  --primary-hover: #047857;
-  /* Deeper green for active states */
-  --primary-light: #f0fdf4;
-  /* Mint background */
-  --accent: #0ea5e9;
-  /* Cyber energetic blue */
-  --accent-hover: #0284c7;
-  /* Deeper blue */
-  --accent-light: #f0f9ff;
-  /* Sky blue tint */
-  --success: #10b981;
-  /* Modern success mint-green */
-  --warning: #f59e0b;
-  /* Amber warning */
-  --danger: #ef4444;
-  /* Neon-ish danger red */
-  --info: #06b6d4;
-  /* Electric cyan info */
-  --text-dark: #0f172a;
-  /* Slate-900 */
-  --text-muted: #64748b;
-  /* Slate-500 secondary labels */
-  --text-light: #ffffff;
-  /* High-contrast white */
-  --bg-body: #f8fafc;
-  /* Slate-50 ultra-clean premium canvas */
-  --bg-card: #ffffff;
-  /* Pure white container card */
-  --border-color: #cbd5e1;
-  /* Slate-300 sharp, thin boundary line */
+/* Custom Typography Utilities */
+.font-display,
+.font-sports-display,
+.font-body,
+.font-sports-body {
+  font-family: 'Be Vietnam Pro', sans-serif !important;
+}
 
-  --font-heading: 'Be Vietnam Pro', sans-serif;
-  --font-body: 'Be Vietnam Pro', sans-serif;
-
-  --border-radius: 14px;
-  /* radius_md */
-  --border-radius-sm: 6px;
-  /* radius_sm */
-  --border-radius-lg: 24px;
-  /* radius_lg */
-
-  --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
-  --shadow-md: 0 12px 30px -10px rgba(15, 23, 42, 0.08);
-  --shadow-lg: 0 30px 60px -15px rgba(15, 23, 42, 0.12);
-  --shadow-glow-primary: 0 0 20px 0 rgba(5, 150, 105, 0.25);
-
-  --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  /* ease_out_expo */
-  --transition-spring: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-  /* spring_snappy */
+/* Glass Card Global Utilities */
+.glass-card,
+.white-card {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid #e2e8f0 !important;
+  backdrop-filter: blur(16px) !important;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.05) !important;
+  border-radius: 24px !important;
 }
 
 /* Reset and base styles */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
+html,
 body {
-  background-color: var(--bg-body) !important;
-  color: var(--text-dark) !important;
-  font-family: var(--font-body) !important;
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  font-family: 'Be Vietnam Pro', sans-serif !important;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  overflow-x: hidden;
 }
 
 h1,
@@ -209,528 +194,62 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: var(--font-heading);
-  font-weight: 700;
-  color: var(--text-dark);
-  margin-bottom: 0.5rem;
-}
-
-p {
-  line-height: 1.6;
-}
-
-a {
-  color: var(--primary);
-  text-decoration: none;
-  transition: var(--transition-smooth);
-
-  &:hover {
-    color: var(--primary-hover);
-  }
-}
-
-/* Container */
-.container {
-  width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
+  font-family: 'Be Vietnam Pro', sans-serif !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
 }
 
 /* Material Component Overrides */
-.mat-mdc-card {
-  background-color: var(--bg-card) !important;
-  border: 1px solid var(--border-color) !important;
-  border-radius: var(--border-radius) !important;
-  box-shadow: var(--shadow-sm) !important;
-  transition: var(--transition-smooth) !important;
-  overflow: hidden;
+::ng-deep {
 
-  &.hover-effect:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-md) !important;
-    border-color: rgba(46, 125, 50, 0.2) !important;
-  }
-}
-
-.mat-mdc-button,
-.mat-mdc-raised-button,
-.mat-mdc-flat-button,
-.mat-mdc-outlined-button {
-  font-family: var(--font-body) !important;
-  font-weight: 600 !important;
-  border-radius: var(--border-radius-sm) !important;
-  letter-spacing: 0.2px !important;
-  text-transform: none !important;
-
-  &.round-btn {
-    border-radius: 99px !important;
-  }
-}
-
-// Override button colors
-.mat-primary {
-  --mat-button-filled-container-color: var(--primary) !important;
-  --mat-button-filled-label-text-color: #ffffff !important;
-  --mat-button-outlined-outline-color: var(--primary) !important;
-  --mat-button-outlined-label-text-color: var(--primary) !important;
-}
-
-.mat-accent {
-  --mat-button-filled-container-color: var(--accent) !important;
-  --mat-button-filled-label-text-color: #ffffff !important;
-  --mat-button-outlined-outline-color: var(--accent) !important;
-  --mat-button-outlined-label-text-color: var(--accent) !important;
-}
-
-// Form Fields Styling
-.mat-mdc-form-field {
-  width: 100%;
-  font-family: var(--font-body) !important;
-
-  // CSS variables override for MDC form fields text colors and contrast
-  --mat-form-field-outlined-input-text-color: var(--text-dark);
-  --mat-form-field-filled-input-text-color: var(--text-dark);
-  --mat-form-field-outlined-label-text-color: #4a5568;
-  --mat-form-field-filled-label-text-color: #4a5568;
-
-  .mat-mdc-select-value {
-    color: var(--text-dark) !important;
+  .mat-drawer-container,
+  .mat-drawer-content,
+  .gs-content,
+  .gs-main {
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
   }
 
-  --mat-form-field-outlined-input-text-placeholder-color: var(--text-muted);
-  --mat-form-field-filled-input-text-placeholder-color: var(--text-muted);
+  .mat-drawer {
+    background-color: #090d16 !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
 
-  // CSS variables override for MDC form fields focus state
-  --mat-form-field-outlined-focus-outline-color: var(--primary);
-  --mat-form-field-outlined-focus-label-text-color: var(--primary);
-  --mat-form-field-outlined-caret-color: var(--primary);
-
-  --mat-form-field-filled-focus-active-indicator-color: var(--primary);
-  --mat-form-field-filled-focus-label-text-color: var(--primary);
-  --mat-form-field-filled-caret-color: var(--primary);
-
-  .mdc-text-field {
-    border-radius: var(--border-radius-sm) !important;
+  .mat-mdc-card {
     background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 24px !important;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05) !important;
   }
 
-  .mat-mdc-input-element {
-    color: var(--text-dark) !important;
-    font-weight: 500 !important;
-    font-size: 0.95rem !important;
-
-    &::placeholder {
-      font-size: 0.82rem !important;
-      font-weight: 400 !important;
-    }
+  table,
+  .mat-mdc-table {
+    background-color: transparent !important;
+    color: #0f172a !important;
   }
 
-  .mdc-notched-outline__leading,
-  .mdc-notched-outline__notch,
-  .mdc-notched-outline__trailing {
-    border-color: var(--border-color) !important;
+  th,
+  .mat-mdc-header-cell {
+    background-color: #f8fafc !important;
+    color: #64748b !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    font-weight: 800 !important;
+    font-family: 'Be Vietnam Pro', sans-serif !important;
+    text-transform: uppercase;
+    font-size: 11px !important;
+    letter-spacing: 0.05em;
   }
 
-  &.mat-focused {
-
-    .mdc-notched-outline__leading,
-    .mdc-notched-outline__notch,
-    .mdc-notched-outline__trailing {
-      border-color: var(--primary) !important;
-      border-width: 2px !important;
-    }
-
-    .mdc-floating-label,
-    .mat-mdc-floating-label {
-      color: var(--primary) !important;
-    }
-  }
-}
-
-/* Primary color override for icons globally */
-mat-icon.mat-primary,
-mat-icon[color="primary"] {
-  color: var(--primary) !important;
-}
-
-/* Badge styles */
-.mat-badge-accent .mat-badge-content {
-  background-color: var(--accent) !important;
-  color: #ffffff !important;
-}
-
-/* Utility classes */
-.text-center {
-  text-align: center;
-}
-
-.text-right {
-  text-align: right;
-}
-
-.full-width {
-  width: 100%;
-}
-
-.badge-organic {
-  background-color: var(--primary-light);
-  color: var(--primary);
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 0.2rem 0.6rem;
-  border-radius: 4px;
-  text-transform: uppercase;
-}
-
-.badge-sale {
-  background-color: var(--accent-light);
-  color: var(--accent);
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 0.2rem 0.6rem;
-  border-radius: 4px;
-  text-transform: uppercase;
-}
-
-/* Custom table wrapper */
-.table-container {
-  width: 100%;
-  overflow-x: auto;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  background-color: #ffffff;
-  box-shadow: var(--shadow-sm);
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-
-    th.mat-mdc-header-cell {
-      background-color: #f7fafc;
-      color: var(--text-dark);
-      font-weight: 700;
-      font-family: var(--font-heading);
-      font-size: 0.9rem;
-      padding: 1rem;
-    }
-
-    td.mat-mdc-cell {
-      padding: 1rem;
-      color: var(--text-dark);
-      font-family: var(--font-body);
-      font-size: 0.875rem;
-      border-bottom: 1px solid var(--border-color);
-    }
-  }
-}
-
-/* Make validation errors high contrast and bold red */
-mat-error,
-.mat-mdc-form-field-error {
-  color: var(--danger) !important;
-  font-weight: 600 !important;
-  opacity: 1 !important;
-  font-size: 0.8rem !important;
-}
-
-/* Premium CSS Animations & Transitions */
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
+  td,
+  .mat-mdc-cell {
+    color: #1e293b !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    font-size: 13px !important;
+    font-family: 'Be Vietnam Pro', sans-serif !important;
   }
 
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(25px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes scaleUp {
-  from {
-    opacity: 0;
-    transform: scale(0.96);
-  }
-
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes pulseGlow {
-  0% {
-    box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.4);
-  }
-
-  70% {
-    box-shadow: 0 0 0 10px rgba(5, 150, 105, 0);
-  }
-
-  100% {
-    box-shadow: 0 0 0 0 rgba(5, 150, 105, 0);
-  }
-}
-
-/* Animation Classes */
-.animate-fade-in {
-  animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-.animate-slide-up {
-  animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.animate-scale-up {
-  animation: scaleUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
-
-.animate-pulse-glow {
-  animation: pulseGlow 2s infinite;
-}
-
-/* Page entrance transition classes */
-.product-detail-page-container,
-.checkout-page-container,
-.my-bookings-container,
-.ai-recommendation-container,
-.venues-page-container,
-.home-page-container {
-  animation: fadeIn 0.5s ease-out forwards;
-}
-
-/* Hover effects upgrades */
-.hover-scale {
-  transition: var(--transition-smooth) !important;
-
-  &:hover {
-    transform: translateY(-4px) scale(1.02) !important;
-    box-shadow: var(--shadow-lg) !important;
-  }
-}
-
-.hover-glow {
-  transition: var(--transition-smooth) !important;
-
-  &:hover {
-    box-shadow: 0 10px 20px rgba(5, 150, 105, 0.12) !important;
-    border-color: rgba(5, 150, 105, 0.25) !important;
-  }
-}
-
-.hover-btn-pulse {
-  transition: var(--transition-smooth) !important;
-
-  &:hover {
-    animation: pulseGlow 1.5s infinite;
-    transform: translateY(-1px);
-  }
-}
-
-/* Session loading spinner styles */
-.session-loading-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background: radial-gradient(circle, #fcfcfc 0%, #f3f4f6 100%);
-  color: #1a1a2e;
-  font-family: 'Outfit', 'Inter', sans-serif;
-
-  mat-spinner {
-    margin-bottom: 24px;
-  }
-
-  p {
-    font-size: 18px;
-    font-weight: 500;
-    color: #4b5563;
-    letter-spacing: 0.5px;
-  }
-}
-
-/* Custom Scrollbar */
-.custom-scrollbar {
-  &::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: var(--bg-body);
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 99px;
-
-    &:hover {
-      background: var(--primary);
-    }
-  }
-}
-
-/* UI/UX PRO MAX - MODERN SPORTS SYSTEM */
-.athletic-title {
-  font-family: var(--font-heading) !important;
-  text-transform: uppercase !important;
-  font-weight: 900 !important;
-  font-style: italic !important;
-  letter-spacing: -0.5px !important;
-}
-
-.athletic-skew {
-  display: inline-block;
-  transform: skewX(-8deg);
-
-  &>* {
-    transform: skewX(8deg);
-    display: inline-block;
-  }
-}
-
-/* Custom table wrapper */
-.table-container {
-  width: 100%;
-  overflow-x: auto;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  background-color: var(--bg-card);
-  box-shadow: var(--shadow-sm);
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-
-    th.mat-mdc-header-cell {
-      background-color: var(--bg-body);
-      color: var(--text-dark);
-      font-weight: 700;
-      font-family: var(--font-heading);
-      font-size: 0.9rem;
-      padding: 1rem;
-    }
-
-    td.mat-mdc-cell {
-      padding: 1rem;
-      color: var(--text-dark);
-      font-family: var(--font-body);
-      font-size: 0.875rem;
-      border-bottom: 1px solid var(--border-color);
-    }
-  }
-}
-
-/* Neubrutalism Sports System Utilities (UI/UX Pro Max) */
-.neo-card {
-  background-color: var(--bg-card) !important;
-  border: 3px solid var(--text-dark) !important;
-  box-shadow: 6px 6px 0px var(--text-dark) !important;
-  border-radius: 12px !important;
-  transition: var(--transition-spring) !important;
-
-  &:hover {
-    transform: translate(-3px, -3px) !important;
-    box-shadow: 9px 9px 0px var(--text-dark) !important;
-    border-color: var(--primary) !important;
-  }
-
-  &:active {
-    transform: translate(3px, 3px) !important;
-    box-shadow: 3px 3px 0px var(--text-dark) !important;
-  }
-}
-
-.neo-btn {
-  border: 3px solid var(--text-dark) !important;
-  box-shadow: 4px 4px 0px var(--text-dark) !important;
-  border-radius: 8px !important;
-  font-weight: 800 !important;
-  text-transform: uppercase !important;
-  font-style: italic !important;
-  transition: var(--transition-spring) !important;
-
-  &:hover:not([disabled]) {
-    transform: translate(-2px, -2px) !important;
-    box-shadow: 6px 6px 0px var(--text-dark) !important;
-    background-color: var(--primary) !important;
-    color: white !important;
-  }
-
-  &:active:not([disabled]) {
-    transform: translate(2px, 2px) !important;
-    box-shadow: 2px 2px 0px var(--text-dark) !important;
-  }
-
-  &[disabled] {
-    opacity: 0.6 !important;
-    box-shadow: none !important;
-  }
-}
-
-.neo-badge {
-  border: 2px solid var(--text-dark) !important;
-  background-color: var(--accent-light) !important;
-  color: var(--accent) !important;
-  font-weight: 800 !important;
-  padding: 4px 12px !important;
-  border-radius: 99px !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.5px !important;
-  font-style: italic !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 4px !important;
-}
-
-body.dark,
-body[data-theme="dark"] {
-  .neo-card {
-    border-color: var(--primary) !important;
-    box-shadow: 6px 6px 0px var(--primary) !important;
-
-    &:hover {
-      box-shadow: 9px 9px 0px var(--primary) !important;
-      border-color: var(--accent) !important;
-    }
-
-    &:active {
-      box-shadow: 3px 3px 0px var(--primary) !important;
-    }
-  }
-
-  .neo-btn {
-    border-color: var(--primary) !important;
-    box-shadow: 4px 4px 0px var(--primary) !important;
-    color: var(--text-dark) !important;
-
-    &:hover:not([disabled]) {
-      box-shadow: 6px 6px 0px var(--primary) !important;
-      background-color: var(--primary-hover) !important;
-      color: white !important;
-    }
-
-    &:active:not([disabled]) {
-      box-shadow: 2px 2px 0px var(--primary) !important;
-    }
-  }
-
-  .neo-badge {
-    border-color: var(--primary) !important;
-    background-color: var(--primary-light) !important;
-    color: var(--primary) !important;
+  tr:hover,
+  .mat-mdc-row:hover {
+    background-color: #f1f5f9 !important;
   }
 }

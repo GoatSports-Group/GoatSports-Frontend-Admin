@@ -1,94 +1,228 @@
-<mat-sidenav-container class="admin-container" autosize>
+<div class="min-h-screen bg-[#f8fafc] text-slate-900 font-sports-body antialiased selection:bg-emerald-500 selection:text-white flex overflow-hidden relative">
 
-  <!-- Left Sidebar Panel -->
-  <mat-sidenav #sidenav mode="side" opened class="admin-sidebar mat-elevation-z2">
-    <div class="sidebar-header">
-      <a class="logo-wrapper">
-        <img src="assets/images/goat.png" alt="GOAT Sports Logo" class="logo-img">
-        <span class="logo-text athletic-title">GOAT <span class="logo-accent">Sports</span></span>
+  <!-- Ambient Blur Background Blobs (AUTH_STYLE_GUIDE.md Z-0 Layer) -->
+  <div class="pointer-events-none fixed top-0 left-1/3 w-[650px] h-[650px] bg-emerald-300/20 rounded-full blur-[140px] z-0"></div>
+  <div class="pointer-events-none fixed bottom-0 right-1/4 w-[650px] h-[650px] bg-sky-300/20 rounded-full blur-[140px] z-0"></div>
+
+  <!-- ═══════════════════════════════════════════
+       SIDEBAR — High-Tech Obsidian Glass Shell
+  ═══════════════════════════════════════════ -->
+  <aside 
+    class="fixed inset-y-0 left-0 z-40 flex flex-col border-r border-slate-800/80 bg-[#090d16] text-white backdrop-blur-2xl transition-all duration-300 ease-in-out shadow-2xl shadow-slate-950/20"
+    [ngClass]="sidebarCollapsed() ? 'w-20' : 'w-64'">
+
+    <!-- Logo & Brand Header -->
+    <div class="flex h-16 items-center justify-between px-4 border-b border-slate-800/80 shrink-0">
+      <a routerLink="/dashboard" class="flex items-center gap-3 overflow-hidden group">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 group-hover:scale-105 transition-all shadow-[0_0_20px_rgba(5,150,105,0.3)]">
+          <img src="assets/images/goat.png" alt="GoatSports" class="h-7 w-7 object-contain">
+        </div>
+        @if (!sidebarCollapsed()) {
+          <div class="flex flex-col">
+            <span class="font-sports-display text-lg font-black tracking-tight text-white flex items-center gap-1">
+              GOAT<span class="text-emerald-400">SPORTS</span>
+            </span>
+            <span class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Admin Portal</span>
+          </div>
+        }
       </a>
+
+      <button 
+        (click)="toggleSidebar()"
+        class="hidden lg:flex h-8 w-8 items-center justify-center rounded-xl border border-slate-800 bg-slate-900/80 text-slate-400 hover:text-white hover:border-slate-700 transition-colors cursor-pointer"
+        [title]="sidebarCollapsed() ? 'Mở rộng' : 'Thu gọn'">
+        <mat-icon class="!w-5 !h-5 text-sm">{{ sidebarCollapsed() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+      </button>
     </div>
 
-    <!-- Admin profile box -->
+    <!-- Admin Profile Section -->
     @if (userProfile) {
-      <div class="admin-profile">
-        <img [src]="userProfile.avatarUrl || fallbackAvatar" alt="Admin Avatar" class="admin-avatar">
-        <div class="admin-meta">
-          <strong class="admin-name">{{ userProfile.fullName }}</strong>
-          <span class="admin-email">{{ userProfile.email }}</span>
+      <div class="p-3 mx-3 my-4 rounded-2xl border border-slate-800/80 bg-slate-900/60 backdrop-blur-md flex items-center gap-3 shadow-inner">
+        <div class="relative shrink-0">
+          <img 
+            [src]="userProfile.avatarUrl || fallbackAvatar" 
+            [alt]="userProfile.fullName" 
+            class="h-10 w-10 rounded-xl object-cover ring-2 ring-emerald-500/40">
+          <span class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-slate-950"></span>
         </div>
+        @if (!sidebarCollapsed()) {
+          <div class="flex flex-col min-w-0">
+            <strong class="text-xs font-bold text-white truncate">{{ userProfile.fullName }}</strong>
+            <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400">Quản Trị Viên</span>
+          </div>
+        }
       </div>
     }
 
-    <mat-divider class="sidebar-divider"></mat-divider>
+    <!-- Navigation Menu List -->
+    <nav class="flex-1 overflow-y-auto px-3 py-2 space-y-6 scrollbar-thin scrollbar-thumb-slate-800">
+      
+      <!-- Group 1: CỔNG VẬN HÀNH -->
+      <div class="space-y-1">
+        @if (!sidebarCollapsed()) {
+          <h4 class="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500 font-sports-display">Cổng Vận Hành</h4>
+        }
+        
+        <a routerLink="./dashboard" routerLinkActive="bg-emerald-500/15 text-emerald-400 border-l-4 border-emerald-500 font-extrabold shadow-lg shadow-emerald-500/10"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 border-l-4 border-transparent hover:text-white hover:bg-slate-900/80 transition-all group"
+           [title]="'Tổng quan'">
+          <mat-icon class="!w-5 !h-5 text-lg group-hover:text-emerald-400 transition-colors">dashboard</mat-icon>
+          @if (!sidebarCollapsed()) { <span class="text-xs font-bold">Tổng quan</span> }
+        </a>
 
-    <!-- Navigation links -->
-    <div class="sidebar-menu">
-      <a routerLink="./dashboard" routerLinkActive="active" class="menu-item">
-        <mat-icon>dashboard</mat-icon> Tổng quan
-      </a>
+        <a routerLink="./owner-applications" routerLinkActive="bg-emerald-500/15 text-emerald-400 border-l-4 border-emerald-500 font-extrabold shadow-lg shadow-emerald-500/10"
+           class="flex items-center justify-between px-3 py-2.5 rounded-xl text-slate-400 border-l-4 border-transparent hover:text-white hover:bg-slate-900/80 transition-all group"
+           [title]="'Chủ sân'">
+          <div class="flex items-center gap-3">
+            <mat-icon class="!w-5 !h-5 text-lg group-hover:text-emerald-400 transition-colors">assignment_ind</mat-icon>
+            @if (!sidebarCollapsed()) { <span class="text-xs font-bold">Chủ Sân</span> }
+          </div>
+        </a>
 
-      <a routerLink="./owner-applications" routerLinkActive="active" class="menu-item">
-        <mat-icon>assignment_ind</mat-icon> Chủ Sân
-      </a>
-
-      <a routerLink="./users" routerLinkActive="active" class="menu-item">
-        <mat-icon>people</mat-icon> Người dùng
-      </a>
-
-      <a routerLink="./roles" routerLinkActive="active" class="menu-item">
-        <mat-icon>admin_panel_settings</mat-icon> Vai trò
-      </a>
-
-      <a routerLink="./permissions" routerLinkActive="active" class="menu-item">
-        <mat-icon>vpn_key</mat-icon> Quyền hạn
-      </a>
-
-      <mat-divider class="menu-divider"></mat-divider>
-
-      <a (click)="logout()" class="menu-item logout-link">
-        <mat-icon>logout</mat-icon> Đăng xuất
-      </a>
-    </div>
-  </mat-sidenav>
-
-  <!-- Right Content View Area -->
-  <mat-sidenav-content class="admin-content-wrapper">
-
-    <!-- Topbar Header -->
-    <header class="admin-topbar mat-elevation-z1">
-      <div class="topbar-left">
-        <button mat-icon-button class="mobile-toggle" (click)="sidenav.toggle()" aria-label="Toggle Sidenav">
-          <mat-icon>menu</mat-icon>
-        </button>
-        <span class="topbar-title">Hệ Thống Quản Trị GOAT Sports</span>
+        <a routerLink="./users" routerLinkActive="bg-emerald-500/15 text-emerald-400 border-l-4 border-emerald-500 font-extrabold shadow-lg shadow-emerald-500/10"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 border-l-4 border-transparent hover:text-white hover:bg-slate-900/80 transition-all group"
+           [title]="'Người dùng'">
+          <mat-icon class="!w-5 !h-5 text-lg group-hover:text-emerald-400 transition-colors">people</mat-icon>
+          @if (!sidebarCollapsed()) { <span class="text-xs font-bold">Người dùng</span> }
+        </a>
       </div>
 
-      <div class="topbar-right">
-        <!-- Notification Bell -->
-        <button mat-icon-button [matMenuTriggerFor]="notifMenu" class="notif-btn" aria-label="Thông báo">
-          <mat-icon [matBadge]="notificationService.unreadCount$ | async"
-            [matBadgeHidden]="(notificationService.unreadCount$ | async) === 0" matBadgeColor="warn" class="notif-icon"
-            aria-hidden="false">
-            notifications
-          </mat-icon>
-        </button>
-        <mat-menu #notifMenu="matMenu" xPosition="before" class="custom-notif-menu">
-          <div class="notif-menu-header">
-            <h3>Thông báo ({{ notificationService.unreadCount$ | async }})</h3>
+      <!-- Group 2: BẢO MẬT & PHÂN QUYỀN -->
+      <div class="space-y-1">
+        @if (!sidebarCollapsed()) {
+          <h4 class="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500 font-sports-display">Bảo Mật & Phân Quyền</h4>
+        }
+
+        <a routerLink="./roles" routerLinkActive="bg-emerald-500/15 text-emerald-400 border-l-4 border-emerald-500 font-extrabold shadow-lg shadow-emerald-500/10"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 border-l-4 border-transparent hover:text-white hover:bg-slate-900/80 transition-all group"
+           [title]="'Vai trò'">
+          <mat-icon class="!w-5 !h-5 text-lg group-hover:text-emerald-400 transition-colors">admin_panel_settings</mat-icon>
+          @if (!sidebarCollapsed()) { <span class="text-xs font-bold">Vai trò</span> }
+        </a>
+
+        <a routerLink="./permissions" routerLinkActive="bg-emerald-500/15 text-emerald-400 border-l-4 border-emerald-500 font-extrabold shadow-lg shadow-emerald-500/10"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 border-l-4 border-transparent hover:text-white hover:bg-slate-900/80 transition-all group"
+           [title]="'Quyền hạn'">
+          <mat-icon class="!w-5 !h-5 text-lg group-hover:text-emerald-400 transition-colors">vpn_key</mat-icon>
+          @if (!sidebarCollapsed()) { <span class="text-xs font-bold">Quyền hạn</span> }
+        </a>
+      </div>
+
+    </nav>
+
+    <!-- Sidebar Footer -->
+    <div class="p-3 border-t border-slate-800/80 bg-slate-950 space-y-2 shrink-0">
+      @if (!sidebarCollapsed()) {
+        <div class="flex items-center justify-between px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800">
+          <div class="flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full" [ngClass]="isOnline() ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'"></span>
+            <span class="text-[11px] font-bold text-slate-300">{{ isOnline() ? 'API Online' : 'Disconnected' }}</span>
           </div>
-          <mat-divider></mat-divider>
-          <div class="notif-items-list" (scroll)="onNotificationScroll($event)">
+          <span class="text-[10px] text-slate-500 font-mono">v1.0.0</span>
+        </div>
+      }
+
+      <button 
+        (click)="logout()"
+        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all font-semibold cursor-pointer"
+        [title]="'Đăng xuất'">
+        <mat-icon class="!w-5 !h-5 text-lg">logout</mat-icon>
+        @if (!sidebarCollapsed()) { <span class="text-xs font-bold">Đăng xuất</span> }
+      </button>
+    </div>
+  </aside>
+
+  <!-- ═══════════════════════════════════════════
+       MAIN LAYOUT AREA (Topbar + Router Outlet)
+  ═══════════════════════════════════════════ -->
+  <div 
+    class="flex-1 flex flex-col min-w-0 min-h-screen bg-[#f8fafc] transition-all duration-300 ease-in-out relative z-10"
+    [ngClass]="sidebarCollapsed() ? 'lg:pl-20' : 'lg:pl-64'">
+
+    <!-- FROSTED LIGHT TOPBAR NAVBAR -->
+    <header class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/80 px-4 md:px-8 backdrop-blur-xl shadow-sm">
+      
+      <!-- Left: Mobile Hamburger & Breadcrumbs -->
+      <div class="flex items-center gap-4">
+        <button 
+          (click)="toggleSidebar()" 
+          class="lg:hidden p-2 text-slate-600 hover:text-slate-900 rounded-xl hover:bg-slate-100 border border-slate-200 cursor-pointer"
+          aria-label="Toggle Navigation">
+          <mat-icon>menu</mat-icon>
+        </button>
+
+        <div class="hidden sm:flex items-center gap-2 text-xs">
+          <span class="font-bold text-slate-500">GoatSports</span>
+          <mat-icon class="!w-4 !h-4 text-xs text-slate-400">chevron_right</mat-icon>
+          <span class="text-emerald-600 font-black tracking-wide uppercase font-sports-display">Hệ Thống Quản Trị</span>
+        </div>
+      </div>
+
+      <!-- Center: Command Search Bar -->
+      <div class="hidden md:flex flex-1 max-w-md mx-6">
+        <div class="relative w-full">
+          <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+            <mat-icon class="!w-4 !h-4 text-slate-400 text-sm">search</mat-icon>
+          </div>
+          <input 
+            type="text"
+            placeholder="Tìm kiếm người dùng, sân thể thao, chủ sân (Ctrl+K)..." 
+            class="w-full rounded-2xl border border-slate-200/80 bg-slate-100/70 py-2 pl-10 pr-12 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all shadow-inner">
+          <kbd class="pointer-events-none absolute right-3 top-2.5 hidden rounded-md border border-slate-300 bg-white px-1.5 py-0.5 text-[10px] font-mono text-slate-500 sm:inline-block shadow-sm">⌘K</kbd>
+        </div>
+      </div>
+
+      <!-- Right: Actions & Profile Menu -->
+      <div class="flex items-center gap-3">
+
+        <!-- Uptime Status Badge -->
+        <div class="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-extrabold text-emerald-700 shadow-sm">
+          <span class="h-2 w-2 rounded-full" [ngClass]="isOnline() ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'"></span>
+          <span>{{ isOnline() ? 'Hệ thống online' : 'Mất kết nối' }}</span>
+        </div>
+
+        <!-- Notification Trigger Button -->
+        <button 
+          [matMenuTriggerFor]="notifMenu" 
+          class="relative p-2 rounded-2xl border border-slate-200 bg-white text-slate-700 hover:text-emerald-600 hover:border-emerald-300 transition-all shadow-sm cursor-pointer"
+          aria-label="Notifications">
+          <mat-icon class="!w-5 !h-5 text-lg">notifications</mat-icon>
+          @if ((notificationService.unreadCount$ | async)! > 0) {
+            <span class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white ring-2 ring-white shadow-md">
+              {{ notificationService.unreadCount$ | async }}
+            </span>
+          }
+        </button>
+
+        <mat-menu #notifMenu="matMenu" xPosition="before" class="!bg-white/95 !border !border-slate-200 !rounded-3xl !p-0 shadow-2xl backdrop-blur-2xl">
+          <div class="p-4 border-b border-slate-100 flex items-center justify-between min-w-[340px]" (click)="$event.stopPropagation()">
+            <span class="font-sports-display font-extrabold text-xs uppercase tracking-wider text-slate-900">Thông Báo Live</span>
+            @if ((notificationService.unreadCount$ | async)! > 0) {
+              <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-bold">
+                {{ notificationService.unreadCount$ | async }} Chưa đọc
+              </span>
+            }
+          </div>
+
+          <div class="max-h-80 overflow-y-auto divide-y divide-slate-100" (scroll)="onNotificationScroll($event)">
             @if ((notificationService.notifications$ | async)?.length === 0) {
-              <div class="notif-empty">Không có thông báo nào</div>
+              <div class="p-8 text-center text-xs text-slate-400">
+                <mat-icon class="!w-8 !h-8 text-slate-300 mb-1">notifications_none</mat-icon>
+                <p>Không có thông báo mới nào</p>
+              </div>
             } @else {
               @for (notif of notificationService.notifications$ | async; track notif.notificationId) {
-                <button mat-menu-item (click)="onNotificationClick(notif)" [class.unread]="notif.status === 'UNREAD'"
-                  class="notif-item">
-                  <div class="notif-item-content">
-                    <span class="notif-title">{{ notif.title }}</span>
-                    <p class="notif-desc">{{ notif.content }}</p>
-                    <span class="notif-time">{{ notif.createdAt | date:'dd/MM HH:mm' }}</span>
+                <button 
+                  mat-menu-item
+                  (click)="onNotificationClick(notif)"
+                  class="!h-auto !py-3 !px-4 hover:!bg-slate-50 transition-colors text-left flex items-start gap-3">
+                  <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 mt-0.5">
+                    <mat-icon class="!w-4 !h-4 text-base">campaign</mat-icon>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <strong class="block text-xs font-bold text-slate-900 truncate">{{ notif.title }}</strong>
+                    <p class="text-[11px] text-slate-500 line-clamp-2 mt-0.5 leading-snug">{{ notif.content }}</p>
+                    <span class="block text-[10px] text-slate-400 mt-1 font-mono">{{ notif.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
                   </div>
                 </button>
               }
@@ -96,18 +230,37 @@
           </div>
         </mat-menu>
 
-        <div class="status-indicator" [class.offline]="!isOnline">
-          <span class="status-dot"></span>
-          <span class="status-label">{{ isOnline ? 'Kết nối ổn định' : 'Mất kết nối' }}</span>
-        </div>
+        <!-- Admin Profile Button -->
+        <button 
+          [matMenuTriggerFor]="userMenu" 
+          class="flex items-center gap-2.5 p-1.5 rounded-2xl border border-slate-200 bg-white hover:border-emerald-300 transition-all shadow-sm cursor-pointer">
+          <img 
+            [src]="userProfile?.avatarUrl || fallbackAvatar" 
+            [alt]="userProfile?.fullName || 'Admin'" 
+            class="h-7 w-7 rounded-xl object-cover ring-1 ring-emerald-500/40">
+          <span class="hidden md:inline text-xs font-extrabold text-slate-800">{{ userProfile?.fullName?.split(' ')?.slice(-1)?.[0] }}</span>
+          <mat-icon class="!w-4 !h-4 text-xs text-slate-400">expand_more</mat-icon>
+        </button>
+
+        <mat-menu #userMenu="matMenu" xPosition="before" class="!bg-white !border !border-slate-200 !rounded-2xl shadow-2xl">
+          <div class="p-4 border-b border-slate-100 min-w-[220px]" (click)="$event.stopPropagation()">
+            <p class="text-xs font-extrabold text-slate-900">{{ userProfile?.fullName }}</p>
+            <p class="text-[11px] text-slate-500 font-mono truncate mt-0.5">{{ userProfile?.email }}</p>
+          </div>
+          <button mat-menu-item (click)="logout()" class="!text-rose-600 hover:!bg-rose-50">
+            <mat-icon class="!w-4 !h-4 text-sm text-rose-600">logout</mat-icon>
+            <span class="text-xs font-extrabold">Đăng xuất</span>
+          </button>
+        </mat-menu>
+
       </div>
     </header>
 
-    <!-- Inner Router Outlet -->
-    <main class="admin-main-content">
+    <!-- ROUTER CONTENT VIEWPORT -->
+    <main class="flex-1 p-4 md:p-6 lg:p-8 space-y-6 bg-[#f8fafc]">
       <router-outlet></router-outlet>
     </main>
 
-  </mat-sidenav-content>
+  </div>
 
-</mat-sidenav-container>
+</div>

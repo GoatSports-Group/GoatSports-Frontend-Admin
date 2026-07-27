@@ -1,145 +1,214 @@
-<div class="users-container-page">
-  <div class="page-header">
-    <div class="header-title-box">
-      <h1>Quản Lý Thành Viên</h1>
-      <p>Tra cứu thông tin, quản lý trạng thái và phân vai trò cho các thành viên trong hệ thống.</p>
+<div class="flex flex-col gap-6 animate-fade-in relative z-10">
+
+  <!-- Page Header -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/80 pb-5">
+    <div>
+      <h1 class="font-display text-2xl font-black text-slate-900 uppercase tracking-tight">Quản Lý Thành Viên</h1>
+      <p class="text-xs font-semibold text-slate-500 mt-1">Tra cứu thông tin, quản lý trạng thái và phân vai trò cho các thành viên trong hệ thống.</p>
     </div>
-    <div class="header-actions">
-      <button mat-flat-button color="primary" class="export-menu-btn" [matMenuTriggerFor]="exportListMenu">
-        <mat-icon>download</mat-icon> Xuất báo cáo danh sách
+    
+    <div class="flex items-center gap-3 w-full md:w-auto">
+      <button mat-flat-button 
+              class="!bg-gradient-to-r !from-emerald-600 !to-emerald-500 hover:!from-emerald-500 hover:!to-emerald-400 !text-white !h-11 !rounded-2xl !font-black font-display !px-5 transition-all shadow-lg shadow-emerald-500/20 cursor-pointer" 
+              [matMenuTriggerFor]="exportListMenu">
+        <mat-icon class="mr-1">download</mat-icon> Xuất báo cáo danh sách
       </button>
-      <mat-menu #exportListMenu="matMenu">
-        <button mat-menu-item (click)="exportUsersReport('pdf')">
-          <mat-icon>picture_as_pdf</mat-icon> Xuất bản PDF
+      <mat-menu #exportListMenu="matMenu" class="!bg-white !border !border-slate-200 !rounded-2xl shadow-2xl">
+        <button mat-menu-item (click)="exportUsersReport('pdf')" class="!text-slate-800 !font-extrabold">
+          <mat-icon class="!text-rose-600">picture_as_pdf</mat-icon> Xuất bản PDF
         </button>
-        <button mat-menu-item (click)="exportUsersReport('xlsx')">
-          <mat-icon>table_chart</mat-icon> Xuất bản Excel (XLSX)
+        <button mat-menu-item (click)="exportUsersReport('xlsx')" class="!text-slate-800 !font-extrabold">
+          <mat-icon class="!text-emerald-600">table_chart</mat-icon> Xuất bản Excel (XLSX)
         </button>
       </mat-menu>
     </div>
   </div>
 
   <!-- Search & Filter Controls -->
-  <mat-card class="filter-card">
-    <mat-card-content class="filter-content">
-      <mat-form-field appearance="outline" class="search-field">
-        <mat-label>Tìm kiếm thành viên</mat-label>
-        <input matInput [(ngModel)]="searchQuery" (keyup.enter)="onSearch()" placeholder="Nhập tên, username hoặc email...">
-        <button mat-icon-button matSuffix (click)="onSearch()" aria-label="Search">
-          <mat-icon>search</mat-icon>
-        </button>
-      </mat-form-field>
+  <div class="bg-white/85 border border-slate-200/80 backdrop-blur-xl rounded-[24px] p-4 shadow-xl shadow-slate-950/5 flex flex-col md:flex-row items-center gap-4">
+    <div class="relative w-full flex-1">
+      <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+        <mat-icon class="text-slate-400">search</mat-icon>
+      </span>
+      <input type="text" 
+             [(ngModel)]="searchQuery" 
+             (keyup.enter)="onSearch()"
+             placeholder="Nhập tên, username hoặc email và nhấn Enter..." 
+             class="w-full h-[46px] bg-slate-50/80 border border-slate-200/80 rounded-2xl pl-11 pr-4 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all">
+    </div>
+    
+    <button (click)="onSearch()" 
+            class="w-full md:w-auto bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs px-6 h-[46px] rounded-2xl flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer font-display">
+      <mat-icon class="text-sm">filter_list</mat-icon> Lọc dữ liệu
+    </button>
+  </div>
 
-      <button mat-flat-button color="primary" class="search-btn" (click)="onSearch()">
-        <mat-icon>filter_list</mat-icon> Lọc dữ liệu
-      </button>
-    </mat-card-content>
-  </mat-card>
-
-  <!-- Table Card -->
-  <mat-card class="table-card">
-    @if (loading) {
-      <div class="table-progress-bar">
-        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  <!-- Loading State -->
+  @if (loading) {
+    <div class="flex flex-col items-center justify-center py-20 bg-white/85 border border-slate-200/80 backdrop-blur-xl rounded-[24px] shadow-xl">
+      <mat-spinner diameter="40" color="accent"></mat-spinner>
+      <p class="text-xs font-extrabold text-slate-400 uppercase tracking-wider font-display mt-4">Đang tải danh sách thành viên...</p>
+    </div>
+  } @else {
+    
+    <!-- Empty State -->
+    @if (users.length === 0) {
+      <div class="flex flex-col items-center justify-center py-20 text-center bg-white/85 border border-slate-200/80 backdrop-blur-xl rounded-[24px] shadow-xl">
+        <mat-icon class="text-5xl text-slate-300 mb-4">people_outline</mat-icon>
+        <h3 class="text-base font-extrabold text-slate-900 font-display">Không tìm thấy thành viên nào</h3>
+        <p class="text-xs text-slate-500 mt-1 max-w-sm font-medium">Thử điều chỉnh từ khóa tìm kiếm hoặc làm mới lại bộ lọc của bạn.</p>
       </div>
-    }
-
-    <mat-card-content class="table-wrapper-content">
-      <!-- Empty State -->
-      @if (!loading && users.length === 0) {
-        <div class="empty-state">
-          <mat-icon class="empty-icon">people_outline</mat-icon>
-          <h3>Không tìm thấy thành viên nào</h3>
-          <p>Thử điều chỉnh từ khóa tìm kiếm hoặc làm mới trang.</p>
-        </div>
-      }
-
-      @if (users.length > 0) {
-        <div class="table-scroll">
-          <table mat-table [dataSource]="users" class="users-table">
-            <!-- Avatar & Full Name Column -->
-            <ng-container matColumnDef="fullName">
-              <th mat-header-cell *matHeaderCellDef> Thành viên </th>
-              <td mat-cell *matCellDef="let user">
-                <div class="user-profile-cell">
-                  <img [src]="user.avatarUrl || getFallbackAvatar(user)" alt="User Avatar" class="table-user-avatar">
-                  <div class="user-info">
-                    <span class="user-name">{{ user.fullName || 'Nửa tên' }}</span>
-                    <span class="user-id">ID: {{ user.userId.substring(0, 8) }}...</span>
-                  </div>
-                </div>
-              </td>
-            </ng-container>
-            <!-- Username Column -->
-            <ng-container matColumnDef="username">
-              <th mat-header-cell *matHeaderCellDef> Tên tài khoản </th>
-              <td mat-cell *matCellDef="let user" class="font-mono"> {{ user.username }} </td>
-            </ng-container>
-            <!-- Email Column -->
-            <ng-container matColumnDef="email">
-              <th mat-header-cell *matHeaderCellDef> Email </th>
-              <td mat-cell *matCellDef="let user"> {{ user.email }} </td>
-            </ng-container>
-            <!-- Role Column -->
-            <ng-container matColumnDef="role">
-              <th mat-header-cell *matHeaderCellDef> Vai trò </th>
-              <td mat-cell *matCellDef="let user">
-                <span class="role-badge" [class.admin-badge]="user.role?.name === 'ADMIN'">
-                  {{ user.role?.name || 'USER' }}
-                </span>
-              </td>
-            </ng-container>
-            <!-- Status Column -->
-            <ng-container matColumnDef="status">
-              <th mat-header-cell *matHeaderCellDef> Trạng thái </th>
-              <td mat-cell *matCellDef="let user">
-                <span class="status-badge" [class.active]="user.status === 'ACTIVE' || user.status === 'ACTIVATED'">
-                  {{ user.status || 'ACTIVATED' }}
-                </span>
-              </td>
-            </ng-container>
-            <!-- Created At Column -->
-            <ng-container matColumnDef="createdAt">
-              <th mat-header-cell *matHeaderCellDef> Ngày tham gia </th>
-              <td mat-cell *matCellDef="let user"> {{ user.createdAt | date:'dd/MM/yyyy HH:mm' }} </td>
-            </ng-container>
-            <!-- Actions Column -->
-            <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef class="text-center"> Thao tác </th>
-              <td mat-cell *matCellDef="let user" class="text-center">
-                <div class="actions-cell-wrapper">
-                  <button mat-stroked-button color="primary" class="action-btn" (click)="openAssignRoleDialog(user)">
-                    <mat-icon>manage_accounts</mat-icon> Gán vai trò
-                  </button>
-                  <button mat-icon-button color="accent" [matMenuTriggerFor]="exportUserMenu" aria-label="Export user report">
-                    <mat-icon>download</mat-icon>
-                  </button>
-                  <mat-menu #exportUserMenu="matMenu">
-                    <button mat-menu-item (click)="exportUserDetailReport(user, 'pdf')">
-                      <mat-icon>picture_as_pdf</mat-icon> Xuất chi tiết PDF
-                    </button>
-                    <button mat-menu-item (click)="exportUserDetailReport(user, 'xlsx')">
-                      <mat-icon>table_chart</mat-icon> Xuất chi tiết Excel (XLSX)
-                    </button>
-                  </mat-menu>
-                </div>
-              </td>
-            </ng-container>
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    } @else {
+      
+      <!-- Users List container -->
+      <div class="bg-white/85 border border-slate-200/80 backdrop-blur-xl rounded-[24px] shadow-xl shadow-slate-950/5 overflow-hidden">
+        
+        <!-- Desktop Table View -->
+        <div class="hidden md:block overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-slate-200/80 text-[11px] font-black uppercase tracking-wider text-slate-500 bg-slate-50/80 font-display">
+                <th class="py-4 px-6">Thành viên</th>
+                <th class="py-4 px-6">Tên tài khoản</th>
+                <th class="py-4 px-6">Email</th>
+                <th class="py-4 px-6">Vai trò</th>
+                <th class="py-4 px-6">Trạng thái</th>
+                <th class="py-4 px-6">Ngày tham gia</th>
+                <th class="py-4 px-6 text-center">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              @for (user of users; track user.userId) {
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <!-- Avatar & Full Name -->
+                  <td class="py-4 px-6">
+                    <div class="flex items-center gap-3.5">
+                      <img [src]="user.avatarUrl || getFallbackAvatar(user)" alt="User Avatar" class="w-9 h-9 rounded-2xl object-cover ring-1 ring-slate-200 shadow-xs">
+                      <div class="flex flex-col">
+                        <span class="font-extrabold text-slate-900 text-[13.5px]">{{ user.fullName || user.username }}</span>
+                        <span class="text-[10.5px] text-slate-400 font-mono font-semibold">ID: {{ user.userId.substring(0, 8) }}...</span>
+                      </div>
+                    </div>
+                  </td>
+                  
+                  <!-- Username -->
+                  <td class="py-4 px-6 text-xs font-extrabold text-slate-800 font-mono">
+                    {{ user.username }}
+                  </td>
+                  
+                  <!-- Email -->
+                  <td class="py-4 px-6 text-xs font-semibold text-slate-600 font-mono">
+                    {{ user.email }}
+                  </td>
+                  
+                  <!-- Role -->
+                  <td class="py-4 px-6">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-xs"
+                          [ngClass]="{
+                            'bg-rose-50 text-rose-700 border-rose-200': user.role.name === 'ADMIN',
+                            'bg-sky-50 text-sky-700 border-sky-200': user.role.name === 'OWNER' || user.role.name === 'VENUE_OWNER',
+                            'bg-slate-100 text-slate-700 border-slate-200': user.role.name !== 'ADMIN' && user.role.name !== 'OWNER' && user.role.name !== 'VENUE_OWNER'
+                          }">
+                      {{ user.role.name || 'USER' }}
+                    </span>
+                  </td>
+                  
+                  <!-- Status -->
+                  <td class="py-4 px-6">
+                    <app-status-badge [status]="user.status === 'ACTIVE' || user.status === 'ACTIVATED' ? 'active' : 'inactive'" [text]="user.status === 'ACTIVE' || user.status === 'ACTIVATED' ? 'Đang hoạt động' : 'Khóa'"></app-status-badge>
+                  </td>
+                  
+                  <!-- Created At -->
+                  <td class="py-4 px-6 text-xs font-semibold text-slate-500 font-mono">
+                    {{ user.createdAt | date:'dd/MM/yyyy HH:mm' }}
+                  </td>
+                  
+                  <!-- Actions -->
+                  <td class="py-4 px-6">
+                    <div class="flex items-center justify-center gap-2">
+                      <button (click)="openAssignRoleDialog(user)"
+                              class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white font-extrabold text-xs transition-all cursor-pointer shadow-xs">
+                        <mat-icon class="text-xs !w-3.5 !h-3.5 !font-bold">manage_accounts</mat-icon> Gán vai trò
+                      </button>
+                      
+                      <button [matMenuTriggerFor]="userActionsMenu" 
+                              class="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors cursor-pointer border border-slate-200">
+                        <mat-icon>download</mat-icon>
+                      </button>
+                      <mat-menu #userActionsMenu="matMenu" class="!bg-white !border !border-slate-200 !rounded-2xl shadow-2xl">
+                        <button mat-menu-item (click)="exportUserDetailReport(user, 'pdf')" class="!text-slate-800 !font-extrabold">
+                          <mat-icon class="!text-rose-600">picture_as_pdf</mat-icon> Xuất chi tiết PDF
+                        </button>
+                        <button mat-menu-item (click)="exportUserDetailReport(user, 'xlsx')" class="!text-slate-800 !font-extrabold">
+                          <mat-icon class="!text-emerald-600">table_chart</mat-icon> Xuất chi tiết Excel
+                        </button>
+                      </mat-menu>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
           </table>
         </div>
-      }
-    </mat-card-content>
 
-    <!-- Paginator -->
-    <mat-paginator
-      [length]="totalItems"
-      [pageSize]="pageSize"
-      [pageSizeOptions]="[5, 10, 20, 50]"
-      [pageIndex]="pageIndex"
-      (page)="onPageChange($event)"
-      showFirstLastButtons>
-    </mat-paginator>
-  </mat-card>
+        <!-- Mobile Card List View -->
+        <div class="block md:hidden divide-y divide-slate-100">
+          @for (user of users; track user.userId) {
+            <div class="p-4 flex flex-col gap-3">
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex items-center gap-3">
+                  <img [src]="user.avatarUrl || getFallbackAvatar(user)" alt="User Avatar" class="w-10 h-10 rounded-2xl object-cover border border-slate-200 shadow-xs">
+                  <div class="flex flex-col">
+                    <span class="font-extrabold text-slate-900 text-sm">{{ user.fullName || user.username }}</span>
+                    <span class="text-xs text-slate-500 font-mono font-medium">&#64;{{ user.username }}</span>
+                  </div>
+                </div>
+                
+                <app-status-badge [status]="user.status === 'ACTIVE' || user.status === 'ACTIVATED' ? 'active' : 'inactive'" [text]="user.status === 'ACTIVE' || user.status === 'ACTIVATED' ? 'Hoạt động' : 'Khóa'"></app-status-badge>
+              </div>
+              
+              <div class="grid grid-cols-2 gap-2 text-xs py-2 border-t border-b border-slate-100 text-slate-500 font-semibold">
+                <div>Email: <span class="text-slate-900 font-bold block truncate">{{ user.email }}</span></div>
+                <div>Vai trò: 
+                  <span class="inline-block mt-0.5 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase border"
+                        [ngClass]="{
+                          'bg-rose-50 text-rose-700 border-rose-200': user.role.name === 'ADMIN',
+                          'bg-sky-50 text-sky-700 border-sky-200': user.role.name === 'OWNER' || user.role.name === 'VENUE_OWNER',
+                          'bg-slate-100 text-slate-700 border-slate-200': user.role.name !== 'ADMIN' && user.role.name !== 'OWNER' && user.role.name !== 'VENUE_OWNER'
+                        }">
+                    {{ user.role.name || 'USER' }}
+                  </span>
+                </div>
+              </div>
+              
+              <div class="flex items-center justify-between gap-4 mt-1">
+                <span class="text-[11px] text-slate-500 font-mono">Gia nhập: {{ user.createdAt | date:'dd/MM/yyyy' }}</span>
+                
+                <button (click)="openAssignRoleDialog(user)"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 font-extrabold text-xs">
+                  Gán vai trò
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Paginator -->
+        <div class="border-t border-slate-100 p-2 bg-slate-50/50">
+          <mat-paginator
+            [length]="totalElements"
+            [pageSize]="pageSize"
+            [pageSizeOptions]="[5, 10, 20]"
+            [pageIndex]="pageIndex"
+            (page)="onPageChange($event)"
+            showFirstLastButtons
+            class="!bg-transparent text-slate-600">
+          </mat-paginator>
+        </div>
+
+      </div>
+
+    }
+  }
+
 </div>
