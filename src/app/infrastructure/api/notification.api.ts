@@ -34,4 +34,17 @@ export class NotificationApi {
       {}
     );
   }
+
+  markAllRead(): Observable<BaseResponse<void>> {
+    return this.http.put<BaseResponse<void>>(
+      `${this.apiBase}/notification-service/api/v1/notifications/read-all`,
+      {}
+    );
+  }
+
+  deleteNotification(id: string): Observable<BaseResponse<void>> {
+    return this.http.delete<BaseResponse<void>>(
+      `${this.apiBase}/notification-service/api/v1/notifications/${id}`
+    );
+  }
 }

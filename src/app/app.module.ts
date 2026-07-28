@@ -73,7 +73,8 @@ import {
   LucideInfo,
   LucideExternalLink,
   LucideLandPlot,
-  LucideCloudLightning
+  LucideCloudLightning,
+  LucideDroplets
 } from '@lucide/angular';
 
 @NgModule({
@@ -156,7 +157,8 @@ import {
       LucideInfo,
       LucideExternalLink,
       LucideLandPlot,
-      LucideCloudLightning
+      LucideCloudLightning,
+      LucideDroplets
     )
   ],
   bootstrap: [AppComponent]

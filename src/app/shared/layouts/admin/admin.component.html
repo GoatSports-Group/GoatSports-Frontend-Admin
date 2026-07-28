@@ -54,70 +54,76 @@
 
     <!-- Right: Actions & Profile Menu -->
     <div class="flex items-center gap-3">
-      <button [matMenuTriggerFor]="notifMenu"
-        class="relative p-2 rounded-2xl border border-slate-200 bg-slate-100 text-slate-700 hover:text-emerald-600 hover:border-emerald-300 transition-all shadow-sm cursor-pointer flex items-center justify-center"
-        aria-label="Notifications">
-        <lucide-icon name="bell" class="h-5 w-5"></lucide-icon>
-        @if ((notificationService.unreadCount$ | async)! > 0) {
-        <span
-          class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white ring-2 ring-white shadow-md">
-          {{ notificationService.unreadCount$ | async }}
-        </span>
-        }
-      </button>
+      <!-- Notification Dropdown Container -->
+      <div class="relative">
+        <button (click)="toggleNotifDropdown($event)"
+          class="relative p-2 rounded-2xl border border-slate-200 bg-slate-100 text-slate-700 hover:text-emerald-600 hover:border-emerald-300 transition-all shadow-sm cursor-pointer flex items-center justify-center"
+          aria-label="Notifications">
+          <lucide-icon name="bell" class="h-5 w-5"></lucide-icon>
+          @if ((notificationService.unreadCount$ | async)! > 0) {
+          <span
+            class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white ring-2 ring-white shadow-md">
+            {{ notificationService.unreadCount$ | async }}
+          </span>
+          }
+        </button>
 
-      <mat-menu #notifMenu="matMenu" xPosition="before" panelClass="custom-notif-menu-panel"
-        class="!p-0 !bg-white mt-4 shadow-sm">
-        <div class="px-3 py-2.5 border-b border-slate-100 flex items-center justify-between bg-white"
+        <!-- Custom Dropdown Panel -->
+        @if (isNotifOpen) {
+        <div
+          class="absolute right-0 top-full mt-4 w-[400px] max-w-[calc(100vw-32px)] bg-white border border-slate-200 rounded-2xl shadow-xl z-[250] overflow-hidden"
           (click)="$event.stopPropagation()">
-          <span class="text-sm font-normal text-black font-sports-display tracking-wide">Thông báo</span>
-          <button (click)="markAllRead()"
-            class="text-xs text-slate-500 hover:text-emerald-600 hover:underline transition-all cursor-pointer outline-none bg-transparent border-0 p-0 font-normal">
-            Đánh dấu tất cả
-          </button>
-        </div>
-
-        <div class="max-h-80 overflow-y-auto divide-y divide-slate-100/60 bg-white"
-          (scroll)="onNotificationScroll($event)">
-          @if ((notificationService.notifications$ | async)?.length === 0) {
-          <div class="p-8 text-center text-xs text-slate-400 bg-white">
-            <lucide-icon name="bell-off" class="h-8 w-8 text-slate-300 mb-1 mx-auto"></lucide-icon>
-            <p>Không có thông báo mới nào</p>
+          <div class="px-3 py-2.5 border-b border-slate-100 flex items-center justify-between bg-white">
+            <span class="text-sm font-normal text-black font-sports-display tracking-wide">Thông báo</span>
+            <button (click)="markAllRead()"
+              class="text-xs text-slate-500 hover:text-emerald-600 hover:underline transition-all cursor-pointer outline-none bg-transparent border-0 p-0 font-normal">
+              Đánh dấu tất cả
+            </button>
           </div>
-          } @else {
-          @for (notif of notificationService.notifications$ | async; track notif.notificationId) {
-          <div (click)="onNotificationClick(notif)"
-            class="px-3 py-2.5 hover:bg-emeral-50/60 bg-white transition-colors text-left flex items-start gap-3 cursor-pointer relative group">
-            <span class="h-2 w-2 rounded-full shrink-0 mt-1.5 transition-all duration-300"
-              [ngClass]="notif.status === 'UNREAD' ? 'bg-[#059669]' : 'opacity-0'"></span>
 
-            <div class="flex-1 min-w-0 pr-2">
-              <span class="block text-[13px] font-semibold text-slate-800 leading-snug truncate">{{ notif.title
-                }}</span>
-              <p class="text-[12px] text-slate-500 leading-normal mt-0.5 line-clamp-2">{{ notif.content }}</p>
-              <span class="block text-[11px] text-slate-400 mt-1 font-sports-body">{{ getRelativeTime(notif.createdAt)
-                }}</span>
+          <div class="max-h-80 overflow-y-auto divide-y divide-slate-100/60 bg-white"
+            (scroll)="onNotificationScroll($event)">
+            @if ((notificationService.notifications$ | async)?.length === 0) {
+            <div class="p-8 text-center text-xs text-slate-400 bg-white">
+              <lucide-icon name="bell-off" class="h-8 w-8 text-slate-300 mb-1 mx-auto"></lucide-icon>
+              <p>Không có thông báo mới nào</p>
             </div>
+            } @else {
+            @for (notif of notificationService.notifications$ | async; track notif.notificationId) {
+            <div (click)="onNotificationClick(notif)"
+              class="px-3 py-2.5 hover:bg-emerald-50/60 bg-white transition-colors text-left flex items-start gap-3 cursor-pointer relative group">
+              <span class="h-2 w-2 rounded-full shrink-0 mt-1.5 transition-all duration-300"
+                [ngClass]="notif.status === 'UNREAD' ? 'bg-[#059669]' : 'opacity-0'"></span>
 
-            <div class="flex items-center gap-1.5 shrink-0" (click)="$event.stopPropagation()">
-              @if (notif.status === 'UNREAD') {
-              <button (click)="onNotificationClick(notif)"
-                class="h-7 w-7 rounded-full bg-slate-100 hover:bg-emerald-300 text-slate-600 flex items-center justify-center transition-all cursor-pointer outline-none border-0 p-0"
-                title="Đánh dấu đã đọc">
-                <lucide-icon name="check" class="h-3.5 w-3.5"></lucide-icon>
-              </button>
-              }
-              <button (click)="deleteNotification(notif)"
-                class="h-7 w-7 rounded-full bg-slate-100 hover:bg-red-300 text-slate-600 flex items-center justify-center transition-all cursor-pointer outline-none border-0 p-0"
-                title="Xóa thông báo">
-                <lucide-icon name="x" class="h-3.5 w-3.5"></lucide-icon>
-              </button>
+              <div class="flex-1 min-w-0 pr-2">
+                <span class="block text-[13px] font-semibold text-slate-800 leading-snug truncate">{{ notif.title
+                  }}</span>
+                <p class="text-[12px] text-slate-500 leading-normal mt-0.5 line-clamp-2">{{ notif.content }}</p>
+                <span class="block text-[11px] text-slate-400 mt-1 font-sports-body">{{ getRelativeTime(notif.createdAt)
+                  }}</span>
+              </div>
+
+              <div class="flex items-center gap-1.5 shrink-0" (click)="$event.stopPropagation()">
+                @if (notif.status === 'UNREAD') {
+                <button (click)="onNotificationClick(notif)"
+                  class="h-7 w-7 rounded-full bg-slate-100 hover:bg-emerald-300 text-slate-600 flex items-center justify-center transition-all cursor-pointer outline-none border-0 p-0"
+                  title="Đánh dấu đã đọc">
+                  <lucide-icon name="check" class="h-3.5 w-3.5"></lucide-icon>
+                </button>
+                }
+                <button (click)="deleteNotification(notif)"
+                  class="h-7 w-7 rounded-full bg-slate-100 hover:bg-red-300 text-slate-600 flex items-center justify-center transition-all cursor-pointer outline-none border-0 p-0"
+                  title="Xóa thông báo">
+                  <lucide-icon name="x" class="h-3.5 w-3.5"></lucide-icon>
+                </button>
+              </div>
             </div>
+            }
+            }
           </div>
-          }
-          }
         </div>
-      </mat-menu>
+        }
+      </div>
 
       <!-- Admin Profile Button -->
       <div
@@ -199,8 +205,7 @@
 
   <!-- COMMAND PALETTE SEARCH MODAL DIALOG -->
   @if (isSearchOpen()) {
-  <div
-    class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-start justify-center pt-24 transition-opacity duration-300"
+  <div class="fixed inset-0 z-50 flex items-start justify-center pt-24 transition-opacity duration-300"
     (click)="closeSearch()">
     <div
       class="bg-white w-full max-w-xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col mx-4 transform transition-all duration-300 scale-100"

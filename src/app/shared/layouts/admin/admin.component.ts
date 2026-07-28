@@ -198,7 +198,20 @@ export class AdminComponent implements OnInit, OnDestroy {
     });
   }
 
+  isNotifOpen = false;
+
+  toggleNotifDropdown(event: Event): void {
+    event.stopPropagation();
+    this.isNotifOpen = !this.isNotifOpen;
+  }
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.isNotifOpen = false;
+  }
+
   onNotificationClick(notification: Notification) {
+    this.isNotifOpen = false;
     this.notificationService.markAsRead(notification.notificationId).subscribe({
       next: () => {
         if (notification.type === NotificationType.OWNER_APPLICATION) {
@@ -209,49 +222,25 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   markAllRead() {
-    // API not available yet, placeholder
-    console.log('Mark all read clicked');
+    this.notificationService.markAllRead().subscribe({
+      error: (err) => console.error('Failed to mark all as read:', err)
+    });
   }
 
   deleteNotification(notification: Notification) {
-    // API not available yet, placeholder
-    console.log('Delete notification clicked', notification.notificationId);
+    this.notificationService.deleteNotification(notification.notificationId).subscribe({
+      error: (err) => console.error('Failed to delete notification:', err)
+    });
   }
 
   onNotificationScroll(event: Event): void {
     const element = event.target as HTMLElement;
-    if (!element || this.isNotificationLoading) return;
+    if (!element) return;
 
-    const atBottom = element.scrollHeight - element.scrollTop <= element.clientHeight + 5;
-    const atTop = element.scrollTop === 0;
-
+    const atBottom = element.scrollHeight - element.scrollTop <= element.clientHeight + 10;
     if (atBottom) {
-      this.loadNotificationPage(this.notificationPage + 1, element);
-    } else if (atTop && this.notificationPage > 1) {
-      this.loadNotificationPage(this.notificationPage - 1, element);
+      this.notificationService.loadNextPage();
     }
-  }
-
-  private loadNotificationPage(page: number, scrollElement: HTMLElement): void {
-    this.isNotificationLoading = true;
-    this.notificationService.fetchNotifications({ page, size: 10 }).subscribe({
-      next: (notifications) => {
-        if (notifications.length > 0 || page === 1) {
-          this.notificationPage = page;
-          if (page > 1) {
-            setTimeout(() => { scrollElement.scrollTop = 10; }, 50);
-          } else {
-            setTimeout(() => {
-              scrollElement.scrollTop = scrollElement.scrollHeight - scrollElement.clientHeight - 10;
-            }, 50);
-          }
-        }
-        this.isNotificationLoading = false;
-      },
-      error: () => {
-        this.isNotificationLoading = false;
-      }
-    });
   }
 
   get fallbackAvatar(): string {
