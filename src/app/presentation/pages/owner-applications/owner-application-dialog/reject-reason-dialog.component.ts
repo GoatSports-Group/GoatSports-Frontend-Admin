@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { LucideIconComponent } from '@shared/components/ui/lucide-icon.component';
 
 @Component({
     selector: 'app-reject-reason-dialog',
@@ -14,7 +14,7 @@ import { MatIconModule } from '@angular/material/icon';
         MatFormFieldModule,
         MatInputModule,
         MatButtonModule,
-        MatIconModule
+        LucideIconComponent
     ],
     templateUrl: './reject-reason-dialog.component.html',
     styleUrls: ['./reject-reason-dialog.component.scss']

@@ -25,6 +25,8 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
+import { LucideIconComponent } from '@shared/components/ui/lucide-icon.component';
+
 // Shared Components
 import { StarRatingComponent } from '@shared/components/star-rating/star-rating.component';
 import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/loading-skeleton.component';
@@ -35,7 +37,6 @@ const MATERIAL_MODULES = [
   MatSidenavModule,
   MatCardModule,
   MatButtonModule,
-  MatIconModule,
   MatInputModule,
   MatFormFieldModule,
   MatMenuModule,
@@ -68,7 +69,8 @@ const COMPONENT_DECLARATIONS = [
     FormsModule,
     ReactiveFormsModule,
     RouterModule,
-    ...MATERIAL_MODULES
+    ...MATERIAL_MODULES,
+    LucideIconComponent
   ],
   exports: [
     CommonModule,
@@ -76,6 +78,7 @@ const COMPONENT_DECLARATIONS = [
     ReactiveFormsModule,
     RouterModule,
     ...MATERIAL_MODULES,
+    LucideIconComponent,
     ...COMPONENT_DECLARATIONS
   ]
 })

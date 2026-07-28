@@ -86,33 +86,4 @@
   font-weight: 700;
   box-shadow: 0 4px 10px rgba(231, 55, 37, 0.2);
 }
-@media (prefers-color-scheme: dark) {
-  .dialog-container {
-    background-color: #121212 !important;
-    color: #ffffff !important;
-  }
-  .status-toggle-box {
-    ::ng-deep .mat-mdc-checkbox .mdc-label {
-      color: #ffffff !important;
-    }
-  }
-  .dialog-actions {
-    border-top-color: rgba(255, 255, 255, 0.1) !important;
-  }
-  ::ng-deep .mat-mdc-form-field {
-    .mat-mdc-input-element {
-      color: #ffffff !important;
-    }
-    .mdc-floating-label, .mat-mdc-floating-label {
-      color: #a0aec0 !important;
-    }
-    .mdc-notched-outline__leading,
-    .mdc-notched-outline__notch,
-    .mdc-notched-outline__trailing {
-      border-color: rgba(255, 255, 255, 0.15) !important;
-    }
-  }
-  .dialog-actions button[mat-button] {
-    color: #cbd5e0 !important;
-  }
-}
+

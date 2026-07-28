@@ -11,9 +11,9 @@ import { AuthService } from '@presentation/services/auth.service';
 
 import { MetricCardComponent } from '@shared/components/ui/metric-card.component';
 import { StatusBadgeComponent } from '@shared/components/ui/status-badge.component';
-import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { LucideIconComponent } from '@shared/components/ui/lucide-icon.component';
 
 export interface WeatherInfo {
   temp: number;
@@ -28,11 +28,11 @@ export interface WeatherInfo {
   imports: [
     CommonModule,
     RouterModule,
-    MatIconModule,
     MatButtonModule,
     MatProgressSpinnerModule,
     MetricCardComponent,
-    StatusBadgeComponent
+    StatusBadgeComponent,
+    LucideIconComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
@@ -130,11 +130,11 @@ export class DashboardOverviewComponent implements OnInit {
   }
 
   parseWeatherCode(code: number): { condition: string; icon: string; description: string } {
-    if (code === 0) return { condition: 'clear', icon: 'wb_sunny', description: 'Trời nắng đẹp ☀️' };
+    if (code === 0) return { condition: 'clear', icon: 'sun', description: 'Trời nắng đẹp ☀️' };
     if ([1, 2, 3].includes(code)) return { condition: 'cloudy', icon: 'cloud', description: 'Có mây nhẹ ⛅' };
-    if ([45, 48].includes(code)) return { condition: 'fog', icon: 'blur_on', description: 'Có sương mù 🌫️' };
-    if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) return { condition: 'rain', icon: 'water_drop', description: 'Trời có mưa 🌧️' };
-    if ([95, 96, 99].includes(code)) return { condition: 'storm', icon: 'bolt', description: 'Giông bão ⛈️' };
+    if ([45, 48].includes(code)) return { condition: 'fog', icon: 'cloud-fog', description: 'Có sương mù 🌫️' };
+    if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) return { condition: 'rain', icon: 'droplets', description: 'Trời có mưa 🌧️' };
+    if ([95, 96, 99].includes(code)) return { condition: 'storm', icon: 'cloud-lightning', description: 'Giông bão ⛈️' };
     return { condition: 'cloudy', icon: 'cloud', description: 'Nhiều mây ☁️' };
   }
 

@@ -1,13 +1,13 @@
 <div class="forbidden-container">
   <div class="forbidden-card mat-elevation-z3">
-    <mat-icon class="lock-icon">block</mat-icon>
+    <lucide-icon name="ban" class="lock-icon h-12 w-12 text-rose-500 inline-block mb-4"></lucide-icon>
     <h1>403 - TRUY CẬP BỊ TỪ CHỐI</h1>
     <p>Tài khoản của bạn không có quyền truy cập vào hệ thống quản trị.</p>
     <p class="role-hint">Trang web này chỉ dành cho Admin.</p>
 
     <div class="actions">
-      <button mat-flat-button color="primary" (click)="goToClient()">
-        <mat-icon>sports</mat-icon> Quay lại Trang chủ GOAT Sports
+      <button mat-flat-button color="primary" (click)="goToClient()" class="flex items-center justify-center gap-1.5 mx-auto">
+        <lucide-icon name="activity" class="h-5 w-5"></lucide-icon> Quay lại Trang chủ GOAT Sports
       </button>
     </div>
   </div>

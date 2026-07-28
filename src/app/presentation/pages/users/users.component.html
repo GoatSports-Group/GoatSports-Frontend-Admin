@@ -9,16 +9,16 @@
     
     <div class="flex items-center gap-3 w-full md:w-auto">
       <button mat-flat-button 
-              class="!bg-gradient-to-r !from-emerald-600 !to-emerald-500 hover:!from-emerald-500 hover:!to-emerald-400 !text-white !h-11 !rounded-2xl !font-black font-display !px-5 transition-all shadow-lg shadow-emerald-500/20 cursor-pointer" 
+              class="!bg-gradient-to-r !from-emerald-600 !to-emerald-500 hover:!from-emerald-500 hover:!to-emerald-400 !text-white !h-11 !rounded-2xl !font-black font-display !px-5 transition-all shadow-lg shadow-emerald-500/20 cursor-pointer flex items-center gap-1.5" 
               [matMenuTriggerFor]="exportListMenu">
-        <mat-icon class="mr-1">download</mat-icon> Xuất báo cáo danh sách
+        <lucide-icon name="download" class="h-4 w-4 shrink-0"></lucide-icon> Xuất báo cáo danh sách
       </button>
       <mat-menu #exportListMenu="matMenu" class="!bg-white !border !border-slate-200 !rounded-2xl shadow-2xl">
-        <button mat-menu-item (click)="exportUsersReport('pdf')" class="!text-slate-800 !font-extrabold">
-          <mat-icon class="!text-rose-600">picture_as_pdf</mat-icon> Xuất bản PDF
+        <button mat-menu-item (click)="exportUsersReport('pdf')" class="!text-slate-800 !font-extrabold flex items-center">
+          <lucide-icon name="file-text" class="text-rose-600 h-4 w-4 mr-2 shrink-0"></lucide-icon> Xuất bản PDF
         </button>
-        <button mat-menu-item (click)="exportUsersReport('xlsx')" class="!text-slate-800 !font-extrabold">
-          <mat-icon class="!text-emerald-600">table_chart</mat-icon> Xuất bản Excel (XLSX)
+        <button mat-menu-item (click)="exportUsersReport('xlsx')" class="!text-slate-800 !font-extrabold flex items-center">
+          <lucide-icon name="table" class="text-emerald-600 h-4 w-4 mr-2 shrink-0"></lucide-icon> Xuất bản Excel (XLSX)
         </button>
       </mat-menu>
     </div>
@@ -28,7 +28,7 @@
   <div class="bg-white/85 border border-slate-200/80 backdrop-blur-xl rounded-[24px] p-4 shadow-xl shadow-slate-950/5 flex flex-col md:flex-row items-center gap-4">
     <div class="relative w-full flex-1">
       <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-        <mat-icon class="text-slate-400">search</mat-icon>
+        <lucide-icon name="search" class="text-slate-400 h-5 w-5"></lucide-icon>
       </span>
       <input type="text" 
              [(ngModel)]="searchQuery" 
@@ -39,7 +39,7 @@
     
     <button (click)="onSearch()" 
             class="w-full md:w-auto bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs px-6 h-[46px] rounded-2xl flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer font-display">
-      <mat-icon class="text-sm">filter_list</mat-icon> Lọc dữ liệu
+      <lucide-icon name="filter" class="h-4 w-4 shrink-0"></lucide-icon> Lọc dữ liệu
     </button>
   </div>
 
@@ -54,7 +54,7 @@
     <!-- Empty State -->
     @if (users.length === 0) {
       <div class="flex flex-col items-center justify-center py-20 text-center bg-white/85 border border-slate-200/80 backdrop-blur-xl rounded-[24px] shadow-xl">
-        <mat-icon class="text-5xl text-slate-300 mb-4">people_outline</mat-icon>
+        <lucide-icon name="users" class="text-slate-300 h-12 w-12 mb-4 mx-auto"></lucide-icon>
         <h3 class="text-base font-extrabold text-slate-900 font-display">Không tìm thấy thành viên nào</h3>
         <p class="text-xs text-slate-500 mt-1 max-w-sm font-medium">Thử điều chỉnh từ khóa tìm kiếm hoặc làm mới lại bộ lọc của bạn.</p>
       </div>
@@ -128,19 +128,19 @@
                     <div class="flex items-center justify-center gap-2">
                       <button (click)="openAssignRoleDialog(user)"
                               class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white font-extrabold text-xs transition-all cursor-pointer shadow-xs">
-                        <mat-icon class="text-xs !w-3.5 !h-3.5 !font-bold">manage_accounts</mat-icon> Gán vai trò
+                        <lucide-icon name="user-cog" class="h-3.5 w-3.5"></lucide-icon> Gán vai trò
                       </button>
                       
                       <button [matMenuTriggerFor]="userActionsMenu" 
                               class="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors cursor-pointer border border-slate-200">
-                        <mat-icon>download</mat-icon>
+                        <lucide-icon name="download" class="h-4 w-4 shrink-0"></lucide-icon>
                       </button>
                       <mat-menu #userActionsMenu="matMenu" class="!bg-white !border !border-slate-200 !rounded-2xl shadow-2xl">
-                        <button mat-menu-item (click)="exportUserDetailReport(user, 'pdf')" class="!text-slate-800 !font-extrabold">
-                          <mat-icon class="!text-rose-600">picture_as_pdf</mat-icon> Xuất chi tiết PDF
+                        <button mat-menu-item (click)="exportUserDetailReport(user, 'pdf')" class="!text-slate-800 !font-extrabold flex items-center">
+                          <lucide-icon name="file-text" class="text-rose-600 h-4 w-4 mr-2 shrink-0"></lucide-icon> Xuất chi tiết PDF
                         </button>
-                        <button mat-menu-item (click)="exportUserDetailReport(user, 'xlsx')" class="!text-slate-800 !font-extrabold">
-                          <mat-icon class="!text-emerald-600">table_chart</mat-icon> Xuất chi tiết Excel
+                        <button mat-menu-item (click)="exportUserDetailReport(user, 'xlsx')" class="!text-slate-800 !font-extrabold flex items-center">
+                          <lucide-icon name="table" class="text-emerald-600 h-4 w-4 mr-2 shrink-0"></lucide-icon> Xuất chi tiết Excel
                         </button>
                       </mat-menu>
                     </div>

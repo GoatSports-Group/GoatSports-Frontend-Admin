@@ -16,8 +16,8 @@
 }
 
 .mat-drawer {
-  background-color: #090d16 !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background-color: #ffffff !important;
+  border-right: 1px solid rgba(226, 232, 240, 0.8) !important;
 }
 
 /* Custom scrollbar for sidebar nav */
@@ -28,6 +28,69 @@ nav::-webkit-scrollbar-track {
   background: transparent;
 }
 nav::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: #e2e8f0;
   border-radius: 4px;
+}
+
+/* ═══════════════════════════════════════════
+   PREMIUM COLLAPSE ANIMATIONS (Delayed Fade-in)
+   ═══════════════════════════════════════════ */
+
+.sidebar-text {
+  white-space: nowrap;
+  overflow: hidden;
+  vertical-align: middle;
+}
+
+.sidebar-collapsed {
+  .sidebar-text {
+    opacity: 0;
+    max-width: 0 !important;
+    margin-left: 0 !important;
+    pointer-events: none;
+    transition: opacity 0.12s ease-out, max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  h4.sidebar-text {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    height: 0 !important;
+    transition: opacity 0.12s ease-out, max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin-top 0.3s, margin-bottom 0.3s, height 0.3s;
+  }
+
+  div.sidebar-text {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    height: 0 !important;
+    border-color: transparent !important;
+    transition: opacity 0.12s ease-out, max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s, height 0.3s, border-color 0.3s;
+  }
+}
+
+.sidebar-expanded {
+  .sidebar-text {
+    opacity: 1;
+    max-width: 200px; /* Increased to accommodate 14px font size */
+    margin-left: 12px; /* ml-3 */
+    transition: opacity 0.2s ease-in 0.15s, max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  h4.sidebar-text {
+    opacity: 1;
+    max-width: 100%;
+    margin-top: 24px;
+    margin-bottom: 8px;
+    height: 16px;
+    transition: opacity 0.2s ease-in 0.15s, max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin-top 0.3s, margin-bottom 0.3s, height 0.3s;
+  }
+
+  div.sidebar-text {
+    opacity: 1;
+    max-width: 100%;
+    padding: 6px 12px; /* px-3 py-1.5 */
+    height: 32px; /* h-8 */
+    transition: opacity 0.2s ease-in 0.15s, max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s, height 0.3s, border-color 0.3s;
+  }
 }

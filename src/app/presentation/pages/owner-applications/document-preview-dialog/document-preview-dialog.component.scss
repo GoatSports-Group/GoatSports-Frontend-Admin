@@ -86,25 +86,4 @@
   color: #4a5568 !important;
   font-weight: 600;
 }
-@media (prefers-color-scheme: dark) {
-  .preview-dialog-container {
-    background-color: #121212;
-    color: #ffffff;
-  }
-  .dialog-header {
-    border-bottom-color: rgba(255,255,255,0.1);
-  }
-  .dialog-title {
-    color: #ffffff;
-  }
-  .dialog-body {
-    background-color: #1a1a1a;
-    border-color: rgba(255,255,255,0.1);
-  }
-  .dialog-actions {
-    border-top-color: rgba(255,255,255,0.1);
-  }
-  .cancel-btn {
-    color: #cbd5e0 !important;
-  }
-}
+

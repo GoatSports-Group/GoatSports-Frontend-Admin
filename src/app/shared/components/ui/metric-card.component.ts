@@ -1,11 +1,14 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatIconModule } from '@angular/material/icon';
+import { LucideIconComponent } from '@shared/components/ui/lucide-icon.component';
 
 @Component({
   selector: 'app-metric-card',
   standalone: true,
-  imports: [CommonModule, MatIconModule],
+  imports: [
+    CommonModule,
+    LucideIconComponent
+  ],
   template: `
     <div class="group relative overflow-hidden rounded-[24px] border border-slate-200/80 bg-white/85 p-6 backdrop-blur-xl shadow-xl shadow-slate-950/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40">
       <!-- Glow ambient gradient background orb -->
@@ -23,7 +26,7 @@ import { MatIconModule } from '@angular/material/icon';
               <span 
                 class="inline-flex items-center text-[11px] font-extrabold px-2.5 py-0.5 rounded-full"
                 [ngClass]="isPositiveTrend ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'">
-                <mat-icon class="!w-3.5 !h-3.5 text-xs mr-0.5">{{ isPositiveTrend ? 'trending_up' : 'trending_down' }}</mat-icon>
+                <lucide-icon [name]="isPositiveTrend ? 'trending-up' : 'trending-down'" class="h-3.5 w-3.5 mr-0.5"></lucide-icon>
                 {{ trendText }}
               </span>
             }
@@ -33,7 +36,7 @@ import { MatIconModule } from '@angular/material/icon';
         <div 
           class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border shadow-md group-hover:scale-110 transition-transform duration-300"
           [ngClass]="iconBgClass">
-          <mat-icon class="!w-6 !h-6 text-xl">{{ icon }}</mat-icon>
+          <lucide-icon [name]="icon" class="h-6 w-6"></lucide-icon>
         </div>
       </div>
 

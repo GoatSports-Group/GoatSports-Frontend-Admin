@@ -1,8 +1,8 @@
 <div class="assign-permissions-page">
   <div class="page-header">
     <div class="header-title-box">
-      <div class="back-link" (click)="onCancel()">
-        <mat-icon>arrow_back</mat-icon> Quay lại danh sách
+      <div class="back-link flex items-center gap-1 cursor-pointer" (click)="onCancel()">
+        <lucide-icon name="arrow-left" class="h-4 w-4"></lucide-icon> Quay lại danh sách
       </div>
       <h1>Cấu Hình Quyền Hạn: <span class="role-highlight">{{ role?.name }}</span></h1>
       <p>Bật/tắt các quyền truy cập API được gán cho vai trò này.</p>
@@ -10,29 +10,29 @@
 
     <div class="header-actions">
       <button mat-button (click)="onCancel()" [disabled]="saving">Hủy bỏ</button>
-      <button mat-flat-button color="primary" class="save-btn" (click)="onSave()" [disabled]="saving || loading">
-        <mat-icon>save</mat-icon> Lưu thiết lập
+      <button mat-flat-button color="primary" class="save-btn flex items-center gap-1.5" (click)="onSave()" [disabled]="saving || loading">
+        <lucide-icon name="save" class="h-4 w-4"></lucide-icon> Lưu thiết lập
       </button>
     </div>
   </div>
 
   <!-- Search & Filter Controls -->
   <mat-card class="filter-card">
-    <mat-card-content class="filter-content">
-      <mat-form-field appearance="outline" class="search-field">
+    <mat-card-content class="filter-content flex flex-wrap items-center gap-4">
+      <mat-form-field appearance="outline" class="search-field flex-1">
         <mat-label>Tìm kiếm quyền hạn</mat-label>
         <input matInput [(ngModel)]="searchQuery" (keyup.enter)="onSearch()" placeholder="Nhập tên, api path, method, module...">
         <button mat-icon-button matSuffix (click)="onSearch()" aria-label="Search">
-          <mat-icon>search</mat-icon>
+          <lucide-icon name="search" class="h-5 w-5"></lucide-icon>
         </button>
       </mat-form-field>
 
-      <button mat-flat-button color="primary" class="search-btn" (click)="onSearch()">
-        <mat-icon>filter_list</mat-icon> Lọc dữ liệu
+      <button mat-flat-button color="primary" class="search-btn flex items-center gap-1.5" (click)="onSearch()">
+        <lucide-icon name="filter" class="h-4 w-4"></lucide-icon> Lọc dữ liệu
       </button>
 
-      <span class="selection-badge">
-        <mat-icon>check_circle</mat-icon> {{ selectedPermissionIds.size }} quyền hạn được chọn
+      <span class="selection-badge flex items-center gap-1">
+        <lucide-icon name="check-circle" class="h-4 w-4"></lucide-icon> {{ selectedPermissionIds.size }} quyền hạn được chọn
       </span>
     </mat-card-content>
   </mat-card>
@@ -49,7 +49,7 @@
       <!-- Empty State -->
       @if (!loading && permissions.length === 0) {
         <div class="empty-state">
-          <mat-icon class="empty-icon">security</mat-icon>
+          <lucide-icon name="shield" class="empty-icon h-12 w-12 text-slate-300 mb-4 mx-auto block"></lucide-icon>
           <h3>Không tìm thấy quyền hạn nào</h3>
           <p>Thử điều chỉnh từ khóa tìm kiếm để bắt đầu.</p>
         </div>
@@ -123,8 +123,8 @@
   @if (!loading) {
     <div class="bottom-actions">
       <button mat-button (click)="onCancel()" [disabled]="saving">Quay lại</button>
-      <button mat-flat-button color="primary" class="save-btn" (click)="onSave()" [disabled]="saving">
-        <mat-icon>save</mat-icon> Lưu thiết lập
+      <button mat-flat-button color="primary" class="save-btn flex items-center gap-1.5" (click)="onSave()" [disabled]="saving">
+        <lucide-icon name="save" class="h-4 w-4 shrink-0"></lucide-icon> Lưu thiết lập
       </button>
     </div>
   }

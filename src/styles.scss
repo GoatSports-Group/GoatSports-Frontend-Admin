@@ -211,8 +211,8 @@ h6 {
   }
 
   .mat-drawer {
-    background-color: #090d16 !important;
-    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background-color: #ffffff !important;
+    border-right: 1px solid rgba(226, 232, 240, 0.8) !important;
   }
 
   .mat-mdc-card {
@@ -251,5 +251,31 @@ h6 {
   tr:hover,
   .mat-mdc-row:hover {
     background-color: #f1f5f9 !important;
+  }
+}
+
+/* Custom Notification Menu Panel */
+.custom-notif-menu-panel {
+  min-width: 360px !important;
+  max-width: 360px !important;
+  width: 360px !important;
+  border-radius: 16px !important;
+  overflow-x: hidden !important;
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(5, 150, 105, 0.15) !important;
+  box-shadow: 0 10px 30px rgba(5, 150, 105, 0.12), 0 4px 12px rgba(5, 150, 105, 0.06) !important;
+  --mat-menu-container-background-color: #ffffff !important;
+  --mdc-menu-container-color: #ffffff !important;
+
+  &.mdc-menu-surface {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+  }
+
+  .mat-mdc-menu-content {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    padding: 0 !important;
   }
 }

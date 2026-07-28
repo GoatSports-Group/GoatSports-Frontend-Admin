@@ -7,7 +7,6 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { ApiInterceptor } from '@presentation/interceptors/api.interceptor';
 import { ForbiddenComponent } from '@shared/components/forbidden/forbidden.component';
-import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
@@ -27,6 +26,55 @@ import { OwnerApplicationRepositoryImpl } from '@infrastructure/repositories/own
 import { NotificationRepositoryImpl } from '@infrastructure/repositories/notification.repository.impl';
 import { StompWebSocketService } from '@infrastructure/websocket/stomp-websocket.service';
 import { IMAGE_CONFIG } from '@angular/common';
+import { LucideIconComponent } from '@shared/components/ui/lucide-icon.component';
+import {
+  provideLucideIcons,
+  LucideMenu,
+  LucideChevronRight,
+  LucideChevronLeft,
+  LucideSearch,
+  LucideBell,
+  LucideBellOff,
+  LucideCheck,
+  LucideX,
+  LucideLayoutDashboard,
+  LucideUserCheck,
+  LucideUsers,
+  LucideShield,
+  LucideKey,
+  LucideLogOut,
+  LucideTrendingUp,
+  LucideTrendingDown,
+  LucideStar,
+  LucideStarHalf,
+  LucideBan,
+  LucideActivity,
+  LucideDownload,
+  LucideFileText,
+  LucideTable,
+  LucideFilter,
+  LucideUserCog,
+  LucidePlus,
+  LucidePencil,
+  LucideTrash2,
+  LucideUnlock,
+  LucideArrowLeft,
+  LucideSave,
+  LucideCheckCircle,
+  LucideClock,
+  LucideArrowRight,
+  LucideCalendar,
+  LucideAlertTriangle,
+  LucideUser,
+  LucideMapPin,
+  LucideCloud,
+  LucideAlertCircle,
+  LucideEye,
+  LucideInfo,
+  LucideExternalLink,
+  LucideLandPlot,
+  LucideCloudLightning
+} from '@lucide/angular';
 
 @NgModule({
   declarations: [
@@ -39,9 +87,9 @@ import { IMAGE_CONFIG } from '@angular/common';
     FormsModule,
     AppRoutingModule,
     BrowserAnimationsModule,
-    MatIconModule,
     MatButtonModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    LucideIconComponent
   ],
   providers: [
     {
@@ -62,7 +110,54 @@ import { IMAGE_CONFIG } from '@angular/common';
         disableImageSizeWarning: true,
         disableImageLazyLoadWarning: true
       }
-    }
+    },
+    provideLucideIcons(
+      LucideMenu,
+      LucideChevronRight,
+      LucideChevronLeft,
+      LucideSearch,
+      LucideBell,
+      LucideBellOff,
+      LucideCheck,
+      LucideX,
+      LucideLayoutDashboard,
+      LucideUserCheck,
+      LucideUsers,
+      LucideShield,
+      LucideKey,
+      LucideLogOut,
+      LucideTrendingUp,
+      LucideTrendingDown,
+      LucideStar,
+      LucideStarHalf,
+      LucideBan,
+      LucideActivity,
+      LucideDownload,
+      LucideFileText,
+      LucideTable,
+      LucideFilter,
+      LucideUserCog,
+      LucidePlus,
+      LucidePencil,
+      LucideTrash2,
+      LucideUnlock,
+      LucideArrowLeft,
+      LucideSave,
+      LucideCheckCircle,
+      LucideClock,
+      LucideArrowRight,
+      LucideCalendar,
+      LucideAlertTriangle,
+      LucideUser,
+      LucideMapPin,
+      LucideCloud,
+      LucideAlertCircle,
+      LucideEye,
+      LucideInfo,
+      LucideExternalLink,
+      LucideLandPlot,
+      LucideCloudLightning
+    )
   ],
   bootstrap: [AppComponent]
 })

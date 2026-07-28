@@ -2,7 +2,7 @@
   <div class="dialog-header">
     <h2 class="dialog-title">{{ data.title }}</h2>
     <button mat-icon-button class="close-btn" (click)="close()" aria-label="Close dialog">
-      <mat-icon>close</mat-icon>
+      <lucide-icon name="x" class="h-5 w-5"></lucide-icon>
     </button>
   </div>
 
@@ -14,7 +14,7 @@
       </div>
     } @else if (error) {
       <div class="error-box">
-        <mat-icon color="warn">error</mat-icon>
+        <lucide-icon name="alert-circle" class="text-rose-500 h-10 w-10 mb-2 mx-auto block"></lucide-icon>
         <p>Không thể xem trước tài liệu này trực tiếp.</p>
       </div>
     } @else {
@@ -32,8 +32,8 @@
 
   <div class="dialog-actions">
     @if (downloadUrl) {
-      <a mat-flat-button color="primary" [href]="downloadUrl" target="_blank" class="view-btn">
-        <mat-icon>open_in_new</mat-icon> Mở tab mới / Tải xuống
+      <a mat-flat-button color="primary" [href]="downloadUrl" target="_blank" class="view-btn flex items-center gap-1.5 justify-center">
+        <lucide-icon name="external-link" class="h-4 w-4 shrink-0"></lucide-icon> Mở tab mới / Tải xuống
       </a>
     }
     <button mat-button (click)="close()" class="cancel-btn">Đóng</button>
