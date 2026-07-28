@@ -160,32 +160,9 @@
     class="fixed top-[92px] left-4 bottom-4 z-30 flex flex-col border border-slate-200/80 bg-white text-slate-700 backdrop-blur-2xl transition-all duration-300 ease-in-out shadow-md rounded-2xl"
     [ngClass]="sidebarCollapsed() ? 'w-20 sidebar-collapsed' : 'w-64 sidebar-expanded'">
 
-    <!-- Admin Profile Section -->
-    @if (userProfile) {
-    <div
-      class="mx-3 my-4 rounded-2xl border border-slate-200/80 bg-slate-50/60 backdrop-blur-md flex items-center shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)] transition-all duration-300"
-      [ngClass]="sidebarCollapsed() ? 'p-1.5 justify-center' : 'p-3'">
-      <div class="relative shrink-0">
-        <img [src]="userProfile.avatarUrl || fallbackAvatar" [alt]="userProfile.fullName"
-          class="h-10 w-10 rounded-xl object-cover ring-2 ring-emerald-500/20 shrink-0">
-        <span class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white"></span>
-      </div>
-      <div class="sidebar-text flex flex-col min-w-0">
-        <span class="text-[14px] text-black truncate">{{ userProfile.fullName }}</span>
-        <span class="text-[13px] uppercase tracking-wider text-black">Quản Trị Viên</span>
-      </div>
-    </div>
-    }
-
     <!-- Navigation Menu List -->
     <nav class="flex-1 overflow-y-auto px-3 py-2 space-y-6 scrollbar-thin scrollbar-thumb-slate-200">
-
-      <!-- Group 1: CỔNG VẬN HÀNH -->
       <div class="space-y-1">
-        <h4 class="sidebar-text px-3 text-[13px] uppercase tracking-widest text-black font-sports-display">
-          Cổng Vận Hành
-        </h4>
-
         <a routerLink="./dashboard"
           routerLinkActive="bg-emerald-50 text-emerald-600 shadow-[0_4px_12px_rgba(16,185,129,0.08)]"
           class="flex items-center rounded-xl text-black hover:text-emerald-600 hover:bg-emerald-50/50 focus:text-emerald-600 focus:bg-emerald-50/50 outline-none transition-all group"
@@ -215,13 +192,6 @@
             Người dùng
           </span>
         </a>
-      </div>
-
-      <!-- Group 2: BẢO MẬT & PHÂN QUYỀN -->
-      <div class="space-y-1">
-        <h4 class="sidebar-text px-3 text-[13px] uppercase tracking-widest text-black font-sports-display">
-          Bảo Mật & Phân Quyền
-        </h4>
 
         <a routerLink="./roles"
           routerLinkActive="bg-emerald-50 text-emerald-600 shadow-[0_4px_12px_rgba(16,185,129,0.08)]"
@@ -243,20 +213,10 @@
           </span>
         </a>
       </div>
-
     </nav>
 
     <!-- Sidebar Footer -->
     <div class="p-3 border-t border-slate-200/80 bg-slate-50 space-y-2 shrink-0">
-      <div class="sidebar-text flex items-center justify-between bg-white border border-slate-200/60 rounded-xl">
-        <div class="flex items-center gap-2">
-          <span class="h-2 w-2 rounded-full shrink-0"
-            [ngClass]="isOnline() ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'"></span>
-          <span class="text-[13px] text-black">{{ isOnline() ? 'API Online' : 'Disconnected' }}</span>
-        </div>
-        <span class="text-[13px] text-black font-mono">v1.0.0</span>
-      </div>
-
       <button (click)="logout()"
         class="w-full flex items-center rounded-xl text-black hover:text-rose-600 hover:bg-rose-50/80 focus:text-rose-600 focus:bg-rose-50/80 border border-transparent hover:border-rose-200/50 outline-none transition-all cursor-pointer"
         [ngClass]="sidebarCollapsed() ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5'" [title]="'Đăng xuất'">
