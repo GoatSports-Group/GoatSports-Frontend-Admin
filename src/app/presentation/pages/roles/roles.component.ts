@@ -10,10 +10,10 @@ import { PageEvent } from '@angular/material/paginator';
 import { buildRsqlSearch } from '@shared/utils/api.helper';
 
 @Component({
-    selector: 'app-roles',
-    templateUrl: './roles.component.html',
-    styleUrls: ['./roles.component.scss'],
-    standalone: false
+  selector: 'app-roles',
+  templateUrl: './roles.component.html',
+  styleUrls: ['./roles.component.scss'],
+  standalone: false
 })
 export class RolesComponent implements OnInit {
   private roleAdminService = inject(RoleService);
@@ -41,11 +41,11 @@ export class RolesComponent implements OnInit {
       size: this.pageSize,
       filter: buildRsqlSearch(this.searchQuery, ['name', 'description'])
     }).subscribe({
-      next: (roles) => {
-        this.roles = roles;
+      next: (response) => {
+        this.roles = response.result || [];
 
-        if (roles.length < this.pageSize) {
-          this.totalItems = this.pageIndex * this.pageSize + roles.length;
+        if (this.roles.length < this.pageSize) {
+          this.totalItems = this.pageIndex * this.pageSize + this.roles.length;
         } else {
           this.totalItems = (this.pageIndex + 2) * this.pageSize;
         }

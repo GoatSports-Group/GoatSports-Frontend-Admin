@@ -5,6 +5,7 @@ import { OwnerApplicationRepository } from '@application/ports/persistence/owner
 import { OwnerApplication } from '@domain/entities/owner-application';
 import { OwnerApplicationApi } from '@infrastructure/api/owner-application.api';
 import { PageFilter } from '@application/dto/page.filter';
+import { BaseListResponse } from '@application/dto/base/base-response';
 
 @Injectable({
   providedIn: 'root'
@@ -12,9 +13,9 @@ import { PageFilter } from '@application/dto/page.filter';
 export class OwnerApplicationRepositoryImpl implements OwnerApplicationRepository {
   private ownerApplicationApi = inject(OwnerApplicationApi);
 
-  getAllApplications(filter: PageFilter): Observable<OwnerApplication[]> {
+  getAllApplications(filter: PageFilter): Observable<BaseListResponse<OwnerApplication>> {
     return this.ownerApplicationApi.getAllApplications(filter).pipe(
-      map(response => response.data?.result || [])
+      map(response => response.data)
     );
   }
 

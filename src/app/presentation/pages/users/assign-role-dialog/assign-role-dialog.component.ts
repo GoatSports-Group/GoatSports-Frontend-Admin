@@ -12,10 +12,10 @@ export interface AssignRoleDialogData {
 }
 
 @Component({
-    selector: 'app-assign-role-dialog',
-    templateUrl: './assign-role-dialog.component.html',
-    styleUrls: ['./assign-role-dialog.component.scss'],
-    standalone: false
+  selector: 'app-assign-role-dialog',
+  templateUrl: './assign-role-dialog.component.html',
+  styleUrls: ['./assign-role-dialog.component.scss'],
+  standalone: false
 })
 export class AssignRoleDialogComponent implements OnInit {
   private roleAdminService = inject(RoleService);
@@ -46,8 +46,8 @@ export class AssignRoleDialogComponent implements OnInit {
   loadRoles(): void {
     this.loading = true;
     this.roleAdminService.getRoles({ page: 0, size: 100 }).subscribe({
-      next: (roles) => {
-        this.roles = roles || [];
+      next: (response) => {
+        this.roles = response.result || [];
         this.loading = false;
       },
       error: (err: any) => {

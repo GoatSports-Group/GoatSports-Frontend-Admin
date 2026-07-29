@@ -4,6 +4,7 @@ import { PermissionRepository } from '@application/ports/persistence/permission.
 import { PermissionApi } from '../api/permission.api';
 import { PageFilter } from '@application/dto/page.filter';
 import { Permission } from '@domain/entities/permission';
+import { BaseListResponse } from '@application/dto/base/base-response';
 
 @Injectable({
   providedIn: 'root'
@@ -11,9 +12,9 @@ import { Permission } from '@domain/entities/permission';
 export class PermissionRepositoryImpl implements PermissionRepository {
   private permissionApi = inject(PermissionApi);
 
-  getPermissions(filter: PageFilter): Observable<Permission[]> {
+  getPermissions(filter: PageFilter): Observable<BaseListResponse<Permission>> {
     return this.permissionApi.getPermissions(filter).pipe(
-      map(response => response.data?.result || [])
+      map(response => response.data)
     );
   }
 

@@ -5,6 +5,7 @@ import { RoleApi } from '@infrastructure/api/role.api';
 import { RoleCreateRequest, RoleUpdateRequest } from '@application/dto/role/role.dto';
 import { Role } from "@domain/entities/role"
 import { PageFilter } from '@application/dto/page.filter';
+import { BaseListResponse } from '@application/dto/base/base-response';
 
 @Injectable({
   providedIn: 'root'
@@ -12,9 +13,9 @@ import { PageFilter } from '@application/dto/page.filter';
 export class RoleRepositoryImpl implements RoleRepository {
   private roleApi = inject(RoleApi);
 
-  getRoles(filter: PageFilter): Observable<Role[]> {
+  getRoles(filter: PageFilter): Observable<BaseListResponse<Role>> {
     return this.roleApi.getRoles(filter).pipe(
-      map(response => response.data?.result || [])
+      map(response => response.data)
     );
   }
 

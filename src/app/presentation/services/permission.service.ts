@@ -1,12 +1,13 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Permission } from '@domain/entities/permission';
 import { PageFilter } from '@application/dto/page.filter';
 import { GetPermissionsUseCase } from '@application/usecase/permission/get-permissions.usecase';
 import { GetPermissionByIdUseCase } from '@application/usecase/permission/get-permission-by-id.usecase';
 import { CreatePermissionUseCase } from '@application/usecase/permission/create-permission.usecase';
 import { UpdatePermissionUseCase } from '@application/usecase/permission/update-permission.usecase';
 import { DeletePermissionUseCase } from '@application/usecase/permission/delete-permission.usecase';
+import { BaseListResponse } from '@application/dto/base/base-response';
+import { Permission } from '@application/dto/permission/permission.dto';
 
 @Injectable({
   providedIn: 'root'
@@ -18,7 +19,7 @@ export class PermissionService {
   private updatePermissionUseCase = inject(UpdatePermissionUseCase);
   private deletePermissionUseCase = inject(DeletePermissionUseCase);
 
-  getPermissions(filter: PageFilter): Observable<Permission[]> {
+  getPermissions(filter: PageFilter): Observable<BaseListResponse<Permission>> {
     return this.getPermissionsUseCase.execute(filter);
   }
 

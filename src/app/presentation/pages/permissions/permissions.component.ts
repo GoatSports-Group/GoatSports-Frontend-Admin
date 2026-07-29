@@ -9,10 +9,10 @@ import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/co
 import { buildRsqlSearch } from '@shared/utils/api.helper';
 
 @Component({
-    selector: 'app-permissions',
-    templateUrl: './permissions.component.html',
-    styleUrls: ['./permissions.component.scss'],
-    standalone: false
+  selector: 'app-permissions',
+  templateUrl: './permissions.component.html',
+  styleUrls: ['./permissions.component.scss'],
+  standalone: false
 })
 export class PermissionsComponent implements OnInit {
   private permissionAdminService = inject(PermissionService);
@@ -41,10 +41,10 @@ export class PermissionsComponent implements OnInit {
       size: this.pageSize,
       filter: buildRsqlSearch(this.searchQuery, ['name', 'apiPath', 'method', 'module'])
     }).subscribe({
-      next: (permissions) => {
-        this.permissions = permissions;
-        if (permissions.length < this.pageSize) {
-          this.totalItems = this.pageIndex * this.pageSize + permissions.length;
+      next: (response) => {
+        this.permissions = response.result;
+        if (response.result.length < this.pageSize) {
+          this.totalItems = this.pageIndex * this.pageSize + response.result.length;
         } else {
           this.totalItems = (this.pageIndex + 2) * this.pageSize;
         }

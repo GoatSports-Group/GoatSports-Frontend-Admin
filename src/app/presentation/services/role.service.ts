@@ -9,6 +9,7 @@ import { UpdateRoleUseCase } from '@application/usecase/role/update-role.usecase
 import { DeleteRoleUseCase } from '@application/usecase/role/delete-role.usecase';
 import { ActivateRoleUseCase } from '@application/usecase/role/activate-role.usecase';
 import { DeactivateRoleUseCase } from '@application/usecase/role/deactivate-role.usecase';
+import { BaseListResponse } from '@application/dto/base/base-response';
 
 @Injectable({
   providedIn: 'root'
@@ -22,7 +23,7 @@ export class RoleService {
   private activateRoleUseCase = inject(ActivateRoleUseCase);
   private deactivateRoleUseCase = inject(DeactivateRoleUseCase);
 
-  getRoles(filter: PageFilter): Observable<Role[]> {
+  getRoles(filter: PageFilter): Observable<BaseListResponse<Role>> {
     return this.getRolesUseCase.execute(filter);
   }
 

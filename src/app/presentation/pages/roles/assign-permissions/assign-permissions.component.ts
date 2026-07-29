@@ -10,10 +10,10 @@ import { PageEvent } from '@angular/material/paginator';
 import { buildRsqlSearch } from '@shared/utils/api.helper';
 
 @Component({
-    selector: 'app-assign-permissions',
-    templateUrl: './assign-permissions.component.html',
-    styleUrls: ['./assign-permissions.component.scss'],
-    standalone: false
+  selector: 'app-assign-permissions',
+  templateUrl: './assign-permissions.component.html',
+  styleUrls: ['./assign-permissions.component.scss'],
+  standalone: false
 })
 export class AssignPermissionsComponent implements OnInit {
   private route = inject(ActivatedRoute);
@@ -60,7 +60,7 @@ export class AssignPermissionsComponent implements OnInit {
         next: (res) => {
           this.role = res.role;
           this.selectedPermissionIds = new Set(this.role?.permissions?.map(p => p.permissionId) || []);
-          this.permissions = res.permissionsPage || [];
+          this.permissions = res.permissionsPage.result || [];
 
           if (this.permissions.length < this.pageSize) {
             this.totalItems = this.pageIndex * this.pageSize + this.permissions.length;
@@ -77,10 +77,10 @@ export class AssignPermissionsComponent implements OnInit {
         size: this.pageSize,
         filter: buildRsqlSearch(this.searchQuery, ['name', 'apiPath', 'method', 'module'])
       }).subscribe({
-        next: (permissions) => {
-          this.permissions = permissions;
-          if (permissions.length < this.pageSize) {
-            this.totalItems = this.pageIndex * this.pageSize + permissions.length;
+        next: (res) => {
+          this.permissions = res.result || [];
+          if (res.result.length < this.pageSize) {
+            this.totalItems = this.pageIndex * this.pageSize + res.result.length;
           } else {
             this.totalItems = (this.pageIndex + 2) * this.pageSize;
           }

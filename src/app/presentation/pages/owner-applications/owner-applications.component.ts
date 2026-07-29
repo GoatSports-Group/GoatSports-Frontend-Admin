@@ -13,10 +13,10 @@ import { GetFileUrlUseCase } from '@application/usecase/owner-application/get-fi
 import { DocumentPreviewDialogComponent } from '@presentation/pages/owner-applications/document-preview-dialog/document-preview-dialog.component';
 
 @Component({
-    selector: 'app-admin-owner-applications',
-    templateUrl: './owner-applications.component.html',
-    styleUrls: ['./owner-applications.component.scss'],
-    standalone: false
+  selector: 'app-admin-owner-applications',
+  templateUrl: './owner-applications.component.html',
+  styleUrls: ['./owner-applications.component.scss'],
+  standalone: false
 })
 export class OwnerApplicationsComponent implements OnInit {
   private getAllUseCase = inject(GetAllOwnerApplicationsUseCase);
@@ -59,11 +59,11 @@ export class OwnerApplicationsComponent implements OnInit {
       size: this.pageSize,
       filter: filterQuery
     }).subscribe({
-      next: (data) => {
-        this.filteredApplications = this.sortApplications(data);
+      next: (response) => {
+        this.filteredApplications = this.sortApplications(response.result);
 
-        if (data.length < this.pageSize) {
-          this.totalItems = this.pageIndex * this.pageSize + data.length;
+        if (response.result.length < this.pageSize) {
+          this.totalItems = this.pageIndex * this.pageSize + response.result.length;
         } else {
           this.totalItems = (this.pageIndex + 2) * this.pageSize;
         }

@@ -94,9 +94,9 @@ export class DashboardOverviewComponent implements OnInit {
         this.totalUsers.set(users.meta.total);
         this.recentUsers.set(users.result.slice(0, 5));
 
-        const pending = applications.filter(a => a.status === OwnerApplicationStatus.PENDING);
-        const approved = applications.filter(a => a.status === OwnerApplicationStatus.APPROVED);
-        const rejected = applications.filter(a => a.status === OwnerApplicationStatus.REJECTED);
+        const pending = applications.result.filter(a => a.status === OwnerApplicationStatus.PENDING);
+        const approved = applications.result.filter(a => a.status === OwnerApplicationStatus.APPROVED);
+        const rejected = applications.result.filter(a => a.status === OwnerApplicationStatus.REJECTED);
 
         this.pendingApps.set(pending.length);
         this.approvedApps.set(approved.length);
