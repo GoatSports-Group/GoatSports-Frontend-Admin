@@ -1,11 +1,13 @@
-import { Component, OnInit, inject } from '@angular/core';
-import { User } from '@domain/entities/user';
-import { MatDialog } from '@angular/material/dialog';
+import { Component, OnInit, inject, ViewChild, TemplateRef, ViewContainerRef } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AssignRoleDialogComponent } from '@presentation/pages/users/assign-role-dialog/assign-role-dialog.component';
-import { UserApi } from '@infrastructure/api/user.api';
-import { CdkDrag, CdkDragDrop, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { RoleEnum } from '@application/dto/role/role.dto';
+import { Overlay, OverlayRef } from '@angular/cdk/overlay';
+import { TemplatePortal } from '@angular/cdk/portal';
+import { MatDialog } from '@angular/material/dialog';
+import { User } from '@application/dto/user/user.dto';
+import { UserService } from '@presentation/services/user.service';
 
 @Component({
   selector: 'app-users',
@@ -14,9 +16,14 @@ import { RoleEnum } from '@application/dto/role/role.dto';
   standalone: false
 })
 export class UsersComponent implements OnInit {
-  private userApi = inject(UserApi);
+  @ViewChild('createUserTemplate') createUserTemplate!: TemplateRef<any>;
+  private overlay = inject(Overlay);
+  private viewContainerRef = inject(ViewContainerRef);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
+  private userAdminService = inject(UserService);
+
+  private overlayRef?: OverlayRef;
 
   users: User[] = [];
   loading = false;
@@ -71,15 +78,15 @@ export class UsersComponent implements OnInit {
     }
     const rsqlFilter = parts.join(' and ');
 
-    this.userApi.getUsers({
+    this.userAdminService.getUsers({
       page: this.pageIndex,
       size: this.pageSize,
       filter: rsqlFilter
     }).subscribe({
       next: (response) => {
-        if (response && response.data) {
-          this.users = response.data.result || [];
-          this.totalItems = response.data.meta?.total || 0;
+        if (response) {
+          this.users = response.result || [];
+          this.totalItems = response.meta?.total || 0;
         } else {
           this.users = [];
           this.totalItems = 0;
@@ -101,10 +108,10 @@ export class UsersComponent implements OnInit {
 
   loadStats(): void {
     // Fetch count of users (or set default fallbacks matching the layout image if empty/fails)
-    this.userApi.getUsers({ page: 0, size: 1000 }).subscribe({
+    this.userAdminService.getUsers({ page: 0, size: 1000 }).subscribe({
       next: (response) => {
-        if (response && response.data) {
-          const allUsers = response.data.result || [];
+        if (response && response.result) {
+          const allUsers = response.result || [];
           this.totalUsersCount = allUsers.length;
 
           this.verifiedUsersCount = allUsers.filter(u => u.status === 'ACTIVE' || u.status === 'ACTIVATED').length;
@@ -203,13 +210,186 @@ export class UsersComponent implements OnInit {
     return RoleEnum.find(r => r.value === role)?.label || role;
   }
 
-  // User Actions Ellipsis Click Handlers
+  // Create User Drawer State & Form Model
+  isCreateDrawerOpen = false;
+  showPassword = false;
+
+  newUser = {
+    username: '',
+    fullName: '',
+    email: '',
+    gender: 'MALE',
+    password: '',
+    avatarUrl: ''
+  };
+
   onCreateUser(): void {
-    console.log('Create User clicked');
-    this.snackBar.open('Tạo tài khoản người dùng mới (Chức năng chưa có API)', 'Đóng', {
-      duration: 3000,
-      horizontalPosition: 'end',
-      verticalPosition: 'top'
+    if (!this.overlayRef) {
+      this.overlayRef = this.overlay.create({
+        hasBackdrop: true,
+        backdropClass: 'custom-drawer-backdrop',
+        panelClass: 'custom-drawer-panel',
+        positionStrategy: this.overlay.position().global().right('0').top('0').bottom('0'),
+        scrollStrategy: this.overlay.scrollStrategies.block()
+      });
+
+      this.overlayRef.backdropClick().subscribe(() => {
+        this.closeCreateDrawer();
+      });
+    }
+
+    if (!this.overlayRef.hasAttached()) {
+      const portal = new TemplatePortal(this.createUserTemplate, this.viewContainerRef);
+      this.overlayRef.attach(portal);
+    }
+
+    // Trigger CSS slide-in animation on next frame
+    setTimeout(() => {
+      this.isCreateDrawerOpen = true;
+    }, 15);
+  }
+
+  closeCreateDrawer(): void {
+    // Trigger CSS slide-out animation first
+    this.isCreateDrawerOpen = false;
+
+    // Wait 300ms for slide-out animation to finish before detaching from DOM
+    setTimeout(() => {
+      if (!this.isCreateDrawerOpen && this.overlayRef?.hasAttached()) {
+        this.overlayRef.detach();
+      }
+      this.resetNewUserForm();
+    }, 300);
+  }
+
+  toggleShowPassword(): void {
+    this.showPassword = !this.showPassword;
+  }
+
+  getPasswordStrength(): number {
+    const pwd = this.newUser.password || '';
+    if (!pwd) return 0;
+    let score = 0;
+    if (pwd.length >= 8) score++;
+    if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) score++;
+    if (/\d/.test(pwd)) score++;
+    if (/[^A-Za-z0-9]/.test(pwd)) score++;
+    return score;
+  }
+
+  resetNewUserForm(): void {
+    this.newUser = {
+      username: '',
+      fullName: '',
+      email: '',
+      gender: 'MALE',
+      password: '',
+      avatarUrl: ''
+    };
+    this.showPassword = false;
+  }
+
+  isSubmitting = false;
+
+  submitCreateUser(): void {
+    if (this.isSubmitting) return;
+
+    if (!this.newUser.username || !this.newUser.username.trim()) {
+      this.snackBar.open('Tên hiển thị không được để trống', 'Đóng', {
+        duration: 3000,
+        horizontalPosition: 'end',
+        verticalPosition: 'top'
+      });
+      return;
+    }
+
+    if (!this.newUser.fullName || !this.newUser.fullName.trim()) {
+      this.snackBar.open('Họ tên không được để trống', 'Đóng', {
+        duration: 3000,
+        horizontalPosition: 'end',
+        verticalPosition: 'top'
+      });
+      return;
+    }
+
+    if (!this.newUser.email || !this.newUser.email.trim()) {
+      this.snackBar.open('Email không được để trống', 'Đóng', {
+        duration: 3000,
+        horizontalPosition: 'end',
+        verticalPosition: 'top'
+      });
+      return;
+    }
+
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailPattern.test(this.newUser.email.trim())) {
+      this.snackBar.open('Email không hợp lệ', 'Đóng', {
+        duration: 3000,
+        horizontalPosition: 'end',
+        verticalPosition: 'top'
+      });
+      return;
+    }
+
+    if (!this.newUser.gender) {
+      this.snackBar.open('Giới tính không được để trống', 'Đóng', {
+        duration: 3000,
+        horizontalPosition: 'end',
+        verticalPosition: 'top'
+      });
+      return;
+    }
+
+    if (!this.newUser.password) {
+      this.snackBar.open('Mật khẩu không được để trống', 'Đóng', {
+        duration: 3000,
+        horizontalPosition: 'end',
+        verticalPosition: 'top'
+      });
+      return;
+    }
+
+    const pwdPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+    if (!pwdPattern.test(this.newUser.password)) {
+      this.snackBar.open('Mật khẩu phải có ít nhất 8 ký tự, chữ hoa, chữ thường, số và ký tự đặc biệt', 'Đóng', {
+        duration: 4000,
+        horizontalPosition: 'end',
+        verticalPosition: 'top'
+      });
+      return;
+    }
+
+    this.isSubmitting = true;
+
+    const payload = {
+      username: this.newUser.username.trim(),
+      fullName: this.newUser.fullName.trim(),
+      email: this.newUser.email.trim(),
+      gender: this.newUser.gender,
+      password: this.newUser.password
+    };
+
+    this.userAdminService.createUser(payload).subscribe({
+      next: () => {
+        this.isSubmitting = false;
+        this.snackBar.open(`Tạo tài khoản ${payload.username} thành công!`, 'Đóng', {
+          duration: 3000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top'
+        });
+        this.closeCreateDrawer();
+        this.loadUsers();
+        this.loadStats();
+      },
+      error: (err) => {
+        this.isSubmitting = false;
+        const msg = err.error?.message || err.error?.data || 'Tạo tài khoản thất bại, vui lòng thử lại!';
+        this.snackBar.open(msg, 'Đóng', {
+          duration: 4000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top'
+        });
+      }
     });
   }
 

@@ -108,4 +108,48 @@
       }
     }
   }
+
+  .slide-over-dialog-panel {
+    max-width: 100vw !important;
+
+    .mat-mdc-dialog-container {
+      padding: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      animation: slideInRight 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+    }
+
+    .mat-mdc-dialog-surface {
+      border-radius: 0 !important;
+      box-shadow: -20px 0 50px rgba(15, 23, 42, 0.18) !important;
+      background-color: #ffffff !important;
+      overflow: hidden !important;
+      height: 100vh !important;
+      max-height: 100vh !important;
+    }
+  }
+
+  .slide-over-dialog-panel-exit .mat-mdc-dialog-container,
+  .mat-mdc-dialog-panel-exit .mat-mdc-dialog-container,
+  .mat-mdc-dialog-panel-exit.slide-over-dialog-panel .mat-mdc-dialog-container {
+    animation: slideOutRight 0.25s cubic-bezier(0.7, 0, 0.84, 0) forwards !important;
+  }
+}
+
+@keyframes slideInRight {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutRight {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }

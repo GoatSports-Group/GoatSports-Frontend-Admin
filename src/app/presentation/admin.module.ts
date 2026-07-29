@@ -18,6 +18,7 @@ import { DocumentPreviewDialogComponent } from '@presentation/pages/owner-applic
 import { StatusBadgeComponent } from '@shared/components/ui/status-badge.component';
 
 import { DragDropModule } from '@angular/cdk/drag-drop';
+import { OverlayModule } from '@angular/cdk/overlay';
 
 @NgModule({
   declarations: [
@@ -38,7 +39,8 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
     AdminComponent,
     DashboardOverviewComponent,
     StatusBadgeComponent,
-    DragDropModule
+    DragDropModule,
+    OverlayModule
   ]
 })
 export class AdminModule { }

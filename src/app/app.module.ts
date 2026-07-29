@@ -79,7 +79,13 @@ import {
   LucideMoreVertical,
   LucideTrash,
   LucideRotateCcw,
-  LucideGripHorizontal
+  LucideGripHorizontal,
+  LucideUpload,
+  LucideImage,
+  LucideEyeOff,
+  LucideChevronDown,
+  LucideGlobe,
+  LucideLoader2
 } from '@lucide/angular';
 
 @NgModule({
@@ -168,7 +174,13 @@ import {
       LucideMoreVertical,
       LucideTrash,
       LucideRotateCcw,
-      LucideGripHorizontal
+      LucideGripHorizontal,
+      LucideUpload,
+      LucideImage,
+      LucideEyeOff,
+      LucideChevronDown,
+      LucideGlobe,
+      LucideLoader2
     )
   ],
   bootstrap: [AppComponent]

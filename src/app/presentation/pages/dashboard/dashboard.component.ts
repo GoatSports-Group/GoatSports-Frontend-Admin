@@ -91,8 +91,8 @@ export class DashboardOverviewComponent implements OnInit {
       applications: this.getAllApplicationsUseCase.execute({ page: 0, size: 1000 })
     }).subscribe({
       next: ({ users, applications }) => {
-        this.totalUsers.set(users.length);
-        this.recentUsers.set(users.slice(0, 5));
+        this.totalUsers.set(users.meta.total);
+        this.recentUsers.set(users.result.slice(0, 5));
 
         const pending = applications.filter(a => a.status === OwnerApplicationStatus.PENDING);
         const approved = applications.filter(a => a.status === OwnerApplicationStatus.APPROVED);

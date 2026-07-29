@@ -6,6 +6,7 @@ import { User } from '@domain/entities/user';
 import { PageFilter } from '@application/dto/page.filter';
 import { buildPageParams } from '@shared/utils/api.helper';
 import { environment } from "@environments/environment"
+import { CreateUserRequest } from '@application/dto/user/user.dto';
 
 @Injectable({
   providedIn: 'root'
@@ -22,6 +23,10 @@ export class UserApi {
   assignRole(userId: string, roleId: string): Observable<BaseResponse<User>> {
     const payload = { userId, roleId };
     return this.http.put<BaseResponse<User>>(`${this.apiBase}/auth-service/api/v1/admin/users/role`, payload);
+  }
+
+  createUser(payload: CreateUserRequest): Observable<BaseResponse<User>> {
+    return this.http.post<BaseResponse<User>>(`${this.apiBase}/auth-service/api/v1/admin/users`, payload);
   }
 
   exportUsersReport(format: string): Observable<Blob> {
