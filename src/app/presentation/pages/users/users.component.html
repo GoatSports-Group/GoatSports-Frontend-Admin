@@ -1,214 +1,258 @@
-<div class="flex flex-col gap-6 animate-fade-in relative z-10">
+<div class="max-w-full py-4 pl-4 flex flex-col gap-6 animate-fade-in relative z-10">
 
   <!-- Page Header -->
-  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/80 pb-5">
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
     <div>
-      <h1 class="font-display text-2xl font-black text-slate-900 uppercase tracking-tight">Quản Lý Thành Viên</h1>
-      <p class="text-xs font-semibold text-slate-500 mt-1">Tra cứu thông tin, quản lý trạng thái và phân vai trò cho các thành viên trong hệ thống.</p>
+      <h1 class="text-2xl font-bold tracking-tight font-display">Tất cả người dùng</h1>
+      <p class="text-sm font-bold text-slate-400 mt-1">Quản lý người dùng và tài khoản</p>
     </div>
-    
-    <div class="flex items-center gap-3 w-full md:w-auto">
-      <button mat-flat-button 
-              class="!bg-gradient-to-r !from-emerald-600 !to-emerald-500 hover:!from-emerald-500 hover:!to-emerald-400 !text-white !h-11 !rounded-2xl !font-black font-display !px-5 transition-all shadow-lg shadow-emerald-500/20 cursor-pointer flex items-center gap-1.5" 
-              [matMenuTriggerFor]="exportListMenu">
-        <lucide-icon name="download" class="h-4 w-4 shrink-0"></lucide-icon> Xuất báo cáo danh sách
-      </button>
-      <mat-menu #exportListMenu="matMenu" class="!bg-white !border !border-slate-200 !rounded-2xl shadow-2xl">
-        <button mat-menu-item (click)="exportUsersReport('pdf')" class="!text-slate-800 !font-extrabold flex items-center">
-          <lucide-icon name="file-text" class="text-rose-600 h-4 w-4 mr-2 shrink-0"></lucide-icon> Xuất bản PDF
-        </button>
-        <button mat-menu-item (click)="exportUsersReport('xlsx')" class="!text-slate-800 !font-extrabold flex items-center">
-          <lucide-icon name="table" class="text-emerald-600 h-4 w-4 mr-2 shrink-0"></lucide-icon> Xuất bản Excel (XLSX)
-        </button>
-      </mat-menu>
+    <button (click)="onCreateUser()"
+      class="bg-primary hover:bg-emerald-800 active:scale-[0.98] text-white text-xs font-bold px-5 py-2.5 rounded-full flex items-center gap-1.5 transition-all shadow-xs cursor-pointer">
+      <lucide-icon name="plus" class="h-4 w-4"></lucide-icon> Tạo tài khoản
+    </button>
+  </div>
+
+  <!-- Overview Stats Container -->
+  <div class="flex flex-wrap items-center justify-between gap-5 w-full" cdkDropList cdkDropListOrientation="horizontal"
+    (cdkDropListDropped)="drop($event)">
+    <div *ngFor="let card of statCards" cdkDrag
+      class="bg-white border border-slate-100 rounded-xl p-4 relative overflow-hidden flex flex-col justify-between min-h-[90px] w-full max-w-[400px] z-50 hover:shadow-sm transition-shadow bg-white cursor-default">
+
+      <!-- Drag Placeholder (Subtle drop zone) -->
+      <div *cdkDragPlaceholder class="border-slate-200 rounded-xl min-h-[90px] w-full max-w-[400px]"></div>
+
+      <!-- Top Row -->
+      <div class="flex items-start justify-between z-10 relative w-full">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100">
+            <lucide-icon [name]="card.icon" class="h-5 w-5 text-emerald-500"></lucide-icon>
+          </div>
+          <div class="flex flex-col gap-1">
+            <h1 class="font-bold text-slate-500 capitalize">{{ card.title }}</h1>
+            <span class="text-[18px] font-bold text-slate-900">{{ card.count }}</span>
+          </div>
+        </div>
+
+        <!-- Drag Handle -->
+        <div cdkDragHandle
+          class="cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500 p-1 -mr-1 -mt-1 rounded transition-colors"
+          title="Kéo để di chuyển">
+          <lucide-icon name="grip-horizontal" class="h-4 w-4"></lucide-icon>
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- Search & Filter Controls -->
-  <div class="bg-white/85 border border-slate-200/80 backdrop-blur-xl rounded-[24px] p-4 shadow-xl shadow-slate-950/5 flex flex-col md:flex-row items-center gap-4">
-    <div class="relative w-full flex-1">
-      <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-        <lucide-icon name="search" class="text-slate-400 h-5 w-5"></lucide-icon>
-      </span>
-      <input type="text" 
-             [(ngModel)]="searchQuery" 
-             (keyup.enter)="onSearch()"
-             placeholder="Nhập tên, username hoặc email và nhấn Enter..." 
-             class="w-full h-[46px] bg-slate-50/80 border border-slate-200/80 rounded-2xl pl-11 pr-4 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all">
+  <div class="bg-white border border-slate-100/85 rounded-3xl p-6 shadow-xs">
+    <!-- Row 1 -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-sm font-bold text-emerald-800">Họ tên</label>
+        <input type="text" [(ngModel)]="filterFullName" (keyup.enter)="onSearch()" placeholder="Tìm kiếm theo họ tên"
+          class="w-full h-11 px-4 bg-slate-50/70 border-0 rounded-2xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-slate-100/80 transition-all">
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label class="text-sm font-bold text-emerald-800">Email</label>
+        <input type="text" [(ngModel)]="filterEmail" (keyup.enter)="onSearch()" placeholder="Tìm kiếm theo email"
+          class="w-full h-11 px-4 bg-slate-50/70 border-0 rounded-2xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-slate-100/80 transition-all">
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label class="text-sm font-bold text-emerald-800">Từ ngày</label>
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+            <lucide-icon name="calendar" class="text-slate-400 h-4 w-4"></lucide-icon>
+          </span>
+          <input type="date" [(ngModel)]="filterFromDate"
+            class="w-full h-11 pl-10 pr-4 bg-slate-50/70 border-0 rounded-2xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-slate-100/80 transition-all cursor-pointer" />
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label class="text-sm font-bold text-emerald-800">Đến ngày</label>
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+            <lucide-icon name="calendar" class="text-slate-400 h-4 w-4"></lucide-icon>
+          </span>
+          <input type="date" [(ngModel)]="filterToDate"
+            class="w-full h-11 pl-10 pr-4 bg-slate-50/70 border-0 rounded-2xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-slate-100/80 transition-all cursor-pointer" />
+        </div>
+      </div>
     </div>
-    
-    <button (click)="onSearch()" 
-            class="w-full md:w-auto bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs px-6 h-[46px] rounded-2xl flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer font-display">
-      <lucide-icon name="filter" class="h-4 w-4 shrink-0"></lucide-icon> Lọc dữ liệu
-    </button>
+
+    <!-- Row 2 -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+      <!-- Action Buttons -->
+      <div class="col-start-1 md:col-start-4 flex items-center gap-3">
+        <button (click)="onSearch()"
+          class="flex-1 h-10 bg-primary hover:bg-emerald-800 active:scale-[0.98] text-white font-bold text-sm rounded-2xl flex items-center justify-center gap-1.5 transition-all cursor-pointer">
+          <lucide-icon name="search" class="h-4 w-4"></lucide-icon> Tìm kiếm
+        </button>
+        <button (click)="resetFilters()"
+          class="flex-1 h-10 bg-white hover:bg-slate-50 active:scale-[0.98] border border-slate-200 text-slate-700 font-bold text-sm rounded-2xl flex items-center justify-center gap-1.5 transition-all cursor-pointer">
+          <lucide-icon name="rotate-ccw" class="h-4 w-4"></lucide-icon> Làm mới
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Loading State -->
   @if (loading) {
-    <div class="flex flex-col items-center justify-center py-20 bg-white/85 border border-slate-200/80 backdrop-blur-xl rounded-[24px] shadow-xl">
-      <mat-spinner diameter="40" color="accent"></mat-spinner>
-      <p class="text-xs font-extrabold text-slate-400 uppercase tracking-wider font-display mt-4">Đang tải danh sách thành viên...</p>
-    </div>
+  <div class="flex flex-col items-center justify-center py-20 bg-white border border-slate-100 rounded-3xl shadow-xs">
+    <mat-spinner diameter="40" color="accent"></mat-spinner>
+    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider font-display mt-4">Đang tải danh sách người
+      dùng...</p>
+  </div>
   } @else {
-    
-    <!-- Empty State -->
-    @if (users.length === 0) {
-      <div class="flex flex-col items-center justify-center py-20 text-center bg-white/85 border border-slate-200/80 backdrop-blur-xl rounded-[24px] shadow-xl">
-        <lucide-icon name="users" class="text-slate-300 h-12 w-12 mb-4 mx-auto"></lucide-icon>
-        <h3 class="text-base font-extrabold text-slate-900 font-display">Không tìm thấy thành viên nào</h3>
-        <p class="text-xs text-slate-500 mt-1 max-w-sm font-medium">Thử điều chỉnh từ khóa tìm kiếm hoặc làm mới lại bộ lọc của bạn.</p>
-      </div>
-    } @else {
-      
-      <!-- Users List container -->
-      <div class="bg-white/85 border border-slate-200/80 backdrop-blur-xl rounded-[24px] shadow-xl shadow-slate-950/5 overflow-hidden">
-        
-        <!-- Desktop Table View -->
-        <div class="hidden md:block overflow-x-auto">
-          <table class="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr class="border-b border-slate-200/80 text-[11px] font-black uppercase tracking-wider text-slate-500 bg-slate-50/80 font-display">
-                <th class="py-4 px-6">Thành viên</th>
-                <th class="py-4 px-6">Tên tài khoản</th>
-                <th class="py-4 px-6">Email</th>
-                <th class="py-4 px-6">Vai trò</th>
-                <th class="py-4 px-6">Trạng thái</th>
-                <th class="py-4 px-6">Ngày tham gia</th>
-                <th class="py-4 px-6 text-center">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100">
-              @for (user of users; track user.userId) {
-                <tr class="hover:bg-slate-50/80 transition-colors">
-                  <!-- Avatar & Full Name -->
-                  <td class="py-4 px-6">
-                    <div class="flex items-center gap-3.5">
-                      <img [src]="user.avatarUrl || getFallbackAvatar(user)" alt="User Avatar" class="w-9 h-9 rounded-2xl object-cover ring-1 ring-slate-200 shadow-xs">
-                      <div class="flex flex-col">
-                        <span class="font-extrabold text-slate-900 text-[13.5px]">{{ user.fullName || user.username }}</span>
-                        <span class="text-[10.5px] text-slate-400 font-mono font-semibold">ID: {{ user.userId.substring(0, 8) }}...</span>
-                      </div>
-                    </div>
-                  </td>
-                  
-                  <!-- Username -->
-                  <td class="py-4 px-6 text-xs font-extrabold text-slate-800 font-mono">
-                    {{ user.username }}
-                  </td>
-                  
-                  <!-- Email -->
-                  <td class="py-4 px-6 text-xs font-semibold text-slate-600 font-mono">
-                    {{ user.email }}
-                  </td>
-                  
-                  <!-- Role -->
-                  <td class="py-4 px-6">
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-xs"
-                          [ngClass]="{
-                            'bg-rose-50 text-rose-700 border-rose-200': user.role.name === 'ADMIN',
-                            'bg-sky-50 text-sky-700 border-sky-200': user.role.name === 'OWNER' || user.role.name === 'VENUE_OWNER',
-                            'bg-slate-100 text-slate-700 border-slate-200': user.role.name !== 'ADMIN' && user.role.name !== 'OWNER' && user.role.name !== 'VENUE_OWNER'
-                          }">
-                      {{ user.role.name || 'USER' }}
-                    </span>
-                  </td>
-                  
-                  <!-- Status -->
-                  <td class="py-4 px-6">
-                    <app-status-badge [status]="user.status === 'ACTIVE' || user.status === 'ACTIVATED' ? 'active' : 'inactive'" [text]="user.status === 'ACTIVE' || user.status === 'ACTIVATED' ? 'Đang hoạt động' : 'Khóa'"></app-status-badge>
-                  </td>
-                  
-                  <!-- Created At -->
-                  <td class="py-4 px-6 text-xs font-semibold text-slate-500 font-mono">
-                    {{ user.createdAt | date:'dd/MM/yyyy HH:mm' }}
-                  </td>
-                  
-                  <!-- Actions -->
-                  <td class="py-4 px-6">
-                    <div class="flex items-center justify-center gap-2">
-                      <button (click)="openAssignRoleDialog(user)"
-                              class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white font-extrabold text-xs transition-all cursor-pointer shadow-xs">
-                        <lucide-icon name="user-cog" class="h-3.5 w-3.5"></lucide-icon> Gán vai trò
-                      </button>
-                      
-                      <button [matMenuTriggerFor]="userActionsMenu" 
-                              class="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors cursor-pointer border border-slate-200">
-                        <lucide-icon name="download" class="h-4 w-4 shrink-0"></lucide-icon>
-                      </button>
-                      <mat-menu #userActionsMenu="matMenu" class="!bg-white !border !border-slate-200 !rounded-2xl shadow-2xl">
-                        <button mat-menu-item (click)="exportUserDetailReport(user, 'pdf')" class="!text-slate-800 !font-extrabold flex items-center">
-                          <lucide-icon name="file-text" class="text-rose-600 h-4 w-4 mr-2 shrink-0"></lucide-icon> Xuất chi tiết PDF
-                        </button>
-                        <button mat-menu-item (click)="exportUserDetailReport(user, 'xlsx')" class="!text-slate-800 !font-extrabold flex items-center">
-                          <lucide-icon name="table" class="text-emerald-600 h-4 w-4 mr-2 shrink-0"></lucide-icon> Xuất chi tiết Excel
-                        </button>
-                      </mat-menu>
-                    </div>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
 
-        <!-- Mobile Card List View -->
-        <div class="block md:hidden divide-y divide-slate-100">
+  <!-- Empty State -->
+  @if (users.length === 0) {
+  <div
+    class="flex flex-col items-center justify-center py-20 text-center bg-white border border-slate-100 rounded-3xl shadow-xs">
+    <lucide-icon name="users" class="text-slate-300 h-12 w-12 mb-4 mx-auto"></lucide-icon>
+    <h3 class="text-sm font-bold text-slate-900 font-display">Không có danh sách người dùng</h3>
+    <p class="text-xs text-slate-500 mt-1 max-w-sm font-medium">Hãy thử điều chỉnh bộ lọc hoặc đặt lại từ khóa tìm kiếm.
+    </p>
+  </div>
+  } @else {
+
+  <!-- Users List Table Wrapper -->
+  <div class="bg-white border border-slate-100 rounded-3xl shadow-xs overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse text-sm">
+        <thead>
+          <tr class="border-b border-slate-100 text-[14px] font-bold tracking-wider text-emerald-400 bg-white">
+            <th class="py-4 px-6 font-bold text-emerald-500">Họ tên</th>
+            <th class="py-4 px-6 font-bold text-emerald-500">Username</th>
+            <th class="py-4 px-6 font-bold text-emerald-500">Email</th>
+            <th class="py-4 px-6 font-bold text-emerald-500">Vai trò</th>
+            <th class="py-4 px-6 font-bold text-emerald-500">Trạng thái</th>
+            <th class="py-4 px-6 font-bold text-emerald-500">Ngày tham gia</th>
+            <th class="py-4 px-6 font-bold text-emerald-500 text-right pr-12">Hành động</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
           @for (user of users; track user.userId) {
-            <div class="p-4 flex flex-col gap-3">
-              <div class="flex items-start justify-between gap-2">
-                <div class="flex items-center gap-3">
-                  <img [src]="user.avatarUrl || getFallbackAvatar(user)" alt="User Avatar" class="w-10 h-10 rounded-2xl object-cover border border-slate-200 shadow-xs">
-                  <div class="flex flex-col">
-                    <span class="font-extrabold text-slate-900 text-sm">{{ user.fullName || user.username }}</span>
-                    <span class="text-xs text-slate-500 font-mono font-medium">&#64;{{ user.username }}</span>
-                  </div>
-                </div>
-                
-                <app-status-badge [status]="user.status === 'ACTIVE' || user.status === 'ACTIVATED' ? 'active' : 'inactive'" [text]="user.status === 'ACTIVE' || user.status === 'ACTIVATED' ? 'Hoạt động' : 'Khóa'"></app-status-badge>
+          <tr class="hover:bg-emerald-50/50 transition-colors">
+            <!-- Name & Avatar -->
+            <td class="py-4 px-6">
+              <div class="flex items-center gap-3">
+                <img [src]="user.avatarUrl || getFallbackAvatar(user)" alt="User Avatar"
+                  class="w-8 h-8 rounded-full object-cover shadow-xs border border-slate-100">
+                <span class="font-medium text-slate-800 text-[13px] font-display">{{ user.fullName}}</span>
               </div>
-              
-              <div class="grid grid-cols-2 gap-2 text-xs py-2 border-t border-b border-slate-100 text-slate-500 font-semibold">
-                <div>Email: <span class="text-slate-900 font-bold block truncate">{{ user.email }}</span></div>
-                <div>Vai trò: 
-                  <span class="inline-block mt-0.5 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase border"
-                        [ngClass]="{
-                          'bg-rose-50 text-rose-700 border-rose-200': user.role.name === 'ADMIN',
-                          'bg-sky-50 text-sky-700 border-sky-200': user.role.name === 'OWNER' || user.role.name === 'VENUE_OWNER',
-                          'bg-slate-100 text-slate-700 border-slate-200': user.role.name !== 'ADMIN' && user.role.name !== 'OWNER' && user.role.name !== 'VENUE_OWNER'
-                        }">
-                    {{ user.role.name || 'USER' }}
-                  </span>
-                </div>
-              </div>
-              
-              <div class="flex items-center justify-between gap-4 mt-1">
-                <span class="text-[11px] text-slate-500 font-mono">Gia nhập: {{ user.createdAt | date:'dd/MM/yyyy' }}</span>
-                
-                <button (click)="openAssignRoleDialog(user)"
-                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 font-extrabold text-xs">
-                  Gán vai trò
+            </td>
+
+            <!-- Username -->
+            <td class="py-4 px-6 font-medium text-slate-800">
+              {{ user.username }}
+            </td>
+
+            <!-- Email -->
+            <td class="py-4 px-6 font-medium text-slate-800">
+              {{ user.email }}
+            </td>
+
+            <!-- Role -->
+            <td class="py-4 px-6 font-medium text-slate-800">
+              {{ getFallbackRole(user.role.name) }}
+            </td>
+
+            <!-- Status -->
+            <td class="py-4 px-6">
+              @if (user.status === 'ACTIVE' || user.status === 'ACTIVATED') {
+              <span
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100/50 uppercase tracking-wide">
+                Đã xác thực
+              </span>
+              } @else {
+              <span
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100/50 uppercase tracking-wide">
+                Chưa xác thực
+              </span>
+              }
+            </td>
+
+            <!-- Joined Date -->
+            <td class="py-4 px-6 font-medium text-slate-800">
+              {{ user.createdAt | date:'dd/MM/yyyy' }}
+            </td>
+
+            <!-- Actions -->
+            <td class="py-4 px-6 text-left pr-6">
+              <div class="flex items-center justify-center gap-1.5">
+                <button (click)="viewUser(user)"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-slate-600 hover:text-emerald-900 hover:bg-emerald-50 active:scale-[0.98] font-bold text-[11px] transition-all cursor-pointer border border-transparent hover:border-slate-100">
+                  <lucide-icon name="eye" class="h-4.5 w-4.5"></lucide-icon>
                 </button>
+
+                <button [matMenuTriggerFor]="actionDropdownMenu"
+                  class="w-8 h-8 rounded-full flex items-center justify-center text-slate-600 hover:text-emerald-900 hover:bg-emerald-50 transition-colors cursor-pointer border border-transparent">
+                  <lucide-icon name="more-vertical" class="h-4.5 w-4.5"></lucide-icon>
+                </button>
+
+                <mat-menu #actionDropdownMenu="matMenu" class="custom-premium-menu">
+                  <button mat-menu-item (click)="editUser(user)">
+                    <lucide-icon name="pencil" class="h-5 w-5 mr-2"></lucide-icon>
+                    <span>Chỉnh sửa</span>
+                  </button>
+                  <button mat-menu-item (click)="openAssignRoleDialog(user)">
+                    <lucide-icon name="user-cog" class="h-5 w-5 mr-2"></lucide-icon>
+                    <span>Gán vai trò</span>
+                  </button>
+                  <button mat-menu-item (click)="changePassword(user)">
+                    <lucide-icon name="key" class="h-5 w-5 mr-2"></lucide-icon>
+                    <span>Đổi mật khẩu</span>
+                  </button>
+                  <button mat-menu-item (click)="markAsUnverified(user)">
+                    <lucide-icon name="shield-alert" class="h-5 w-5 mr-2"></lucide-icon>
+                    <span>Bỏ xác thực</span>
+                  </button>
+                  <button mat-menu-item (click)="deleteUser(user)" class="danger-item">
+                    <lucide-icon name="trash" class="h-5 w-5 mr-2 text-rose-500"></lucide-icon>
+                    <span>Xóa</span>
+                  </button>
+                </mat-menu>
               </div>
-            </div>
+            </td>
+          </tr>
           }
-        </div>
+        </tbody>
+      </table>
+    </div>
 
-        <!-- Paginator -->
-        <div class="border-t border-slate-100 p-2 bg-slate-50/50">
-          <mat-paginator
-            [length]="totalElements"
-            [pageSize]="pageSize"
-            [pageSizeOptions]="[5, 10, 20]"
-            [pageIndex]="pageIndex"
-            (page)="onPageChange($event)"
-            showFirstLastButtons
-            class="!bg-transparent text-slate-600">
-          </mat-paginator>
-        </div>
+    <!-- Pagination Bottom Bar -->
+    <div
+      class="flex flex-col sm:flex-row justify-between items-center px-6 py-4 border-t border-slate-100 gap-4 bg-slate-50/10">
+      <span class="text-xs font-semibold text-emerald-500">
+        {{ getShowingText() }}
+      </span>
 
+      <div class="flex items-center gap-2">
+        <!-- Previous Button -->
+        <button [disabled]="pageIndex === 0" (click)="onPrevPage()"
+          class="px-4 py-1.5 text-xs font-bold text-emerald-700 bg-white border border-slate-200 rounded-full hover:bg-emerald-50 disabled:opacity-50 disabled:pointer-events-none transition-all active:scale-[0.98] cursor-pointer">
+          Trước
+        </button>
+
+        <!-- Page Numbers -->
+        @for (p of pages; track p) {
+        <button (click)="goToPage(p)"
+          [class]="p === pageIndex ? 'w-8 h-8 rounded-full bg-emerald-900 text-white flex items-center justify-center font-bold text-xs transition-all cursor-pointer shadow-xs' : 'w-8 h-8 rounded-full border border-slate-200 text-slate-700 hover:bg-emerald-50 flex items-center justify-center font-bold text-xs transition-all cursor-pointer'">
+          {{ p + 1 }}
+        </button>
+        }
+
+        <!-- Next Button -->
+        <button [disabled]="(pageIndex + 1) >= totalPages" (click)="onNextPage()"
+          class="px-4 py-1.5 text-xs font-bold text-emerald-700 bg-white border border-slate-200 rounded-full hover:bg-emerald-50 disabled:opacity-50 disabled:pointer-events-none transition-all active:scale-[0.98] cursor-pointer">
+          Tiếp
+        </button>
       </div>
-
-    }
+    </div>
+  </div>
   }
-
+  }
 </div>

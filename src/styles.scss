@@ -196,7 +196,39 @@ h5,
 h6 {
   font-family: 'Be Vietnam Pro', sans-serif !important;
   font-weight: 800 !important;
-  color: #0f172a !important;
+  color: var(--color-emerald-600) !important;
+}
+
+/* Angular CDK Drag & Drop styles - Global Scope */
+.cdk-drag-preview {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  padding: 1rem !important;
+  box-sizing: border-box !important;
+  border-radius: 0.75rem !important;
+  background-color: #ffffff !important;
+  border: 1px solid #f1f5f9 !important;
+  box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.12), 0 4px 6px -2px rgba(15, 23, 42, 0.04) !important;
+  cursor: grabbing !important;
+  --tw-bg-opacity: 1 !important;
+  --tw-border-opacity: 1 !important;
+  --tw-text-opacity: 1 !important;
+}
+
+.cdk-drag-preview * {
+  cursor: grabbing !important;
+  --tw-bg-opacity: 1 !important;
+  --tw-border-opacity: 1 !important;
+  --tw-text-opacity: 1 !important;
+}
+
+.cdk-drag-animating {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1) !important;
+}
+
+.cdk-drop-list-dragging .cdk-drag:not(.cdk-drag-placeholder) {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1) !important;
 }
 
 /* Material Component Overrides */
@@ -208,11 +240,6 @@ h6 {
   .gs-main {
     background-color: #f8fafc !important;
     color: #0f172a !important;
-  }
-
-  .mat-drawer {
-    background-color: #ffffff !important;
-    border-right: 1px solid rgba(226, 232, 240, 0.8) !important;
   }
 
   .mat-mdc-card {
@@ -252,4 +279,4 @@ h6 {
   .mat-mdc-row:hover {
     background-color: #f1f5f9 !important;
   }
-}
+}

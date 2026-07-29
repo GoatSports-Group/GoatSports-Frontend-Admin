@@ -1,4 +1,5 @@
 export { Role } from '@domain/entities/role';
+export { ROLE_ENUM_OPTIONS as RoleEnum } from "@domain/enums/role.enum"
 
 export interface RoleCreateRequest {
   name: string;

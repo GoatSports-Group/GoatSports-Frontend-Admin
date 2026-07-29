@@ -74,7 +74,12 @@ import {
   LucideExternalLink,
   LucideLandPlot,
   LucideCloudLightning,
-  LucideDroplets
+  LucideDroplets,
+  LucideShieldAlert,
+  LucideMoreVertical,
+  LucideTrash,
+  LucideRotateCcw,
+  LucideGripHorizontal
 } from '@lucide/angular';
 
 @NgModule({
@@ -158,7 +163,12 @@ import {
       LucideExternalLink,
       LucideLandPlot,
       LucideCloudLightning,
-      LucideDroplets
+      LucideDroplets,
+      LucideShieldAlert,
+      LucideMoreVertical,
+      LucideTrash,
+      LucideRotateCcw,
+      LucideGripHorizontal
     )
   ],
   bootstrap: [AppComponent]
