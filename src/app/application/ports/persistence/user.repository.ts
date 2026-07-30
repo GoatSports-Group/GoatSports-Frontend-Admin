@@ -10,6 +10,7 @@ export interface UserRepository {
   assignRole(userId: string, roleId: string): Observable<User>;
   exportUsersReport(format: string): Observable<Blob>;
   exportUserDetailReport(userId: string, format: string): Observable<Blob>;
+  getUserById(userId: string): Observable<User>;
 }
 
 export const USER_REPOSITORY_TOKEN = new InjectionToken<UserRepository>('UserRepository');

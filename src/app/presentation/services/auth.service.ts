@@ -106,6 +106,8 @@ export class AuthService {
               fullName: 'Quản Trị Viên GOAT Sports',
               avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
               status: 'ACTIVE',
+              gender: 'MALE',
+              authProviders: ['LOCAL'],
               role: { roleId: 'role-admin', name: 'ADMIN' },
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString()

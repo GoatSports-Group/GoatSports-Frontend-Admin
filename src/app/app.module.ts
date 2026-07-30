@@ -85,7 +85,10 @@ import {
   LucideEyeOff,
   LucideChevronDown,
   LucideGlobe,
-  LucideLoader2
+  LucideLoader2,
+  LucideMail,
+  LucideHash,
+  LucidePhone
 } from '@lucide/angular';
 
 @NgModule({
@@ -180,7 +183,10 @@ import {
       LucideEyeOff,
       LucideChevronDown,
       LucideGlobe,
-      LucideLoader2
+      LucideLoader2,
+      LucideMail,
+      LucideHash,
+      LucidePhone
     )
   ],
   bootstrap: [AppComponent]

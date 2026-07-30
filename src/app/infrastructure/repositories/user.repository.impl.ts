@@ -38,4 +38,10 @@ export class UserRepositoryImpl implements UserRepository {
   exportUserDetailReport(userId: string, format: string): Observable<Blob> {
     return this.userApi.exportUserDetailReport(userId, format);
   }
+
+  getUserById(userId: string): Observable<User> {
+    return this.userApi.getUserById(userId).pipe(
+      map(response => response.data)
+    );
+  }
 }

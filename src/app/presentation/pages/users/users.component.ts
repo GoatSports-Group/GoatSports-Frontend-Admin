@@ -6,7 +6,7 @@ import { RoleEnum } from '@application/dto/role/role.dto';
 import { Overlay, OverlayRef } from '@angular/cdk/overlay';
 import { TemplatePortal } from '@angular/cdk/portal';
 import { MatDialog } from '@angular/material/dialog';
-import { User } from '@application/dto/user/user.dto';
+import { GENDER_ENUM_OPTIONS, User } from '@application/dto/user/user.dto';
 import { UserService } from '@presentation/services/user.service';
 
 @Component({
@@ -27,6 +27,8 @@ export class UsersComponent implements OnInit {
 
   users: User[] = [];
   loading = false;
+  selectedUser: User | null = null;
+  loadingDetails = false;
 
   // Pagination states
   totalItems = 0;
@@ -208,6 +210,10 @@ export class UsersComponent implements OnInit {
 
   getFallbackRole(role: string): string {
     return RoleEnum.find(r => r.value === role)?.label || role;
+  }
+
+  getFallbackGender(gender: string): string {
+    return GENDER_ENUM_OPTIONS.find(g => g.value === gender)?.label || gender;
   }
 
   // Create User Drawer State & Form Model
@@ -394,12 +400,23 @@ export class UsersComponent implements OnInit {
   }
 
   viewUser(user: User): void {
-    console.log('View user clicked:', user);
-    this.snackBar.open(`Xem chi tiết tài khoản ${user.fullName || user.username} (Chức năng chưa có API)`, 'Đóng', {
-      duration: 3000,
-      horizontalPosition: 'end',
-      verticalPosition: 'top'
+    if (!user.userId) return;
+    this.loadingDetails = true;
+    this.userAdminService.getUserById(user.userId).subscribe({
+      next: (detailedUser) => {
+        this.loadingDetails = false;
+        this.selectedUser = detailedUser;
+      },
+      error: (err) => {
+        this.loadingDetails = false;
+        this.selectedUser = user;
+        console.error('Failed to load detailed user:', err);
+      }
     });
+  }
+
+  closeUserDetails(): void {
+    this.selectedUser = null;
   }
 
   editUser(user: User): void {

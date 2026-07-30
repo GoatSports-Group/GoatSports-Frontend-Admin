@@ -7,6 +7,7 @@ import { AssignRoleUseCase } from '@application/usecase/user/assign-role.usecase
 import { ExportUsersReportUseCase } from '@application/usecase/user/export-users-report.usecase';
 import { ExportUserDetailReportUseCase } from '@application/usecase/user/export-user-detail-report.usecase';
 import { CreateUserUseCase } from '@application/usecase/user/create-user.usecase';
+import { GetUserByIdUseCase } from '@application/usecase/user/get-user-by-id.usecase';
 import { CreateUserRequest } from '@application/dto/user/user.dto';
 import { BaseListResponse } from '@application/dto/base/base-response';
 
@@ -19,6 +20,7 @@ export class UserService {
   private assignRoleUseCase = inject(AssignRoleUseCase);
   private exportUsersReportUseCase = inject(ExportUsersReportUseCase);
   private exportUserDetailReportUseCase = inject(ExportUserDetailReportUseCase);
+  private getUserByIdUseCase = inject(GetUserByIdUseCase);
 
   createUser(request: CreateUserRequest): Observable<User> {
     return this.createUserUseCase.execute(request);
@@ -38,5 +40,9 @@ export class UserService {
 
   exportUserDetailReport(userId: string, format: string): Observable<Blob> {
     return this.exportUserDetailReportUseCase.execute(userId, format);
+  }
+
+  getUserById(userId: string): Observable<User> {
+    return this.getUserByIdUseCase.execute(userId);
   }
 }

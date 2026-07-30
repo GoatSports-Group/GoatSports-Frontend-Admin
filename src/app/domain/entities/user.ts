@@ -5,10 +5,16 @@ export type User = {
   fullName: string;
   avatarUrl?: string;
   status: string;
-  createdAt: string;
-  updatedAt: string;
+  gender: string;
+  authProviders: string[];
+  phone?: string;
+  country?: string;
+
   role: {
     roleId: string;
     name: string;
   }
+
+  createdAt: string;
+  updatedAt: string;
 }

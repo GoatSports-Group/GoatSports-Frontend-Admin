@@ -29,6 +29,10 @@ export class UserApi {
     return this.http.post<BaseResponse<User>>(`${this.apiBase}/auth-service/api/v1/admin/users`, payload);
   }
 
+  getUserById(userId: string): Observable<BaseResponse<User>> {
+    return this.http.get<BaseResponse<User>>(`${this.apiBase}/auth-service/api/v1/users/${userId}`);
+  }
+
   exportUsersReport(format: string): Observable<Blob> {
     return this.http.get(`${this.apiBase}/report-service/api/v1/reports/export/users`, {
       params: new HttpParams().set('format', format),
