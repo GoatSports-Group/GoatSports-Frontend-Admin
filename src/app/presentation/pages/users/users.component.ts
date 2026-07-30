@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ViewChild, TemplateRef, ViewContainerRef } from '@angular/core';
+import { Component, OnInit, inject, ViewChild, TemplateRef, ViewContainerRef, HostListener } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AssignRoleDialogComponent } from '@presentation/pages/users/assign-role-dialog/assign-role-dialog.component';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
@@ -11,6 +11,7 @@ import { UserService } from '@presentation/services/user.service';
 import { StorageService } from '@presentation/services/storage.service';
 import { environment } from '@environments/environment';
 import { forkJoin, switchMap } from 'rxjs';
+import { COUNTRIES } from '@shared/constants/countries.constant';
 
 @Component({
   selector: 'app-users',
@@ -31,9 +32,35 @@ export class UsersComponent implements OnInit {
   private overlayRef?: OverlayRef;
 
   users: User[] = [];
+  countries = COUNTRIES;
   loading = false;
   selectedUser: User | null = null;
   loadingDetails = false;
+
+  isCountryDropdownOpen = false;
+  countrySearchQuery = '';
+
+  get filteredCountries(): readonly any[] {
+    const query = this.countrySearchQuery.toLowerCase().trim();
+    if (!query) return this.countries;
+    return this.countries.filter(c => c.name.toLowerCase().includes(query));
+  }
+
+  toggleCountryDropdown(event: Event): void {
+    event.stopPropagation();
+    this.isCountryDropdownOpen = !this.isCountryDropdownOpen;
+  }
+
+  selectCountry(countryName: string): void {
+    this.editCountry = countryName;
+    this.isCountryDropdownOpen = false;
+    this.countrySearchQuery = '';
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    this.isCountryDropdownOpen = false;
+  }
 
   // Pagination states
   totalItems = 0;

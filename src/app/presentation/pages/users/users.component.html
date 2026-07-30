@@ -693,11 +693,46 @@
             class="w-full h-11 px-4 bg-slate-50/70 border border-slate-100 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-slate-100/80 transition-all">
         </div>
 
-        <!-- Country -->
-        <div class="flex flex-col gap-1.5">
+        <!-- Country (Custom Search Dropdown) -->
+        <div class="flex flex-col gap-1.5 relative">
           <label class="text-sm font-bold text-emerald-600">Quốc gia</label>
-          <input type="text" [(ngModel)]="editCountry" placeholder="Nhập tên quốc gia"
-            class="w-full h-11 px-4 bg-slate-50/70 border border-slate-100 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-slate-100/80 transition-all">
+          
+          <!-- Dropdown Trigger Button -->
+          <div (click)="toggleCountryDropdown($event)"
+            class="w-full h-11 px-4 bg-slate-50/70 border border-slate-100 rounded-xl text-xs font-semibold text-slate-800 flex items-center justify-between cursor-pointer hover:bg-slate-100/80 transition-all select-none">
+            <span [class.text-slate-400]="!editCountry">
+              {{ editCountry || 'Chọn quốc gia' }}
+            </span>
+            <lucide-icon name="chevron-down" class="w-4 h-4 text-slate-400 transition-transform duration-200"
+              [class.rotate-180]="isCountryDropdownOpen"></lucide-icon>
+          </div>
+
+          <!-- Dropdown Menu Panel -->
+          <div *ngIf="isCountryDropdownOpen" (click)="$event.stopPropagation()"
+            class="absolute top-[70px] left-0 right-0 bg-white border border-slate-100 rounded-xl shadow-xl z-50 flex flex-col max-h-60 overflow-hidden transform origin-top transition-all duration-200">
+            
+            <!-- Search Input -->
+            <div class="p-2 border-b border-slate-100 sticky top-0 bg-white z-10 flex items-center gap-2">
+              <lucide-icon name="search" class="w-3.5 h-3.5 text-slate-400 ml-1"></lucide-icon>
+              <input type="text" [(ngModel)]="countrySearchQuery" placeholder="Tìm kiếm quốc gia..."
+                class="w-full h-8 px-2 bg-slate-50 border border-slate-100 rounded-lg text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-600 focus:bg-white transition-all">
+            </div>
+
+            <!-- Countries List -->
+            <div class="flex-1 overflow-y-auto max-h-48 py-1 scrollbar-thin">
+              <div *ngFor="let country of filteredCountries"
+                (click)="selectCountry(country.name)"
+                class="px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer flex items-center justify-between transition-colors"
+                [class.bg-emerald-50/50]="editCountry === country.name"
+                [class.text-emerald-600]="editCountry === country.name">
+                <span>{{ country.name }}</span>
+                <lucide-icon name="check" *ngIf="editCountry === country.name" class="w-3.5 h-3.5 text-emerald-600"></lucide-icon>
+              </div>
+              <div *ngIf="filteredCountries.length === 0" class="px-4 py-3 text-xs text-slate-400 text-center font-medium">
+                Không tìm thấy quốc gia nào
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Gender -->
