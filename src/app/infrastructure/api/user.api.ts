@@ -33,6 +33,15 @@ export class UserApi {
     return this.http.get<BaseResponse<User>>(`${this.apiBase}/auth-service/api/v1/users/${userId}`);
   }
 
+  updateUser(userId: string, payload: Partial<User>): Observable<BaseResponse<User>> {
+    return this.http.put<BaseResponse<User>>(`${this.apiBase}/auth-service/api/v1/users/${userId}`, payload);
+  }
+
+  updateAvatar(userId: string, tempKey: string): Observable<BaseResponse<void>> {
+    const params = new HttpParams().set('tempKey', tempKey);
+    return this.http.put<BaseResponse<void>>(`${this.apiBase}/auth-service/api/v1/users/${userId}/avatar`, null, { params });
+  }
+
   exportUsersReport(format: string): Observable<Blob> {
     return this.http.get(`${this.apiBase}/report-service/api/v1/reports/export/users`, {
       params: new HttpParams().set('format', format),

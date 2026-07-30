@@ -8,6 +8,9 @@ import { TemplatePortal } from '@angular/cdk/portal';
 import { MatDialog } from '@angular/material/dialog';
 import { GENDER_ENUM_OPTIONS, User } from '@application/dto/user/user.dto';
 import { UserService } from '@presentation/services/user.service';
+import { StorageService } from '@presentation/services/storage.service';
+import { environment } from '@environments/environment';
+import { forkJoin, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-users',
@@ -17,11 +20,13 @@ import { UserService } from '@presentation/services/user.service';
 })
 export class UsersComponent implements OnInit {
   @ViewChild('createUserTemplate') createUserTemplate!: TemplateRef<any>;
+  @ViewChild('editUserTemplate') editUserTemplate!: TemplateRef<any>;
   private overlay = inject(Overlay);
   private viewContainerRef = inject(ViewContainerRef);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
   private userAdminService = inject(UserService);
+  private storageService = inject(StorageService);
 
   private overlayRef?: OverlayRef;
 
@@ -229,6 +234,20 @@ export class UsersComponent implements OnInit {
     avatarUrl: ''
   };
 
+  // Edit User Drawer State & Form Model
+  isEditDrawerOpen = false;
+  editingUser: User | null = null;
+  editUsername = '';
+  editFullName = '';
+  editAvatarUrl = '';
+  editPhone = '';
+  editCountry = '';
+  editGender = '';
+  isSubmittingEdit = false;
+  isUploadingAvatar = false;
+  avatarFileToUpload: File | null = null;
+  localAvatarPreviewUrl: string | null = null;
+
   onCreateUser(): void {
     if (!this.overlayRef) {
       this.overlayRef = this.overlay.create({
@@ -240,7 +259,11 @@ export class UsersComponent implements OnInit {
       });
 
       this.overlayRef.backdropClick().subscribe(() => {
-        this.closeCreateDrawer();
+        if (this.isCreateDrawerOpen) {
+          this.closeCreateDrawer();
+        } else if (this.isEditDrawerOpen) {
+          this.closeEditDrawer();
+        }
       });
     }
 
@@ -420,12 +443,188 @@ export class UsersComponent implements OnInit {
   }
 
   editUser(user: User): void {
-    console.log('Edit clicked for user:', user);
-    this.snackBar.open(`Chỉnh sửa thông tin ${user.fullName || user.username} (Chức năng chưa có API)`, 'Đóng', {
-      duration: 3000,
-      horizontalPosition: 'end',
-      verticalPosition: 'top'
-    });
+    this.editingUser = user;
+    this.editUsername = user.username || '';
+    this.editFullName = user.fullName || '';
+    this.editAvatarUrl = user.avatarUrl || '';
+    this.editPhone = user.phone || '';
+    this.editCountry = user.country || '';
+    this.editGender = user.gender || 'OTHER';
+
+    if (!this.overlayRef) {
+      this.overlayRef = this.overlay.create({
+        hasBackdrop: true,
+        backdropClass: 'custom-drawer-backdrop',
+        panelClass: 'custom-drawer-panel',
+        positionStrategy: this.overlay.position().global().right('0').top('0').bottom('0'),
+        scrollStrategy: this.overlay.scrollStrategies.block()
+      });
+
+      this.overlayRef.backdropClick().subscribe(() => {
+        if (this.isCreateDrawerOpen) {
+          this.closeCreateDrawer();
+        } else if (this.isEditDrawerOpen) {
+          this.closeEditDrawer();
+        }
+      });
+    }
+
+    if (this.overlayRef.hasAttached()) {
+      this.overlayRef.detach();
+    }
+
+    const portal = new TemplatePortal(this.editUserTemplate, this.viewContainerRef);
+    this.overlayRef.attach(portal);
+
+    setTimeout(() => {
+      this.isEditDrawerOpen = true;
+    }, 15);
+  }
+
+  closeEditDrawer(): void {
+    this.isEditDrawerOpen = false;
+    this.avatarFileToUpload = null;
+    if (this.localAvatarPreviewUrl) {
+      URL.revokeObjectURL(this.localAvatarPreviewUrl);
+      this.localAvatarPreviewUrl = null;
+    }
+    setTimeout(() => {
+      if (!this.isEditDrawerOpen && this.overlayRef?.hasAttached()) {
+        this.overlayRef.detach();
+      }
+      this.editingUser = null;
+    }, 300);
+  }
+
+  submitEditUser(): void {
+    if (this.isSubmittingEdit || !this.editingUser) return;
+
+    if (!this.editUsername || !this.editUsername.trim()) {
+      this.snackBar.open('Tên đăng nhập không được để trống', 'Đóng', {
+        duration: 3000,
+        horizontalPosition: 'end',
+        verticalPosition: 'top'
+      });
+      return;
+    }
+
+    if (!this.editFullName || !this.editFullName.trim()) {
+      this.snackBar.open('Họ tên không được để trống', 'Đóng', {
+        duration: 3000,
+        horizontalPosition: 'end',
+        verticalPosition: 'top'
+      });
+      return;
+    }
+
+    if (!this.editGender) {
+      this.snackBar.open('Giới tính không được để trống', 'Đóng', {
+        duration: 3000,
+        horizontalPosition: 'end',
+        verticalPosition: 'top'
+      });
+      return;
+    }
+
+    this.isSubmittingEdit = true;
+
+    const payload: Partial<User> = {
+      username: this.editUsername.trim(),
+      fullName: this.editFullName.trim(),
+      phone: this.editPhone.trim(),
+      country: this.editCountry.trim(),
+      gender: this.editGender
+    };
+
+    const updateObs$ = this.userAdminService.updateUser(this.editingUser.userId, payload);
+
+    if (this.avatarFileToUpload) {
+      const file = this.avatarFileToUpload;
+      const presignedObs$ = this.storageService.getPresignedUrl(file.name, file.type, 'avatars');
+
+      forkJoin({
+        user: updateObs$,
+        presigned: presignedObs$
+      }).subscribe({
+        next: (result) => {
+          this.isSubmittingEdit = false;
+          this.snackBar.open(`Cập nhật thông tin thành công!`, 'Đóng', {
+            duration: 2000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top'
+          });
+
+          // Close drawer and load users list immediately
+          this.closeEditDrawer();
+          this.loadUsers();
+          this.loadStats();
+
+          // BACKGROUND WORK
+          const presignedInfo = result.presigned[0];
+          this.storageService.uploadToPresignedUrl(presignedInfo.uploadUrl, file).pipe(
+            switchMap(() => this.userAdminService.updateAvatar(result.user.userId, presignedInfo.objectKey))
+          ).subscribe({
+            next: () => {
+              // Refresh again to show new avatar
+              this.loadUsers();
+              if (this.selectedUser && this.selectedUser.userId === result.user.userId) {
+                this.userAdminService.getUserById(result.user.userId).subscribe(user => {
+                  this.selectedUser = user;
+                });
+              }
+            },
+            error: (err) => {
+              console.error('Background avatar upload failed:', err);
+              this.snackBar.open(`Tải lên ảnh đại diện thất bại ở chế độ nền!`, 'Đóng', {
+                duration: 4000,
+                horizontalPosition: 'end',
+                verticalPosition: 'top'
+              });
+            }
+          });
+        },
+        error: (err) => {
+          this.isSubmittingEdit = false;
+          const msg = err.error?.message || err.error?.data || 'Cập nhật tài khoản thất bại, vui lòng thử lại!';
+          this.snackBar.open(msg, 'Đóng', {
+            duration: 4000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top'
+          });
+        }
+      });
+    } else {
+      updateObs$.subscribe({
+        next: (updatedUser) => {
+          this.isSubmittingEdit = false;
+          this.snackBar.open(`Cập nhật tài khoản ${updatedUser.username} thành công!`, 'Đóng', {
+            duration: 2000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top'
+          });
+
+          if (this.selectedUser && this.selectedUser.userId === updatedUser.userId) {
+            this.selectedUser = {
+              ...this.selectedUser,
+              ...updatedUser
+            };
+          }
+
+          this.closeEditDrawer();
+          this.loadUsers();
+          this.loadStats();
+        },
+        error: (err) => {
+          this.isSubmittingEdit = false;
+          const msg = err.error?.message || err.error?.data || 'Cập nhật tài khoản thất bại, vui lòng thử lại!';
+          this.snackBar.open(msg, 'Đóng', {
+            duration: 4000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top'
+          });
+        }
+      });
+    }
   }
 
   openAssignRoleDialog(user: User): void {
@@ -467,5 +666,32 @@ export class UsersComponent implements OnInit {
       horizontalPosition: 'end',
       verticalPosition: 'top'
     });
+  }
+
+  getAvatarUrl(avatarUrl: string | null | undefined): string {
+    if (!avatarUrl) return '';
+    if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) {
+      return avatarUrl;
+    }
+    return `${environment.apiUrl}/storage-service/api/v1/files/download?key=${avatarUrl}`;
+  }
+
+  getDisplayAvatar(user: User | null | undefined): string {
+    if (!user) return '';
+    if (user.avatarUrl) {
+      return this.getAvatarUrl(user.avatarUrl);
+    }
+    return this.getFallbackAvatar(user);
+  }
+
+  onAvatarSelected(event: any): void {
+    const file: File = event.target.files[0];
+    if (!file) return;
+
+    this.avatarFileToUpload = file;
+    if (this.localAvatarPreviewUrl) {
+      URL.revokeObjectURL(this.localAvatarPreviewUrl);
+    }
+    this.localAvatarPreviewUrl = URL.createObjectURL(file);
   }
 }

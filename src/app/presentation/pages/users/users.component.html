@@ -32,12 +32,8 @@
         <div class="flex items-center gap-5">
           <!-- Profile Avatar -->
           <div class="relative">
-            <img *ngIf="selectedUser.avatarUrl" [src]="selectedUser.avatarUrl" alt="Avatar"
+            <img [src]="getDisplayAvatar(selectedUser)" alt="Avatar"
               class="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-2 border-slate-100 shadow-inner">
-            <div *ngIf="!selectedUser.avatarUrl"
-              class="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
-              <lucide-icon name="user" class="w-12 h-12 sm:w-16 sm:h-16"></lucide-icon>
-            </div>
           </div>
 
           <!-- Name and Username -->
@@ -416,12 +412,8 @@
             <!-- Name & Avatar -->
             <td class="py-4 px-6">
               <div class="flex items-center gap-3">
-                <img *ngIf="user.avatarUrl" [src]="user.avatarUrl" alt="Avatar"
+                <img [src]="getDisplayAvatar(user)" alt="Avatar"
                   class="w-8 h-8 rounded-full object-cover border border-slate-100 shadow-inner">
-                <div *ngIf="!user.avatarUrl"
-                  class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 border border-slate-200">
-                  <lucide-icon name="user" class="h-4.5 w-4.5"></lucide-icon>
-                </div>
                 <span class="font-bold text-slate-800">{{ user.fullName || 'Chưa cập nhật' }}</span>
               </div>
             </td>
@@ -641,6 +633,106 @@
           <span>Đang tạo...</span>
           } @else {
           <span>Tạo tài khoản</span>
+          }
+        </button>
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- Slide-Over Drawer Dialog Template (Edit User Details) -->
+  <ng-template #editUserTemplate>
+    <div
+      class="w-[440px] max-w-[100vw] h-screen bg-white shadow-2xl flex flex-col justify-between overflow-hidden transform transition-transform duration-300 ease-out"
+      [class.translate-x-0]="isEditDrawerOpen" [class.translate-x-full]="!isEditDrawerOpen">
+
+      <!-- Drawer Header -->
+      <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-white">
+        <h2 class="text-lg font-bold text-slate-900 font-display">Chỉnh sửa tài khoản</h2>
+        <button type="button" (click)="closeEditDrawer()"
+          class="text-slate-400 hover:text-slate-600 p-1.5 rounded-full hover:bg-slate-100 transition-colors cursor-pointer">
+          <lucide-icon name="x" class="h-5 w-5"></lucide-icon>
+        </button>
+      </div>
+
+      <!-- Drawer Body Content -->
+      <div class="flex-1 overflow-y-auto p-6 space-y-5">
+        <!-- Interactive Avatar Selector -->
+        <div class="flex flex-col items-center justify-center gap-2 bg-slate-50/50 p-4 rounded-2xl border border-slate-100/50">
+          <label class="relative group cursor-pointer block w-20 h-20 rounded-full overflow-hidden border border-slate-200 shadow-sm transition-all hover:ring-4 hover:ring-emerald-600/20">
+            <input type="file" (change)="onAvatarSelected($event)" accept="image/*" class="hidden">
+            
+            <img [src]="localAvatarPreviewUrl || getAvatarUrl(editAvatarUrl) || (editingUser ? getFallbackAvatar(editingUser) : '')" 
+                 class="w-full h-full object-cover transition-transform group-hover:scale-105" alt="Avatar Preview" />
+            
+            <div class="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <lucide-icon name="camera" class="w-5 h-5 text-white mb-0.5"></lucide-icon>
+              <span class="text-[9px] font-bold text-white uppercase tracking-wider">Thay đổi</span>
+            </div>
+          </label>
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ảnh đại diện</span>
+        </div>
+
+        <!-- Username -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-sm font-bold text-emerald-600">Username / Tên đăng nhập <span class="text-rose-500">*</span></label>
+          <input type="text" [(ngModel)]="editUsername" placeholder="Nhập username"
+            class="w-full h-11 px-4 bg-slate-50/70 border border-slate-100 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-slate-100/80 transition-all">
+        </div>
+
+        <!-- Full Name -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-sm font-bold text-emerald-600">Họ và tên <span class="text-rose-500">*</span></label>
+          <input type="text" [(ngModel)]="editFullName" placeholder="Nhập họ và tên đầy đủ"
+            class="w-full h-11 px-4 bg-slate-50/70 border border-slate-100 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-slate-100/80 transition-all">
+        </div>
+
+        <!-- Phone -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-sm font-bold text-emerald-600">Số điện thoại</label>
+          <input type="text" [(ngModel)]="editPhone" placeholder="Nhập số điện thoại"
+            class="w-full h-11 px-4 bg-slate-50/70 border border-slate-100 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-slate-100/80 transition-all">
+        </div>
+
+        <!-- Country -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-sm font-bold text-emerald-600">Quốc gia</label>
+          <input type="text" [(ngModel)]="editCountry" placeholder="Nhập tên quốc gia"
+            class="w-full h-11 px-4 bg-slate-50/70 border border-slate-100 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-slate-100/80 transition-all">
+        </div>
+
+        <!-- Gender -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-sm font-bold text-emerald-600">Giới tính <span class="text-rose-500">*</span></label>
+          <div class="grid grid-cols-3 gap-2.5 pt-0.5">
+            <button type="button" (click)="editGender = 'MALE'"
+              [class]="editGender === 'MALE' ? 'h-11 rounded-xl bg-primary text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer' : 'h-11 rounded-xl bg-slate-50/70 border border-slate-100 text-slate-700 font-semibold text-xs flex items-center justify-center gap-1.5 hover:bg-slate-100 transition-all cursor-pointer'">
+              Nam
+            </button>
+            <button type="button" (click)="editGender = 'FEMALE'"
+              [class]="editGender === 'FEMALE' ? 'h-11 rounded-xl bg-primary text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer' : 'h-11 rounded-xl bg-slate-50/70 border border-slate-100 text-slate-700 font-semibold text-xs flex items-center justify-center gap-1.5 hover:bg-slate-100 transition-all cursor-pointer'">
+              Nữ
+            </button>
+            <button type="button" (click)="editGender = 'OTHER'"
+              [class]="editGender === 'OTHER' ? 'h-11 rounded-xl bg-primary text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer' : 'h-11 rounded-xl bg-slate-50/70 border border-slate-100 text-slate-700 font-semibold text-xs flex items-center justify-center gap-1.5 hover:bg-slate-100 transition-all cursor-pointer'">
+              Khác
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Drawer Footer Buttons -->
+      <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 bg-white">
+        <button type="button" (click)="closeEditDrawer()" [disabled]="isSubmittingEdit"
+          class="px-6 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-full font-bold text-xs transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50">
+          Hủy
+        </button>
+        <button type="button" (click)="submitEditUser()" [disabled]="isSubmittingEdit"
+          class="px-6 py-2.5 bg-primary hover:bg-emerald-800 disabled:opacity-50 text-white rounded-full font-bold text-xs transition-all active:scale-[0.98] shadow-xs cursor-pointer inline-flex items-center gap-2">
+          @if (isSubmittingEdit) {
+          <lucide-icon name="loader-2" class="h-4 w-4 animate-spin"></lucide-icon>
+          <span>Đang lưu...</span>
+          } @else {
+          <span>Lưu thay đổi</span>
           }
         </button>
       </div>

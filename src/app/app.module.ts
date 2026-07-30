@@ -12,6 +12,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { AUTH_REPOSITORY_TOKEN } from '@application/ports/persistence/auth.repository';
 import { USER_REPOSITORY_TOKEN } from '@application/ports/persistence/user.repository';
+import { STORAGE_REPOSITORY_TOKEN } from '@application/ports/persistence/storage.repository';
 import { ROLE_REPOSITORY_TOKEN } from '@application/ports/persistence/role.repository';
 import { PERMISSION_REPOSITORY_TOKEN } from '@application/ports/persistence/permission.repository';
 import { OWNER_APPLICATION_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-application.repository';
@@ -20,6 +21,7 @@ import { WEBSOCKET_SERVICE_TOKEN } from '@application/ports/websocket.service';
 
 import { AuthRepositoryImpl } from '@infrastructure/repositories/auth.repository.impl';
 import { UserRepositoryImpl } from '@infrastructure/repositories/user.repository.impl';
+import { StorageRepositoryImpl } from '@infrastructure/repositories/storage.repository.impl';
 import { RoleRepositoryImpl } from '@infrastructure/repositories/role.repository.impl';
 import { PermissionRepositoryImpl } from '@infrastructure/repositories/permission.repository.impl';
 import { OwnerApplicationRepositoryImpl } from '@infrastructure/repositories/owner-application.repository.impl';
@@ -82,6 +84,7 @@ import {
   LucideGripHorizontal,
   LucideUpload,
   LucideImage,
+  LucideCamera,
   LucideEyeOff,
   LucideChevronDown,
   LucideGlobe,
@@ -114,6 +117,7 @@ import {
     },
     { provide: AUTH_REPOSITORY_TOKEN, useClass: AuthRepositoryImpl },
     { provide: USER_REPOSITORY_TOKEN, useClass: UserRepositoryImpl },
+    { provide: STORAGE_REPOSITORY_TOKEN, useClass: StorageRepositoryImpl },
     { provide: ROLE_REPOSITORY_TOKEN, useClass: RoleRepositoryImpl },
     { provide: PERMISSION_REPOSITORY_TOKEN, useClass: PermissionRepositoryImpl },
     { provide: OWNER_APPLICATION_REPOSITORY_TOKEN, useClass: OwnerApplicationRepositoryImpl },
@@ -180,6 +184,7 @@ import {
       LucideGripHorizontal,
       LucideUpload,
       LucideImage,
+      LucideCamera,
       LucideEyeOff,
       LucideChevronDown,
       LucideGlobe,

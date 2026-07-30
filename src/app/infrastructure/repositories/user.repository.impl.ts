@@ -5,7 +5,7 @@ import { UserApi } from '@infrastructure/api/user.api';
 import { User } from '@domain/entities/user';
 import { PageFilter } from '@application/dto/page.filter';
 import { CreateUserRequest } from '@application/dto/user/user.dto';
-import { BaseListResponse, BaseResponse } from '@application/dto/base/base-response';
+import { BaseListResponse } from '@application/dto/base/base-response';
 
 @Injectable({
   providedIn: 'root'
@@ -41,6 +41,18 @@ export class UserRepositoryImpl implements UserRepository {
 
   getUserById(userId: string): Observable<User> {
     return this.userApi.getUserById(userId).pipe(
+      map(response => response.data)
+    );
+  }
+
+  updateUser(userId: string, data: Partial<User>): Observable<User> {
+    return this.userApi.updateUser(userId, data).pipe(
+      map(response => response.data)
+    );
+  }
+
+  updateAvatar(userId: string, tempKey: string): Observable<void> {
+    return this.userApi.updateAvatar(userId, tempKey).pipe(
       map(response => response.data)
     );
   }

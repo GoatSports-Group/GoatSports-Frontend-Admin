@@ -8,6 +8,8 @@ import { ExportUsersReportUseCase } from '@application/usecase/user/export-users
 import { ExportUserDetailReportUseCase } from '@application/usecase/user/export-user-detail-report.usecase';
 import { CreateUserUseCase } from '@application/usecase/user/create-user.usecase';
 import { GetUserByIdUseCase } from '@application/usecase/user/get-user-by-id.usecase';
+import { UpdateUserUseCase } from '@application/usecase/user/update-user.usecase';
+import { UpdateUserAvatarUseCase } from '@application/usecase/user/update-user-avatar.usecase';
 import { CreateUserRequest } from '@application/dto/user/user.dto';
 import { BaseListResponse } from '@application/dto/base/base-response';
 
@@ -21,6 +23,8 @@ export class UserService {
   private exportUsersReportUseCase = inject(ExportUsersReportUseCase);
   private exportUserDetailReportUseCase = inject(ExportUserDetailReportUseCase);
   private getUserByIdUseCase = inject(GetUserByIdUseCase);
+  private updateUserUseCase = inject(UpdateUserUseCase);
+  private updateUserAvatarUseCase = inject(UpdateUserAvatarUseCase);
 
   createUser(request: CreateUserRequest): Observable<User> {
     return this.createUserUseCase.execute(request);
@@ -44,5 +48,13 @@ export class UserService {
 
   getUserById(userId: string): Observable<User> {
     return this.getUserByIdUseCase.execute(userId);
+  }
+
+  updateUser(userId: string, data: Partial<User>): Observable<User> {
+    return this.updateUserUseCase.execute(userId, data);
+  }
+
+  updateAvatar(userId: string, tempKey: string): Observable<void> {
+    return this.updateUserAvatarUseCase.execute(userId, tempKey);
   }
 }
