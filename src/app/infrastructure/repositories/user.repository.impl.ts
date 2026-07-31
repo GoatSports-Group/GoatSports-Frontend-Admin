@@ -56,4 +56,10 @@ export class UserRepositoryImpl implements UserRepository {
       map(response => response.data)
     );
   }
+
+  updatePasswordByAdmin(userId: string, data: any): Observable<void> {
+    return this.userApi.updatePasswordByAdmin(userId, data).pipe(
+      map(response => response.data)
+    );
+  }
 }

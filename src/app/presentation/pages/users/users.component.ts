@@ -22,6 +22,7 @@ import { COUNTRIES } from '@shared/constants/countries.constant';
 export class UsersComponent implements OnInit {
   @ViewChild('createUserTemplate') createUserTemplate!: TemplateRef<any>;
   @ViewChild('editUserTemplate') editUserTemplate!: TemplateRef<any>;
+  @ViewChild('changePasswordTemplate') changePasswordTemplate!: TemplateRef<any>;
   private overlay = inject(Overlay);
   private viewContainerRef = inject(ViewContainerRef);
   private dialog = inject(MatDialog);
@@ -275,6 +276,15 @@ export class UsersComponent implements OnInit {
   avatarFileToUpload: File | null = null;
   localAvatarPreviewUrl: string | null = null;
 
+  // Change Password Drawer State & Form Model
+  isPasswordDrawerOpen = false;
+  passwordEditingUser: User | null = null;
+  newPassword = '';
+  confirmPassword = '';
+  showNewPassword = false;
+  showConfirmPassword = false;
+  isSubmittingPassword = false;
+
   onCreateUser(): void {
     if (!this.overlayRef) {
       this.overlayRef = this.overlay.create({
@@ -290,6 +300,8 @@ export class UsersComponent implements OnInit {
           this.closeCreateDrawer();
         } else if (this.isEditDrawerOpen) {
           this.closeEditDrawer();
+        } else if (this.isPasswordDrawerOpen) {
+          this.closePasswordDrawer();
         }
       });
     }
@@ -322,8 +334,8 @@ export class UsersComponent implements OnInit {
     this.showPassword = !this.showPassword;
   }
 
-  getPasswordStrength(): number {
-    const pwd = this.newUser.password || '';
+  getPasswordStrength(passwordValue?: string): number {
+    const pwd = passwordValue !== undefined ? passwordValue : (this.newUser.password || '');
     if (!pwd) return 0;
     let score = 0;
     if (pwd.length >= 8) score++;
@@ -670,11 +682,117 @@ export class UsersComponent implements OnInit {
   }
 
   changePassword(user: User): void {
-    console.log('Change Password clicked for user:', user);
-    this.snackBar.open(`Yêu cầu đổi mật khẩu cho ${user.fullName || user.username} (Chức năng chưa có API)`, 'Đóng', {
-      duration: 3000,
-      horizontalPosition: 'end',
-      verticalPosition: 'top'
+    this.passwordEditingUser = user;
+    this.newPassword = '';
+    this.confirmPassword = '';
+    this.showNewPassword = false;
+    this.showConfirmPassword = false;
+
+    if (!this.overlayRef) {
+      this.overlayRef = this.overlay.create({
+        hasBackdrop: true,
+        backdropClass: 'custom-drawer-backdrop',
+        panelClass: 'custom-drawer-panel',
+        positionStrategy: this.overlay.position().global().right('0').top('0').bottom('0'),
+        scrollStrategy: this.overlay.scrollStrategies.block()
+      });
+
+      this.overlayRef.backdropClick().subscribe(() => {
+        if (this.isCreateDrawerOpen) {
+          this.closeCreateDrawer();
+        } else if (this.isEditDrawerOpen) {
+          this.closeEditDrawer();
+        } else if (this.isPasswordDrawerOpen) {
+          this.closePasswordDrawer();
+        }
+      });
+    }
+
+    if (this.overlayRef.hasAttached()) {
+      this.overlayRef.detach();
+    }
+
+    const portal = new TemplatePortal(this.changePasswordTemplate, this.viewContainerRef);
+    this.overlayRef.attach(portal);
+
+    setTimeout(() => {
+      this.isPasswordDrawerOpen = true;
+    }, 15);
+  }
+
+  closePasswordDrawer(): void {
+    this.isPasswordDrawerOpen = false;
+    setTimeout(() => {
+      if (!this.isPasswordDrawerOpen && this.overlayRef?.hasAttached()) {
+        this.overlayRef.detach();
+      }
+      this.passwordEditingUser = null;
+      this.newPassword = '';
+      this.confirmPassword = '';
+    }, 300);
+  }
+
+  submitChangePassword(): void {
+    if (this.isSubmittingPassword || !this.passwordEditingUser || !this.passwordEditingUser.userId) return;
+
+    if (!this.newPassword) {
+      this.snackBar.open('Mật khẩu mới không được để trống', 'Đóng', {
+        duration: 3000,
+        horizontalPosition: 'end',
+        verticalPosition: 'top',
+        panelClass: ['snackbar-error']
+      });
+      return;
+    }
+
+    const pwdPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+    if (!pwdPattern.test(this.newPassword)) {
+      this.snackBar.open('Mật khẩu phải có ít nhất 8 ký tự, chữ hoa, chữ thường, số và ký tự đặc biệt', 'Đóng', {
+        duration: 4000,
+        horizontalPosition: 'end',
+        verticalPosition: 'top',
+        panelClass: ['snackbar-error']
+      });
+      return;
+    }
+
+    if (this.newPassword !== this.confirmPassword) {
+      this.snackBar.open('Mật khẩu mới và xác nhận mật khẩu không khớp', 'Đóng', {
+        duration: 3000,
+        horizontalPosition: 'end',
+        verticalPosition: 'top',
+        panelClass: ['snackbar-error']
+      });
+      return;
+    }
+
+    this.isSubmittingPassword = true;
+
+    this.userAdminService.updatePasswordByAdmin(
+      this.passwordEditingUser.userId,
+      this.newPassword,
+      this.confirmPassword
+    ).subscribe({
+      next: () => {
+        this.isSubmittingPassword = false;
+        this.snackBar.open(`Đổi mật khẩu thành công!`, 'Đóng', {
+          duration: 3000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top',
+          panelClass: ['snackbar-success']
+        });
+        this.closePasswordDrawer();
+      },
+      error: (err) => {
+        this.isSubmittingPassword = false;
+        const msg = err.error?.message || err.error?.data || 'Đổi mật khẩu thất bại, vui lòng thử lại!';
+        this.snackBar.open(msg, 'Đóng', {
+          duration: 4000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top',
+          panelClass: ['snackbar-error']
+        });
+      }
     });
   }
 

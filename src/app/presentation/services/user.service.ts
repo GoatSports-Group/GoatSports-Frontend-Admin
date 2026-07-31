@@ -10,6 +10,7 @@ import { CreateUserUseCase } from '@application/usecase/user/create-user.usecase
 import { GetUserByIdUseCase } from '@application/usecase/user/get-user-by-id.usecase';
 import { UpdateUserUseCase } from '@application/usecase/user/update-user.usecase';
 import { UpdateUserAvatarUseCase } from '@application/usecase/user/update-user-avatar.usecase';
+import { UpdateUserPasswordByAdminUseCase } from '@application/usecase/user/update-user-password-by-admin.usecase';
 import { CreateUserRequest } from '@application/dto/user/user.dto';
 import { BaseListResponse } from '@application/dto/base/base-response';
 
@@ -25,6 +26,7 @@ export class UserService {
   private getUserByIdUseCase = inject(GetUserByIdUseCase);
   private updateUserUseCase = inject(UpdateUserUseCase);
   private updateUserAvatarUseCase = inject(UpdateUserAvatarUseCase);
+  private updateUserPasswordByAdminUseCase = inject(UpdateUserPasswordByAdminUseCase);
 
   createUser(request: CreateUserRequest): Observable<User> {
     return this.createUserUseCase.execute(request);
@@ -56,5 +58,9 @@ export class UserService {
 
   updateAvatar(userId: string, tempKey: string): Observable<void> {
     return this.updateUserAvatarUseCase.execute(userId, tempKey);
+  }
+
+  updatePasswordByAdmin(userId: string, newPassword: string, confirmPassword: string): Observable<void> {
+    return this.updateUserPasswordByAdminUseCase.execute(userId, { newPassword, confirmPassword });
   }
 }

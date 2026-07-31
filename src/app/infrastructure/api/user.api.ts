@@ -55,4 +55,8 @@ export class UserApi {
       responseType: 'blob'
     });
   }
+
+  updatePasswordByAdmin(userId: string, payload: any): Observable<BaseResponse<void>> {
+    return this.http.put<BaseResponse<void>>(`${this.apiBase}/auth-service/api/v1/admin/users/${userId}/password`, payload);
+  }
 }

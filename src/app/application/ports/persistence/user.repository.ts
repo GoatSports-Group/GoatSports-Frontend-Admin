@@ -13,6 +13,7 @@ export interface UserRepository {
   getUserById(userId: string): Observable<User>;
   updateUser(userId: string, data: Partial<User>): Observable<User>;
   updateAvatar(userId: string, tempKey: string): Observable<void>;
+  updatePasswordByAdmin(userId: string, data: any): Observable<void>;
 }
 
 export const USER_REPOSITORY_TOKEN = new InjectionToken<UserRepository>('UserRepository');
