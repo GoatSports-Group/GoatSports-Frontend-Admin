@@ -1,7 +1,7 @@
-import { Component, Inject, OnInit, inject } from '@angular/core';
+import { Component, Inject, OnInit, inject, HostListener } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { User } from '@application/dto/user/user.dto';
-import { Role } from '@application/dto/role/role.dto';
+import { Role, RoleEnum } from '@application/dto/role/role.dto';
 import { UserService } from '@presentation/services/user.service';
 import { RoleService } from '@presentation/services/role.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -28,6 +28,28 @@ export class AssignRoleDialogComponent implements OnInit {
   selectedRoleId: string = '';
   loading = false;
   saving = false;
+  isRoleDropdownOpen = false;
+
+  toggleRoleDropdown(event: Event): void {
+    event.stopPropagation();
+    this.isRoleDropdownOpen = !this.isRoleDropdownOpen;
+  }
+
+  selectRole(roleId: string): void {
+    this.selectedRoleId = roleId;
+    this.isRoleDropdownOpen = false;
+  }
+
+  getSelectedRoleLabel(): string {
+    const selected = this.roles.find(r => r.roleId === this.selectedRoleId);
+    if (!selected) return 'Chọn vai trò';
+    return this.getFallbackRole(selected.name);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    this.isRoleDropdownOpen = false;
+  }
 
   constructor(
     public dialogRef: MatDialogRef<AssignRoleDialogComponent>,
@@ -128,5 +150,9 @@ export class AssignRoleDialogComponent implements OnInit {
 
   getFallbackAvatar(): string {
     return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(this.user.fullName || this.user.username)}`;
+  }
+
+  getFallbackRole(role: string): string {
+    return RoleEnum.find(r => r.value === role)?.label || role;
   }
 }

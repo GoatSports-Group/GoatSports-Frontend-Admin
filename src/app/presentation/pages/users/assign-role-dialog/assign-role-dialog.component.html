@@ -1,55 +1,93 @@
-<div class="dialog-container">
-  <div class="dialog-header">
-    <h2 class="dialog-title">Gán Vai Trò Thành Viên</h2>
-    <button mat-icon-button class="close-btn" (click)="onCancel()" aria-label="Close dialog">
+<div class="p-5 bg-white text-slate-900 rounded-xl flex flex-col w-full max-w-md shadow-2xl border border-slate-100 select-none">
+  <!-- Dialog Header -->
+  <div class="flex items-center justify-between mb-5">
+    <h2 class="font-extrabold text-xl m-0 tracking-tight text-slate-900">Gán vai trò</h2>
+    <button (click)="onCancel()"
+      class="text-slate-400 hover:text-slate-600 p-1.5 rounded-full hover:bg-slate-100 transition-all cursor-pointer">
       <lucide-icon name="x" class="h-5 w-5"></lucide-icon>
     </button>
   </div>
 
+  <!-- Loading State -->
   @if (loading) {
-    <div class="loading-spinner-box">
-      <mat-spinner diameter="35"></mat-spinner>
-    </div>
+  <div class="flex justify-center items-center py-6">
+    <mat-spinner diameter="35"></mat-spinner>
+  </div>
   }
 
+  <!-- Dialog Body -->
   @if (!loading) {
-    <div class="dialog-body">
-      <!-- User Card Summary -->
-      <div class="user-summary">
-        <img [src]="user.avatarUrl || getFallbackAvatar()" alt="User Avatar" class="user-avatar">
-        <div class="user-details">
-          <span class="user-name">{{ user.fullName || user.username }}</span>
-          <span class="user-email">{{ user.email }}</span>
+  <div class="flex flex-col gap-4 text-slate-900">
+    <!-- User Card Summary -->
+    <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200/60">
+      <img [src]="user.avatarUrl || getFallbackAvatar()" alt="User Avatar"
+        class="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-xs">
+      <div class="flex flex-col">
+        <span class="font-semibold text-sm text-slate-900">{{ user.fullName || user.username }}</span>
+        <span class="text-xs text-slate-500 font-medium">{{ user.email }}</span>
+      </div>
+    </div>
+
+    <p class="text-xs text-slate-500 font-medium leading-relaxed m-0">Chọn vai trò mới cho thành viên này:</p>
+
+    <!-- Role Select Field (Custom Dropdown) -->
+    <div class="flex flex-col gap-1.5 w-full relative">
+      <label class="text-sm font-bold text-emerald-600 tracking-wider">Vai trò</label>
+      
+      <!-- Trigger -->
+      <div (click)="toggleRoleDropdown($event)"
+        class="w-full h-11 px-3 bg-slate-50 border rounded-lg text-xs font-semibold text-slate-800 flex items-center justify-between cursor-pointer hover:bg-slate-100/50 transition-all select-none"
+        [class.border-emerald-500]="isRoleDropdownOpen"
+        [class.ring-2]="isRoleDropdownOpen"
+        [class.ring-emerald-500/10]="isRoleDropdownOpen"
+        [class.border-slate-200]="!isRoleDropdownOpen">
+        <span [class.text-slate-400]="!selectedRoleId">
+          {{ getSelectedRoleLabel() }}
+        </span>
+        <lucide-icon name="chevron-down" class="w-4 h-4 text-slate-400 transition-transform duration-200"
+          [class.rotate-180]="isRoleDropdownOpen"></lucide-icon>
+      </div>
+
+      <!-- Dropdown Panel -->
+      <div *ngIf="isRoleDropdownOpen" (click)="$event.stopPropagation()"
+        class="absolute top-[70px] left-0 right-0 bg-white border border-slate-100 rounded-xl shadow-xl z-50 flex flex-col max-h-48 overflow-y-auto py-1">
+        <div *ngFor="let role of roles"
+          (click)="role.active && selectRole(role.roleId)"
+          class="px-4 py-2.5 text-xs font-semibold text-slate-700 flex items-center justify-between transition-colors"
+          [class.hover:bg-emerald-50]="role.active"
+          [class.hover:text-emerald-700]="role.active"
+          [class.cursor-pointer]="role.active"
+          [class.opacity-50]="!role.active"
+          [class.cursor-not-allowed]="!role.active"
+          [class.bg-emerald-50/50]="selectedRoleId === role.roleId"
+          [class.text-emerald-600]="selectedRoleId === role.roleId">
+          <span>
+            {{ getFallbackRole(role.name) }} 
+            <span *ngIf="!role.active" class="text-[10px] text-slate-400 font-medium italic"> (Bị tắt)</span>
+          </span>
+          <lucide-icon name="check" *ngIf="selectedRoleId === role.roleId" class="w-3.5 h-3.5 text-emerald-600"></lucide-icon>
         </div>
       </div>
-      <!-- Role Selection Dropdown -->
-      <p>Chọn vai trò mới cho thành viên này:</p>
-      <mat-form-field appearance="outline" class="role-select-field">
-        <mat-label>Vai trò (Role)</mat-label>
-        <mat-select [(value)]="selectedRoleId">
-          @for (role of roles; track role) {
-            <mat-option [value]="role.roleId" [disabled]="!role.active">
-              {{ role.name }} @if (!role.active) {
-              <span> (Bị tắt)</span>
-            }
-          </mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
+    </div>
   </div>
-}
+  }
 
-@if (!loading) {
-  <div class="dialog-actions">
-    <button mat-button (click)="onCancel()" [disabled]="saving">Hủy bỏ</button>
-    <button mat-flat-button color="primary" (click)="onSave()" [disabled]="saving || !selectedRoleId">
+  <!-- Dialog Actions -->
+  @if (!loading) {
+  <div class="flex justify-end gap-3 mt-6 border-t border-slate-100 pt-4">
+    <button (click)="onCancel()" [disabled]="saving"
+      class="px-5 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/60 rounded-full font-bold text-xs transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50">
+      Hủy bỏ
+    </button>
+    <button (click)="onSave()" [disabled]="saving || !selectedRoleId"
+      class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-bold text-xs shadow-md shadow-emerald-600/10 transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50">
       @if (!saving) {
-        <span>Lưu lại</span>
+      <span>Lưu lại</span>
       }
       @if (saving) {
-        <span>Đang lưu...</span>
+      <span>Đang lưu...</span>
       }
     </button>
   </div>
-}
+  }
 </div>

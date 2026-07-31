@@ -326,3 +326,24 @@ h6 {
 .cdk-overlay-container * {
   font-family: 'Be Vietnam Pro', sans-serif !important;
 }
+
+/* Custom styles for Role Assign Dialog to allow custom dropdown to overflow without scrollbars and style background */
+.custom-assign-role-dialog {
+  &,
+  .mat-mdc-dialog-container,
+  .mat-mdc-dialog-surface,
+  .mdc-dialog__container,
+  .mdc-dialog__surface,
+  .mat-mdc-dialog-surface-content,
+  .mat-dialog-container,
+  .mat-dialog-surface {
+    background: transparent !important;
+    background-color: transparent !important;
+    --mdc-dialog-container-color: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border-radius: 0 !important;
+    border: none !important;
+  }
+}

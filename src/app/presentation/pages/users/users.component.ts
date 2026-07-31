@@ -657,7 +657,8 @@ export class UsersComponent implements OnInit {
   openAssignRoleDialog(user: User): void {
     const dialogRef = this.dialog.open(AssignRoleDialogComponent, {
       width: '450px',
-      data: { user }
+      data: { user },
+      panelClass: 'custom-assign-role-dialog'
     });
 
     dialogRef.afterClosed().subscribe(result => {
