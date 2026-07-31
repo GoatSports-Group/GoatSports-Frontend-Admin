@@ -796,21 +796,39 @@ export class UsersComponent implements OnInit {
     });
   }
 
-  markAsUnverified(user: User): void {
-    console.log('Mark as Unverified clicked for user:', user);
-    this.snackBar.open(`Đã đánh dấu tài khoản ${user.fullName || user.username} là Chưa xác minh (Chức năng chưa có API)`, 'Đóng', {
-      duration: 3000,
-      horizontalPosition: 'end',
-      verticalPosition: 'top'
-    });
-  }
+  toggleVerification(user: User, verified: boolean): void {
+    if (!user.userId) return;
 
-  deleteUser(user: User): void {
-    console.log('Delete clicked for user:', user);
-    this.snackBar.open(`Đã gửi yêu cầu xóa tài khoản ${user.fullName || user.username} (Chức năng chưa có API)`, 'Đóng', {
-      duration: 3000,
-      horizontalPosition: 'end',
-      verticalPosition: 'top'
+    this.userAdminService.verifyUser(user.userId, verified).subscribe({
+      next: () => {
+        const statusMsg = verified ? 'xác thực' : 'hủy xác thực';
+        this.snackBar.open(`Đã ${statusMsg} tài khoản ${user.fullName || user.username} thành công!`, 'Đóng', {
+          duration: 3000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top',
+          panelClass: ['snackbar-success']
+        });
+
+        this.loadUsers();
+        this.loadStats();
+
+        if (this.selectedUser && this.selectedUser.userId === user.userId) {
+          this.selectedUser = {
+            ...this.selectedUser,
+            status: verified ? 'ACTIVE' : 'INACTIVE'
+          };
+        }
+      },
+      error: (err) => {
+        const actionMsg = verified ? 'Xác thực' : 'Hủy xác thực';
+        const msg = err.error?.message || err.error?.data || `${actionMsg} tài khoản thất bại, vui lòng thử lại!`;
+        this.snackBar.open(msg, 'Đóng', {
+          duration: 4000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top',
+          panelClass: ['snackbar-error']
+        });
+      }
     });
   }
 

@@ -62,4 +62,10 @@ export class UserRepositoryImpl implements UserRepository {
       map(response => response.data)
     );
   }
+
+  verifyUser(userId: string, verified: boolean): Observable<void> {
+    return this.userApi.verifyUser(userId, verified).pipe(
+      map(response => response.data)
+    );
+  }
 }

@@ -91,7 +91,8 @@ import {
   LucideLoader2,
   LucideMail,
   LucideHash,
-  LucidePhone
+  LucidePhone,
+  LucideShieldCheck
 } from '@lucide/angular';
 
 @NgModule({
@@ -191,7 +192,8 @@ import {
       LucideLoader2,
       LucideMail,
       LucideHash,
-      LucidePhone
+      LucidePhone,
+      LucideShieldCheck
     )
   ],
   bootstrap: [AppComponent]

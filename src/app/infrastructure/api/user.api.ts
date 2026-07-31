@@ -59,4 +59,9 @@ export class UserApi {
   updatePasswordByAdmin(userId: string, payload: any): Observable<BaseResponse<void>> {
     return this.http.put<BaseResponse<void>>(`${this.apiBase}/auth-service/api/v1/admin/users/${userId}/password`, payload);
   }
+
+  verifyUser(userId: string, verified: boolean): Observable<BaseResponse<void>> {
+    const params = new HttpParams().set('verified', verified);
+    return this.http.put<BaseResponse<void>>(`${this.apiBase}/auth-service/api/v1/admin/users/${userId}/verify`, null, { params });
+  }
 }
