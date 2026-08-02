@@ -1,3 +1,8 @@
+:host {
+  display: block;
+  height: calc(100vh - 96px - 20px);
+}
+
 /* Cleaned and refactored stylesheet, styling migrated to Tailwind CSS classes */
 .animate-fade-in {
   animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -8,6 +13,7 @@
     opacity: 0;
     transform: translateY(6px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -16,6 +22,7 @@
 
 /* Material overrides integration */
 ::ng-deep {
+
   .custom-premium-menu,
   .mat-mdc-menu-panel.custom-premium-menu {
     background-color: #ffffff !important;
@@ -140,6 +147,7 @@
   0% {
     transform: translateX(100%);
   }
+
   100% {
     transform: translateX(0);
   }
@@ -149,6 +157,7 @@
   0% {
     transform: translateX(0);
   }
+
   100% {
     transform: translateX(100%);
   }

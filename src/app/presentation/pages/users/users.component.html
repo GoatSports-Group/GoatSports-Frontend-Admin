@@ -1,4 +1,4 @@
-<div class="max-w-full py-4 pl-4 flex flex-col gap-6 relative z-10">
+<div class="max-w-full pl-4 flex flex-col gap-6 relative z-10 h-full min-h-0">
 
   @if (loadingDetails) {
   <!-- Loading Details State -->
@@ -70,15 +70,15 @@
               <span>Đổi mật khẩu</span>
             </button>
             @if (selectedUser.status === 'ACTIVE' || selectedUser.status === 'ACTIVATED') {
-              <button mat-menu-item (click)="toggleVerification(selectedUser, false)" class="danger-item">
-                <lucide-icon name="shield-alert" class="h-5 w-5 mr-2"></lucide-icon>
-                <span>Bỏ xác thực</span>
-              </button>
+            <button mat-menu-item (click)="toggleVerification(selectedUser, false)" class="danger-item">
+              <lucide-icon name="shield-alert" class="h-5 w-5 mr-2"></lucide-icon>
+              <span>Bỏ xác thực</span>
+            </button>
             } @else {
-              <button mat-menu-item (click)="toggleVerification(selectedUser, true)">
-                <lucide-icon name="shield-check" class="h-5 w-5 mr-2 text-emerald-600"></lucide-icon>
-                <span class="text-emerald-700 font-bold">Xác thực tài khoản</span>
-              </button>
+            <button mat-menu-item (click)="toggleVerification(selectedUser, true)">
+              <lucide-icon name="shield-check" class="h-5 w-5 mr-2 text-emerald-600"></lucide-icon>
+              <span class="text-emerald-700 font-bold">Xác thực tài khoản</span>
+            </button>
             }
           </mat-menu>
         </div>
@@ -394,8 +394,8 @@
   } @else {
 
   <!-- Users List Table Wrapper -->
-  <div class="bg-white border border-slate-100 rounded-3xl shadow-xs overflow-hidden">
-    <div class="overflow-x-auto">
+  <div class="flex-1 min-h-0 flex flex-col bg-white border border-slate-100 rounded-3xl shadow-xs overflow-hidden">
+    <div class="flex-1 min-h-0 overflow-auto">
       <table class="w-full text-left border-collapse text-sm">
         <thead>
           <tr class="border-b border-slate-100 text-[14px] font-bold tracking-wider text-emerald-400 bg-white">
@@ -462,15 +462,15 @@
                     <span>Đổi mật khẩu</span>
                   </button>
                   @if (user.status === 'ACTIVE' || user.status === 'ACTIVATED') {
-                    <button mat-menu-item (click)="toggleVerification(user, false)" class="danger-item">
-                      <lucide-icon name="shield-alert" class="h-5 w-5 mr-2"></lucide-icon>
-                      <span>Bỏ xác thực</span>
-                    </button>
+                  <button mat-menu-item (click)="toggleVerification(user, false)" class="danger-item">
+                    <lucide-icon name="shield-alert" class="h-5 w-5 mr-2"></lucide-icon>
+                    <span>Bỏ xác thực</span>
+                  </button>
                   } @else {
-                    <button mat-menu-item (click)="toggleVerification(user, true)">
-                      <lucide-icon name="shield-check" class="h-5 w-5 mr-2 text-emerald-600"></lucide-icon>
-                      <span class="text-emerald-700 font-bold">Xác thực tài khoản</span>
-                    </button>
+                  <button mat-menu-item (click)="toggleVerification(user, true)">
+                    <lucide-icon name="shield-check" class="h-5 w-5 mr-2 text-emerald-600"></lucide-icon>
+                    <span class="text-emerald-700 font-bold">Xác thực tài khoản</span>
+                  </button>
                   }
                 </mat-menu>
               </div>
