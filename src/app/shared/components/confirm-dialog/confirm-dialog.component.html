@@ -1,11 +1,13 @@
-<div class="p-6 bg-white text-slate-900 rounded-[28px] border border-slate-100 flex flex-col w-full max-w-sm shadow-2xl select-none animate-fade-in">
+<div
+  class="p-4 bg-white text-slate-900 rounded-2xl border border-slate-100 flex flex-col w-full max-w-md shadow-2xl select-none animate-fade-in">
   <!-- Dialog Header -->
   <div class="flex items-center justify-between mb-4">
-    <h2 class="font-sports-display text-lg font-black uppercase tracking-tight text-slate-900 m-0">{{ data.title }}</h2>
+    <h2 class="font-sports-display text-lg font-black uppercase tracking-tight m-0"
+      [class]="data.confirmColor === 'warn' ? '!text-rose-600' : '!text-emerald-600'">{{ data.title }}</h2>
   </div>
 
   <!-- Dialog Content -->
-  <div class="text-slate-500 font-semibold text-xs leading-relaxed mb-6">
+  <div class="text-slate-500 font-semibold text-sm leading-relaxed mb-6">
     <p class="m-0">{{ data.message }}</p>
   </div>
 

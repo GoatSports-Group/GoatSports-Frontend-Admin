@@ -8,10 +8,16 @@
     opacity: 0;
     transform: translateY(6px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+:host {
+  display: block;
+  height: calc(100vh - 96px - 20px);
 }
 
 ::ng-deep {
@@ -19,5 +25,100 @@
     font-family: var(--font-sports-body) !important;
     font-size: 12px !important;
     color: #64748b !important;
+  }
+
+  .custom-dark-menu,
+  .mat-mdc-menu-panel.custom-dark-menu {
+    background-color: #ffffff !important; // White background
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06) !important;
+    border: 1px solid #f1f5f9 !important; // Light gray border
+
+    .mat-mdc-menu-content {
+      background-color: #ffffff !important;
+      padding: 6px !important;
+    }
+
+    .mat-mdc-menu-item {
+      font-size: 13px !important;
+      padding: 8px 14px !important;
+      height: 38px !important;
+      min-height: 38px !important;
+      font-weight: 600 !important;
+      color: #1e293b !important; // Slate-850 text
+      border-radius: 10px !important;
+      margin-bottom: 2px !important;
+      transition: all 0.15s ease !important;
+
+      &:hover:not([disabled]) {
+        background-color: #f0fdf4 !important; // Emerald-50 hover
+        color: #047857 !important; // Emerald-700 text
+
+        lucide-icon {
+          color: #059669 !important; // Emerald-600 icon
+        }
+
+        .text-rose-500,
+        .text-rose-600 {
+          color: #be123c !important; // Rose-700 text
+        }
+      }
+
+      &.danger-item:not([disabled]) {
+        color: #e11d48 !important;
+
+        lucide-icon {
+          color: #e11d48 !important;
+        }
+
+        &:hover {
+          background-color: #fff1f2 !important;
+          color: #be123c !important;
+        }
+      }
+
+      &[disabled] {
+        opacity: 0.35 !important;
+        color: #94a3b8 !important; // Slate-400
+        cursor: not-allowed !important;
+
+        lucide-icon {
+          color: #94a3b8 !important;
+        }
+      }
+
+      .mdc-list-item__label {
+        display: flex !important;
+        align-items: center !important;
+        width: 100% !important;
+        height: 100% !important;
+      }
+
+      lucide-icon {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex-shrink: 0 !important;
+        color: #64748b !important; // Slate-500 icon
+        margin-right: 8px !important;
+
+        &.text-rose-500,
+        &.text-rose-600 {
+          color: #ef4444 !important; // Rose-500 icon
+        }
+
+        &.text-emerald-500,
+        &.text-emerald-600 {
+          color: #10b981 !important; // Emerald-500 icon
+        }
+      }
+
+      span {
+        display: inline-flex !important;
+        align-items: center !important;
+        line-height: 1 !important;
+      }
+    }
   }
 }

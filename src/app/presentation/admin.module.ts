@@ -11,6 +11,7 @@ import { AssignRoleDialogComponent } from '@presentation/pages/users/assign-role
 import { RolesComponent } from '@presentation/pages/roles/roles.component';
 import { RoleDialogComponent } from '@presentation/pages/roles/role-dialog/role-dialog.component';
 import { AssignPermissionsComponent } from '@presentation/pages/roles/assign-permissions/assign-permissions.component';
+import { RolePermissionsDialogComponent } from '@presentation/pages/roles/role-permissions-dialog/role-permissions-dialog.component';
 import { PermissionsComponent } from '@presentation/pages/permissions/permissions.component';
 import { PermissionDialogComponent } from '@presentation/pages/permissions/permission-dialog/permission-dialog.component';
 import { OwnerApplicationsComponent } from '@presentation/pages/owner-applications/owner-applications.component';
@@ -27,6 +28,7 @@ import { OverlayModule } from '@angular/cdk/overlay';
     RolesComponent,
     RoleDialogComponent,
     AssignPermissionsComponent,
+    RolePermissionsDialogComponent,
     PermissionsComponent,
     PermissionDialogComponent,
     OwnerApplicationsComponent,

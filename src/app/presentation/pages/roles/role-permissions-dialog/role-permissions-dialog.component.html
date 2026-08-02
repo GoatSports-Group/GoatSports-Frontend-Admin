@@ -1,0 +1,129 @@
+<div class="p-6 flex flex-col gap-6 max-h-[90vh] w-[700px] max-w-full overflow-hidden select-none bg-white rounded-2xl">
+
+  <!-- Dialog Header -->
+  <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+    <div class="flex flex-col gap-0.5">
+      <h2 class="text-lg font-bold text-slate-900 font-display flex items-center gap-2">
+        Phân quyền vai trò: <span class="text-emerald-950 font-black tracking-wider">{{ role.name }}</span>
+      </h2>
+      <p class="text-sm font-semibold text-slate-400">Xem và thiết lập quyền truy cập cho vai trò này</p>
+    </div>
+    <button type="button" (click)="onCancel()"
+      class="text-slate-400 hover:text-slate-600 p-1.5 rounded-full hover:bg-slate-50 transition-all cursor-pointer">
+      <lucide-icon name="x" class="h-5 w-5"></lucide-icon>
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading) {
+  <div class="flex-1 flex flex-col items-center justify-center py-20 min-h-[300px]">
+    <mat-spinner diameter="35" color="accent"></mat-spinner>
+    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider font-display mt-4">Đang tải danh sách
+      quyền...</p>
+  </div>
+  } @else {
+
+  <!-- Dialog Body Content -->
+  <div class="flex-1 overflow-y-auto pr-1 space-y-4 max-h-[60vh]">
+
+    <!-- All Permissions Checkbox -->
+    @if (permissionGroups.length > 0) {
+    <div class="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+      <div class="flex flex-col gap-0.5">
+        <span class="text-sm font-medium text-emerald-800 font-display">Tất cả quyền hạn</span>
+      </div>
+      <input type="checkbox" [checked]="isAllSelected()" [indeterminate]="isAllIndeterminate()"
+        (change)="toggleAll($any($event.target).checked)"
+        class="w-4.5 h-4.5 rounded-lg border-slate-350 text-emerald-600 focus:ring-emerald-500 cursor-pointer transition-all">
+    </div>
+    }
+
+    <!-- Permission Groups (Modules Accordion) -->
+    <div class="space-y-3">
+      @for (group of permissionGroups; track group.moduleName) {
+      <div
+        class="border border-slate-100 rounded-2xl bg-white overflow-hidden transition-all shadow-[0_2px_8px_rgba(0,0,0,0.01)]">
+
+        <!-- Accordion Header -->
+        <div
+          class="flex items-center justify-between p-4 bg-slate-50/40 hover:bg-slate-50/70 cursor-pointer select-none transition-colors"
+          (click)="toggleGroupExpand(group)">
+          <div class="flex items-center gap-1.5 flex-1">
+            <!-- Chevron Rotate -->
+            <lucide-icon name="chevron-right"
+              class="h-4.5 w-4.5 text-slate-400 transition-transform duration-200 shrink-0 mr-1.5"
+              [class.rotate-90]="group.expanded">
+            </lucide-icon>
+
+            <span class="font-display font-medium text-emerald-800 text-sm tracking-wider">
+              {{ group.moduleName }}
+            </span>
+
+            <span class="text-xs font-medium text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full ml-2">
+              {{ group.permissions.length }} quyền
+            </span>
+          </div>
+
+          <!-- Module Group Checkbox -->
+          <div (click)="$event.stopPropagation();" class="flex items-center">
+            <input type="checkbox" [checked]="isGroupAllSelected(group)" [indeterminate]="isGroupIndeterminate(group)"
+              (change)="toggleGroup(group, $any($event.target).checked)"
+              class="w-4.5 h-4.5 rounded-lg border-slate-350 text-emerald-600 focus:ring-emerald-500 cursor-pointer transition-all">
+          </div>
+        </div>
+
+        <!-- Accordion Content -->
+        <div class="grid transition-[grid-template-rows] duration-250 ease-in-out"
+          [class.grid-rows-[0fr]]="!group.expanded" [class.grid-rows-[1fr]]="group.expanded">
+          <div class="overflow-hidden">
+            <div class="p-2 border-t border-slate-100/60 bg-white">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                @for (p of group.permissions; track p.permissionId) {
+                <label
+                  class="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors border border-transparent">
+                  <input type="checkbox" [checked]="isPermissionSelected(p.permissionId)"
+                    (change)="togglePermission(p.permissionId, $any($event.target).checked)"
+                    class="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer transition-all">
+
+                  <span class="text-xs font-medium text-emerald-700 leading-normal">
+                    {{ p.name }}
+                  </span>
+                </label>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      } @empty {
+      <div
+        class="flex flex-col items-center justify-center py-16 text-center bg-slate-50/50 border border-dashed border-slate-200 rounded-2xl">
+        <lucide-icon name="shield-off" class="text-slate-400 h-10 w-10 mb-3 mx-auto"></lucide-icon>
+        <p class="text-xl font-bold text-slate-800">Không tìm thấy quyền hạn nào</p>
+        <p class="text-sm text-slate-500 mt-1">Hệ thống chưa cấu hình danh sách quyền truy cập nào.</p>
+      </div>
+      }
+    </div>
+
+  </div>
+
+  <!-- Dialog Footer -->
+  <div class="flex justify-end items-center gap-3 border-t border-slate-100 pt-4 mt-2">
+    <button type="button" (click)="onCancel()"
+      class="px-5 py-2 text-xs font-bold text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 rounded-full cursor-pointer transition-all active:scale-[0.98]">
+      Đóng
+    </button>
+    <button type="button" (click)="onSave()" [disabled]="saving"
+      class="bg-primary hover:bg-emerald-800 active:scale-[0.98] text-white text-xs font-bold px-5 py-2.5 rounded-full flex items-center gap-1.5 transition-all cursor-pointer">
+      <lucide-icon name="save" class="h-3.5 w-3.5" *ngIf="!saving"></lucide-icon>
+      @if (saving) {
+      <span>Đang lưu...</span>
+      } @else {
+      <span>Lưu thay đổi</span>
+      }
+    </button>
+  </div>
+  }
+
+</div>

@@ -241,7 +241,8 @@ export class UsersComponent implements OnInit {
     return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.fullName || user.username)}`;
   }
 
-  getFallbackRole(role: string): string {
+  getFallbackRole(role?: string): string {
+    if (!role) return '';
     return RoleEnum.find(r => r.value === role)?.label || role;
   }
 

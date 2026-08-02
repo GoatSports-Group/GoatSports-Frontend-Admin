@@ -199,6 +199,10 @@ h6 {
   color: var(--color-emerald-600) !important;
 }
 
+input[type="checkbox"] {
+  accent-color: #059669 !important; // Primary emerald green theme color
+}
+
 /* Angular CDK Drag & Drop styles - Global Scope */
 .cdk-drag-preview {
   display: flex !important;
@@ -329,6 +333,10 @@ h6 {
 
 /* Custom styles for Role Assign Dialog to allow custom dropdown to overflow without scrollbars and style background */
 .custom-assign-role-dialog {
+  --mdc-dialog-container-shape: 16px !important;
+  --mat-dialog-container-shape: 16px !important;
+  border-radius: 16px !important;
+
   &,
   .mat-mdc-dialog-container,
   .mat-mdc-dialog-surface,
@@ -343,13 +351,17 @@ h6 {
     box-shadow: none !important;
     padding: 0 !important;
     overflow: hidden !important;
-    border-radius: 0 !important;
+    border-radius: 16px !important;
     border: none !important;
   }
 }
 
 /* Custom premium dialog styles that support overflow and glassmorphism elements */
 .custom-premium-dialog {
+  --mdc-dialog-container-shape: 16px !important;
+  --mat-dialog-container-shape: 16px !important;
+  border-radius: 16px !important;
+
   &,
   .mat-mdc-dialog-container,
   .mat-mdc-dialog-surface,
@@ -363,8 +375,8 @@ h6 {
     --mdc-dialog-container-color: transparent !important;
     box-shadow: none !important;
     padding: 0 !important;
-    overflow: visible !important;
-    border-radius: 0 !important;
+    overflow: hidden !important;
+    border-radius: 16px !important;
     border: none !important;
   }
 }

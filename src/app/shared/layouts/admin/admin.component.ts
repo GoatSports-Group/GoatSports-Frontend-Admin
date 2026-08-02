@@ -110,12 +110,6 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
       description: 'Quản lý các nhóm vai trò quyền hạn của quản trị viên',
       icon: 'shield',
       route: '/roles',
-    },
-    {
-      title: 'Quyền hạn',
-      description: 'Quản lý danh sách các quyền truy cập tài nguyên hệ thống',
-      icon: 'key',
-      route: '/permissions',
     }
   ];
 
