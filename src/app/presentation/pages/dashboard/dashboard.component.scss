@@ -12,6 +12,7 @@
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -47,6 +48,7 @@
 /* Custom scrollbar adjustments */
 .scrollbar-none {
   scrollbar-width: none;
+
   &::-webkit-scrollbar {
     display: none;
   }
@@ -57,5 +59,224 @@
     circle {
       stroke: var(--gs-brand) !important;
     }
+  }
+}
+
+/* Weather Widget Animations */
+.weather-widget {
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &:hover {
+    .weather-icon-container {
+      transform: scale(1.08);
+      background-color: rgba(255, 255, 255, 0.3) !important;
+      border-color: rgba(255, 255, 255, 0.5) !important;
+    }
+  }
+}
+
+.weather-icon-container {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Weather Condition Styles */
+.weather-clear {
+  background: radial-gradient(circle at right, rgba(251, 191, 36, 0.18) 0%, rgba(251, 191, 36, 0.05) 50%, transparent 100%) !important;
+
+  &:hover {
+    background: radial-gradient(circle at right, rgba(251, 191, 36, 0.28) 0%, rgba(251, 191, 36, 0.08) 60%, transparent 100%) !important;
+  }
+}
+
+.weather-cloudy,
+.weather-fog {
+  background: radial-gradient(circle at right, rgba(125, 211, 252, 0.12) 0%, rgba(125, 211, 252, 0.03) 50%, transparent 100%) !important;
+
+  &:hover {
+    background: radial-gradient(circle at right, rgba(125, 211, 252, 0.2) 0%, rgba(125, 211, 252, 0.05) 60%, transparent 100%) !important;
+  }
+}
+
+.weather-rain {
+  background: radial-gradient(circle at right, rgba(96, 165, 250, 0.18) 0%, rgba(96, 165, 250, 0.05) 50%, transparent 100%) !important;
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    background: radial-gradient(circle at right, rgba(96, 165, 250, 0.28) 0%, rgba(96, 165, 250, 0.08) 60%, transparent 100%) !important;
+  }
+}
+
+.weather-storm {
+  background: radial-gradient(circle at right, rgba(139, 92, 246, 0.2) 0%, rgba(139, 92, 246, 0.05) 50%, transparent 100%) !important;
+  position: relative;
+  overflow: hidden;
+  animation: storm-flash 8s infinite;
+
+  &:hover {
+    background: radial-gradient(circle at right, rgba(139, 92, 246, 0.3) 0%, rgba(139, 92, 246, 0.08) 60%, transparent 100%) !important;
+  }
+}
+
+@keyframes storm-flash {
+
+  0%,
+  94%,
+  98%,
+  100% {
+    filter: brightness(1);
+  }
+
+  95%,
+  97% {
+    filter: brightness(1.25);
+  }
+}
+
+/* Raindrops Animation */
+.rain-drops {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  display: flex;
+  justify-content: space-around;
+}
+
+.rain-drop {
+  width: 1.5px;
+  height: 25px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.75));
+  animation: fall 1s linear infinite;
+}
+
+@keyframes fall {
+  0% {
+    transform: translateY(-30px) rotate(15deg);
+  }
+
+  100% {
+    transform: translateY(260px) rotate(15deg);
+  }
+}
+
+// Staggered animations for rain drops (8 drops config)
+.rain-drop:nth-child(1) {
+  animation-delay: 0.1s;
+  animation-duration: 0.9s;
+  opacity: 0.85;
+}
+
+.rain-drop:nth-child(2) {
+  animation-delay: 0.4s;
+  animation-duration: 1.1s;
+  opacity: 0.65;
+}
+
+.rain-drop:nth-child(3) {
+  animation-delay: 0.2s;
+  animation-duration: 0.8s;
+  opacity: 0.9;
+}
+
+.rain-drop:nth-child(4) {
+  animation-delay: 0.6s;
+  animation-duration: 1.2s;
+  opacity: 0.55;
+}
+
+.rain-drop:nth-child(5) {
+  animation-delay: 0.3s;
+  animation-duration: 1.0s;
+  opacity: 0.75;
+}
+
+.rain-drop:nth-child(6) {
+  animation-delay: 0.7s;
+  animation-duration: 0.85s;
+  opacity: 0.8;
+}
+
+.rain-drop:nth-child(7) {
+  animation-delay: 0.15s;
+  animation-duration: 1.05s;
+  opacity: 0.7;
+}
+
+.rain-drop:nth-child(8) {
+  animation-delay: 0.5s;
+  animation-duration: 0.95s;
+  opacity: 0.6;
+}
+
+.animate-weather-icon {
+  animation: weather-float 3s ease-in-out infinite;
+}
+
+@keyframes weather-float {
+
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    transform: translateY(-4px) scale(1.06);
+  }
+}
+
+.animate-weather-spin {
+  animation: weather-spin 15s linear infinite;
+}
+
+@keyframes weather-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-weather-pulse {
+  animation: weather-pulse 2s ease-in-out infinite;
+}
+
+@keyframes weather-pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.4));
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: scale(0.93);
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
+  }
+}
+
+/* Leaflet Map Custom Marker & Popup Styles */
+::ng-deep {
+  .leaflet-popup-content-wrapper {
+    border-radius: 16px !important;
+    box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.1), 0 4px 6px -2px rgba(15, 23, 42, 0.05) !important;
+    border: 1px solid #f1f5f9 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+  .leaflet-popup-content {
+    margin: 0 !important;
+  }
+  .leaflet-popup-tip {
+    box-shadow: none !important;
+    border: 1px solid #f1f5f9 !important;
+  }
+  .custom-leaflet-marker {
+    background: transparent !important;
+    border: none !important;
   }
 }

@@ -204,7 +204,7 @@ input[type="checkbox"] {
 }
 
 /* Angular CDK Drag & Drop styles - Global Scope */
-.cdk-drag-preview {
+.cdk-user-stat-preview {
   display: flex !important;
   flex-direction: column !important;
   justify-content: space-between !important;
@@ -220,11 +220,23 @@ input[type="checkbox"] {
   --tw-text-opacity: 1 !important;
 }
 
-.cdk-drag-preview * {
+.cdk-user-stat-preview * {
   cursor: grabbing !important;
   --tw-bg-opacity: 1 !important;
   --tw-border-opacity: 1 !important;
   --tw-text-opacity: 1 !important;
+}
+
+.cdk-dashboard-stat-preview {
+  background-color: #ffffff !important;
+  border-radius: 28px !important;
+  box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.15), 0 10px 10px -5px rgba(15, 23, 42, 0.08) !important;
+  cursor: grabbing !important;
+  overflow: hidden !important;
+}
+
+.cdk-dashboard-stat-preview * {
+  cursor: grabbing !important;
 }
 
 .cdk-drag-animating {

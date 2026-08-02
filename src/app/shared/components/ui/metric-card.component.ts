@@ -19,7 +19,7 @@ import { LucideIconComponent } from '@shared/components/ui/lucide-icon.component
 
       <div class="flex items-start justify-between gap-4 relative z-10">
         <div class="space-y-2">
-          <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 font-display">{{ title }}</span>
+          <span class="text-sm font-bold tracking-wider text-slate-500 font-display">{{ title }}</span>
           <div class="flex items-baseline gap-2.5">
             <h3 class="font-display text-3xl font-black tracking-tight text-slate-900">{{ value }}</h3>
             @if (trendText) {

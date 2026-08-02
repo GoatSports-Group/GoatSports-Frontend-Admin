@@ -1,62 +1,86 @@
-<div class="space-y-6 relative z-10">
+<div class="space-y-6 relative z-10 pl-4">
 
   <!-- ═══════════════════════════════════════════
        1. HERO WELCOME & WEATHER BANNER
   ═══════════════════════════════════════════ -->
-  <div class="relative overflow-hidden rounded-[28px] border border-emerald-800/15 bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-850 p-6 md:p-8 shadow-xl shadow-emerald-950/10 text-white">
+  <div
+    class="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-850 shadow-xl shadow-emerald-950/10 text-white">
     <!-- Ambient Overlay Grid Pattern -->
-    <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent"></div>
+    <div
+      class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent">
+    </div>
 
-    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-      
+    <div class="relative z-10 flex flex-col md:flex-row items-stretch justify-between">
+
       <!-- Welcome Headline -->
-      <div class="space-y-3 max-w-xl">
+      <div class="space-y-3 flex-1 p-6 md:p-8 max-w-2xl flex flex-col justify-center">
         <div class="flex items-center gap-3">
-          <span class="inline-flex items-center gap-1.5 rounded-full bg-white/20 border border-white/30 px-3 py-1 text-xs font-black text-white backdrop-blur-md">
-            <span class="h-2 w-2 rounded-full bg-white animate-pulse"></span>
-            Hệ Thống Live
-          </span>
-          <span class="text-xs font-semibold text-emerald-100">{{ currentDate | date:'EEEE, dd MMMM yyyy' }}</span>
+          <span class="text-sm font-semibold text-emerald-100">{{ formattedDateVi }}</span>
         </div>
 
         <h1 class="font-display text-2xl md:text-3xl font-black tracking-tight text-white">
           Xin chào, {{ adminName }}! ⚽
         </h1>
-        
+
         <p class="text-xs md:text-sm text-emerald-50 leading-relaxed font-medium">
-          Trung tâm điều hành GoatSports Admin. Theo dõi các đơn đăng ký chủ sân, người dùng mới và hiệu suất lấp đầy các cơ sở thể thao.
+          Trung tâm điều hành GoatSports Admin. Theo dõi các đơn đăng ký chủ sân, người dùng mới và hiệu suất lấp đầy
+          các cơ sở thể thao.
         </p>
 
         <!-- Quick Action CTA Buttons -->
         <div class="pt-2 flex flex-wrap items-center gap-3">
-          <a routerLink="/owner-applications" 
-             class="inline-flex items-center gap-2 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 text-xs font-black shadow-lg transition-all hover:scale-[1.02] font-display">
+          <a routerLink="/admin/owner-applications"
+            class="inline-flex items-center gap-2 rounded-2xl bg-emerald-800 hover:bg-emerald-700 text-white px-5 py-2.5 text-xs font-black shadow-lg transition-all hover:scale-[1.02] font-display">
             <lucide-icon name="user-check" class="h-4 w-4 shrink-0"></lucide-icon>
-            Duyệt Chủ Sân
+            Duyệt chủ sân
             @if (pendingApps() > 0) {
-              <span class="ml-1 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-black text-white">{{ pendingApps() }}</span>
+            <span class="ml-1 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-black text-white">{{
+              pendingApps() }}</span>
             }
           </a>
 
-          <a routerLink="/users" 
-             class="inline-flex items-center gap-2 rounded-2xl border border-white/30 bg-white/10 hover:bg-white/20 text-white px-5 py-2.5 text-xs font-extrabold backdrop-blur-md transition-all font-display">
+          <a routerLink="/admin/users"
+            class="inline-flex items-center gap-2 rounded-2xl border border-white/30 bg-white/10 hover:bg-white/20 text-white px-5 py-2.5 text-xs font-extrabold backdrop-blur-md transition-all font-display">
             <lucide-icon name="users" class="h-4 w-4 shrink-0"></lucide-icon>
-            Quản Lý Người Dùng
+            Quản lý người dùng
           </a>
         </div>
       </div>
 
-      <!-- Real-time Weather Widget -->
-      <div class="shrink-0 rounded-2xl border border-white/30 bg-white/15 p-5 backdrop-blur-md flex items-center gap-4 min-w-[240px] shadow-lg">
-        <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-white border border-white/30">
-          <lucide-icon [name]="weather().icon" class="h-7 w-7"></lucide-icon>
+      <!-- Real-time Weather Widget (Seamless Right Column) -->
+      <div [ngClass]="'weather-' + weather().condition"
+        class="weather-widget self-stretch shrink-0 p-6 md:p-8 flex items-center justify-center gap-6 min-w-[260px] md:w-[300px] lg:w-[340px] cursor-pointer relative overflow-hidden">
+
+        <!-- Rain Drops Effect -->
+        @if (weather().condition === 'rain' || weather().condition === 'storm') {
+        <div class="rain-drops">
+          <span class="rain-drop"></span>
+          <span class="rain-drop"></span>
+          <span class="rain-drop"></span>
+          <span class="rain-drop"></span>
+          <span class="rain-drop"></span>
+          <span class="rain-drop"></span>
+          <span class="rain-drop"></span>
+          <span class="rain-drop"></span>
         </div>
-        <div>
-          <span class="text-[10px] uppercase font-black tracking-widest text-emerald-100 font-display">TP. Hồ Chí Minh</span>
-          <div class="flex items-baseline gap-1">
-            <span class="font-display text-2xl font-black text-white">{{ weather().temp }}°C</span>
+        }
+
+        <div
+          class="weather-icon-container flex h-18 w-18 items-center justify-center rounded-[22px] bg-white/20 text-white border border-white/30 shadow-inner z-10">
+          <lucide-icon [name]="weather().icon" [ngClass]="{
+              'animate-weather-spin': weather().icon === 'sun',
+              'animate-weather-icon': ['cloud', 'cloud-fog'].includes(weather().icon),
+              'animate-weather-pulse': ['droplets', 'cloud-lightning'].includes(weather().icon)
+            }" class="h-10 w-10"></lucide-icon>
+        </div>
+        <div class="z-10 flex flex-col justify-center gap-0.5">
+          <span class="text-xs uppercase font-black tracking-widest text-emerald-100/90 font-display">TP. Hồ Chí
+            Minh</span>
+          <div class="flex items-baseline gap-1 my-0.5">
+            <span class="font-display text-4xl lg:text-5xl font-black text-white leading-none">{{ weather().temp
+              }}°C</span>
           </div>
-          <span class="text-xs text-white font-extrabold">{{ weather().description }}</span>
+          <span class="text-sm text-white font-extrabold">{{ weather().description }}</span>
         </div>
       </div>
 
@@ -66,272 +90,113 @@
   <!-- ═══════════════════════════════════════════
        2. KPI METRIC CARDS GRID (4 Columns)
   ═══════════════════════════════════════════ -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-    <app-metric-card
-      title="Tổng Người Dùng"
-      [value]="totalUsers()"
-      icon="users"
-      trendText="+12%"
-      [isPositiveTrend]="true"
-      description="Tài khoản người chơi & quản lý"
-      colorScheme="emerald">
-    </app-metric-card>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5" cdkDropList cdkDropListOrientation="horizontal"
+    (cdkDropListDropped)="drop($event)">
 
-    <app-metric-card
-      title="Đơn Chủ Sân Chờ Duyệt"
-      [value]="pendingApps()"
-      icon="clock"
-      trendText="Ưu tiên cao"
-      [isPositiveTrend]="false"
-      description="Yêu cầu xét duyệt tư cách"
-      colorScheme="amber">
-    </app-metric-card>
+    @for (card of metricCards; track card.id) {
+    <div cdkDrag cdkDragPreviewClass="cdk-dashboard-stat-preview" class="relative group cursor-default h-full">
+      <!-- Drag Handle -->
+      <div cdkDragHandle
+        class="absolute right-4 top-4 z-20 cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500 opacity-0 group-hover:opacity-100 p-1 rounded transition-opacity"
+        title="Kéo để di chuyển">
+        <lucide-icon name="grip-horizontal" class="h-4 w-4"></lucide-icon>
+      </div>
 
-    <app-metric-card
-      title="Sân Đang Hoạt Động"
-      [value]="approvedApps()"
-      icon="activity"
-      trendText="+8%"
-      [isPositiveTrend]="true"
-      description="Cơ sở đã được xác minh"
-      colorScheme="cyan">
-    </app-metric-card>
+      <!-- Drag Placeholder (Subtle drop zone) -->
+      <div *cdkDragPlaceholder class="h-full min-h-[140px] w-full"></div>
 
-    <app-metric-card
-      title="Hồ Sơ Đã Từ Chối"
-      [value]="rejectedApps()"
-      icon="ban"
-      description="Không đủ điều kiện kinh doanh"
-      colorScheme="rose">
-    </app-metric-card>
+      <app-metric-card [title]="card.title" [value]="card.value()" [icon]="card.icon" [trendText]="card.trendText()"
+        [isPositiveTrend]="card.isPositiveTrend()" [description]="card.description" [colorScheme]="card.colorScheme">
+      </app-metric-card>
+    </div>
+    }
   </div>
 
   <!-- ═══════════════════════════════════════════
-       3. MAIN CONTENT DUAL COLUMN LAYOUT
+       3. OWNER APPLICATION DISTRIBUTION MAP & REGIONAL BREAKDOWN
   ═══════════════════════════════════════════ -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-    <!-- LEFT COLUMN (2 Cols): Pending Applications Queue & Recent Users -->
-    <div class="lg:col-span-2 space-y-6">
-
-      <!-- Card 1: Pending Owner Applications Queue -->
-      <div class="rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.015)]">
-        <div class="flex items-center justify-between pb-4 border-b border-slate-100">
-          <div class="flex items-center gap-3">
-            <div class="flex h-9 w-9 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 border border-amber-200">
-              <lucide-icon name="user-check" class="h-5 w-5 shrink-0"></lucide-icon>
-            </div>
-            <div>
-              <h2 class="text-sm font-black text-slate-900 font-display">Yêu Cầu Đăng Ký Chủ Sân</h2>
-              <p class="text-[11px] font-semibold text-slate-500">Danh sách các cơ sở thể thao chờ xác minh</p>
-            </div>
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <!-- Map Widget (col-span-2) -->
+    <div
+      class="lg:col-span-3 rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.015)] flex flex-col h-[420px]">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100 shrink-0">
+        <div class="flex items-center gap-3">
+          <div
+            class="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200">
+            <lucide-icon name="map-pin" class="h-5 w-5 shrink-0"></lucide-icon>
           </div>
-
-          <a routerLink="/owner-applications" 
-             class="text-xs font-extrabold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 font-display">
-            Xem tất cả
-            <lucide-icon name="arrow-right" class="h-4 w-4 shrink-0"></lucide-icon>
-          </a>
+          <div>
+            <h2 class="text-sm font-black text-slate-900 font-display">Bản đồ phân bố sân thể thao</h2>
+            <p class="text-xs font-semibold text-slate-500">Vị trí địa lý thực tế các cơ sở sân thể thao</p>
+          </div>
         </div>
-
-        <!-- Table Container -->
-        <div class="mt-4 overflow-x-auto">
-          @if (loading()) {
-            <div class="flex items-center justify-center py-12">
-              <mat-spinner diameter="32" color="accent"></mat-spinner>
-            </div>
-          } @else if (upcomingSurveys().length === 0) {
-            <div class="p-10 text-center text-xs text-slate-400 space-y-2">
-              <lucide-icon name="check-circle" class="h-10 w-10 text-emerald-500 opacity-60 mx-auto"></lucide-icon>
-              <p class="font-bold text-slate-600">Tất cả đơn đăng ký chủ sân đã được xử lý hoàn tất!</p>
-            </div>
-          } @else {
-            <table class="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr class="border-b border-slate-100 text-xs font-bold uppercase tracking-wider text-emerald-600 bg-slate-50/50 font-display select-none">
-                  <th class="py-3.5 px-4">Tên Cơ Sở / Chủ Sân</th>
-                  <th class="py-3.5 px-4">SĐT Liên Hệ</th>
-                  <th class="py-3.5 px-4">Ngày Gửi</th>
-                  <th class="py-3.5 px-4">Trạng Thái</th>
-                  <th class="py-3.5 px-4 text-right">Thao Tác</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100">
-                @for (app of upcomingSurveys(); track app.ownerApplicationId) {
-                  <tr class="hover:bg-emerald-50/30 transition-colors group text-sm">
-                    <td class="py-3.5 px-4">
-                      <div class="flex items-center gap-3">
-                        <div class="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 font-black uppercase text-xs border border-emerald-200 shadow-xs font-display">
-                          {{ app.businessName ? app.businessName.charAt(0) : 'S' }}
-                        </div>
-                        <div>
-                          <strong class="block text-sm font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">{{ app.businessName }}</strong>
-                          <span class="text-xs font-semibold text-slate-500">{{ app.fullName }}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="py-3.5 px-4 text-slate-700 font-mono font-bold">{{ app.phone || 'N/A' }}</td>
-                    <td class="py-3.5 px-4 text-slate-600 font-semibold">{{ (app.reviewedAt | date:'dd/MM/yyyy') || 'Vừa gửi' }}</td>
-                    <td class="py-3.5 px-4">
-                      <app-status-badge status="pending" text="Chờ duyệt"></app-status-badge>
-                    </td>
-                    <td class="py-3.5 px-4 text-right">
-                      <a routerLink="/owner-applications" 
-                         class="inline-flex items-center gap-1 rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-extrabold text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all shadow-xs">
-                        Xử lý
-                      </a>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          }
+        <div class="flex items-center gap-1.5">
+          <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="text-xs font-bold text-emerald-600 tracking-wider">Thời gian thực</span>
         </div>
       </div>
 
-      <!-- Card 2: Recent Registered Users -->
-      <div class="rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.015)]">
-        <div class="flex items-center justify-between pb-4 border-b border-slate-100">
-          <div class="flex items-center gap-3">
-            <div class="flex h-9 w-9 items-center justify-center rounded-2xl bg-sky-50 text-sky-600 border border-sky-200">
-              <lucide-icon name="users" class="h-5 w-5 shrink-0"></lucide-icon>
-            </div>
-            <div>
-              <h2 class="text-sm font-black text-slate-900 font-display">Thành Viên Mới Gia Nhập</h2>
-              <p class="text-[11px] font-semibold text-slate-500">Tài khoản vừa đăng ký tài khoản thành viên</p>
-            </div>
-          </div>
-
-          <a routerLink="/users" class="text-xs font-extrabold text-sky-600 hover:text-sky-700 flex items-center gap-1 font-display">
-            Quản lý
-            <lucide-icon name="arrow-right" class="h-4 w-4 shrink-0"></lucide-icon>
-          </a>
+      <!-- Map Legend Row -->
+      <div class="flex flex-wrap items-center gap-4 text-xs font-extrabold text-slate-500 mt-2 shrink-0 select-none">
+        <div class="flex items-center gap-1.5">
+          <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+          <span>Sân đang hoạt động</span>
         </div>
-
-        <div class="mt-4 divide-y divide-slate-100">
-          @for (user of recentUsers(); track user.userId) {
-            <div class="py-3 flex items-center justify-between gap-4 hover:bg-emerald-50/30 px-3 rounded-2xl transition-colors text-sm">
-              <div class="flex items-center gap-3">
-                <img [src]="user.avatarUrl || getFallbackAvatar(user)" [alt]="user.fullName" class="h-9 w-9 rounded-2xl object-cover ring-1 ring-slate-200 shadow-xs">
-                <div>
-                  <strong class="block text-sm font-bold text-slate-900">{{ user.fullName || user.username }}</strong>
-                  <span class="text-xs text-slate-550 font-mono">{{ user.email }}</span>
-                </div>
-              </div>
- 
-              <div class="flex items-center gap-3">
-                <span class="hidden sm:inline-block text-xs text-slate-500 font-mono font-bold">&#64;{{ user.username }}</span>
-                <app-status-badge [status]="user.status === 'ACTIVE' ? 'active' : 'inactive'" [text]="user.status || 'ACTIVE'"></app-status-badge>
-              </div>
-            </div>
-          }
+        <div class="flex items-center gap-1.5">
+          <span class="h-2 w-2 rounded-full bg-amber-500"></span>
+          <span>Sân chờ xét duyệt</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="h-2 w-2 rounded-full bg-rose-500"></span>
+          <span>Sân bị từ chối</span>
         </div>
       </div>
 
+      <!-- Map canvas -->
+      <div
+        class="flex-1 min-h-0 mt-3 relative bg-slate-50/50 rounded-2xl border border-slate-100/60 select-none overflow-hidden">
+        <div id="real-leaflet-map" class="w-full h-full rounded-2xl z-10"></div>
+      </div>
     </div>
 
-    <!-- RIGHT COLUMN (1 Col): Sports Load & Operations Calendar -->
-    <div class="space-y-6">
-
-      <!-- Card 1: Sports Court Occupancy Rate -->
-      <div class="rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.015)]">
-        <div class="flex items-center justify-between pb-4 border-b border-slate-100">
-          <div class="flex items-center gap-3">
-            <div class="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200">
-              <lucide-icon name="activity" class="h-5 w-5 shrink-0"></lucide-icon>
-            </div>
-            <div>
-              <h2 class="text-sm font-black text-slate-900 font-display">Tải Trọng Sân Thể Thao</h2>
-              <p class="text-[11px] font-semibold text-slate-500">Tỷ lệ đặt sân theo bộ môn</p>
-            </div>
+    <!-- Regional Breakdown Stats Card (col-span-1) -->
+    <div
+      class="lg:col-span-1 rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.015)] flex flex-col h-[420px]">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100 shrink-0">
+        <div class="flex items-center gap-3">
+          <div
+            class="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200">
+            <lucide-icon name="table" class="h-5 w-5 shrink-0"></lucide-icon>
           </div>
-        </div>
-
-        <div class="mt-5 space-y-4">
-          <!-- Sport 1: Football -->
-          <div class="space-y-1.5">
-            <div class="flex justify-between text-sm">
-              <span class="font-bold text-slate-800 flex items-center gap-2">⚽ Bóng Đá</span>
-              <span class="font-black text-emerald-600">84%</span>
-            </div>
-            <div class="h-2 w-full rounded-full bg-slate-100 overflow-hidden border border-slate-200/60">
-              <div class="h-full rounded-full bg-emerald-500 shadow-sm" style="width: 84%"></div>
-            </div>
-          </div>
-
-          <!-- Sport 2: Badminton -->
-          <div class="space-y-1.5">
-            <div class="flex justify-between text-sm">
-              <span class="font-bold text-slate-800 flex items-center gap-2">🏸 Cầu Lông</span>
-              <span class="font-black text-sky-600">76%</span>
-            </div>
-            <div class="h-2 w-full rounded-full bg-slate-100 overflow-hidden border border-slate-200/60">
-              <div class="h-full rounded-full bg-sky-500 shadow-sm" style="width: 76%"></div>
-            </div>
-          </div>
-
-          <!-- Sport 3: Tennis -->
-          <div class="space-y-1.5">
-            <div class="flex justify-between text-sm">
-              <span class="font-bold text-slate-800 flex items-center gap-2">🎾 Tennis</span>
-              <span class="font-black text-amber-600">58%</span>
-            </div>
-            <div class="h-2 w-full rounded-full bg-slate-100 overflow-hidden border border-slate-200/60">
-              <div class="h-full rounded-full bg-amber-500 shadow-sm" style="width: 58%"></div>
-            </div>
-          </div>
-
-          <!-- Sport 4: Pickleball -->
-          <div class="space-y-1.5">
-            <div class="flex justify-between text-sm">
-              <span class="font-bold text-slate-800 flex items-center gap-2">🏓 Pickleball</span>
-              <span class="font-black text-purple-600">92%</span>
-            </div>
-            <div class="h-2 w-full rounded-full bg-slate-100 overflow-hidden border border-slate-200/60">
-              <div class="h-full rounded-full bg-purple-500 shadow-sm" style="width: 92%"></div>
-            </div>
+          <div>
+            <h2 class="text-sm font-black text-slate-900 font-display">Phân bố khu vực</h2>
+            <p class="text-xs font-semibold text-slate-500">Số lượng sân theo Quận/Huyện</p>
           </div>
         </div>
       </div>
 
-      <!-- Card 2: Interactive Operations Calendar -->
-      <div class="rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.015)]">
-        <div class="flex items-center justify-between pb-4 border-b border-slate-100">
-          <div class="flex items-center gap-3">
-            <div class="flex h-9 w-9 items-center justify-center rounded-2xl bg-sky-50 text-sky-600 border border-sky-200">
-              <lucide-icon name="calendar" class="h-5 w-5 shrink-0"></lucide-icon>
-            </div>
-            <div>
-              <h2 class="text-sm font-black text-slate-900 font-display">Lịch Vận Hành System</h2>
-              <p class="text-[11px] font-semibold text-slate-500">{{ currentDate | date:'MMMM yyyy' }}</p>
-            </div>
-          </div>
+      <div class="flex-1 overflow-y-auto mt-4 pr-1 space-y-2.5">
+        @if (districtBreakdown().length === 0) {
+        <div class="h-full flex flex-col items-center justify-center text-center text-sm text-slate-400 p-6">
+          <lucide-icon name="info" class="h-8 w-8 text-slate-300 mb-2"></lucide-icon>
+          <p class="font-bold">Chưa có dữ liệu địa lý</p>
         </div>
-
-        <div class="mt-4">
-          <!-- Calendar Days of Week Header -->
-          <div class="grid grid-cols-7 gap-1 text-center text-xs font-bold uppercase text-slate-400 mb-2 font-display">
-            <span>CN</span><span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span>
+        } @else {
+        @for (item of districtBreakdown(); track item.name) {
+        <div
+          class="flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 border border-slate-50/50 transition-colors">
+          <div class="flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+            <span class="text-sm font-bold text-slate-800">{{ item.name }}</span>
           </div>
-
-          <!-- Calendar Grid -->
-          <div class="grid grid-cols-7 gap-1 text-center text-sm font-bold">
-            @for (blank of calendarOffsetCells; track $index) {
-              <div class="h-9 w-9"></div>
-            }
-            @for (day of calendarDays; track day) {
-              <div 
-                class="flex h-9 w-9 items-center justify-center rounded-xl transition-all"
-                [ngClass]="day === currentDay ? 'bg-emerald-600 text-white font-black shadow-md shadow-emerald-600/30 scale-105' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'">
-                {{ day }}
-              </div>
-            }
-          </div>
+          <span
+            class="text-sm font-extrabold text-emerald-600 bg-emerald-50/60 border border-emerald-100/50 px-2.5 py-1 rounded-full font-mono">{{
+            item.count }} sân</span>
         </div>
+        }
+        }
       </div>
-
     </div>
-
   </div>
 
 </div>

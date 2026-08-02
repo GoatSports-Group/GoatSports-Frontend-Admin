@@ -290,7 +290,7 @@
   <!-- Overview Stats Container -->
   <div class="flex flex-wrap items-center justify-between gap-5 w-full" cdkDropList cdkDropListOrientation="horizontal"
     (cdkDropListDropped)="drop($event)">
-    <div *ngFor="let card of statCards" cdkDrag
+    <div *ngFor="let card of statCards" cdkDrag cdkDragPreviewClass="cdk-user-stat-preview"
       class="bg-white border border-slate-100 rounded-xl p-4 relative overflow-hidden flex flex-col justify-between min-h-[90px] w-full max-w-[400px] z-50 hover:shadow-sm transition-shadow bg-white cursor-default">
 
       <!-- Drag Placeholder (Subtle drop zone) -->

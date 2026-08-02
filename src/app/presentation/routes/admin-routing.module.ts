@@ -5,7 +5,6 @@ import { DashboardOverviewComponent } from '@presentation/pages/dashboard/dashbo
 import { UsersComponent } from '@presentation/pages/users/users.component';
 import { RolesComponent } from '@presentation/pages/roles/roles.component';
 import { AssignPermissionsComponent } from '@presentation/pages/roles/assign-permissions/assign-permissions.component';
-import { PermissionsComponent } from '@presentation/pages/permissions/permissions.component';
 import { OwnerApplicationsComponent } from '@presentation/pages/owner-applications/owner-applications.component';
 
 const routes: Routes = [
@@ -18,7 +17,6 @@ const routes: Routes = [
       { path: 'users', component: UsersComponent },
       { path: 'roles', component: RolesComponent },
       { path: 'roles/:id/permissions', component: AssignPermissionsComponent },
-      { path: 'permissions', component: PermissionsComponent },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   }
