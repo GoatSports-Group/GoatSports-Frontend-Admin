@@ -1,3 +1,9 @@
+/* Host element must be block-level and full-height for h-full chain to work */
+:host {
+  display: block;
+  height: 100%;
+}
+
 /* Cleaned and refactored stylesheet, styling migrated to Tailwind CSS classes */
 .animate-fade-in {
   animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;

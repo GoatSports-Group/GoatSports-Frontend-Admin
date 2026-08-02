@@ -92,7 +92,8 @@ import {
   LucideMail,
   LucideHash,
   LucidePhone,
-  LucideShieldCheck
+  LucideShieldCheck,
+  LucideCreditCard
 } from '@lucide/angular';
 
 @NgModule({
@@ -193,7 +194,8 @@ import {
       LucideMail,
       LucideHash,
       LucidePhone,
-      LucideShieldCheck
+      LucideShieldCheck,
+      LucideCreditCard
     )
   ],
   bootstrap: [AppComponent]

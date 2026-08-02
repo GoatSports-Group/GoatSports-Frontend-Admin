@@ -1,50 +1,58 @@
-<div class="dialog-container">
-  <div class="dialog-header">
-    <h2 class="dialog-title">{{ isEditMode ? 'Chỉnh Sửa Vai Trò' : 'Tạo Vai Trò Mới' }}</h2>
-    <button mat-icon-button class="close-btn" (click)="onCancel()" aria-label="Close dialog">
+<div class="p-6 bg-white text-slate-900 rounded-[28px] border border-slate-100 flex flex-col w-full max-w-md shadow-2xl select-none animate-fade-in">
+  <!-- Dialog Header -->
+  <div class="flex items-center justify-between mb-5">
+    <h2 class="font-sports-display text-lg font-black uppercase tracking-tight text-emerald-600 m-0">{{ isEditMode ? 'Chỉnh Sửa Vai Trò' : 'Tạo Vai Trò Mới' }}</h2>
+    <button type="button" (click)="onCancel()"
+      class="text-slate-400 hover:text-slate-600 p-1.5 rounded-full hover:bg-slate-100 transition-all cursor-pointer flex items-center justify-center">
       <lucide-icon name="x" class="h-5 w-5"></lucide-icon>
     </button>
   </div>
 
-  <form [formGroup]="roleForm" (ngSubmit)="onSubmit()" class="role-form">
+  <form [formGroup]="roleForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
     <!-- Role Name Field -->
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Tên vai trò (ví dụ: MODERATOR)</mat-label>
-      <input matInput formControlName="name" placeholder="Nhập tên viết hoa không dấu cách...">
-      @if (roleForm.get('name')?.hasError('required')) {
-        <mat-error>
-          Tên vai trò không được để trống
-        </mat-error>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-[13px] font-extrabold uppercase tracking-wide text-slate-700">Tên vai trò (ví dụ: MODERATOR)</label>
+      <input type="text" formControlName="name" placeholder="Nhập tên viết hoa không dấu cách..."
+        class="custom-dialog-input">
+      @if (roleForm.get('name')?.touched && roleForm.get('name')?.invalid) {
+        @if (roleForm.get('name')?.hasError('required')) {
+          <span class="text-[11px] font-extrabold text-rose-600 tracking-wider uppercase mt-1">Tên vai trò không được để trống</span>
+        }
+        @if (roleForm.get('name')?.hasError('maxlength')) {
+          <span class="text-[11px] font-extrabold text-rose-600 tracking-wider uppercase mt-1">Tên vai trò tối đa 100 ký tự</span>
+        }
       }
-      @if (roleForm.get('name')?.hasError('maxlength')) {
-        <mat-error>
-          Tên vai trò tối đa 100 ký tự
-        </mat-error>
-      }
-    </mat-form-field>
+    </div>
 
     <!-- Description Field -->
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Mô tả chi tiết</mat-label>
-      <textarea matInput formControlName="description" rows="3" placeholder="Ghi chú về trách nhiệm và quyền hạn..."></textarea>
-      @if (roleForm.get('description')?.hasError('maxlength')) {
-        <mat-error>
-          Mô tả tối đa 250 ký tự
-        </mat-error>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-[13px] font-extrabold uppercase tracking-wide text-slate-700">Mô tả chi tiết</label>
+      <textarea formControlName="description" rows="3" placeholder="Ghi chú về trách nhiệm và quyền hạn..."
+        class="custom-dialog-textarea"></textarea>
+      @if (roleForm.get('description')?.touched && roleForm.get('description')?.invalid) {
+        @if (roleForm.get('description')?.hasError('maxlength')) {
+          <span class="text-[11px] font-extrabold text-rose-600 tracking-wider uppercase mt-1">Mô tả tối đa 250 ký tự</span>
+        }
       }
-    </mat-form-field>
+    </div>
 
-    <!-- Active status toggle (Only in edit mode) -->
+    <!-- Active status checkbox (Only in edit mode) -->
     @if (isEditMode) {
-      <div class="status-toggle-box">
-        <mat-checkbox formControlName="active">Kích hoạt hoạt động</mat-checkbox>
+      <div class="flex items-center gap-2 mt-2">
+        <input type="checkbox" formControlName="active" id="active-checkbox"
+          class="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+        <label for="active-checkbox" class="text-xs font-bold text-slate-700 cursor-pointer select-none">Kích hoạt hoạt động</label>
       </div>
     }
 
     <!-- Actions -->
-    <div class="dialog-actions">
-      <button type="button" mat-button (click)="onCancel()" [disabled]="saving">Hủy</button>
-      <button type="submit" mat-flat-button color="primary" [disabled]="roleForm.invalid || saving">
+    <div class="flex justify-end gap-3 mt-6 border-t border-slate-100 pt-4">
+      <button type="button" (click)="onCancel()" [disabled]="saving"
+        class="px-5 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/60 rounded-full font-bold text-xs transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50">
+        Hủy
+      </button>
+      <button type="submit" [disabled]="roleForm.invalid || saving"
+        class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-bold text-xs shadow-md shadow-emerald-600/10 transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5">
         @if (!saving) {
           <span>Lưu lại</span>
         }

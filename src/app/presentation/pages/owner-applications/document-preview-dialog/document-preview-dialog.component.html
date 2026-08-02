@@ -1,41 +1,89 @@
-<div class="preview-dialog-container">
-  <div class="dialog-header">
-    <h2 class="dialog-title">{{ data.title }}</h2>
-    <button mat-icon-button class="close-btn" (click)="close()" aria-label="Close dialog">
+<div
+  class="p-8 bg-white text-slate-900 rounded-[28px] border border-slate-100 flex flex-col w-full shadow-2xl select-none animate-fade-in">
+
+  <!-- Dialog Header -->
+  <div class="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
+    <h2
+      class="font-sports-display text-xl font-black uppercase tracking-tight text-emerald-600 m-0 flex items-center gap-2.5">
+      <lucide-icon name="cloud" class="h-5 w-5 text-emerald-500 shrink-0"></lucide-icon>
+      {{ data.title }}
+    </h2>
+    <button type="button" (click)="close()"
+      class="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100 transition-all cursor-pointer flex items-center justify-center">
       <lucide-icon name="x" class="h-5 w-5"></lucide-icon>
     </button>
   </div>
 
-  <div class="dialog-body">
-    @if (loading) {
-      <div class="loading-box">
-        <mat-spinner diameter="40"></mat-spinner>
-        <p>Đang tải tài liệu...</p>
+  <!-- Dialog Body -->
+  @if (loading) {
+  <div
+    class="min-h-[400px] flex flex-col items-center justify-center gap-3 text-slate-500 bg-slate-50 border border-slate-200 rounded-2xl p-3">
+    <mat-spinner diameter="40" color="accent"></mat-spinner>
+    <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mt-2">Đang tải tài liệu...</p>
+  </div>
+  } @else if (error) {
+  <div
+    class="min-h-[400px] flex flex-col items-center justify-center gap-2 text-slate-500 bg-slate-50 border border-slate-200 rounded-2xl p-3 py-12">
+    <lucide-icon name="alert-circle" class="text-rose-500 h-10 w-10 mb-2 mx-auto block"></lucide-icon>
+    <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Không thể xem trước tài liệu này.</p>
+  </div>
+  } @else if (isMultiMode) {
+  <!-- Multi-image mode: CCCD front + back side by side -->
+  <div class="grid gap-5" [style.gridTemplateColumns]="'repeat(' + resolvedItems.length + ', 1fr)'">
+    @for (item of resolvedItems; track $index) {
+    <div class="flex flex-col gap-3">
+      <!-- Label badge -->
+      <div class="flex items-center justify-center">
+        <span
+          class="px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-xs font-black uppercase tracking-wider text-emerald-700">
+          {{ item.label }}
+        </span>
       </div>
-    } @else if (error) {
-      <div class="error-box">
-        <lucide-icon name="alert-circle" class="text-rose-500 h-10 w-10 mb-2 mx-auto block"></lucide-icon>
-        <p>Không thể xem trước tài liệu này trực tiếp.</p>
+      <!-- Image container -->
+      <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center justify-center min-h-[400px]">
+        @if (item.isImage) {
+        <img [src]="item.url" [alt]="item.label" class="max-w-full max-h-[65vh] object-contain rounded-xl shadow-md">
+        } @else {
+        <iframe [src]="item.url" class="border-0 rounded-xl w-full h-[400px]"></iframe>
+        }
       </div>
-    } @else {
-      @if (isImageFile) {
-        <div class="image-viewer">
-          <img [src]="resolvedUrl" alt="Tài liệu" class="preview-img">
-        </div>
-      } @else {
-        <div class="pdf-viewer">
-          <iframe [src]="resolvedUrl" class="preview-iframe" width="100%" height="550px"></iframe>
-        </div>
-      }
+      <!-- Download link -->
+      <div class="flex justify-center">
+        <a [href]="item.downloadUrl" target="_blank"
+          class="px-4 py-2 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 text-slate-600 border border-slate-200 rounded-full font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5">
+          <lucide-icon name="external-link" class="h-3.5 w-3.5 shrink-0"></lucide-icon> Mở tab mới
+        </a>
+      </div>
+    </div>
     }
   </div>
-
-  <div class="dialog-actions">
-    @if (downloadUrl) {
-      <a mat-flat-button color="primary" [href]="downloadUrl" target="_blank" class="view-btn flex items-center gap-1.5 justify-center">
-        <lucide-icon name="external-link" class="h-4 w-4 shrink-0"></lucide-icon> Mở tab mới / Tải xuống
-      </a>
+  } @else {
+  <!-- Single-file mode (legacy) -->
+  <div
+    class="flex-1 overflow-auto min-h-[450px] w-full flex justify-center items-center bg-slate-50 border border-slate-200 rounded-2xl p-4 box-border">
+    @if (isImageFile) {
+    <div class="w-full flex justify-center items-center">
+      <img [src]="resolvedUrl" alt="Tài liệu" class="max-w-full max-h-[65vh] object-contain rounded-xl shadow-md">
+    </div>
+    } @else {
+    <div class="w-full h-[550px]">
+      <iframe [src]="resolvedUrl" class="border-0 rounded-xl w-full h-full"></iframe>
+    </div>
     }
-    <button mat-button (click)="close()" class="cancel-btn">Đóng</button>
+  </div>
+  }
+
+  <!-- Dialog Actions -->
+  <div class="flex justify-end gap-3 mt-6 border-t border-slate-100 pt-4">
+    @if (!isMultiMode && downloadUrl) {
+    <a [href]="downloadUrl" target="_blank"
+      class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-bold text-xs shadow-md shadow-emerald-600/10 transition-all active:scale-[0.98] cursor-pointer flex items-center gap-1.5 justify-center">
+      <lucide-icon name="external-link" class="h-4 w-4 shrink-0"></lucide-icon> Mở tab mới / Tải xuống
+    </a>
+    }
+    <button type="button" (click)="close()"
+      class="px-5 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/60 rounded-full font-bold text-xs transition-all active:scale-[0.98] cursor-pointer">
+      Đóng
+    </button>
   </div>
 </div>

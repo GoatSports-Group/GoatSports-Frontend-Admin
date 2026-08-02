@@ -1,18 +1,13 @@
 export enum DocumentType {
-  ID_CARD_FRONT = 'ID_CARD_FRONT',
-  ID_CARD_BACK = 'ID_CARD_BACK',
+  ID_CARD = 'ID_CARD',
   BUSINESS_LICENSE = 'BUSINESS_LICENSE',
   VENUE_IMAGE = 'VENUE_IMAGE',
 }
 
 export const DOCUMENT_TYPE_OPTIONS = [
   {
-    value: DocumentType.ID_CARD_FRONT,
-    label: 'Mặt trước CCCD',
-  },
-  {
-    value: DocumentType.ID_CARD_BACK,
-    label: 'Mặt sau CCCD',
+    value: DocumentType.ID_CARD,
+    label: 'CCCD',
   },
   {
     value: DocumentType.BUSINESS_LICENSE,

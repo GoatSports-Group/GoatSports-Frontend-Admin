@@ -1,18 +1,24 @@
-<h2 mat-dialog-title class="dialog-title">{{ data.title }}</h2>
+<div class="p-6 bg-white text-slate-900 rounded-[28px] border border-slate-100 flex flex-col w-full max-w-sm shadow-2xl select-none animate-fade-in">
+  <!-- Dialog Header -->
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="font-sports-display text-lg font-black uppercase tracking-tight text-slate-900 m-0">{{ data.title }}</h2>
+  </div>
 
-<mat-dialog-content class="dialog-content">
-  <p>{{ data.message }}</p>
-</mat-dialog-content>
+  <!-- Dialog Content -->
+  <div class="text-slate-500 font-semibold text-xs leading-relaxed mb-6">
+    <p class="m-0">{{ data.message }}</p>
+  </div>
 
-<mat-dialog-actions align="end" class="dialog-actions">
-  <button mat-button (click)="onCancel()" class="cancel-btn">
-    {{ data.cancelText || 'Hủy' }}
-  </button>
-  <button 
-    mat-raised-button 
-    [color]="data.confirmColor || 'primary'" 
-    (click)="onConfirm()" 
-    class="confirm-btn">
-    {{ data.confirmText || 'Xác nhận' }}
-  </button>
-</mat-dialog-actions>
+  <!-- Dialog Actions -->
+  <div class="flex justify-end gap-3 border-t border-slate-100 pt-4">
+    <button type="button" (click)="onCancel()"
+      class="px-5 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/60 rounded-full font-bold text-xs transition-all active:scale-[0.98] cursor-pointer">
+      {{ data.cancelText || 'Hủy' }}
+    </button>
+    <button type="button" (click)="onConfirm()"
+      [ngClass]="data.confirmColor === 'warn' ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/10' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/10'"
+      class="px-5 py-2.5 text-white rounded-full font-bold text-xs shadow-md transition-all active:scale-[0.98] cursor-pointer">
+      {{ data.confirmText || 'Xác nhận' }}
+    </button>
+  </div>
+</div>

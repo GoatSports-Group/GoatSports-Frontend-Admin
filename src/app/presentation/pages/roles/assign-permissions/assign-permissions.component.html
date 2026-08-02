@@ -1,129 +1,151 @@
-<div class="assign-permissions-page">
-  <div class="page-header">
-    <div class="header-title-box">
-      <div class="back-link flex items-center gap-1 cursor-pointer" (click)="onCancel()">
+<div class="flex flex-col gap-6 animate-fade-in relative z-10">
+  <!-- Page Header -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/80 pb-5">
+    <div class="flex flex-col">
+      <div class="flex items-center gap-1 text-slate-500 hover:text-emerald-600 text-xs font-extrabold cursor-pointer mb-2 select-none" (click)="onCancel()">
         <lucide-icon name="arrow-left" class="h-4 w-4"></lucide-icon> Quay lại danh sách
       </div>
-      <h1>Cấu Hình Quyền Hạn: <span class="role-highlight">{{ role?.name }}</span></h1>
-      <p>Bật/tắt các quyền truy cập API được gán cho vai trò này.</p>
+      <h1 class="font-display text-2xl font-black text-slate-900 uppercase tracking-tight">
+        Cấu Hình Quyền Hạn: <span class="text-emerald-600 font-black">{{ role?.name }}</span>
+      </h1>
+      <p class="text-xs font-semibold text-slate-500 mt-1">Bật/tắt các quyền truy cập API được gán cho vai trò này.</p>
     </div>
 
-    <div class="header-actions">
-      <button mat-button (click)="onCancel()" [disabled]="saving">Hủy bỏ</button>
-      <button mat-flat-button color="primary" class="save-btn flex items-center gap-1.5" (click)="onSave()" [disabled]="saving || loading">
-        <lucide-icon name="save" class="h-4 w-4"></lucide-icon> Lưu thiết lập
+    <div class="flex items-center gap-3 w-full md:w-auto">
+      <button (click)="onCancel()" [disabled]="saving"
+        class="flex-1 md:flex-none h-11 px-5 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/60 rounded-2xl font-bold text-xs transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50">
+        Hủy bỏ
+      </button>
+      <button (click)="onSave()" [disabled]="saving || loading"
+        class="flex-1 md:flex-none h-11 px-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold text-xs shadow-lg shadow-emerald-600/10 transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 font-display">
+        <lucide-icon name="save" class="h-4 w-4 shrink-0"></lucide-icon> Lưu thiết lập
       </button>
     </div>
   </div>
 
   <!-- Search & Filter Controls -->
-  <mat-card class="filter-card">
-    <mat-card-content class="filter-content flex flex-wrap items-center gap-4">
-      <mat-form-field appearance="outline" class="search-field flex-1">
-        <mat-label>Tìm kiếm quyền hạn</mat-label>
-        <input matInput [(ngModel)]="searchQuery" (keyup.enter)="onSearch()" placeholder="Nhập tên, api path, method, module...">
-        <button mat-icon-button matSuffix (click)="onSearch()" aria-label="Search">
-          <lucide-icon name="search" class="h-5 w-5"></lucide-icon>
-        </button>
-      </mat-form-field>
-
-      <button mat-flat-button color="primary" class="search-btn flex items-center gap-1.5" (click)="onSearch()">
-        <lucide-icon name="filter" class="h-4 w-4"></lucide-icon> Lọc dữ liệu
-      </button>
-
-      <span class="selection-badge flex items-center gap-1">
-        <lucide-icon name="check-circle" class="h-4 w-4"></lucide-icon> {{ selectedPermissionIds.size }} quyền hạn được chọn
+  <div class="bg-white border border-slate-100 rounded-3xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.015)] flex flex-col md:flex-row items-center gap-4">
+    <div class="relative w-full flex-1">
+      <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+        <lucide-icon name="search" class="text-slate-400 h-5 w-5"></lucide-icon>
       </span>
-    </mat-card-content>
-  </mat-card>
+      <input type="text" 
+             [(ngModel)]="searchQuery" 
+             (keyup.enter)="onSearch()"
+             placeholder="Tìm kiếm quyền hạn theo tên, api path, method, module..." 
+             class="w-full h-11 bg-slate-50/70 border-0 rounded-2xl pl-11 pr-4 text-sm font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500 transition-all">
+    </div>
+    
+    <button (click)="onSearch()" 
+            class="w-full md:w-auto bg-slate-900 hover:bg-slate-800 active:scale-[0.98] text-white font-bold text-sm px-6 h-11 rounded-2xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md font-display">
+      <lucide-icon name="filter" class="h-4 w-4 shrink-0"></lucide-icon> Lọc dữ liệu
+    </button>
 
-  <!-- Table Card -->
-  <mat-card class="table-card">
+    <div class="w-full md:w-auto flex items-center justify-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-4 h-11 rounded-2xl md:ml-auto">
+      <lucide-icon name="check-circle" class="h-4 w-4 shrink-0 text-emerald-600"></lucide-icon>
+      <span>{{ selectedPermissionIds.size }} quyền hạn được chọn</span>
+    </div>
+  </div>
+
+  <!-- Table Card Wrapper -->
+  <div class="bg-white border border-slate-100 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.015)] overflow-hidden">
     @if (loading) {
-      <div class="table-progress-bar">
-        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      <div class="flex flex-col items-center justify-center py-20">
+        <mat-spinner diameter="40" color="accent"></mat-spinner>
+        <p class="text-xs font-extrabold text-slate-400 uppercase tracking-wider font-display mt-4">Đang tải danh sách quyền...</p>
       </div>
-    }
-
-    <mat-card-content class="table-wrapper-content">
+    } @else {
       <!-- Empty State -->
-      @if (!loading && permissions.length === 0) {
-        <div class="empty-state">
-          <lucide-icon name="shield" class="empty-icon h-12 w-12 text-slate-300 mb-4 mx-auto block"></lucide-icon>
-          <h3>Không tìm thấy quyền hạn nào</h3>
-          <p>Thử điều chỉnh từ khóa tìm kiếm để bắt đầu.</p>
+      @if (permissions.length === 0) {
+        <div class="flex flex-col items-center justify-center py-20 text-center">
+          <lucide-icon name="shield" class="text-slate-300 h-12 w-12 mb-4 mx-auto block"></lucide-icon>
+          <h3 class="text-base font-extrabold text-slate-900 font-display">Không tìm thấy quyền hạn nào</h3>
+          <p class="text-xs text-slate-500 mt-1 max-w-sm font-medium">Thử điều chỉnh từ khóa tìm kiếm để bắt đầu.</p>
         </div>
-      }
-
-      @if (permissions.length > 0) {
-        <div class="table-scroll">
-          <table mat-table [dataSource]="permissions" class="permissions-table">
-            <!-- Checkbox Column -->
-            <ng-container matColumnDef="select">
-              <th mat-header-cell *matHeaderCellDef class="checkbox-cell">
-                <mat-checkbox
-                  (change)="toggleAllOnPage($event.checked)"
-                  [checked]="isAllOnPageSelected()"
-                  [indeterminate]="isSomeOnPageSelected()">
-                </mat-checkbox>
-              </th>
-              <td mat-cell *matCellDef="let row" class="checkbox-cell">
-                <mat-checkbox
-                  (click)="$event.stopPropagation()"
-                  (change)="togglePermission(row.permissionId, $event.checked)"
-                  [checked]="isPermissionSelected(row.permissionId)">
-                </mat-checkbox>
-              </td>
-            </ng-container>
-            <!-- Permission Name Column -->
-            <ng-container matColumnDef="name">
-              <th mat-header-cell *matHeaderCellDef> Tên quyền hạn </th>
-              <td mat-cell *matCellDef="let p" class="font-bold">
-                {{ p.name }}
-              </td>
-            </ng-container>
-            <!-- API Path Column -->
-            <ng-container matColumnDef="apiPath">
-              <th mat-header-cell *matHeaderCellDef> Đường dẫn API </th>
-              <td mat-cell *matCellDef="let p" class="font-mono path-cell"> {{ p.apiPath }} </td>
-            </ng-container>
-            <!-- Method Column -->
-            <ng-container matColumnDef="method">
-              <th mat-header-cell *matHeaderCellDef class="text-center"> Phương thức </th>
-              <td mat-cell *matCellDef="let p" class="text-center">
-                <span class="method-tag" [attr.data-method]="p.method">{{ p.method }}</span>
-              </td>
-            </ng-container>
-            <!-- Module Column -->
-            <ng-container matColumnDef="module">
-              <th mat-header-cell *matHeaderCellDef class="text-center"> Nhóm (Module) </th>
-              <td mat-cell *matCellDef="let p" class="text-center">
-                <span class="module-badge">{{ p.module || 'OTHER' }}</span>
-              </td>
-            </ng-container>
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="togglePermission(row.permissionId, !isPermissionSelected(row.permissionId))" class="clickable-row"></tr>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-slate-100 text-xs font-bold uppercase tracking-wider text-emerald-600 bg-slate-50/50 font-display select-none">
+                <th class="py-4 px-6 w-[60px] text-center">
+                  <input type="checkbox"
+                    (change)="toggleAllOnPage($any($event.target).checked)"
+                    [checked]="isAllOnPageSelected()"
+                    [indeterminate]="isSomeOnPageSelected()"
+                    class="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                </th>
+                <th class="py-4 px-6">Tên quyền hạn</th>
+                <th class="py-4 px-6">Đường dẫn API</th>
+                <th class="py-4 px-6 text-center">Phương thức</th>
+                <th class="py-4 px-6 text-center">Nhóm (Module)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              @for (p of permissions; track p.permissionId) {
+                <tr class="hover:bg-emerald-50/30 transition-colors cursor-pointer border-b border-slate-100 text-sm"
+                  (click)="togglePermission(p.permissionId, !isPermissionSelected(p.permissionId))">
+                  <td class="py-4 px-6 w-[60px] text-center" (click)="$event.stopPropagation()">
+                    <input type="checkbox"
+                      (change)="togglePermission(p.permissionId, $any($event.target).checked)"
+                      [checked]="isPermissionSelected(p.permissionId)"
+                      class="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                  </td>
+                  <td class="py-4 px-6 font-bold text-slate-800">
+                    {{ p.name }}
+                  </td>
+                  <td class="py-4 px-6">
+                    <span class="font-mono text-xs text-slate-700 bg-slate-50 border border-slate-200/40 px-3.5 py-2 rounded-2xl font-semibold">
+                      {{ p.apiPath }}
+                    </span>
+                  </td>
+                  <td class="py-4 px-6 text-center">
+                    <span class="inline-flex items-center justify-center min-w-[66px] px-3.5 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider border shadow-xs"
+                      [ngClass]="{
+                        'bg-emerald-50 text-emerald-700 border-emerald-200': p.method === 'GET',
+                        'bg-amber-50 text-amber-700 border-amber-200': p.method === 'POST',
+                        'bg-sky-50 text-sky-700 border-sky-200': p.method === 'PUT',
+                        'bg-purple-50 text-purple-700 border-purple-200': p.method === 'PATCH',
+                        'bg-rose-50 text-rose-700 border-rose-200': p.method === 'DELETE'
+                      }">
+                      {{ p.method }}
+                    </span>
+                  </td>
+                  <td class="py-4 px-6 text-center">
+                    <span class="inline-flex items-center px-3 py-1.5 rounded-xl text-[11px] font-bold uppercase tracking-wider bg-slate-50 text-slate-700 border border-slate-200/50">
+                      {{ p.module || 'OTHER' }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
           </table>
         </div>
       }
-    </mat-card-content>
+    }
 
-    <!-- Paginator -->
-    <mat-paginator
-      [length]="totalItems"
-      [pageSize]="pageSize"
-      [pageSizeOptions]="[5, 10, 20, 50]"
-      [pageIndex]="pageIndex"
-      (page)="onPageChange($event)"
-      showFirstLastButtons>
-    </mat-paginator>
-  </mat-card>
+    <!-- Paginator Footer -->
+    <div class="border-t border-slate-100 p-2 bg-slate-50/50">
+      <mat-paginator
+        [length]="totalItems"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[5, 10, 20, 50]"
+        [pageIndex]="pageIndex"
+        (page)="onPageChange($event)"
+        showFirstLastButtons
+        class="!bg-transparent text-slate-600">
+      </mat-paginator>
+    </div>
+  </div>
 
   <!-- Bottom Actions -->
   @if (!loading) {
-    <div class="bottom-actions">
-      <button mat-button (click)="onCancel()" [disabled]="saving">Quay lại</button>
-      <button mat-flat-button color="primary" class="save-btn flex items-center gap-1.5" (click)="onSave()" [disabled]="saving">
+    <div class="flex justify-end gap-3 mt-4 border-t border-slate-100 pt-4">
+      <button (click)="onCancel()"
+        class="px-5 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/60 rounded-full font-bold text-xs transition-all active:scale-[0.98] cursor-pointer">
+        Quay lại
+      </button>
+      <button (click)="onSave()" [disabled]="saving"
+        class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-bold text-xs shadow-md shadow-emerald-600/10 transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 font-display">
         <lucide-icon name="save" class="h-4 w-4 shrink-0"></lucide-icon> Lưu thiết lập
       </button>
     </div>

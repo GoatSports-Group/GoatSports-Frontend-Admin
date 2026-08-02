@@ -104,7 +104,8 @@ export class AssignRoleDialogComponent implements OnInit {
 
       const confirmRef = this.dialog.open(ConfirmDialogComponent, {
         width: '400px',
-        data: confirmData
+        data: confirmData,
+        panelClass: 'custom-premium-dialog'
       });
 
       confirmRef.afterClosed().subscribe(confirmed => {

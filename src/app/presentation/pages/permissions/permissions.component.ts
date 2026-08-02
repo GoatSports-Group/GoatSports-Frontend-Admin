@@ -77,7 +77,8 @@ export class PermissionsComponent implements OnInit {
   openPermissionDialog(permission?: Permission): void {
     const dialogRef = this.dialog.open(PermissionDialogComponent, {
       width: '600px',
-      data: { permission }
+      data: { permission },
+      panelClass: 'custom-premium-dialog'
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -98,7 +99,8 @@ export class PermissionsComponent implements OnInit {
 
     const confirmRef = this.dialog.open(ConfirmDialogComponent, {
       width: '420px',
-      data: confirmData
+      data: confirmData,
+      panelClass: 'custom-premium-dialog'
     });
 
     confirmRef.afterClosed().subscribe(confirmed => {
@@ -126,5 +128,45 @@ export class PermissionsComponent implements OnInit {
         });
       }
     });
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.totalItems / this.pageSize) || 1;
+  }
+
+  get pages(): number[] {
+    const pagesArray = [];
+    for (let i = 0; i < this.totalPages; i++) {
+      pagesArray.push(i);
+    }
+    return pagesArray;
+  }
+
+  onPrevPage(): void {
+    if (this.pageIndex > 0) {
+      this.pageIndex--;
+      this.loadPermissions();
+    }
+  }
+
+  onNextPage(): void {
+    if ((this.pageIndex + 1) < this.totalPages) {
+      this.pageIndex++;
+      this.loadPermissions();
+    }
+  }
+
+  goToPage(page: number): void {
+    this.pageIndex = page;
+    this.loadPermissions();
+  }
+
+  getShowingText(): string {
+    if (this.totalItems === 0) {
+      return 'Xem 0 - 0 trong 0 kết quả';
+    }
+    const start = this.pageIndex * this.pageSize + 1;
+    const end = Math.min((this.pageIndex + 1) * this.pageSize, this.totalItems);
+    return `Xem ${start} - ${end} trong ${this.totalItems} kết quả`;
   }
 }

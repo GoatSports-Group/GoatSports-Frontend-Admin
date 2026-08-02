@@ -79,7 +79,8 @@ export class RolesComponent implements OnInit {
   openRoleDialog(role?: Role): void {
     const dialogRef = this.dialog.open(RoleDialogComponent, {
       width: '450px',
-      data: { role }
+      data: { role },
+      panelClass: 'custom-premium-dialog'
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -100,7 +101,8 @@ export class RolesComponent implements OnInit {
 
     const confirmRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
-      data: confirmData
+      data: confirmData,
+      panelClass: 'custom-premium-dialog'
     });
 
     confirmRef.afterClosed().subscribe(confirmed => {
@@ -145,7 +147,8 @@ export class RolesComponent implements OnInit {
 
     const confirmRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
-      data: confirmData
+      data: confirmData,
+      panelClass: 'custom-premium-dialog'
     });
 
     confirmRef.afterClosed().subscribe(confirmed => {
@@ -177,5 +180,45 @@ export class RolesComponent implements OnInit {
 
   navigateToPermissions(role: Role): void {
     this.router.navigate(['/admin/roles', role.roleId, 'permissions']);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.totalItems / this.pageSize) || 1;
+  }
+
+  get pages(): number[] {
+    const pagesArray = [];
+    for (let i = 0; i < this.totalPages; i++) {
+      pagesArray.push(i);
+    }
+    return pagesArray;
+  }
+
+  onPrevPage(): void {
+    if (this.pageIndex > 0) {
+      this.pageIndex--;
+      this.loadRoles();
+    }
+  }
+
+  onNextPage(): void {
+    if ((this.pageIndex + 1) < this.totalPages) {
+      this.pageIndex++;
+      this.loadRoles();
+    }
+  }
+
+  goToPage(page: number): void {
+    this.pageIndex = page;
+    this.loadRoles();
+  }
+
+  getShowingText(): string {
+    if (this.totalItems === 0) {
+      return 'Xem 0 - 0 trong 0 kết quả';
+    }
+    const start = this.pageIndex * this.pageSize + 1;
+    const end = Math.min((this.pageIndex + 1) * this.pageSize, this.totalItems);
+    return `Xem ${start} - ${end} trong ${this.totalItems} kết quả`;
   }
 }

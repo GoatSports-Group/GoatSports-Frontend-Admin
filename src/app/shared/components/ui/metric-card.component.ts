@@ -10,7 +10,7 @@ import { LucideIconComponent } from '@shared/components/ui/lucide-icon.component
     LucideIconComponent
   ],
   template: `
-    <div class="group relative overflow-hidden rounded-[24px] border border-slate-200/80 bg-white/85 p-6 backdrop-blur-xl shadow-xl shadow-slate-950/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-500/40">
+    <div class="group relative overflow-hidden rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.015)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:border-emerald-500/30">
       <!-- Glow ambient gradient background orb -->
       <div 
         class="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full opacity-10 blur-2xl transition-opacity duration-300 group-hover:opacity-25"

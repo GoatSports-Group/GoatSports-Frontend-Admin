@@ -1,28 +1,14 @@
-.dialog-title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-family: 'Outfit', sans-serif;
-  font-weight: 700;
-  color: #b91c1c;
-  margin-top: 1rem;
+.animate-fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
-.dialog-desc {
-  font-size: 0.9rem;
-  color: #64748b;
-  margin-bottom: 1.25rem;
-  line-height: 1.5;
-}
-.dialog-content {
-  min-width: 320px;
-  max-width: 480px;
-}
-.reason-field {
-  width: 100%;
-}
-.dialog-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  padding: 1rem 1.5rem 1.5rem 1.5rem;
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

@@ -1,20 +1,21 @@
 <div class="flex flex-col gap-6 animate-fade-in relative z-10">
 
   <!-- Page Header -->
-  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/80 pb-5">
-    <div>
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 pb-5">
+    <div class="flex flex-col">
+      <span class="inline-flex items-center rounded-full bg-emerald-50 border border-emerald-100/60 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 uppercase tracking-widest mb-1.5 w-max select-none">Roles Management</span>
       <h1 class="font-display text-2xl font-black text-slate-900 uppercase tracking-tight">Quản Lý Vai Trò (Roles)</h1>
-      <p class="text-xs font-semibold text-slate-500 mt-1">Khai báo, cấu hình trạng thái và phân bổ quyền hạn cho từng nhóm vai trò trong GOAT Sports.</p>
+      <p class="text-sm font-semibold text-slate-500 mt-1">Khai báo, cấu hình trạng thái và phân bổ quyền hạn cho từng nhóm vai trò trong GOAT Sports.</p>
     </div>
     
     <button (click)="openRoleDialog()"
-            class="w-full md:w-auto bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-extrabold text-xs px-5 h-11 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 cursor-pointer font-display">
+            class="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-xs px-5 h-11 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-600/10 cursor-pointer font-display">
       <lucide-icon name="plus" class="h-4 w-4 shrink-0"></lucide-icon> Tạo Vai Trò Mới
     </button>
   </div>
 
   <!-- Search & Filter Controls -->
-  <div class="bg-white/85 border border-slate-200/80 backdrop-blur-xl rounded-[24px] p-4 shadow-xl shadow-slate-950/5 flex flex-col md:flex-row items-center gap-4">
+  <div class="bg-white border border-slate-100 rounded-3xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.015)] flex flex-col md:flex-row items-center gap-4">
     <div class="relative w-full flex-1">
       <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
         <lucide-icon name="search" class="text-slate-400 h-5 w-5"></lucide-icon>
@@ -23,28 +24,28 @@
              [(ngModel)]="searchQuery" 
              (keyup.enter)="onSearch()"
              placeholder="Tìm kiếm vai trò theo tên hoặc mô tả..." 
-             class="w-full h-[46px] bg-slate-50/80 border border-slate-200/80 rounded-2xl pl-11 pr-4 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all">
+             class="w-full h-11 bg-slate-50/70 border-0 rounded-2xl pl-11 pr-4 text-sm font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500 transition-all">
     </div>
     
     <button (click)="onSearch()" 
-            class="w-full md:w-auto bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs px-6 h-[46px] rounded-2xl flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-md font-display">
+            class="w-full md:w-auto bg-slate-900 hover:bg-slate-800 active:scale-[0.98] text-white font-bold text-sm px-6 h-11 rounded-2xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md font-display">
       <lucide-icon name="filter" class="h-4 w-4 shrink-0"></lucide-icon> Lọc dữ liệu
     </button>
   </div>
 
   <!-- Loading State -->
   @if (loading) {
-    <div class="flex flex-col items-center justify-center py-20 bg-white/85 border border-slate-200/80 backdrop-blur-xl rounded-[24px] shadow-xl">
+    <div class="min-h-[350px] flex flex-col items-center justify-center bg-white border border-slate-100 rounded-3xl shadow-sm">
       <mat-spinner diameter="40" color="accent"></mat-spinner>
-      <p class="text-xs font-extrabold text-slate-400 uppercase tracking-wider font-display mt-4">Đang tải danh sách vai trò...</p>
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-wider font-display mt-4">Đang tải danh sách vai trò...</p>
     </div>
   } @else {
     
     <!-- Empty State -->
     @if (roles.length === 0) {
-      <div class="flex flex-col items-center justify-center py-20 text-center bg-white/85 border border-slate-200/80 backdrop-blur-xl rounded-[24px] shadow-xl">
+      <div class="min-h-[350px] flex flex-col items-center justify-center text-center bg-white border border-slate-100 rounded-3xl shadow-sm">
         <lucide-icon name="shield" class="text-slate-300 h-12 w-12 mb-4 mx-auto"></lucide-icon>
-        <h3 class="text-base font-extrabold text-slate-900 font-display">Không tìm thấy vai trò nào</h3>
+        <h3 class="text-sm font-bold text-slate-900 font-display">Không tìm thấy vai trò nào</h3>
         <p class="text-xs text-slate-500 mt-1 max-w-sm font-medium">Thử điều chỉnh từ khóa tìm kiếm hoặc nhấn nút Tạo Vai Trò để bắt đầu.</p>
       </div>
     } @else {
@@ -52,7 +53,7 @@
       <!-- Roles Cards Grid (3 Columns) -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @for (role of roles; track role.roleId) {
-          <div class="bg-white/85 border border-slate-200/80 backdrop-blur-xl rounded-[24px] p-5 shadow-xl shadow-slate-950/5 hover:border-emerald-400 hover:shadow-2xl transition-all flex flex-col justify-between gap-5 relative overflow-hidden group">
+          <div class="bg-white border border-slate-100 rounded-[28px] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.015)] hover:border-emerald-400 hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between gap-5 relative overflow-hidden group">
             
             <!-- Card Header -->
             <div class="flex items-start justify-between gap-4">
@@ -61,27 +62,27 @@
                   <lucide-icon name="shield" class="h-5 w-5"></lucide-icon>
                 </div>
                 <div class="flex flex-col">
-                  <span class="font-display text-sm font-black text-slate-900 uppercase tracking-wider">{{ role.name }}</span>
-                  <span class="text-[10px] text-slate-400 font-mono font-medium">ID: {{ role.roleId.substring(0, 8) }}...</span>
+                  <span class="font-display text-base font-black text-slate-900 uppercase tracking-wider">{{ role.name }}</span>
+                  <span class="text-xs text-slate-400 font-mono font-medium">ID: {{ role.roleId.substring(0, 8) }}...</span>
                 </div>
               </div>
 
               <!-- Active Status Badge -->
               <button (click)="toggleActive(role)"
-                      [ngClass]="role.active ? 'bg-emerald-50 border-emerald-200 text-emerald-700 font-extrabold' : 'bg-slate-100 border-slate-200 text-slate-500 font-semibold'"
-                      class="border px-3 py-1 rounded-full text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-xs">
+                      [ngClass]="role.active ? 'bg-emerald-50 border-emerald-100 text-emerald-700 font-bold' : 'bg-slate-50 border-slate-250/50 text-slate-500 font-semibold'"
+                      class="border px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs">
                 {{ role.active ? 'Đang hoạt động' : 'Tạm ngưng' }}
               </button>
             </div>
 
             <!-- Card Body / Description -->
             <div class="flex flex-col gap-3">
-              <p class="text-xs text-slate-600 font-medium leading-relaxed min-h-[40px] line-clamp-2">
+              <p class="text-sm text-slate-500 font-semibold leading-relaxed min-h-[40px] line-clamp-2">
                 {{ role.description || 'Không có mô tả chi tiết cho vai trò này.' }}
               </p>
               
               <div class="flex items-center gap-2">
-                <span class="bg-slate-100 border border-slate-200/80 text-slate-700 text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider">
+                <span class="bg-slate-50 border border-slate-200/60 text-slate-700 text-xs font-extrabold px-3 py-1.5 rounded-xl uppercase tracking-wider">
                   {{ role.permissions?.length || 0 }} quyền hạn
                 </span>
               </div>
@@ -92,19 +93,19 @@
               <div class="flex items-center gap-1.5">
                 <button (click)="openRoleDialog(role)"
                         matTooltip="Chỉnh sửa vai trò"
-                        class="w-8 h-8 rounded-xl flex items-center justify-center border border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all cursor-pointer">
-                  <lucide-icon name="pencil" class="h-4 w-4"></lucide-icon>
+                        class="w-9 h-9 rounded-2xl flex items-center justify-center border border-slate-200/60 text-slate-400 hover:text-slate-900 hover:bg-slate-50 transition-all duration-200 cursor-pointer">
+                  <lucide-icon name="pencil" class="h-4.5 w-4.5"></lucide-icon>
                 </button>
                 <button (click)="deleteRole(role)"
                         [disabled]="role.name === 'ADMIN'"
                         matTooltip="Xóa vai trò"
-                        class="w-8 h-8 rounded-xl flex items-center justify-center border border-slate-200 text-slate-500 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 transition-all disabled:opacity-30 cursor-pointer">
-                  <lucide-icon name="trash-2" class="h-4 w-4"></lucide-icon>
+                        class="w-9 h-9 rounded-2xl flex items-center justify-center border border-slate-200/60 text-slate-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 transition-all duration-200 disabled:opacity-30 cursor-pointer">
+                  <lucide-icon name="trash-2" class="h-4.5 w-4.5"></lucide-icon>
                 </button>
               </div>
-
+ 
               <button (click)="navigateToPermissions(role)"
-                      class="px-3.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 hover:bg-emerald-600 hover:text-white text-emerald-700 font-extrabold text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-xs">
+                      class="px-4.5 py-2.5 rounded-2xl bg-emerald-50 border border-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-700 font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-xs">
                 <lucide-icon name="unlock" class="h-3.5 w-3.5"></lucide-icon> Phân quyền
               </button>
             </div>
@@ -113,18 +114,34 @@
         }
       </div>
 
-      <!-- Paginator Footer -->
-      @if (totalItems > pageSize) {
-        <div class="bg-white/85 border border-slate-200/80 backdrop-blur-xl rounded-[24px] p-2 shadow-xl mt-4">
-          <mat-paginator
-            [length]="totalItems"
-            [pageSize]="pageSize"
-            [pageSizeOptions]="[6, 12, 24]"
-            [pageIndex]="pageIndex"
-            (page)="onPageChange($event)"
-            showFirstLastButtons
-            class="!bg-transparent text-slate-600">
-          </mat-paginator>
+      <!-- Custom Pagination Bottom Bar -->
+      @if (totalItems > 0) {
+        <div class="flex flex-col sm:flex-row justify-between items-center px-6 py-4 border border-slate-100 rounded-3xl gap-4 bg-white mt-6 shadow-xs select-none">
+          <span class="text-xs font-semibold text-emerald-700">
+            {{ getShowingText() }}
+          </span>
+
+          <div class="flex items-center gap-2">
+            <!-- Previous Button -->
+            <button [disabled]="pageIndex === 0" (click)="onPrevPage()"
+              class="px-4 py-1.5 text-xs font-bold text-emerald-700 bg-white border border-slate-200 rounded-full hover:bg-emerald-50 disabled:opacity-40 disabled:pointer-events-none transition-all active:scale-[0.98] cursor-pointer">
+              Trước
+            </button>
+
+            <!-- Page Numbers -->
+            @for (p of pages; track p) {
+            <button (click)="goToPage(p)"
+              [class]="p === pageIndex ? 'w-8 h-8 rounded-full bg-emerald-900 text-white flex items-center justify-center font-bold text-xs transition-all cursor-pointer shadow-xs' : 'w-8 h-8 rounded-full border border-slate-200 text-slate-700 hover:bg-emerald-50 flex items-center justify-center font-bold text-xs transition-all cursor-pointer'">
+              {{ p + 1 }}
+            </button>
+            }
+
+            <!-- Next Button -->
+            <button [disabled]="(pageIndex + 1) >= totalPages" (click)="onNextPage()"
+              class="px-4 py-1.5 text-xs font-bold text-emerald-700 bg-white border border-slate-200 rounded-full hover:bg-emerald-50 disabled:opacity-40 disabled:pointer-events-none transition-all active:scale-[0.98] cursor-pointer">
+              Tiếp
+            </button>
+          </div>
         </div>
       }
     }
