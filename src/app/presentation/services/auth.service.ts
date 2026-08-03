@@ -5,6 +5,7 @@ import { SessionStateService } from '@presentation/services/session-state.servic
 import { LogoutUseCase } from '@application/usecase/auth/logout.usecase';
 import { RefreshTokenUseCase } from '@application/usecase/auth/refresh-token.usecase';
 import { GetCurrentUserUseCase } from '@application/usecase/auth/get-current-user.usecase';
+import { environment } from "@environments/environment"
 
 @Injectable({
   providedIn: 'root'
@@ -79,7 +80,7 @@ export class AuthService {
     console.log('Performing logout...');
     this.clearSession();
 
-    const authUrl = import.meta.env.NG_APP_AUTH_API_URL || 'http://localhost:4400';
+    const authUrl = environment.authApiUrl;
     window.location.href = `${authUrl}/login`;
   }
 

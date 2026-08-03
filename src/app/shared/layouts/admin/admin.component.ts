@@ -15,6 +15,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon.component';
+import { environment } from "@environments/environment"
 
 type BallType = 'SOCCER' | 'BASKETBALL' | 'TENNIS' | 'TABLE_TENNIS' | 'BADMINTON' | 'VOLLEYBALL';
 
@@ -49,7 +50,7 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
   public notificationService = inject(NotificationService);
   private router = inject(Router);
   private http = inject(HttpClient);
-  private apiBase = import.meta.env.NG_APP_API_URL;
+  private apiBase = environment.apiUrl;
 
   // Canvas Background Animation State
   private canvas!: HTMLCanvasElement;
@@ -188,7 +189,7 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   userProfile: User | null = null;
-  clientUrl = import.meta.env.NG_APP_CLIENT_API_URL;
+  clientUrl = environment.clientApiUrl;
   private statusSub?: Subscription;
 
   notificationPage = 1;
@@ -391,7 +392,7 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
   logout() {
     this.authService.logout().subscribe({
       next: () => {
-        const authUrl = import.meta.env.NG_APP_AUTH_API_URL;
+        const authUrl = environment.authApiUrl;
         window.location.href = `${authUrl}/login`;
       }
     });
