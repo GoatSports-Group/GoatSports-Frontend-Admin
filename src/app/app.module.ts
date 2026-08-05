@@ -17,6 +17,7 @@ import { ROLE_REPOSITORY_TOKEN } from '@application/ports/persistence/role.repos
 import { PERMISSION_REPOSITORY_TOKEN } from '@application/ports/persistence/permission.repository';
 import { OWNER_APPLICATION_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-application.repository';
 import { NOTIFICATION_REPOSITORY_TOKEN } from '@application/ports/persistence/notification.repository';
+import { LOG_REPOSITORY_TOKEN } from '@application/ports/persistence/log.repository';
 import { WEBSOCKET_SERVICE_TOKEN } from '@application/ports/websocket.service';
 
 import { AuthRepositoryImpl } from '@infrastructure/repositories/auth.repository.impl';
@@ -26,6 +27,7 @@ import { RoleRepositoryImpl } from '@infrastructure/repositories/role.repository
 import { PermissionRepositoryImpl } from '@infrastructure/repositories/permission.repository.impl';
 import { OwnerApplicationRepositoryImpl } from '@infrastructure/repositories/owner-application.repository.impl';
 import { NotificationRepositoryImpl } from '@infrastructure/repositories/notification.repository.impl';
+import { LogRepositoryImpl } from '@infrastructure/repositories/log.repository.impl';
 import { StompWebSocketService } from '@infrastructure/websocket/stomp-websocket.service';
 import { IMAGE_CONFIG } from '@angular/common';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon.component';
@@ -94,7 +96,11 @@ import {
   LucidePhone,
   LucideShieldCheck,
   LucideCreditCard,
-  LucideShieldOff
+  LucideShieldOff,
+  LucideGauge,
+  LucideTimer,
+  LucideNetwork,
+  LucideGripVertical
 } from '@lucide/angular';
 
 @NgModule({
@@ -125,6 +131,7 @@ import {
     { provide: PERMISSION_REPOSITORY_TOKEN, useClass: PermissionRepositoryImpl },
     { provide: OWNER_APPLICATION_REPOSITORY_TOKEN, useClass: OwnerApplicationRepositoryImpl },
     { provide: NOTIFICATION_REPOSITORY_TOKEN, useClass: NotificationRepositoryImpl },
+    { provide: LOG_REPOSITORY_TOKEN, useClass: LogRepositoryImpl },
     { provide: WEBSOCKET_SERVICE_TOKEN, useClass: StompWebSocketService },
     {
       provide: IMAGE_CONFIG,
@@ -197,7 +204,11 @@ import {
       LucidePhone,
       LucideShieldCheck,
       LucideCreditCard,
-      LucideShieldOff
+      LucideShieldOff,
+      LucideGauge,
+      LucideTimer,
+      LucideNetwork,
+      LucideGripVertical
     )
   ],
   bootstrap: [AppComponent]

@@ -14,7 +14,11 @@ import { AssignPermissionsComponent } from '@presentation/pages/roles/assign-per
 import { RolePermissionsDialogComponent } from '@presentation/pages/roles/role-permissions-dialog/role-permissions-dialog.component';
 import { OwnerApplicationsComponent } from '@presentation/pages/owner-applications/owner-applications.component';
 import { DocumentPreviewDialogComponent } from '@presentation/pages/owner-applications/document-preview-dialog/document-preview-dialog.component';
+import { LogsComponent } from '@presentation/pages/logs/logs.component';
 import { StatusBadgeComponent } from '@shared/components/ui/status-badge.component';
+import { OverviewStatsComponent } from '@presentation/pages/logs/components/overview-stats.component';
+import { LogFilterComponent } from '@presentation/pages/logs/components/log-filter.component';
+import { LogTableComponent } from '@presentation/pages/logs/components/log-table.component';
 
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { OverlayModule } from '@angular/cdk/overlay';
@@ -28,7 +32,8 @@ import { OverlayModule } from '@angular/cdk/overlay';
     AssignPermissionsComponent,
     RolePermissionsDialogComponent,
     OwnerApplicationsComponent,
-    DocumentPreviewDialogComponent
+    DocumentPreviewDialogComponent,
+    LogsComponent
   ],
   imports: [
     CommonModule,
@@ -38,7 +43,10 @@ import { OverlayModule } from '@angular/cdk/overlay';
     DashboardOverviewComponent,
     StatusBadgeComponent,
     DragDropModule,
-    OverlayModule
+    OverlayModule,
+    OverviewStatsComponent,
+    LogFilterComponent,
+    LogTableComponent
   ]
 })
 export class AdminModule { }

@@ -6,6 +6,7 @@ import { UsersComponent } from '@presentation/pages/users/users.component';
 import { RolesComponent } from '@presentation/pages/roles/roles.component';
 import { AssignPermissionsComponent } from '@presentation/pages/roles/assign-permissions/assign-permissions.component';
 import { OwnerApplicationsComponent } from '@presentation/pages/owner-applications/owner-applications.component';
+import { LogsComponent } from '@presentation/pages/logs/logs.component';
 
 const routes: Routes = [
   {
@@ -17,6 +18,7 @@ const routes: Routes = [
       { path: 'users', component: UsersComponent },
       { path: 'roles', component: RolesComponent },
       { path: 'roles/:id/permissions', component: AssignPermissionsComponent },
+      { path: 'logs', component: LogsComponent },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   }

@@ -177,6 +177,13 @@
           <span class="sidebar-text text-[14px] ml-3">Vai trò</span>
         </a>
 
+        <a routerLink="./logs"
+          routerLinkActive="bg-emerald-50 text-emerald-600 shadow-[0_4px_12px_rgba(16,185,129,0.08)]"
+          class="flex items-center rounded-xl text-black hover:text-emerald-600 hover:bg-emerald-50/50 focus:text-emerald-600 focus:bg-emerald-50/50 outline-none transition-all group"
+          [ngClass]="sidebarCollapsed() ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5'" [title]="'Nhật ký hệ thống'">
+          <lucide-icon name="activity" class="h-5 w-5 transition-colors shrink-0"></lucide-icon>
+          <span class="sidebar-text text-[14px] ml-3">Nhật ký</span>
+        </a>
 
       </div>
     </nav>
