@@ -28,7 +28,7 @@
 
 :host {
   display: block;
-  height: calc(100vh - 96px - 20px);
+  min-height: calc(100vh - 96px - 20px);
 }
 
 .cdk-user-stat-preview {

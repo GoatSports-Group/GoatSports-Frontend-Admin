@@ -1,4 +1,4 @@
-<div class="flex flex-col gap-6 animate-fade-in relative z-10 pl-4 h-full min-h-0 pb-10">
+<div class="flex flex-col gap-6 animate-fade-in relative z-10 pl-4 h-full min-h-0">
 
   <!-- Page Header -->
   <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-2">
@@ -14,26 +14,14 @@
   <app-overview-stats [stats]="stats" [loading]="loadingStats"></app-overview-stats>
 
   <!-- Filters Section -->
-  <app-log-filter 
-    [(filterPath)]="filterPath"
-    [(filterMethod)]="filterMethod"
-    [(filterStatusClass)]="filterStatusClass"
-    [(filterFromDate)]="filterFromDate"
-    [(filterToDate)]="filterToDate"
-    (search)="onSearch()"
-    (reset)="resetFilters()">
+  <app-log-filter [(filterDescription)]="filterDescription" [(filterAction)]="filterAction"
+    [actions]="uniqueActions"
+    [(filterFromDate)]="filterFromDate" [(filterToDate)]="filterToDate" (search)="onSearch()" (reset)="resetFilters()">
   </app-log-filter>
 
   <!-- Log Table & Details Overlay -->
-  <app-log-table
-    [logs]="logs"
-    [loading]="loading"
-    [pageIndex]="pageIndex"
-    [pageSize]="pageSize"
-    [totalItems]="totalItems"
-    (prevPage)="onPrevPage()"
-    (nextPage)="onNextPage()"
-    (goToPage)="goToPage($event)">
+  <app-log-table [logs]="logs" [loading]="loading" [pageIndex]="pageIndex" [pageSize]="pageSize"
+    [totalItems]="totalItems" (prevPage)="onPrevPage()" (nextPage)="onNextPage()" (goToPage)="goToPage($event)">
   </app-log-table>
 
 </div>

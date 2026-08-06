@@ -100,7 +100,8 @@ import {
   LucideGauge,
   LucideTimer,
   LucideNetwork,
-  LucideGripVertical
+  LucideGripVertical,
+  LucideLayoutGrid
 } from '@lucide/angular';
 
 @NgModule({
@@ -208,7 +209,8 @@ import {
       LucideGauge,
       LucideTimer,
       LucideNetwork,
-      LucideGripVertical
+      LucideGripVertical,
+      LucideLayoutGrid
     )
   ],
   bootstrap: [AppComponent]

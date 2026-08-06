@@ -10,7 +10,7 @@ import { ChartDataPoint } from '../models';
   template: `
     <div class="bg-white border border-slate-100 rounded-2xl p-5 shadow-xs flex flex-col h-[300px] hover:shadow-md transition-shadow duration-300">
       <div class="flex items-center justify-between mb-4 shrink-0">
-          <h1 class="font-bold text-slate-600 text-sm tracking-tight">Lưu lượng yêu cầu trong ngày</h1>
+          <h1 class="font-bold text-slate-600 text-sm tracking-tight">Tổng yêu cầu trong ngày</h1>
       </div>
       
       <!-- Scroll container for narrow screens to ensure 24h charts remain legible -->
@@ -77,7 +77,7 @@ import { ChartDataPoint } from '../models';
             <div class="absolute left-0 right-0 bottom-0 h-4 border-t border-slate-100/80 pt-1.5">
               @for (lbl of data; track lbl.label; let first = $first; let last = $last; let index = $index) {
                 @if (first || last || index % 3 === 0) {
-                  <span class="absolute text-[9px] font-extrabold text-slate-400 tracking-wider transition-all duration-300"
+                  <span class="absolute text-[10px] font-extrabold text-slate-400 tracking-wider transition-all duration-300"
                         [style.left.%]="(index / (data.length - 1)) * 100"
                         [class]="index === 0 ? '-translate-x-0' : (index === data.length - 1 ? '-translate-x-full' : '-translate-x-1/2')">
                     {{ lbl.label }}

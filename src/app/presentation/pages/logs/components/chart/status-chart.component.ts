@@ -126,8 +126,7 @@ export class StatusChartComponent implements OnChanges {
       const dashArray = `${pct} ${100 - pct}`;
 
       // Calculate offset based on cumulative starting percentage
-      // Shifting stroke backwards: offset = 100 - cumulativePercentage
-      const dashOffset = cumulativePercentage === 0 ? 0 : 100 - cumulativePercentage;
+      const dashOffset = cumulativePercentage;
       cumulativePercentage += pct;
 
       return {

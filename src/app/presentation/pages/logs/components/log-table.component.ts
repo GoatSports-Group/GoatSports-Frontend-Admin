@@ -1,233 +1,157 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { LucideIconComponent } from '@shared/components/ui/lucide-icon.component';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Log } from '@domain/entities/log';
 
 @Component({
   selector: 'app-log-table',
   standalone: true,
-  imports: [CommonModule, LucideIconComponent, MatProgressSpinnerModule],
+  imports: [CommonModule],
   template: `
-    <!-- Logs Table -->
-    @if (loading) {
-      <div class="min-h-[350px] flex flex-col items-center justify-center bg-white border border-slate-100 rounded-3xl shadow-sm">
-        <mat-spinner diameter="40" color="accent"></mat-spinner>
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-4">Đang tải nhật ký hệ thống...</p>
+    <div class="flex-1 min-h-0 flex flex-col bg-white border border-slate-100 rounded-3xl shadow-xl">
+      
+      <!-- Table Wrapper -->
+      <div class="flex-1 min-h-0 overflow-x-auto rounded-t-3xl scrollbar-none">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-slate-100 text-[14px] font-bold tracking-wider text-emerald-400 bg-white">
+              <th class="py-4 px-6 font-bold text-emerald-500 bg-white sticky top-0 z-20 border-b border-slate-100">Người thực hiện</th>
+              <th class="py-4 px-6 font-bold text-emerald-500 bg-white sticky top-0 z-20 border-b border-slate-100">Hành động</th>
+              <th class="py-4 px-6 font-bold text-emerald-500 bg-white sticky top-0 z-20 border-b border-slate-100">Địa chỉ IP</th>
+              <th class="py-4 px-6 font-bold text-emerald-500 bg-white sticky top-0 z-20 border-b border-slate-100">Trạng thái</th>
+              <th class="py-4 px-6 font-bold text-emerald-500 bg-white sticky top-0 z-20 border-b border-slate-100">Thời gian</th>
+              <th class="py-4 px-6 font-bold text-emerald-500 text-center bg-white sticky top-0 z-20 border-b border-slate-100">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <!-- Loading State -->
+            <tr *ngIf="loading">
+              <td colspan="6" class="py-20 text-center">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-emerald-500 border-t-transparent"></div>
+                <p class="text-sm font-semibold text-slate-400 mt-3">Đang tải danh sách nhật ký...</p>
+              </td>
+            </tr>
+
+            <!-- Empty State -->
+            <tr *ngIf="!loading && logs.length === 0">
+              <td colspan="6" class="py-20 text-center">
+                <div class="text-slate-300 text-5xl mb-4">📂</div>
+                <p class="text-base font-bold text-slate-700">Không tìm thấy nhật ký nào</p>
+                <p class="text-sm text-slate-400 mt-1">Vui lòng điều chỉnh lại bộ lọc tìm kiếm của bạn.</p>
+              </td>
+            </tr>
+
+            <!-- Log Rows -->
+            <ng-container *ngIf="!loading && logs.length > 0">
+              <tr *ngFor="let log of logs" 
+                  class="hover:bg-emerald-50/50 transition-colors">
+                <!-- User ID -->
+                <td class="py-4 px-6">
+                  <div class="flex items-center gap-3">
+                    <!-- User Avatar or Initials -->
+                    <span class="text-sm font-bold" [ngClass]="log.userId === 'anonymous' ? 'text-slate-400' : 'text-slate-800'">
+                      {{ log.userId === 'anonymous' ? 'Khách ẩn danh' : log.userId }}
+                    </span>
+                  </div>
+                </td>
+
+                <!-- Action Badge -->
+                <td class="py-4 px-6">
+                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase border"
+                        [ngClass]="getActionBadgeClass(log.action)">
+                    {{ log.action || 'HTTP CALL' }}
+                  </span>
+                </td>
+
+                <!-- IP Address -->
+                <td class="py-4 px-6 text-sm font-semibold text-slate-600">
+                  {{ log.ipAddress || 'unknown' }}
+                </td>
+
+                <!-- Status Code -->
+                <td class="py-4 px-6">
+                  <span class="inline-flex items-center justify-center w-12 py-1 rounded-xl text-xs font-black"
+                        [ngClass]="getStatusClass(log.statusCode)">
+                    {{ log.statusCode }}
+                  </span>
+                </td>
+
+                <!-- Timestamp -->
+                <td class="py-4 px-6 text-sm font-semibold text-slate-600">
+                  {{ formatTimestamp(log.timestamp) }}
+                </td>
+
+                <!-- Actions -->
+                <td class="py-4 px-6 text-center">
+                  <div class="relative inline-block">
+                    <button (mouseenter)="showTooltip($event, log.description || 'Không có mô tả chi tiết')"
+                            (mouseleave)="hideTooltip()"
+                            class="px-4 py-1.5 rounded-2xl text-xs font-bold text-emerald-600 hover:text-white bg-emerald-50 hover:bg-emerald-600 transition-all duration-300 shadow-sm border border-emerald-100 hover:border-emerald-600 cursor-pointer">
+                      Chi tiết
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
+          </tbody>
+        </table>
       </div>
-    } @else {
-      @if (logs.length === 0) {
-        <div class="flex flex-col items-center justify-center py-20 text-center bg-white border border-slate-100 rounded-3xl shadow-xs">
-          <lucide-icon name="activity" class="text-slate-300 h-12 w-12 mb-4 mx-auto"></lucide-icon>
-          <h3 class="text-sm font-bold text-slate-900">Không tìm thấy bản ghi log nào</h3>
-          <p class="text-xs text-slate-500 mt-1 max-w-sm font-medium">Hãy thử điều chỉnh bộ lọc hoặc chọn khoảng thời gian khác.</p>
-        </div>
-      } @else {
-        <!-- Table Wrapper -->
-        <div class="flex-1 min-h-0 flex flex-col bg-white border border-slate-100 rounded-3xl shadow-xs overflow-hidden">
-          <div class="flex-1 min-h-0 overflow-auto">
-            <table class="w-full text-left border-collapse text-sm">
-              <thead>
-                <tr class="border-b border-slate-100 text-[14px] font-bold tracking-wider text-emerald-400 bg-white sticky top-0 z-10">
-                  <th class="py-4 px-6 font-bold text-emerald-500 bg-white">HTTP Method</th>
-                  <th class="py-4 px-6 font-bold text-emerald-500 bg-white">Đường dẫn (Path)</th>
-                  <th class="py-4 px-6 font-bold text-emerald-500 bg-white">Mã phản hồi</th>
-                  <th class="py-4 px-6 font-bold text-emerald-500 bg-white">Thời gian chạy</th>
-                  <th class="py-4 px-6 font-bold text-emerald-500 bg-white">Thời gian log</th>
-                  <th class="py-4 px-6 font-bold text-emerald-500 bg-white">Địa chỉ IP</th>
-                  <th class="py-4 px-6 font-bold text-emerald-500 bg-white text-right pr-8">Xem chi tiết</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100 font-sans">
-                @for (log of logs; track log.logId) {
-                  <tr class="hover:bg-emerald-50/30 transition-all duration-150 cursor-pointer" 
-                      [ngClass]="{'bg-emerald-50/20 font-semibold border-l-2 border-l-emerald-600': selectedLog?.logId === log.logId}"
-                      (click)="viewLogDetails(log)">
-                    <!-- Method -->
-                    <td class="py-3.5 px-6">
-                      <span class="px-2.5 py-1 text-[11px] font-bold rounded-md border" [ngClass]="getMethodClass(log.method)">
-                        {{ log.method }}
-                      </span>
-                    </td>
-                    <!-- Path -->
-                    <td class="py-3.5 px-6 font-mono text-xs text-slate-800 max-w-[280px] truncate" [title]="log.path">
-                      {{ log.path }}
-                    </td>
-                    <!-- Status Code -->
-                    <td class="py-3.5 px-6">
-                      <span class="px-2.5 py-0.5 text-xs font-bold rounded-full" [ngClass]="getStatusClass(log.statusCode)">
-                        {{ log.statusCode }}
-                      </span>
-                    </td>
-                    <!-- Duration -->
-                    <td class="py-3.5 px-6 font-medium">
-                      <div class="flex items-center gap-1.5"
-                           [ngClass]="log.duration > 1000 ? 'text-amber-600 font-bold' : 'text-slate-600'">
-                        <span>{{ log.duration }}ms</span>
-                        @if (log.duration > 1000) {
-                          <lucide-icon name="alert-circle" class="h-3.5 w-3.5 shrink-0 text-amber-500" title="Yêu cầu xử lý chậm!"></lucide-icon>
-                        }
-                      </div>
-                    </td>
-                    <!-- Timestamp -->
-                    <td class="py-3.5 px-6 text-slate-550 font-semibold text-xs">
-                      {{ log.timestamp | date:'dd/MM/yyyy HH:mm:ss' }}
-                    </td>
-                    <!-- IP Address -->
-                    <td class="py-3.5 px-6 text-xs text-slate-450 font-mono">
-                      {{ log.ipAddress || '-' }}
-                    </td>
-                    <!-- Actions -->
-                    <td class="py-3.5 px-6 text-right pr-8">
-                      <button (click)="viewLogDetails(log); $event.stopPropagation()"
-                              class="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-emerald-900 hover:bg-emerald-50 transition-all cursor-pointer border border-transparent hover:border-slate-100">
-                        <lucide-icon name="eye" class="h-4 w-4"></lucide-icon>
-                      </button>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
 
-          <!-- Pagination Bottom Bar -->
-          <div class="flex flex-col sm:flex-row justify-between items-center px-6 py-4 border-t border-slate-100 gap-4 bg-slate-50/10">
-            <span class="text-xs font-semibold text-emerald-600">
-              {{ getShowingText() }}
-            </span>
+      <!-- Pagination Bottom Bar -->
+      <div *ngIf="!loading && logs.length > 0" 
+           class="flex flex-col sm:flex-row justify-between items-center px-6 py-4 border-t border-slate-100 gap-4 bg-slate-50/10">
+        <span class="text-xs font-semibold text-emerald-500">
+          {{ getShowingText() }}
+        </span>
 
-            <div class="flex items-center gap-2">
-              <!-- Previous Button -->
-              <button [disabled]="pageIndex === 0" (click)="prevPage.emit()"
-                      class="px-4 py-1.5 text-xs font-bold text-emerald-700 bg-white border border-slate-200 rounded-full hover:bg-emerald-50 disabled:opacity-50 disabled:pointer-events-none transition-all active:scale-[0.98] cursor-pointer">
-                Trước
-              </button>
+        <div class="flex items-center gap-2">
+          <!-- Previous Button -->
+          <button (click)="onPrev()" [disabled]="pageIndex === 0"
+            class="px-4 py-1.5 text-xs font-bold text-emerald-700 bg-white border border-slate-200 rounded-full hover:bg-emerald-50 disabled:opacity-50 disabled:pointer-events-none transition-all active:scale-[0.98] cursor-pointer">
+            Trước
+          </button>
 
-              <!-- Page Numbers -->
-              @for (p of pages; track p) {
-                <button (click)="goToPage.emit(p)"
-                        [class]="p === pageIndex ? 'w-8 h-8 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold text-xs transition-all cursor-pointer shadow-xs' : 'w-8 h-8 rounded-full border border-slate-200 text-slate-700 hover:bg-emerald-50 flex items-center justify-center font-bold text-xs transition-all cursor-pointer'">
-                  {{ p + 1 }}
-                </button>
-              }
-
-              <!-- Next Button -->
-              <button [disabled]="(pageIndex + 1) >= totalPages" (click)="nextPage.emit()"
-                      class="px-4 py-1.5 text-xs font-bold text-emerald-700 bg-white border border-slate-200 rounded-full hover:bg-emerald-50 disabled:opacity-50 disabled:pointer-events-none transition-all active:scale-[0.98] cursor-pointer">
-                Tiếp
-              </button>
-            </div>
-          </div>
-        </div>
-      }
-    }
-
-    <!-- Detail Slide-out Sheet Panel (Premium Overlay UX) -->
-    @if (selectedLog) {
-      <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-[300] flex justify-end" (click)="closeDetails()">
-        <div class="w-full max-w-lg bg-white h-full border-l border-slate-250 shadow-2xl flex flex-col z-[310] animate-slide-in relative"
-             (click)="$event.stopPropagation()">
-
-          <!-- Slide Header -->
-          <div class="px-6 py-4.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-            <div class="flex items-center gap-2.5">
-              <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center border border-emerald-100 text-emerald-600">
-                <lucide-icon name="activity" class="h-4.5 w-4.5"></lucide-icon>
-              </div>
-              <div>
-                <h2 class="text-sm font-bold text-slate-900 font-display">Chi tiết bản ghi Log</h2>
-                <span class="text-[10px] text-slate-400 font-mono mt-0.5 block">ID: {{ selectedLog.logId }}</span>
-              </div>
-            </div>
-            <button (click)="closeDetails()"
-                    class="h-8 w-8 rounded-full bg-slate-100 hover:bg-slate-250 text-slate-650 flex items-center justify-center cursor-pointer border-0 outline-none transition-all">
-              <lucide-icon name="x" class="h-4.5 w-4.5"></lucide-icon>
+          <!-- Page Numbers -->
+          <div class="flex gap-1">
+            <button *ngFor="let page of getVisiblePages()" (click)="onGoToPage(page)"
+              [class]="page === pageIndex ? 'w-8 h-8 rounded-full bg-emerald-950 text-white flex items-center justify-center font-bold text-xs transition-all cursor-pointer shadow-xs' : 'w-8 h-8 rounded-full border border-slate-200 text-slate-700 hover:bg-emerald-50 flex items-center justify-center font-bold text-xs transition-all cursor-pointer'">
+              {{ page + 1 }}
             </button>
           </div>
 
-          <!-- Slide Content -->
-          <div class="flex-1 overflow-y-auto px-6 py-5 space-y-6">
-            <!-- Endpoint API Details -->
-            <div class="bg-slate-50 border border-slate-150/40 rounded-2xl p-4 flex flex-col gap-3 font-sans">
-              <div class="flex items-center gap-3">
-                <span class="px-2.5 py-1 text-[11px] font-black rounded-md border"
-                      [ngClass]="getMethodClass(selectedLog.method)">
-                  {{ selectedLog.method }}
-                </span>
-                <span class="font-mono text-[13px] font-bold text-slate-900 break-all select-all">{{ selectedLog.path }}</span>
-              </div>
-              @if (selectedLog.queryParams) {
-                <div class="border-t border-slate-200/50 pt-2.5 flex flex-col gap-1">
-                  <span class="text-[10px] font-bold text-slate-450 uppercase tracking-wider">Query Parameters</span>
-                  <span class="font-mono text-xs text-slate-700 bg-slate-100/50 rounded-lg p-2 break-all border border-slate-200/40">{{ selectedLog.queryParams }}</span>
-                </div>
-              }
-            </div>
-
-            <!-- Status & Performance Stats -->
-            <div class="grid grid-cols-2 gap-4">
-              <div class="bg-white border border-slate-155 rounded-2xl p-4 flex flex-col gap-1.5 shadow-xs">
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Mã phản hồi HTTP</span>
-                <div class="flex items-center gap-2">
-                  <span class="w-2.5 h-2.5 rounded-full shrink-0"
-                        [ngClass]="selectedLog.statusCode >= 200 && selectedLog.statusCode < 300 ? 'bg-emerald-500' : (selectedLog.statusCode >= 400 ? 'bg-rose-500' : 'bg-amber-500')"></span>
-                  <span class="text-xl font-black text-slate-900">{{ selectedLog.statusCode }}</span>
-                </div>
-              </div>
-
-              <div class="bg-white border border-slate-155 rounded-2xl p-4 flex flex-col gap-1.5 shadow-xs">
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Thời gian xử lý</span>
-                <div class="flex items-center gap-1.5">
-                  <lucide-icon name="clock" class="h-4.5 w-4.5 text-slate-400 shrink-0"></lucide-icon>
-                  <span class="text-xl font-black text-slate-900">{{ selectedLog.duration }}ms</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Metadata Information -->
-            <div class="space-y-4">
-              <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider font-display">Thông tin tác vụ</h3>
-
-              <div class="divide-y divide-slate-100 border border-slate-100 rounded-2xl overflow-hidden bg-white shadow-xs">
-                <!-- User ID -->
-                <div class="p-3.5 flex items-center justify-between text-xs font-semibold">
-                  <span class="text-slate-400">Mã Người dùng (User ID)</span>
-                  <span class="font-mono text-slate-800 break-all select-all text-right max-w-[200px] truncate"
-                        [title]="selectedLog.userId || 'Không xác định'">
-                    {{ selectedLog.userId || 'Khách (Anonymous)' }}
-                  </span>
-                </div>
-
-                <!-- Client IP -->
-                <div class="p-3.5 flex items-center justify-between text-xs font-semibold">
-                  <span class="text-slate-400">Địa chỉ IP</span>
-                  <span class="font-mono text-slate-800 text-right">{{ selectedLog.ipAddress || '-' }}</span>
-                </div>
-
-                <!-- Timestamp -->
-                <div class="p-3.5 flex items-center justify-between text-xs font-semibold">
-                  <span class="text-slate-400">Thời gian ghi nhận</span>
-                  <span class="text-slate-800 text-right font-medium">{{ selectedLog.timestamp | date:'dd/MM/yyyy HH:mm:ss.SSS' }}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Error Panel Details -->
-            @if (selectedLog.errorMessage) {
-              <div class="space-y-3">
-                <h3 class="text-xs font-bold text-rose-500 uppercase tracking-wider font-display flex items-center gap-1.5">
-                  <lucide-icon name="alert-triangle" class="h-4 w-4"></lucide-icon> Lỗi & Ngoại lệ
-                </h3>
-                <div class="bg-rose-50 border border-rose-150/40 text-rose-700 font-mono text-[11px] leading-relaxed p-4 rounded-2xl whitespace-pre-wrap break-all max-h-48 overflow-y-auto">
-                  {{ selectedLog.errorMessage }}
-                </div>
-              </div>
-            }
-          </div>
+          <!-- Next Button -->
+          <button (click)="onNext()" [disabled]="(pageIndex + 1) * pageSize >= totalItems"
+            class="px-4 py-1.5 text-xs font-bold text-emerald-700 bg-white border border-slate-200 rounded-full hover:bg-emerald-50 disabled:opacity-50 disabled:pointer-events-none transition-all active:scale-[0.98] cursor-pointer">
+            Tiếp
+          </button>
         </div>
       </div>
+    </div>
+
+    <!-- Absolute Tooltip relative to host -->
+    <div *ngIf="activeTooltipText" 
+         [style.left.px]="tooltipX"
+         [style.top.px]="tooltipY"
+         class="absolute -translate-x-[calc(100%-24px)] -translate-y-full -mt-2 w-72 bg-slate-950/95 backdrop-blur-md text-white text-xs rounded-xl p-3.5 shadow-2xl z-[999] pointer-events-none transition-all duration-200 border border-slate-800/80">
+      <!-- Arrow -->
+      <div class="absolute top-full right-6 border-4 border-transparent border-t-slate-950/95"></div>
+      
+      <div class="space-y-1">
+        <span class="text-[9px] font-extrabold text-emerald-400 uppercase tracking-wider block text-left">Mô tả hoạt động</span>
+        <p class="font-medium text-slate-100 leading-relaxed text-left break-words whitespace-pre-wrap">
+          {{ activeTooltipText }}
+        </p>
+      </div>
+    </div>
+  `,
+  styles: [`
+    :host {
+      display: flex;
+      flex: 1;
+      min-height: 480px;
+      flex-direction: column;
+      position: relative;
     }
-  `
+  `]
 })
 export class LogTableComponent {
   @Input() logs: Log[] = [];
@@ -240,26 +164,98 @@ export class LogTableComponent {
   @Output() nextPage = new EventEmitter<void>();
   @Output() goToPage = new EventEmitter<number>();
 
-  selectedLog: Log | null = null;
+  activeTooltipText: string | null = null;
+  tooltipX = 0;
+  tooltipY = 0;
 
-  get totalPages(): number {
-    return Math.ceil(this.totalItems / this.pageSize) || 1;
+  showTooltip(event: MouseEvent, text: string): void {
+    this.activeTooltipText = text;
+    const button = event.currentTarget as HTMLElement;
+    const host = button.closest('app-log-table') as HTMLElement;
+    if (button && host) {
+      const buttonRect = button.getBoundingClientRect();
+      const hostRect = host.getBoundingClientRect();
+      this.tooltipX = buttonRect.left - hostRect.left + buttonRect.width / 2;
+      this.tooltipY = buttonRect.top - hostRect.top;
+    }
   }
 
-  get pages(): number[] {
-    const pagesArray = [];
-    const maxVisiblePages = 5;
-    let startPage = Math.max(0, this.pageIndex - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(this.totalPages, startPage + maxVisiblePages);
+  hideTooltip(): void {
+    this.activeTooltipText = null;
+  }
 
-    if (endPage - startPage < maxVisiblePages) {
-      startPage = Math.max(0, endPage - maxVisiblePages);
-    }
 
-    for (let i = startPage; i < endPage; i++) {
-      pagesArray.push(i);
+
+  formatTimestamp(dateStr: string): string {
+    if (!dateStr) return '';
+    try {
+      let cleanDateStr = dateStr;
+      if (!dateStr.endsWith('Z') && !dateStr.includes('+')) {
+        cleanDateStr = dateStr + 'Z';
+      }
+      const date = new Date(cleanDateStr);
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${hours}:${minutes}:${seconds} ${day}/${month}/${year}`;
+    } catch {
+      return dateStr;
     }
-    return pagesArray;
+  }
+
+  formatTimestampFull(dateStr: string): string {
+    if (!dateStr) return '';
+    try {
+      let cleanDateStr = dateStr;
+      if (!dateStr.endsWith('Z') && !dateStr.includes('+')) {
+        cleanDateStr = dateStr + 'Z';
+      }
+      const date = new Date(cleanDateStr);
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+    } catch {
+      return dateStr;
+    }
+  }
+
+  getActionBadgeClass(action: string): string {
+    if (!action) return 'bg-slate-50 text-slate-600 border-slate-200';
+    const cleanAction = action.toUpperCase();
+    if (cleanAction.includes('LOGIN') || cleanAction.includes('REGISTER')) {
+      return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+    } else if (cleanAction.includes('LOGOUT') || cleanAction.includes('RESET') || cleanAction.includes('UPDATE')) {
+      return 'bg-blue-50 text-blue-700 border-blue-200';
+    } else if (cleanAction.includes('APPROVE') || cleanAction.includes('ASSIGN')) {
+      return 'bg-purple-50 text-purple-700 border-purple-200';
+    } else if (cleanAction.includes('ERROR') || cleanAction.includes('FAIL')) {
+      return 'bg-rose-50 text-rose-700 border-rose-200';
+    }
+    return 'bg-slate-50 text-slate-700 border-slate-200';
+  }
+
+  getStatusClass(statusCode: number): string {
+    if (statusCode >= 200 && statusCode < 300) {
+      return 'bg-emerald-500 text-white';
+    } else if (statusCode >= 300 && statusCode < 400) {
+      return 'bg-blue-500 text-white';
+    } else if (statusCode >= 400 && statusCode < 500) {
+      return 'bg-amber-500 text-white';
+    } else if (statusCode >= 500) {
+      return 'bg-rose-500 text-white';
+    }
+    return 'bg-slate-500 text-white';
+  }
+
+  getTotalPages(): number {
+    return Math.max(1, Math.ceil(this.totalItems / this.pageSize));
   }
 
   getShowingText(): string {
@@ -271,38 +267,35 @@ export class LogTableComponent {
     return `Xem ${start} - ${end} trong ${this.totalItems} kết quả`;
   }
 
-  getMethodClass(method: string): string {
-    switch (method?.toUpperCase()) {
-      case 'GET':
-        return 'bg-emerald-50 text-emerald-700 border-emerald-100';
-      case 'POST':
-        return 'bg-sky-50 text-sky-700 border-sky-100';
-      case 'PUT':
-        return 'bg-amber-50 text-amber-700 border-amber-100';
-      case 'DELETE':
-        return 'bg-rose-50 text-rose-700 border-rose-100';
-      default:
-        return 'bg-slate-50 text-slate-700 border-slate-100';
+  getVisiblePages(): number[] {
+    const totalPages = this.getTotalPages();
+    const visiblePages: number[] = [];
+    const maxVisible = 5;
+
+    let start = Math.max(0, this.pageIndex - 2);
+    let end = Math.min(totalPages - 1, start + maxVisible - 1);
+
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(0, end - maxVisible + 1);
     }
-  }
 
-  getStatusClass(statusCode: number): string {
-    if (statusCode >= 200 && statusCode < 300) {
-      return 'bg-emerald-50 text-emerald-700 border border-emerald-100';
-    } else if (statusCode >= 300 && statusCode < 400) {
-      return 'bg-sky-50 text-sky-700 border border-sky-100';
-    } else if (statusCode >= 400 && statusCode < 500) {
-      return 'bg-amber-50 text-amber-700 border border-amber-100';
-    } else {
-      return 'bg-rose-50 text-rose-700 border border-rose-100';
+    for (let i = start; i <= end; i++) {
+      visiblePages.push(i);
     }
+    return visiblePages;
   }
 
-  viewLogDetails(log: Log): void {
-    this.selectedLog = log;
+  onPrev(): void {
+    this.prevPage.emit();
   }
 
-  closeDetails(): void {
-    this.selectedLog = null;
+  onNext(): void {
+    this.nextPage.emit();
   }
+
+  onGoToPage(page: number): void {
+    this.goToPage.emit(page);
+  }
+
+
 }

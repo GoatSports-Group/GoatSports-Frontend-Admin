@@ -23,11 +23,12 @@ export class LogsComponent implements OnInit {
   pageIndex = 0;
 
   // Custom filter models
-  filterPath = '';
-  filterMethod = '';
-  filterStatusClass = ''; // '2xx', '4xx', '5xx', or empty for all
+  filterDescription = '';
+  filterAction = '';
   filterFromDate = '';
   filterToDate = '';
+  
+  uniqueActions: string[] = [];
 
   // Overview stats dashboard states
   stats: LogStats | null = null;
@@ -39,82 +40,84 @@ export class LogsComponent implements OnInit {
   }
 
   buildFilterQuery(): string {
-    const parts: string[] = [];
+    const filters: string[] = [];
 
-    // Path filtering using spring-filter regex like matching
-    if (this.filterPath && this.filterPath.trim()) {
-      const cleanPath = this.filterPath.trim().replace(/'/g, "\\'");
-      parts.push(`path like '.*${cleanPath}.*'`);
+    if (this.filterDescription.trim()) {
+      const value = this.filterDescription
+        .trim()
+        .replace(/'/g, "\\'");
+
+      filters.push(`description ~ '${value}'`);
     }
 
-    // Method filter
-    if (this.filterMethod) {
-      parts.push(`method == '${this.filterMethod}'`);
+    if (this.filterAction.trim()) {
+      const value = this.filterAction
+        .trim()
+        .replace(/'/g, "\\'")
+        .toUpperCase();
+
+      filters.push(`action = '${value}'`);
     }
 
-    // Status code class filtering
-    if (this.filterStatusClass) {
-      if (this.filterStatusClass === '2xx') {
-        parts.push(`statusCode >= 200 and statusCode < 300`);
-      } else if (this.filterStatusClass === '4xx') {
-        parts.push(`statusCode >= 400 and statusCode < 500`);
-      } else if (this.filterStatusClass === '5xx') {
-        parts.push(`statusCode >= 500`);
-      }
-    }
-
-    // Date range filtering
     if (this.filterFromDate) {
-      parts.push(`timestamp >= '${this.filterFromDate}T00:00:00Z'`);
-    }
-    if (this.filterToDate) {
-      parts.push(`timestamp <= '${this.filterToDate}T23:59:59Z'`);
+      filters.push(
+        `timestamp >= '${this.filterFromDate}T00:00:00Z'`
+      );
     }
 
-    return parts.join(' and ');
+    if (this.filterToDate) {
+      filters.push(
+        `timestamp <= '${this.filterToDate}T23:59:59Z'`
+      );
+    }
+
+    return filters.join(" and ");
   }
 
   loadLogs(): void {
     this.loading = true;
+
     const filterQuery = this.buildFilterQuery();
 
     this.logService.getLogs({
       page: this.pageIndex,
       size: this.pageSize,
-      filter: filterQuery
+      filter: filterQuery || undefined
     }).subscribe({
-      next: (response) => {
-        if (response) {
-          this.logs = response.result || [];
-          this.totalItems = response.meta?.total || 0;
-        } else {
-          this.logs = [];
-          this.totalItems = 0;
-        }
+      next: response => {
+        this.logs = response?.result ?? [];
+        this.totalItems = response?.meta?.total ?? 0;
         this.loading = false;
+        this.extractUniqueActions(this.logs);
       },
-      error: (err) => {
-        console.error('Failed to load logs:', err);
+      error: err => {
+        console.error(err);
         this.loading = false;
-        this.snackBar.open('Không thể tải nhật ký hệ thống!', 'Đóng', {
-          duration: 4000,
-          horizontalPosition: 'end',
-          verticalPosition: 'top',
-          panelClass: ['snackbar-error']
-        });
+
+        this.snackBar.open(
+          "Không thể tải nhật ký hệ thống!",
+          "Đóng",
+          {
+            duration: 4000,
+            horizontalPosition: "end",
+            verticalPosition: "top",
+            panelClass: ["snackbar-error"]
+          }
+        );
       }
     });
   }
 
   loadStats(): void {
     this.loadingStats = true;
-    
+
     // Load last 500 logs to perform live stats calculations
     this.logService.getLogs({ page: 0, size: 500 }).subscribe({
       next: (response) => {
         const allLogs = response?.result || [];
         this.stats = this.computeStats(allLogs);
         this.loadingStats = false;
+        this.extractUniqueActions(allLogs);
       },
       error: (err) => {
         console.error('Failed to load log stats:', err);
@@ -122,6 +125,19 @@ export class LogsComponent implements OnInit {
         this.loadingStats = false;
       }
     });
+  }
+
+  extractUniqueActions(allLogs: Log[]): void {
+    if (!allLogs) return;
+    allLogs.forEach(log => {
+      if (log.action && log.action.trim()) {
+        const actUpper = log.action.trim().toUpperCase();
+        if (!this.uniqueActions.includes(actUpper)) {
+          this.uniqueActions.push(actUpper);
+        }
+      }
+    });
+    this.uniqueActions.sort();
   }
 
   computeStats(allLogs: Log[]): LogStats {
@@ -158,22 +174,20 @@ export class LogsComponent implements OnInit {
     }
 
     // Dynamic calculations from real logs:
-    const totalRequests = this.totalItems || allLogs.length;
+    const totalRequests = allLogs.length;
     const errors = allLogs.filter(l => l.statusCode >= 400);
     const errorRate = allLogs.length > 0 ? (errors.length / allLogs.length) * 100 : 0;
-    
-    const durations = allLogs.map(l => l.duration).sort((a, b) => a - b);
-    const sumDurations = durations.reduce((sum, d) => sum + d, 0);
-    const avgResponseTime = durations.length > 0 ? sumDurations / durations.length : 0;
-    const p95ResponseTime = durations.length > 0 ? durations[Math.floor(durations.length * 0.95)] : 0;
-    const p99ResponseTime = durations.length > 0 ? durations[Math.floor(durations.length * 0.99)] : 0;
-    const maxResponseTime = durations.length > 0 ? durations[durations.length - 1] : 0;
+
+    const avgResponseTime = 0;
+    const p95ResponseTime = 0;
+    const p99ResponseTime = 0;
+    const maxResponseTime = 0;
 
     const uniqueUsers = new Set(allLogs.map(l => l.userId).filter(id => id && id !== 'anonymous'));
     const activeUsers = uniqueUsers.size > 0 ? uniqueUsers.size : 328;
 
-    const uniqueApis = new Set(allLogs.map(l => l.path));
-    const activeApis = uniqueApis.size;
+    const uniqueApis = new Set(allLogs.map(l => l.action).filter(a => a && a.trim() !== ''));
+    const activeApis = uniqueApis.size > 0 ? uniqueApis.size : 12;
 
     // Traffic trend line chart data points
     const trafficTrend = this.generateTrafficTrend(allLogs);
@@ -210,12 +224,29 @@ export class LogsComponent implements OnInit {
     }));
 
     if (logs && logs.length > 0) {
+      const today = new Date();
+      const todayYear = today.getFullYear();
+      const todayMonth = today.getMonth();
+      const todayDate = today.getDate();
+
       logs.forEach(log => {
         try {
-          const date = new Date(log.timestamp);
-          const hour = date.getHours();
-          if (hour >= 0 && hour < 24) {
-            hourlyCounts[hour].value++;
+          let cleanDateStr = log.timestamp;
+          if (cleanDateStr && !cleanDateStr.endsWith('Z') && !cleanDateStr.includes('+')) {
+            cleanDateStr = cleanDateStr + 'Z';
+          }
+          const date = new Date(cleanDateStr);
+          
+          // Filter only requests from today
+          const isToday = date.getFullYear() === todayYear &&
+                          date.getMonth() === todayMonth &&
+                          date.getDate() === todayDate;
+
+          if (isToday) {
+            const hour = date.getHours();
+            if (hour >= 0 && hour < 24) {
+              hourlyCounts[hour].value++;
+            }
           }
         } catch (e) {
           console.error(e);
@@ -224,7 +255,7 @@ export class LogsComponent implements OnInit {
     } else {
       // Realistic default wavy mock curve representing typical daily load patterns
       const mockWaves = [
-        12, 8, 5, 3, 4, 15, 45, 90, 120, 150, 130, 110, 
+        12, 8, 5, 3, 4, 15, 45, 90, 120, 150, 130, 110,
         95, 140, 180, 220, 250, 210, 160, 120, 90, 75, 45, 25
       ];
       mockWaves.forEach((val, hour) => {
@@ -241,9 +272,8 @@ export class LogsComponent implements OnInit {
   }
 
   resetFilters(): void {
-    this.filterPath = '';
-    this.filterMethod = '';
-    this.filterStatusClass = '';
+    this.filterDescription = '';
+    this.filterAction = '';
     this.filterFromDate = '';
     this.filterToDate = '';
     this.pageIndex = 0;
