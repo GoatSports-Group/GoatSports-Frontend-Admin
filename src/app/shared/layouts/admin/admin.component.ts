@@ -14,7 +14,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSidenavModule } from '@angular/material/sidenav';
-import { LucideIconComponent } from '@shared/components/ui/lucide-icon.component';
+import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { environment } from "@environments/environment"
 
 type BallType = 'SOCCER' | 'BASKETBALL' | 'TENNIS' | 'TABLE_TENNIS' | 'BADMINTON' | 'VOLLEYBALL';

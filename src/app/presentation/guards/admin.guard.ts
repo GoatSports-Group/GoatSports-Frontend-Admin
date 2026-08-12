@@ -33,7 +33,7 @@ export class AdminGuard implements CanActivate {
         }
 
         this.snackBar.open('Bạn không có quyền truy cập vào trang quản trị!', 'Đóng', {
-          duration: 4000,
+          duration: 2000,
           horizontalPosition: 'end',
           verticalPosition: 'top',
           panelClass: ['snackbar-error']

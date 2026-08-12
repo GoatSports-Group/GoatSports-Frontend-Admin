@@ -1,0 +1,113 @@
+<div class="flex-1 min-h-0 flex flex-col bg-white border border-slate-100 rounded-3xl shadow-xl">
+  
+  <!-- Table Wrapper -->
+  <div class="flex-1 min-h-0 overflow-x-auto rounded-t-3xl scrollbar-none">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="border-b border-slate-100 text-[14px] font-bold tracking-wider text-emerald-400 bg-white">
+          <th class="py-4 px-6 font-bold text-emerald-500 bg-white sticky top-0 z-20 border-b border-slate-100">Người thực hiện</th>
+          <th class="py-4 px-6 font-bold text-emerald-500 bg-white sticky top-0 z-20 border-b border-slate-100">Hành động</th>
+          <th class="py-4 px-6 font-bold text-emerald-500 bg-white sticky top-0 z-20 border-b border-slate-100">Địa chỉ IP</th>
+          <th class="py-4 px-6 font-bold text-emerald-500 bg-white sticky top-0 z-20 border-b border-slate-100">Trạng thái</th>
+          <th class="py-4 px-6 font-bold text-emerald-500 bg-white sticky top-0 z-20 border-b border-slate-100">Thời gian</th>
+          <th class="py-4 px-6 font-bold text-emerald-500 text-center bg-white sticky top-0 z-20 border-b border-slate-100">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        <!-- Loading State -->
+        <tr *ngIf="loading">
+          <td colspan="6" class="py-20 text-center">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-emerald-500 border-t-transparent"></div>
+            <p class="text-sm font-semibold text-slate-400 mt-3">Đang tải danh sách nhật ký...</p>
+          </td>
+        </tr>
+
+        <!-- Empty State -->
+        <tr *ngIf="!loading && logs.length === 0">
+          <td colspan="6" class="py-20 text-center">
+            <div class="text-slate-300 text-5xl mb-4">📂</div>
+            <p class="text-base font-bold text-slate-700">Không tìm thấy nhật ký nào</p>
+            <p class="text-sm text-slate-400 mt-1">Vui lòng điều chỉnh lại bộ lọc tìm kiếm của bạn.</p>
+          </td>
+        </tr>
+
+        <!-- Log Rows -->
+        <ng-container *ngIf="!loading && logs.length > 0">
+          <tr *ngFor="let log of logs" 
+              class="hover:bg-emerald-50/50 transition-colors">
+            <!-- User ID -->
+            <td class="py-4 px-6">
+              <div class="flex items-center gap-3">
+                <!-- User Avatar or Initials -->
+                <span class="text-sm font-bold" [ngClass]="log.userId === 'anonymous' ? 'text-slate-400' : 'text-slate-800'">
+                  {{ log.userId === 'anonymous' ? 'Khách ẩn danh' : log.userId }}
+                </span>
+              </div>
+            </td>
+
+            <!-- Action Badge -->
+            <td class="py-4 px-6">
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase border"
+                    [ngClass]="getActionBadgeClass(log.action)">
+                {{ log.action || 'HTTP CALL' }}
+              </span>
+            </td>
+
+            <!-- IP Address -->
+            <td class="py-4 px-6 text-sm font-semibold text-slate-600">
+              {{ log.ipAddress || 'unknown' }}
+            </td>
+
+            <!-- Status Code -->
+            <td class="py-4 px-6">
+              <span class="inline-flex items-center justify-center w-12 py-1 rounded-xl text-xs font-black"
+                    [ngClass]="getStatusClass(log.statusCode)">
+                {{ log.statusCode }}
+              </span>
+            </td>
+
+            <!-- Timestamp -->
+            <td class="py-4 px-6 text-sm font-semibold text-slate-600">
+              {{ formatTimestamp(log.timestamp) }}
+            </td>
+
+            <!-- Actions -->
+            <td class="py-4 px-6 text-center">
+              <div class="relative inline-block">
+                <button (mouseenter)="showTooltip($event, log.description || 'Không có mô tả chi tiết')"
+                        (mouseleave)="hideTooltip()"
+                        class="px-4 py-1.5 rounded-2xl text-xs font-bold text-emerald-600 hover:text-white bg-emerald-50 hover:bg-emerald-600 transition-all duration-300 shadow-sm border border-emerald-100 hover:border-emerald-600 cursor-pointer">
+                  Chi tiết
+                </button>
+              </div>
+            </td>
+          </tr>
+        </ng-container>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination Bottom Bar -->
+  <app-pagination *ngIf="!loading && logs.length > 0"
+    [pageIndex]="pageIndex"
+    [pageSize]="pageSize"
+    [totalItems]="totalItems"
+    (pageChange)="onGoToPage($event)">
+  </app-pagination>
+</div>
+
+<!-- Absolute Tooltip relative to host -->
+<div *ngIf="activeTooltipText" 
+     [style.left.px]="tooltipX"
+     [style.top.px]="tooltipY"
+     class="absolute -translate-x-[calc(100%-24px)] -translate-y-full -mt-2 w-72 bg-slate-950/95 backdrop-blur-md text-white text-xs rounded-xl p-3.5 shadow-2xl z-[999] pointer-events-none transition-all duration-200 border border-slate-800/80">
+  <!-- Arrow -->
+  <div class="absolute top-full right-6 border-4 border-transparent border-t-slate-950/95"></div>
+  
+  <div class="space-y-1">
+    <span class="text-[9px] font-extrabold text-emerald-400 uppercase tracking-wider block text-left">Mô tả hoạt động</span>
+    <p class="font-medium text-slate-100 leading-relaxed text-left break-words whitespace-pre-wrap">
+      {{ activeTooltipText }}
+    </p>
+  </div>
+</div>

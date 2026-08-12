@@ -5,15 +5,8 @@ import { LucideDynamicIcon } from '@lucide/angular';
   selector: 'lucide-icon',
   standalone: true,
   imports: [LucideDynamicIcon],
-  template: `<svg [lucideIcon]="name" [class]="class"></svg>`,
-  styles: [`
-    :host {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      line-height: 0;
-    }
-  `]
+  templateUrl: './lucide-icon.component.html',
+  styleUrls: ['./lucide-icon.component.scss']
 })
 export class LucideIconComponent {
   @Input() name!: string;

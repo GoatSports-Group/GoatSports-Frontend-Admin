@@ -1,0 +1,272 @@
+@if (loadingDetails) {
+  <!-- Loading Details State -->
+  <div class="flex flex-col items-center justify-center py-20 bg-white border border-slate-100 rounded-3xl shadow-xs">
+    <mat-spinner diameter="40" color="accent"></mat-spinner>
+    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider font-display mt-4">
+      Đang tải thông tin chi tiết...
+    </p>
+  </div>
+} @else if (selectedUser) {
+  <!-- User Details View -->
+  <div class="flex flex-col gap-6 animate-fade-in">
+    <!-- Header with Back Button -->
+    <div class="flex items-center gap-4">
+      <button (click)="close.emit()"
+        class="h-10 w-10 rounded-full bg-white hover:bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600 active:scale-[0.98] transition-all cursor-pointer shadow-xs">
+        <lucide-icon name="arrow-left" class="h-5 w-5"></lucide-icon>
+      </button>
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight font-display text-slate-900 flex items-center gap-2">
+          Chi tiết người dùng <span class="text-emerald-950 font-extrabold">{{ selectedUser.fullName ||
+            selectedUser.username }}</span>
+        </h1>
+        <p class="text-sm font-bold text-slate-400 mt-0.5">Xem và quản lý thông tin người dùng</p>
+      </div>
+    </div>
+
+    <!-- Main Profile Card with Quick Info Cards Inside -->
+    <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs flex flex-col gap-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div class="flex items-center gap-5">
+          <!-- Profile Avatar -->
+          <div class="relative">
+            <img [src]="getDisplayAvatar(selectedUser)" alt="Avatar"
+              class="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-2 border-slate-100 shadow-inner">
+          </div>
+
+          <!-- Name and Username -->
+          <div class="flex flex-col gap-1">
+            <h1 class="text-xl sm:text-2xl font-bold text-slate-900 leading-tight">
+              {{ selectedUser.fullName || 'Chưa cập nhật họ tên' }}
+            </h1>
+            <div class="flex items-center gap-1.5 text-sm text-slate-400 font-semibold mt-0.5">
+              <lucide-icon name="user" class="w-3.5 h-3.5"></lucide-icon>
+              <span>@{{ selectedUser.username }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right actions & badges -->
+        <div class="flex items-center gap-3 self-start sm:self-center">
+          <!-- Dropdown Menu trigger button -->
+          <button [matMenuTriggerFor]="detailActionMenu"
+            class="w-9 h-9 rounded-full border border-slate-200 bg-white hover:bg-emerald-50 flex items-center justify-center text-emerald-600 transition-colors cursor-pointer">
+            <lucide-icon name="more-vertical" class="h-4.5 w-4.5"></lucide-icon>
+          </button>
+
+          <mat-menu #detailActionMenu="matMenu" class="custom-premium-menu">
+            <button mat-menu-item (click)="edit.emit(selectedUser)">
+              <lucide-icon name="pencil" class="h-5 w-5 mr-2"></lucide-icon>
+              <span>Chỉnh sửa</span>
+            </button>
+            <button mat-menu-item (click)="assignRole.emit(selectedUser)">
+              <lucide-icon name="user-cog" class="h-5 w-5 mr-2"></lucide-icon>
+              <span>Gán vai trò</span>
+            </button>
+            <button mat-menu-item (click)="changePassword.emit(selectedUser)">
+              <lucide-icon name="key" class="h-5 w-5 mr-2"></lucide-icon>
+              <span>Đổi mật khẩu</span>
+            </button>
+            @if (selectedUser.status === 'ACTIVE' || selectedUser.status === 'ACTIVATED') {
+              <button mat-menu-item (click)="toggleVerification.emit({ user: selectedUser, verified: false })" class="danger-item">
+                <lucide-icon name="shield-alert" class="h-5 w-5 mr-2"></lucide-icon>
+                <span>Bỏ xác thực</span>
+              </button>
+            } @else {
+              <button mat-menu-item (click)="toggleVerification.emit({ user: selectedUser, verified: true })">
+                <lucide-icon name="shield-check" class="h-5 w-5 mr-2 text-emerald-600"></lucide-icon>
+                <span class="text-emerald-700 font-bold">Xác thực tài khoản</span>
+              </button>
+            }
+          </mat-menu>
+        </div>
+      </div>
+
+      <!-- Quick Info Cards Row (Inside Profile Card) -->
+      <div class="flex justify-between items-center">
+        <!-- Status Card -->
+        <div class="flex items-center gap-2">
+          <div
+            class="w-8 h-8 rounded-lg bg-white flex items-center justify-center shrink-0 border border-slate-100 text-emerald-500">
+            <lucide-icon name="shield" class="w-4.5 h-4.5"></lucide-icon>
+          </div>
+          <div class="flex flex-col gap-0.5">
+            <span class="text-[12px] font-bold text-emerald-600 uppercase tracking-wider">Trạng thái tài khoản</span>
+            <span class="text-sm font-bold text-slate-800">
+              {{ selectedUser.status === 'ACTIVE' || selectedUser.status === 'ACTIVATED' ? 'Xác thực' : 'Chưa xác thực' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Phone Card -->
+        <div class="flex items-center gap-2">
+          <div
+            class="w-8 h-8 rounded-lg bg-white flex items-center justify-center shrink-0 border border-slate-100 text-blue-500">
+            <lucide-icon name="phone" class="w-4.5 h-4.5"></lucide-icon>
+          </div>
+          <div class="flex flex-col gap-0.5">
+            <span class="text-[12px] font-bold text-emerald-600 uppercase tracking-wider">Số điện thoại</span>
+            <span class="text-sm font-bold text-slate-800">
+              {{ selectedUser.phone || 'Chưa cập nhật' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Country Card -->
+        <div class="flex items-center gap-2">
+          <div
+            class="w-8 h-8 rounded-lg bg-white flex items-center justify-center shrink-0 border border-slate-100 text-amber-500">
+            <lucide-icon name="globe" class="w-4.5 h-4.5"></lucide-icon>
+          </div>
+          <div class="flex flex-col gap-0.5">
+            <span class="text-[12px] font-bold text-emerald-600 uppercase tracking-wider">Quốc gia</span>
+            <span class="text-sm font-bold text-slate-800 font-sans">
+              {{ selectedUser.country || 'Chưa cập nhật' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Details Columns Container -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Column 1: Account Details -->
+      <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs flex flex-col gap-5">
+        <h3 class="text-sm font-bold text-emerald-600 flex items-center gap-2 border-b border-slate-100 pb-3">
+          <lucide-icon name="shield" class="w-4.5 h-4.5 text-emerald-400"></lucide-icon> Chi tiết tài khoản
+        </h3>
+
+        <div class="flex flex-col gap-4">
+          <!-- User ID -->
+          <div class="flex items-center gap-3">
+            <div
+              class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0 border border-slate-100">
+              <lucide-icon name="hash" class="w-4 h-4 text-emerald-400"></lucide-icon>
+            </div>
+            <div>
+              <p class="text-[13px] font-semibold text-emerald-600 uppercase tracking-wider font-sans">Mã tài khoản</p>
+              <p class="text-xs font-medium text-slate-800 break-all select-all">{{ selectedUser.userId }}</p>
+            </div>
+          </div>
+
+          <!-- Username -->
+          <div class="flex items-center gap-3">
+            <div
+              class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0 border border-slate-100">
+              <lucide-icon name="user" class="w-4 h-4 text-emerald-400"></lucide-icon>
+            </div>
+            <div>
+              <p class="text-[13px] font-semibold text-emerald-600 uppercase tracking-wider font-sans">Tên đăng nhập</p>
+              <p class="text-xs font-medium text-slate-800">{{ selectedUser.username }}</p>
+            </div>
+          </div>
+
+          <!-- Auth Providers -->
+          <div class="flex items-center gap-3">
+            <div
+              class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0 border border-slate-100">
+              <lucide-icon name="globe" class="w-4 h-4 text-emerald-400"></lucide-icon>
+            </div>
+            <div>
+              <p class="text-[13px] font-semibold text-emerald-600 uppercase tracking-wider font-sans">Cổng xác thực</p>
+              <div class="flex flex-wrap gap-1 mt-0.5">
+                @if (selectedUser.authProviders && selectedUser.authProviders.length > 0) {
+                  @for (p of selectedUser.authProviders; track p) {
+                    <span
+                      class="px-2 py-0.5 bg-slate-50 border border-slate-150 text-slate-800 text-xs font-medium rounded-full tracking-wide">
+                      {{ p }}
+                    </span>
+                  }
+                } @else {
+                  <span
+                    class="px-2 py-0.5 bg-slate-50 border border-slate-150 text-slate-800 text-xs font-medium rounded-full tracking-wide">
+                    LOCAL
+                  </span>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- Created Date -->
+          <div class="flex items-center gap-3">
+            <div
+              class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0 border border-slate-100">
+              <lucide-icon name="calendar" class="w-4 h-4 text-emerald-400"></lucide-icon>
+            </div>
+            <div>
+              <p class="text-[13px] font-semibold text-emerald-600 uppercase tracking-wider font-sans">Ngày tạo</p>
+              <p class="text-xs font-medium text-slate-800 font-sans">
+                {{ selectedUser.createdAt ? (selectedUser.createdAt | date: 'dd/MM/yyyy HH:mm') : 'Chưa cập nhật' }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Updated Date -->
+          <div class="flex items-center gap-3">
+            <div
+              class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0 border border-slate-100">
+              <lucide-icon name="clock" class="w-4 h-4 text-emerald-400"></lucide-icon>
+            </div>
+            <div>
+              <p class="text-[13px] font-semibold text-emerald-600 uppercase tracking-wider font-sans">Cập nhật</p>
+              <p class="text-xs font-medium text-slate-800 font-sans">
+                {{ selectedUser.updatedAt ? (selectedUser.updatedAt | date: 'dd/MM/yyyy HH:mm') : 'Chưa cập nhật' }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Column 2: Contact Information -->
+      <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs flex flex-col gap-5">
+        <h3 class="text-sm font-bold text-emerald-600 flex items-center gap-2 border-b border-slate-100 pb-3">
+          <lucide-icon name="mail" class="w-4.5 h-4.5 text-emerald-400"></lucide-icon> Thông tin liên hệ
+        </h3>
+
+        <div class="flex flex-col gap-4">
+          <!-- Email -->
+          <div class="flex items-start gap-3">
+            <div
+              class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0 border border-slate-100 mt-0.5">
+              <lucide-icon name="mail" class="w-4 h-4 text-emerald-400"></lucide-icon>
+            </div>
+            <div>
+              <p class="text-[13px] font-semibold text-emerald-600 uppercase tracking-wider font-sans">Email</p>
+              <div class="flex flex-wrap items-center gap-1.5 mt-0.5">
+                <span class="text-xs font-medium text-slate-800 select-all">{{ selectedUser.email }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Role Description -->
+          <div class="flex items-start gap-3">
+            <div
+              class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0 border border-slate-100 mt-0.5">
+              <lucide-icon name="user-cog" class="w-4 h-4 text-emerald-400"></lucide-icon>
+            </div>
+            <div>
+              <p class="text-[13px] font-semibold text-emerald-600 uppercase tracking-wider font-sans">Vai trò</p>
+              <p class="text-xs font-medium text-slate-800 tracking-wider mt-0.5">
+                {{ getFallbackRole(selectedUser.role.name) || 'CHƯA GÁN VAI TRÒ' }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Gender -->
+          <div class="flex items-start gap-3">
+            <div
+              class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0 border border-slate-100 mt-0.5">
+              <lucide-icon name="user" class="w-4 h-4 text-emerald-400"></lucide-icon>
+            </div>
+            <div>
+              <p class="text-[13px] font-semibold text-emerald-600 uppercase tracking-wider font-sans">Giới tính</p>
+              <p class="text-xs font-medium text-slate-800 mt-0.5">
+                {{ getFallbackGender(selectedUser.gender) || 'Chưa cập nhật' }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+}

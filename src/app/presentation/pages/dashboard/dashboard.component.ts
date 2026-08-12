@@ -9,11 +9,13 @@ import { User } from '@application/dto/user/user.dto';
 import { OwnerApplication, OwnerApplicationStatus } from '@application/dto/owner-application/owner-application.dto';
 import { AuthService } from '@presentation/services/auth.service';
 
-import { MetricCardComponent } from '@shared/components/ui/metric-card.component';
+import { MetricCardComponent } from '@shared/components/ui/metric-card/metric-card.component';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { LucideIconComponent } from '@shared/components/ui/lucide-icon.component';
+import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+import { calculateWeeklyTrend } from '@shared/utils/date-trend.utils';
+import { parseWeatherCode } from '@shared/utils/weather-parser.utils';
 
 export interface WeatherInfo {
   temp: number;
@@ -209,19 +211,19 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit {
         this.upcomingSurveys.set(pending.slice(0, 3));
 
         // Calculate real-time weekly trends
-        const totalUsersTrendRes = this.calculateWeeklyTrend(users.result, 'createdAt');
+        const totalUsersTrendRes = calculateWeeklyTrend(users.result, 'createdAt');
         this.totalUsersTrend.set(totalUsersTrendRes.trendText);
         this.isTotalUsersTrendPositive.set(totalUsersTrendRes.isPositive);
 
-        const pendingTrendRes = this.calculateWeeklyTrend(pending, 'createdAt');
+        const pendingTrendRes = calculateWeeklyTrend(pending, 'createdAt');
         this.pendingAppsTrend.set(pendingTrendRes.trendText);
         this.isPendingAppsTrendPositive.set(pendingTrendRes.isPositive);
 
-        const approvedTrendRes = this.calculateWeeklyTrend(approved, 'reviewedAt');
+        const approvedTrendRes = calculateWeeklyTrend(approved, 'reviewedAt');
         this.approvedAppsTrend.set(approvedTrendRes.trendText);
         this.isApprovedAppsTrendPositive.set(approvedTrendRes.isPositive);
 
-        const rejectedTrendRes = this.calculateWeeklyTrend(rejected, 'reviewedAt');
+        const rejectedTrendRes = calculateWeeklyTrend(rejected, 'reviewedAt');
         this.rejectedAppsTrend.set(rejectedTrendRes.trendText);
         this.isRejectedAppsTrendPositive.set(rejectedTrendRes.isPositive);
 
@@ -253,40 +255,6 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit {
         this.loading.set(false);
       }
     });
-  }
-
-  private calculateWeeklyTrend(items: any[], dateField: string): { trendText: string, isPositive: boolean } {
-    const now = new Date();
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
-
-    let newCount = 0;
-    let oldCount = 0;
-
-    items.forEach(item => {
-      const dateStr = item[dateField] || item['createdAt'];
-      if (!dateStr) return;
-      const date = new Date(dateStr);
-      if (date > sevenDaysAgo) {
-        newCount++;
-      } else if (date <= sevenDaysAgo && date > fourteenDaysAgo) {
-        oldCount++;
-      }
-    });
-
-    if (oldCount === 0) {
-      if (newCount > 0) {
-        return { trendText: `+${newCount} mới`, isPositive: true };
-      }
-      return { trendText: '0%', isPositive: true };
-    }
-
-    const percent = Math.round(((newCount - oldCount) / oldCount) * 100);
-    if (percent >= 0) {
-      return { trendText: `+${percent}%`, isPositive: true };
-    } else {
-      return { trendText: `${percent}%`, isPositive: false };
-    }
   }
 
   ngAfterViewInit() {
@@ -416,7 +384,7 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit {
       .then(res => res.json())
       .then(data => {
         if (data?.current_weather) {
-          const parsed = this.parseWeatherCode(data.current_weather.weathercode);
+          const parsed = parseWeatherCode(data.current_weather.weathercode);
           this.weather.set({
             temp: Math.round(data.current_weather.temperature),
             ...parsed
@@ -424,15 +392,6 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit {
         }
       })
       .catch(() => { /* default fallback */ });
-  }
-
-  parseWeatherCode(code: number): { condition: string; icon: string; description: string } {
-    if (code === 0) return { condition: 'clear', icon: 'sun', description: 'Trời nắng đẹp ☀️' };
-    if ([1, 2, 3].includes(code)) return { condition: 'cloudy', icon: 'cloud', description: 'Có mây nhẹ ⛅' };
-    if ([45, 48].includes(code)) return { condition: 'fog', icon: 'cloud-fog', description: 'Có sương mù 🌫️' };
-    if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) return { condition: 'rain', icon: 'droplets', description: 'Trời có mưa 🌧️' };
-    if ([95, 96, 99].includes(code)) return { condition: 'storm', icon: 'cloud-lightning', description: 'Giông bão ⛈️' };
-    return { condition: 'cloudy', icon: 'cloud', description: 'Nhiều mây ☁️' };
   }
 
   generateCalendar() {

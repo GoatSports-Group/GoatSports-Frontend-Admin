@@ -7,13 +7,8 @@ export type StatusVariant = 'pending' | 'approved' | 'rejected' | 'active' | 'in
   selector: 'app-status-badge',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <span [class]="badgeClasses">
-      <span class="h-1.5 w-1.5 rounded-full shrink-0" [class]="dotClasses"></span>
-      <ng-content></ng-content>
-      {{ text }}
-    </span>
-  `
+  templateUrl: './status-badge.component.html',
+  styleUrls: ['./status-badge.component.scss']
 })
 export class StatusBadgeComponent {
   @Input() status: StatusVariant | string = 'info';

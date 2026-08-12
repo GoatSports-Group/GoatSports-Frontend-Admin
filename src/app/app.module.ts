@@ -30,7 +30,7 @@ import { NotificationRepositoryImpl } from '@infrastructure/repositories/notific
 import { LogRepositoryImpl } from '@infrastructure/repositories/log.repository.impl';
 import { StompWebSocketService } from '@infrastructure/websocket/stomp-websocket.service';
 import { IMAGE_CONFIG } from '@angular/common';
-import { LucideIconComponent } from '@shared/components/ui/lucide-icon.component';
+import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import {
   provideLucideIcons,
   LucideMenu,
@@ -101,7 +101,9 @@ import {
   LucideTimer,
   LucideNetwork,
   LucideGripVertical,
-  LucideLayoutGrid
+  LucideLayoutGrid,
+  LucideChevronsLeft,
+  LucideChevronsRight
 } from '@lucide/angular';
 
 @NgModule({
@@ -210,7 +212,9 @@ import {
       LucideTimer,
       LucideNetwork,
       LucideGripVertical,
-      LucideLayoutGrid
+      LucideLayoutGrid,
+      LucideChevronsLeft,
+      LucideChevronsRight
     )
   ],
   bootstrap: [AppComponent]
