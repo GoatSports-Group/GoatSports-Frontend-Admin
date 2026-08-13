@@ -104,7 +104,8 @@ import {
   LucideGripVertical,
   LucideLayoutGrid,
   LucideChevronsLeft,
-  LucideChevronsRight
+  LucideChevronsRight,
+  LucideSun
 } from '@lucide/angular';
 
 @NgModule({
@@ -216,7 +217,8 @@ import {
       LucideGripVertical,
       LucideLayoutGrid,
       LucideChevronsLeft,
-      LucideChevronsRight
+      LucideChevronsRight,
+      LucideSun
     )
   ],
   bootstrap: [AppComponent]
