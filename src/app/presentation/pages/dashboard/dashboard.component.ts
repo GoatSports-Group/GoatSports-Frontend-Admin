@@ -149,6 +149,7 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit {
     addressText: string;
     status: string;
     district: string;
+    isFallback: boolean;
   }>>([]);
   applicationDistricts = signal<string[]>([]);
   unlocatedVenueCount = signal(0);
@@ -233,12 +234,11 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit {
           applications.result.map(app => app.address?.district?.trim() || 'Chưa xác định')
         );
 
-        // Never infer a venue position from a district centre or random offset.
-        const markers = applications.result
-          .map(app => this.createMapMarker(app))
-          .filter((marker): marker is NonNullable<typeof marker> => marker !== null);
+        const markers = applications.result.map(
+          (app, index) => this.createMapMarker(app, index)
+        );
 
-        this.unlocatedVenueCount.set(applications.result.length - markers.length);
+        this.unlocatedVenueCount.set(markers.filter(marker => marker.isFallback).length);
         this.mapMarkers.set(markers);
         this.renderMarkersOnMap();
 
@@ -325,17 +325,25 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit {
         iconAnchor: [8, 8]
       });
 
-      // Bind dynamic tooltip/popup
-      const popupContent = `
+      const locationNotice = marker.isFallback
+        ? `<span class="block text-[10px] text-amber-600 font-bold leading-snug mt-1">Chưa xác định được vị trí sân. Marker đang được hiển thị tạm tại TP.HCM.</span>`
+        : '';
+      const tooltipContent = `
         <div class="p-2 select-none font-display">
           <strong class="block text-xs font-black text-emerald-600">${marker.businessName}</strong>
           <span class="block text-[12px] text-slate-500 font-bold mt-0.5">Chủ sở hữu: ${marker.fullName}</span>
           <span class="block text-[10px] text-slate-500 font-medium leading-snug mt-1">${marker.addressText}</span>
+          ${locationNotice}
         </div>
       `;
 
       L.marker([marker.lat, marker.lng], { icon: customIcon })
-        .bindPopup(popupContent, { closeButton: false })
+        .bindTooltip(tooltipContent, {
+          direction: 'top',
+          offset: [0, -10],
+          opacity: 1,
+          className: 'venue-map-tooltip'
+        })
         .addTo(this.markersGroup);
       bounds.push([marker.lat, marker.lng]);
     });
@@ -347,20 +355,16 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit {
     }
   }
 
-  private createMapMarker(app: OwnerApplication) {
+  private createMapMarker(app: OwnerApplication, index: number) {
     const rawLat = app.address?.latitude;
     const rawLng = app.address?.longitude;
-
-    if (rawLat === null || rawLat === undefined || rawLng === null || rawLng === undefined) {
-      return null;
-    }
-
     const lat = Number(rawLat);
     const lng = Number(rawLng);
-
-    if (!this.hasValidCoordinates(lat, lng)) {
-      return null;
-    }
+    const hasCoordinates = rawLat !== null
+      && rawLat !== undefined
+      && rawLng !== null
+      && rawLng !== undefined
+      && this.hasValidCoordinates(lat, lng);
 
     const district = app.address?.district?.trim() || 'Chưa xác định';
     const addressParts = [
@@ -371,15 +375,34 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit {
       app.address?.province
     ].map(part => part?.trim()).filter((part): part is string => Boolean(part));
 
+    const fallbackCoordinates = this.getHcmFallbackCoordinates(index);
+
     return {
-      lat,
-      lng,
+      lat: hasCoordinates ? lat : fallbackCoordinates[0],
+      lng: hasCoordinates ? lng : fallbackCoordinates[1],
       businessName: app.businessName,
       fullName: app.fullName,
       addressText: [...new Set(addressParts)].join(', ') || 'Chưa có thông tin địa chỉ',
       status: app.status,
-      district
+      district,
+      isFallback: !hasCoordinates
     };
+  }
+
+  private getHcmFallbackCoordinates(index: number): [number, number] {
+    const hcmCenter: [number, number] = [10.7760, 106.7009];
+    if (index === 0) return hcmCenter;
+
+    const position = index - 1;
+    const pointsPerRing = 8;
+    const ring = Math.floor(position / pointsPerRing) + 1;
+    const angle = (position % pointsPerRing) * (Math.PI * 2 / pointsPerRing);
+    const radius = Math.min(0.03, ring * 0.006);
+
+    return [
+      hcmCenter[0] + Math.sin(angle) * radius,
+      hcmCenter[1] + Math.cos(angle) * radius
+    ];
   }
 
   private hasValidCoordinates(lat: number, lng: number): boolean {
