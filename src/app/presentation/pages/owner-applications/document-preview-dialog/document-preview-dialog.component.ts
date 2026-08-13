@@ -4,23 +4,10 @@ import { GetFileUrlUseCase } from '@application/usecase/owner-application/get-fi
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { forkJoin, of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
+import { DocumentPreviewDialogData, ResolvedItem } from './document-preview-dialog.models';
+import { isImageFile } from '@shared/utils/file.utils';
 
-export interface DocumentPreviewDialogData {
-  title: string;
-  /** Single file mode */
-  fileUrl?: string;
-  /** Multi-file mode (e.g. CCCD front + back) */
-  fileUrls?: string[];
-  /** Optional label for each fileUrls item */
-  fileLabels?: string[];
-}
-
-export interface ResolvedItem {
-  url: SafeResourceUrl;
-  downloadUrl: string;
-  isImage: boolean;
-  label?: string;
-}
+export { DocumentPreviewDialogData, ResolvedItem } from './document-preview-dialog.models';
 
 @Component({
   selector: 'app-document-preview-dialog',
@@ -62,7 +49,7 @@ export class DocumentPreviewDialogComponent implements OnInit {
   }
 
   private resolveSingle(fileUrl: string): void {
-    this.isImageFile = this.isImage(fileUrl);
+    this.isImageFile = isImageFile(fileUrl);
     const url$ = this.toPublicUrl(fileUrl);
     url$.subscribe({
       next: (url) => {
@@ -84,7 +71,7 @@ export class DocumentPreviewDialogComponent implements OnInit {
         this.resolvedItems = urls.map((url, i) => ({
           url: this.sanitizer.bypassSecurityTrustResourceUrl(url),
           downloadUrl: url,
-          isImage: this.isImage(url),
+          isImage: isImageFile(url),
           label: labels[i] || `Ảnh ${i + 1}`
         }));
         this.loading = false;
@@ -111,16 +98,4 @@ export class DocumentPreviewDialogComponent implements OnInit {
     this.dialogRef.close();
   }
 
-  isImage(url: string): boolean {
-    if (!url) return false;
-    const cleanUrl = url.split('?')[0].toLowerCase();
-    return (
-      cleanUrl.endsWith('.jpg') ||
-      cleanUrl.endsWith('.jpeg') ||
-      cleanUrl.endsWith('.png') ||
-      cleanUrl.endsWith('.webp') ||
-      cleanUrl.endsWith('.gif') ||
-      url.startsWith('data:image')
-    );
-  }
 }

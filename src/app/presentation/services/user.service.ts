@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { User } from '@domain/entities/user';
+import { User } from '@application/dto/user/user.dto';
 import { PageFilter } from '@application/dto/page.filter';
 import { GetUsersUseCase } from '@application/usecase/user/get-users.usecase';
 import { AssignRoleUseCase } from '@application/usecase/user/assign-role.usecase';

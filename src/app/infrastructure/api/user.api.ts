@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { BaseListResponse, BaseResponse } from '@application/dto/base/base-response';
 import { User } from '@domain/entities/user';
 import { PageFilter } from '@application/dto/page.filter';
-import { buildPageParams } from '@shared/utils/api.helper';
+import { buildPageParams } from '@infrastructure/api/build-page-params';
 import { environment } from "@environments/environment"
 import { CreateUserRequest } from '@application/dto/user/user.dto';
 

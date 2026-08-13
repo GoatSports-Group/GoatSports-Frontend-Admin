@@ -3,7 +3,8 @@ import { NotifyService } from '@shared/components/notify/notify.service';
 import { User } from '@application/dto/user/user.dto';
 import { UserService } from '@presentation/services/user.service';
 import { PASSWORD_PATTERN } from '@shared/constants/password.constants';
-import { environment } from '@environments/environment';
+import { calculatePasswordStrength } from '@shared/utils/password.utils';
+import { getDisplayAvatar } from '@shared/utils/user-display.utils';
 
 @Component({
   selector: 'app-change-password-drawer',
@@ -12,6 +13,8 @@ import { environment } from '@environments/environment';
   standalone: false
 })
 export class ChangePasswordDrawerComponent implements OnChanges {
+  readonly getDisplayAvatar = getDisplayAvatar;
+  readonly getPasswordStrength = calculatePasswordStrength;
   private userAdminService = inject(UserService);
   private snackBar = inject(NotifyService);
 
@@ -34,32 +37,6 @@ export class ChangePasswordDrawerComponent implements OnChanges {
       this.showNewPassword = false;
       this.showConfirmPassword = false;
     }
-  }
-
-  getAvatarUrl(avatarUrl: string | null | undefined): string {
-    if (!avatarUrl) return '';
-    if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) {
-      return avatarUrl;
-    }
-    return `${environment.apiUrl}/storage-service/api/v1/files/download?key=${avatarUrl}`;
-  }
-
-  getDisplayAvatar(user: User | null | undefined): string {
-    if (!user) return '';
-    if (user.avatarUrl) {
-      return this.getAvatarUrl(user.avatarUrl);
-    }
-    return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.fullName || user.username)}`;
-  }
-
-  getPasswordStrength(pwd: string): number {
-    if (!pwd) return 0;
-    let score = 0;
-    if (pwd.length >= 8) score++;
-    if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) score++;
-    if (/\d/.test(pwd)) score++;
-    if (/[^A-Za-z0-9]/.test(pwd)) score++;
-    return score;
   }
 
   submitChangePassword(): void {

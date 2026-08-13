@@ -1,15 +1,15 @@
 import { Component, Inject, OnInit, inject, HostListener } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { User } from '@application/dto/user/user.dto';
-import { Role, RoleEnum } from '@application/dto/role/role.dto';
+import { Role } from '@application/dto/role/role.dto';
 import { UserService } from '@presentation/services/user.service';
 import { RoleService } from '@presentation/services/role.service';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
+import { AssignRoleDialogData } from './assign-role-dialog.models';
+import { getFallbackAvatar, getRoleLabel } from '@shared/utils/user-display.utils';
 
-export interface AssignRoleDialogData {
-  user: User;
-}
+export { AssignRoleDialogData } from './assign-role-dialog.models';
 
 @Component({
   selector: 'app-assign-role-dialog',
@@ -18,6 +18,7 @@ export interface AssignRoleDialogData {
   standalone: false
 })
 export class AssignRoleDialogComponent implements OnInit {
+  readonly getFallbackRole = getRoleLabel;
   private roleAdminService = inject(RoleService);
   private userAdminService = inject(UserService);
   private dialog = inject(MatDialog);
@@ -150,10 +151,6 @@ export class AssignRoleDialogComponent implements OnInit {
   }
 
   getFallbackAvatar(): string {
-    return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(this.user.fullName || this.user.username)}`;
-  }
-
-  getFallbackRole(role: string): string {
-    return RoleEnum.find(r => r.value === role)?.label || role;
+    return getFallbackAvatar(this.user);
   }
 }

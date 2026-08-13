@@ -16,19 +16,9 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { environment } from "@environments/environment"
-
-type BallType = 'SOCCER' | 'BASKETBALL' | 'TENNIS' | 'TABLE_TENNIS' | 'BADMINTON' | 'VOLLEYBALL';
-
-interface SportsParticle {
-  x: number;
-  y: number;
-  z: number;
-  speed: number;
-  size: number;
-  type: BallType;
-  rotation: number;
-  rotationSpeed: number;
-}
+import { BallType, SportsParticle } from './admin.models';
+import { formatRelativeTime } from '@shared/utils/date-trend.utils';
+import { getFallbackAvatar } from '@shared/utils/user-display.utils';
 
 @Component({
   selector: 'app-admin',
@@ -46,6 +36,7 @@ interface SportsParticle {
   styleUrl: './admin.component.scss'
 })
 export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
+  readonly getRelativeTime = formatRelativeTime;
   public authService = inject(AuthService);
   public notificationService = inject(NotificationService);
   private router = inject(Router);
@@ -458,34 +449,8 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   get fallbackAvatar(): string {
-    return this.userProfile?.fullName
-      ? `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(this.userProfile.fullName)}`
+    return this.userProfile
+      ? getFallbackAvatar(this.userProfile)
       : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80';
-  }
-
-  getRelativeTime(dateInput: any): string {
-    if (!dateInput) return '';
-    const date = new Date(dateInput);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-
-    // Fallback if system clock difference is slightly negative
-    if (diffMs < 0) return 'Vừa xong';
-
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffMins < 1) {
-      return 'Vừa xong';
-    } else if (diffMins < 60) {
-      return `${diffMins} phút trước`;
-    } else if (diffHours < 24) {
-      return `${diffHours} giờ trước`;
-    } else if (diffDays === 1) {
-      return 'Hôm qua';
-    } else {
-      return `${diffDays} ngày trước`;
-    }
   }
 }

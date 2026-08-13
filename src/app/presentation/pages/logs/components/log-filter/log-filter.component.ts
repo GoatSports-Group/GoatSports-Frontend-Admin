@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, HostListener } from '@angular/c
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
+import { formatInputDate } from '@shared/utils/log-display.utils';
 
 @Component({
   selector: 'app-log-filter',
@@ -11,6 +12,7 @@ import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-ic
   styleUrls: ['./log-filter.component.scss']
 })
 export class LogFilterComponent {
+  readonly formatDateToVietnamese = formatInputDate;
   @Input() filterDescription = '';
   @Input() filterAction = '';
   @Input() filterFromDate = '';
@@ -46,12 +48,4 @@ export class LogFilterComponent {
     }
   }
 
-  formatDateToVietnamese(dateStr: string): string {
-    if (!dateStr) return '';
-    const parts = dateStr.split('-');
-    if (parts.length === 3) {
-      return `${parts[2]}/${parts[1]}/${parts[0]}`;
-    }
-    return dateStr;
-  }
 }

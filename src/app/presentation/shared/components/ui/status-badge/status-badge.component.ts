@@ -1,7 +1,8 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { StatusVariant } from './status-badge.models';
 
-export type StatusVariant = 'pending' | 'approved' | 'rejected' | 'active' | 'inactive' | 'info';
+export { StatusVariant } from './status-badge.models';
 
 @Component({
   selector: 'app-status-badge',

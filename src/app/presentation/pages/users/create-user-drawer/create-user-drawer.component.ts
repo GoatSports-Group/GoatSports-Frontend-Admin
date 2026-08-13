@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { UserService } from '@presentation/services/user.service';
 import { PASSWORD_PATTERN } from '@shared/constants/password.constants';
+import { calculatePasswordStrength } from '@shared/utils/password.utils';
 
 @Component({
   selector: 'app-create-user-drawer',
@@ -34,14 +35,7 @@ export class CreateUserDrawerComponent {
   }
 
   getPasswordStrength(): number {
-    const pwd = this.newUser.password || '';
-    if (!pwd) return 0;
-    let score = 0;
-    if (pwd.length >= 8) score++;
-    if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) score++;
-    if (/\d/.test(pwd)) score++;
-    if (/[^A-Za-z0-9]/.test(pwd)) score++;
-    return score;
+    return calculatePasswordStrength(this.newUser.password || '');
   }
 
   submitCreateUser(): void {

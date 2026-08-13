@@ -3,14 +3,26 @@ import { GetAllOwnerApplicationsUseCase } from '@application/usecase/owner-appli
 import { GetOwnerApplicationDetailUseCase } from '@application/usecase/owner-application/get-owner-application-detail.usecase';
 import { ApproveOwnerApplicationUseCase } from '@application/usecase/owner-application/approve-owner-application.usecase';
 import { RejectOwnerApplicationUseCase } from '@application/usecase/owner-application/reject-owner-application.usecase';
-import { OwnerApplication, OWNER_APPLICATION_STATUS_OPTIONS, BUSINESS_TYPE_OPTIONS, DOCUMENT_TYPE_OPTIONS, OwnerApplicationStatus, BusinessType, DocumentType } from '@application/dto/owner-application/owner-application.dto';
+import {
+  OwnerApplication,
+  OwnerApplicationDocument,
+  OWNER_APPLICATION_STATUS_OPTIONS,
+  OwnerApplicationStatus
+} from '@application/dto/owner-application/owner-application.dto';
 import { MatDialog } from '@angular/material/dialog';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { RejectReasonDialogComponent } from '@presentation/pages/owner-applications/owner-application-dialog/reject-reason-dialog.component';
-import { PageEvent } from '@angular/material/paginator';
-import { buildRsqlSearch } from '@shared/utils/api.helper';
-import { GetFileUrlUseCase } from '@application/usecase/owner-application/get-file-url.usecase';
 import { DocumentPreviewDialogComponent } from '@presentation/pages/owner-applications/document-preview-dialog/document-preview-dialog.component';
+import {
+  buildOwnerApplicationFilter,
+  getBusinessTypeLabel,
+  getDocumentTypeLabel,
+  getIdCardDocuments,
+  getNonIdCardDocuments,
+  getOwnerApplicationStatusLabel,
+  isIdCardDocument,
+  sortOwnerApplications
+} from './owner-applications.utils';
 
 @Component({
   selector: 'app-admin-owner-applications',
@@ -23,14 +35,17 @@ export class OwnerApplicationsComponent implements OnInit {
   private getDetailUseCase = inject(GetOwnerApplicationDetailUseCase);
   private approveUseCase = inject(ApproveOwnerApplicationUseCase);
   private rejectUseCase = inject(RejectOwnerApplicationUseCase);
-  private getFileUrlUseCase = inject(GetFileUrlUseCase);
   private dialog = inject(MatDialog);
   private snackBar = inject(NotifyService);
 
   readonly OwnerApplicationStatus = OwnerApplicationStatus;
   readonly OwnerApplicationStatusOp = OWNER_APPLICATION_STATUS_OPTIONS;
-  readonly BusinessTypeOp = BUSINESS_TYPE_OPTIONS;
-  readonly DocumentTypeOp = DOCUMENT_TYPE_OPTIONS;
+  readonly getStatusLabel = getOwnerApplicationStatusLabel;
+  readonly getDocumentTypeLabel = getDocumentTypeLabel;
+  readonly getBusinessTypeLabel = getBusinessTypeLabel;
+  readonly isIdCardDoc = isIdCardDocument;
+  readonly getIdCardDocs = getIdCardDocuments;
+  readonly getNonIdCardDocs = getNonIdCardDocuments;
 
   filteredApplications: OwnerApplication[] = [];
   selectedApplication: OwnerApplication | null = null;
@@ -52,7 +67,7 @@ export class OwnerApplicationsComponent implements OnInit {
 
   loadApplications() {
     this.loadingList = true;
-    const filterQuery = this.buildFilterQuery();
+    const filterQuery = buildOwnerApplicationFilter(this.filterStatus, this.searchQuery);
 
     this.getAllUseCase.execute({
       page: this.pageIndex,
@@ -60,7 +75,7 @@ export class OwnerApplicationsComponent implements OnInit {
       filter: filterQuery
     }).subscribe({
       next: (response) => {
-        this.filteredApplications = this.sortApplications(response.result);
+        this.filteredApplications = sortOwnerApplications(response.result);
 
         if (response.result.length < this.pageSize) {
           this.totalItems = this.pageIndex * this.pageSize + response.result.length;
@@ -87,38 +102,6 @@ export class OwnerApplicationsComponent implements OnInit {
     });
   }
 
-  buildFilterQuery(): string {
-    const parts: string[] = [];
-
-    if (this.filterStatus && this.filterStatus !== 'ALL') {
-      parts.push(`status : '${this.filterStatus}'`);
-    }
-
-    const searchPart = buildRsqlSearch(this.searchQuery, ['fullName', 'email', 'phone']);
-    if (searchPart) {
-      parts.push(`(${searchPart})`);
-    }
-    return parts.join(' and ');
-  }
-
-  sortApplications(list: OwnerApplication[]): OwnerApplication[] {
-    return [...list].sort((a, b) => {
-      if (a.status === OwnerApplicationStatus.PENDING && b.status !== OwnerApplicationStatus.PENDING) {
-        return -1;
-      }
-      if (a.status !== OwnerApplicationStatus.PENDING && b.status === OwnerApplicationStatus.PENDING) {
-        return 1;
-      }
-      return 0;
-    });
-  }
-
-  onPageChange(event: PageEvent): void {
-    this.pageIndex = event.pageIndex;
-    this.pageSize = event.pageSize;
-    this.loadApplications();
-  }
-
   onFilterStatusChange(status: string) {
     this.filterStatus = status;
     this.pageIndex = 0;
@@ -128,18 +111,6 @@ export class OwnerApplicationsComponent implements OnInit {
   onSearchChange() {
     this.pageIndex = 0;
     this.loadApplications();
-  }
-
-  getStatusLabel(status: OwnerApplicationStatus): string {
-    return OWNER_APPLICATION_STATUS_OPTIONS.find(o => o.value === status)?.label || status;
-  }
-
-  getDocumentTypeLabel(type: DocumentType): string {
-    return DOCUMENT_TYPE_OPTIONS.find(o => o.value === type)?.label || type;
-  }
-
-  getBusinessTypeLabel(type: BusinessType): string {
-    return BUSINESS_TYPE_OPTIONS.find(o => o.value === type)?.label || type;
   }
 
   selectApplication(app: OwnerApplication) {
@@ -172,7 +143,7 @@ export class OwnerApplicationsComponent implements OnInit {
           status: OwnerApplicationStatus.APPROVED
         };
 
-        this.filteredApplications = this.sortApplications(
+        this.filteredApplications = sortOwnerApplications(
           this.filteredApplications.map(a => a.ownerApplicationId === app.ownerApplicationId ? updatedApp : a)
         );
         this.selectedApplication = updatedApp;
@@ -213,7 +184,7 @@ export class OwnerApplicationsComponent implements OnInit {
               rejectReason: reason
             };
 
-            this.filteredApplications = this.sortApplications(
+            this.filteredApplications = sortOwnerApplications(
               this.filteredApplications.map(a => a.ownerApplicationId === app.ownerApplicationId ? updatedApp : a)
             );
             this.selectedApplication = updatedApp;
@@ -232,39 +203,7 @@ export class OwnerApplicationsComponent implements OnInit {
     });
   }
 
-  isImage(url: string): boolean {
-    if (!url) return false;
-    const cleanUrl = url.split('?')[0].toLowerCase();
-    return cleanUrl.endsWith('.jpg') ||
-      cleanUrl.endsWith('.jpeg') ||
-      cleanUrl.endsWith('.png') ||
-      cleanUrl.endsWith('.webp') ||
-      cleanUrl.endsWith('.gif') ||
-      url.startsWith('data:image');
-  }
-
-  openDocument(fileUrlOrKey: string): void {
-    if (fileUrlOrKey.startsWith('http://') || fileUrlOrKey.startsWith('https://') || fileUrlOrKey.startsWith('data:image')) {
-      window.open(fileUrlOrKey, '_blank');
-      return;
-    }
-
-    this.getFileUrlUseCase.execute(fileUrlOrKey).subscribe({
-      next: (presignedUrl) => {
-        if (presignedUrl) {
-          window.open(presignedUrl, '_blank');
-        } else {
-          this.snackBar.open('Không thể sinh link tải file!', 'Đóng', { duration: 3000 });
-        }
-      },
-      error: (err) => {
-        console.error(err);
-        this.snackBar.open('Có lỗi xảy ra khi lấy link file!', 'Đóng', { duration: 3000 });
-      }
-    });
-  }
-
-  viewDocument(doc: any): void {
+  viewDocument(doc: OwnerApplicationDocument): void {
     this.dialog.open(DocumentPreviewDialogComponent, {
       width: '800px',
       disableClose: false,
@@ -276,24 +215,7 @@ export class OwnerApplicationsComponent implements OnInit {
     });
   }
 
-  /** Returns true for any ID-card variant */
-  isIdCardDoc(doc: any): boolean {
-    const t: string = doc?.documentType || '';
-    return t === 'ID_CARD' || t === 'ID_CARD_FRONT' || t === 'ID_CARD_BACK';
-  }
-
-  /** All CCCD documents in the list */
-  getIdCardDocs(docs: any[]): any[] {
-    return (docs || []).filter(d => this.isIdCardDoc(d));
-  }
-
-  /** All non-CCCD documents in the list */
-  getNonIdCardDocs(docs: any[]): any[] {
-    return (docs || []).filter(d => !this.isIdCardDoc(d));
-  }
-
-  /** Open multi-image dialog for all CCCD docs */
-  viewIdCardDocuments(docs: any[]): void {
+  viewIdCardDocuments(docs: OwnerApplicationDocument[]): void {
     this.dialog.open(DocumentPreviewDialogComponent, {
       width: '1200px',
       maxWidth: '95vw',
@@ -303,9 +225,7 @@ export class OwnerApplicationsComponent implements OnInit {
         title: 'Căn Cước Công Dân (CCCD)',
         fileUrls: docs.map(d => d.fileUrl),
         fileLabels: docs.map((d, i) => {
-          if (d.documentType === 'ID_CARD_FRONT') return 'Mặt trước CCCD';
-          if (d.documentType === 'ID_CARD_BACK') return 'Mặt sau CCCD';
-          return `Ảnh CCCD ${i + 1}`;
+          return `Ảnh ${i + 1}`;
         })
       }
     });

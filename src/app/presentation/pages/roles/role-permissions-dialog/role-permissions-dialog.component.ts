@@ -5,16 +5,9 @@ import { Permission } from '@application/dto/permission/permission.dto';
 import { PermissionService } from '@presentation/services/permission.service';
 import { RoleService } from '@presentation/services/role.service';
 import { NotifyService } from '@shared/components/notify/notify.service';
+import { PermissionGroup, RolePermissionsDialogData } from './role-permissions-dialog.models';
 
-export interface RolePermissionsDialogData {
-  role: Role;
-}
-
-export interface PermissionGroup {
-  moduleName: string;
-  permissions: Permission[];
-  expanded: boolean;
-}
+export { PermissionGroup, RolePermissionsDialogData } from './role-permissions-dialog.models';
 
 @Component({
   selector: 'app-role-permissions-dialog',

@@ -4,10 +4,9 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Role } from '@application/dto/role/role.dto';
 import { RoleService } from '@presentation/services/role.service';
 import { NotifyService } from '@shared/components/notify/notify.service';
+import { RoleDialogData } from './role-dialog.models';
 
-export interface RoleDialogData {
-  role?: Role;
-}
+export { RoleDialogData } from './role-dialog.models';
 
 @Component({
     selector: 'app-role-dialog',

@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -16,13 +16,16 @@ import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-ic
 import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { calculateWeeklyTrend } from '@shared/utils/date-trend.utils';
 import { parseWeatherCode } from '@shared/utils/weather-parser.utils';
-
-export interface WeatherInfo {
-  temp: number;
-  condition: string;
-  icon: string;
-  description: string;
-}
+import { getFallbackAvatar } from '@shared/utils/user-display.utils';
+import { VenueMapMarker, WeatherInfo } from './dashboard.models';
+import {
+  buildDistrictBreakdown,
+  createCalendarGrid,
+  createVenueMapMarker,
+  formatVietnameseDate,
+  formatVietnameseMonthYear
+} from './dashboard.utils';
+import { DashboardMapService } from './dashboard-map.service';
 
 @Component({
   selector: 'app-dashboard-overview',
@@ -37,32 +40,25 @@ export interface WeatherInfo {
     DragDropModule
   ],
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.scss'
+  styleUrl: './dashboard.component.scss',
+  providers: [DashboardMapService]
 })
-export class DashboardOverviewComponent implements OnInit, AfterViewInit {
+export class DashboardOverviewComponent implements OnInit, AfterViewInit, OnDestroy {
   private userService = inject(UserService);
   private getAllApplicationsUseCase = inject(GetAllOwnerApplicationsUseCase);
   private authService = inject(AuthService);
-
-  private leafletMap: any;
-  private markersGroup: any;
+  private dashboardMap = inject(DashboardMapService);
 
   currentDate = new Date();
   adminName = 'Quản Trị Viên';
+  readonly getFallbackAvatar = getFallbackAvatar;
 
   get formattedDateVi(): string {
-    const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
-    const dayName = days[this.currentDate.getDay()];
-    const date = this.currentDate.getDate().toString().padStart(2, '0');
-    const month = (this.currentDate.getMonth() + 1).toString().padStart(2, '0');
-    const year = this.currentDate.getFullYear();
-    return `${dayName}, ngày ${date} tháng ${month} năm ${year}`;
+    return formatVietnameseDate(this.currentDate);
   }
 
   get formattedMonthYearVi(): string {
-    const month = (this.currentDate.getMonth() + 1).toString().padStart(2, '0');
-    const year = this.currentDate.getFullYear();
-    return `Tháng ${month} năm ${year}`;
+    return formatVietnameseMonthYear(this.currentDate);
   }
 
   // Signals State
@@ -141,34 +137,20 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit {
   upcomingSurveys = signal<OwnerApplication[]>([]);
 
   // Owner Application Map State
-  mapMarkers = signal<Array<{
-    lat: number;
-    lng: number;
-    businessName: string;
-    fullName: string;
-    addressText: string;
-    status: string;
-    district: string;
-    isFallback: boolean;
-  }>>([]);
+  mapMarkers = signal<VenueMapMarker[]>([]);
   applicationDistricts = signal<string[]>([]);
   unlocatedVenueCount = signal(0);
+  selectedMapStatus = signal<OwnerApplicationStatus | null>(null);
+
+  filteredMapMarkers = computed(() => {
+    const status = this.selectedMapStatus();
+    return status
+      ? this.mapMarkers().filter(marker => marker.status === status)
+      : this.mapMarkers();
+  });
 
   districtBreakdown = computed(() => {
-    const counts: { [key: string]: number } = {};
-    this.applicationDistricts().forEach(district => {
-      let name = district.replace(/(quận|q\.|q)/i, '').trim();
-      if (!name) name = 'Khác';
-      counts[name] = (counts[name] || 0) + 1;
-    });
-    return Object.keys(counts).map(key => {
-      const cleanKey = key.trim();
-      const name = isNaN(Number(cleanKey)) ? cleanKey : `Quận ${cleanKey}`;
-      return {
-        name,
-        count: counts[cleanKey]
-      };
-    }).sort((a, b) => b.count - a.count);
+    return buildDistrictBreakdown(this.applicationDistricts());
   });
 
   weather = signal<WeatherInfo>({
@@ -235,12 +217,12 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit {
         );
 
         const markers = applications.result.map(
-          (app, index) => this.createMapMarker(app, index)
+          (app, index) => createVenueMapMarker(app, index)
         );
 
         this.unlocatedVenueCount.set(markers.filter(marker => marker.isFallback).length);
         this.mapMarkers.set(markers);
-        this.renderMarkersOnMap();
+        this.dashboardMap.render(markers);
 
         this.loading.set(false);
       },
@@ -252,167 +234,20 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    this.initRealMap();
+    this.dashboardMap.init('real-leaflet-map');
   }
 
-  private initRealMap() {
-    if ((window as any).L) {
-      this.createLeafletMap();
-      return;
-    }
-
-    // Load CSS
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-    document.head.appendChild(link);
-
-    // Load JS
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-    script.onload = () => {
-      this.createLeafletMap();
-    };
-    document.body.appendChild(script);
+  ngOnDestroy(): void {
+    this.dashboardMap.destroy();
   }
 
-  private createLeafletMap() {
-    const L = (window as any).L;
-    const mapEl = document.getElementById('real-leaflet-map');
-    if (!L || !mapEl || this.leafletMap) return;
-
-    // Initialize Map centered in HCMC
-    this.leafletMap = L.map('real-leaflet-map', {
-      zoomControl: true,
-      attributionControl: false
-    }).setView([10.7760, 106.7009], 11);
-
-    // Add CartoDB Voyager tile layer
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19
-    }).addTo(this.leafletMap);
-
-    // Create marker layer group
-    this.markersGroup = L.layerGroup().addTo(this.leafletMap);
-
-    // Render markers on map
-    this.renderMarkersOnMap();
+  toggleMapStatus(status: OwnerApplicationStatus): void {
+    this.selectedMapStatus.update(current => current === status ? null : status);
+    this.dashboardMap.render(this.filteredMapMarkers());
   }
 
-  private renderMarkersOnMap() {
-    const L = (window as any).L;
-    if (!L || !this.leafletMap || !this.markersGroup) return;
-
-    this.markersGroup.clearLayers();
-    const bounds: Array<[number, number]> = [];
-
-    this.mapMarkers().forEach(marker => {
-      // Color based on status
-      let color = '#10b981'; // green
-      if (marker.status === 'PENDING') color = '#f59e0b'; // amber
-      if (marker.status === 'REJECTED') color = '#ef4444'; // rose
-
-      // Dynamic CSS circle marker
-      const customIcon = L.divIcon({
-        className: 'custom-leaflet-marker',
-        html: `
-          <div class="relative flex items-center justify-center">
-            <span class="absolute inline-flex h-4 w-4 rounded-full opacity-60 animate-ping" style="background-color: ${color}"></span>
-            <span class="relative block h-4 w-4 rounded-full border-2 border-white shadow-md" style="background-color: ${color}"></span>
-          </div>
-        `,
-        iconSize: [16, 16],
-        iconAnchor: [8, 8]
-      });
-
-      const locationNotice = marker.isFallback
-        ? `<span class="block text-[10px] text-amber-600 font-bold leading-snug mt-1">Chưa xác định được vị trí sân. Marker đang được hiển thị tạm tại TP.HCM.</span>`
-        : '';
-      const tooltipContent = `
-        <div class="p-2 select-none font-display">
-          <strong class="block text-xs font-black text-emerald-600">${marker.businessName}</strong>
-          <span class="block text-[12px] text-slate-500 font-bold mt-0.5">Chủ sở hữu: ${marker.fullName}</span>
-          <span class="block text-[10px] text-slate-500 font-medium leading-snug mt-1">${marker.addressText}</span>
-          ${locationNotice}
-        </div>
-      `;
-
-      L.marker([marker.lat, marker.lng], { icon: customIcon })
-        .bindTooltip(tooltipContent, {
-          direction: 'top',
-          offset: [0, -10],
-          opacity: 1,
-          className: 'venue-map-tooltip'
-        })
-        .addTo(this.markersGroup);
-      bounds.push([marker.lat, marker.lng]);
-    });
-
-    if (bounds.length === 1) {
-      this.leafletMap.setView(bounds[0], 15);
-    } else if (bounds.length > 1) {
-      this.leafletMap.fitBounds(bounds, { padding: [32, 32], maxZoom: 15 });
-    }
-  }
-
-  private createMapMarker(app: OwnerApplication, index: number) {
-    const rawLat = app.address?.latitude;
-    const rawLng = app.address?.longitude;
-    const lat = Number(rawLat);
-    const lng = Number(rawLng);
-    const hasCoordinates = rawLat !== null
-      && rawLat !== undefined
-      && rawLng !== null
-      && rawLng !== undefined
-      && this.hasValidCoordinates(lat, lng);
-
-    const district = app.address?.district?.trim() || 'Chưa xác định';
-    const addressParts = [
-      app.address?.address,
-      app.address?.ward,
-      district,
-      app.address?.city,
-      app.address?.province
-    ].map(part => part?.trim()).filter((part): part is string => Boolean(part));
-
-    const fallbackCoordinates = this.getHcmFallbackCoordinates(index);
-
-    return {
-      lat: hasCoordinates ? lat : fallbackCoordinates[0],
-      lng: hasCoordinates ? lng : fallbackCoordinates[1],
-      businessName: app.businessName,
-      fullName: app.fullName,
-      addressText: [...new Set(addressParts)].join(', ') || 'Chưa có thông tin địa chỉ',
-      status: app.status,
-      district,
-      isFallback: !hasCoordinates
-    };
-  }
-
-  private getHcmFallbackCoordinates(index: number): [number, number] {
-    const hcmCenter: [number, number] = [10.7760, 106.7009];
-    if (index === 0) return hcmCenter;
-
-    const position = index - 1;
-    const pointsPerRing = 8;
-    const ring = Math.floor(position / pointsPerRing) + 1;
-    const angle = (position % pointsPerRing) * (Math.PI * 2 / pointsPerRing);
-    const radius = Math.min(0.03, ring * 0.006);
-
-    return [
-      hcmCenter[0] + Math.sin(angle) * radius,
-      hcmCenter[1] + Math.cos(angle) * radius
-    ];
-  }
-
-  private hasValidCoordinates(lat: number, lng: number): boolean {
-    return Number.isFinite(lat)
-      && Number.isFinite(lng)
-      && lat >= -90
-      && lat <= 90
-      && lng >= -180
-      && lng <= 180
-      && !(lat === 0 && lng === 0);
+  getMapMarkerCount(status: OwnerApplicationStatus): number {
+    return this.mapMarkers().filter(marker => marker.status === status).length;
   }
 
   fetchWeather() {
@@ -431,18 +266,9 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit {
   }
 
   generateCalendar() {
-    const today = new Date();
-    this.currentDay = today.getDate();
-    const year = today.getFullYear();
-    const month = today.getMonth();
-    const totalDays = new Date(year, month + 1, 0).getDate();
-    const startDayOfWeek = new Date(year, month, 1).getDay();
-    this.calendarOffsetCells = Array(startDayOfWeek).fill(null);
-    this.calendarDays = Array.from({ length: totalDays }, (_, i) => i + 1);
-  }
-
-  getFallbackAvatar(user: User): string {
-    const seed = encodeURIComponent(user.fullName || user.username);
-    return `https://api.dicebear.com/7.x/initials/svg?seed=${seed}&backgroundColor=059669&fontColor=ffffff`;
+    const calendar = createCalendarGrid(new Date());
+    this.currentDay = calendar.currentDay;
+    this.calendarOffsetCells = calendar.offsetCells;
+    this.calendarDays = calendar.days;
   }
 }

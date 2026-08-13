@@ -6,7 +6,7 @@ import { User } from '@application/dto/user/user.dto';
 import { UserService } from '@presentation/services/user.service';
 import { StorageService } from '@presentation/services/storage.service';
 import { COUNTRIES } from '@shared/constants/countries.constant';
-import { environment } from '@environments/environment';
+import { getAvatarUrl, getFallbackAvatar } from '@shared/utils/user-display.utils';
 
 @Component({
   selector: 'app-edit-user-drawer',
@@ -15,6 +15,8 @@ import { environment } from '@environments/environment';
   standalone: false
 })
 export class EditUserDrawerComponent implements OnChanges {
+  readonly getAvatarUrl = getAvatarUrl;
+  readonly getFallbackAvatar = getFallbackAvatar;
   private userAdminService = inject(UserService);
   private storageService = inject(StorageService);
   private snackBar = inject(NotifyService);
@@ -76,18 +78,6 @@ export class EditUserDrawerComponent implements OnChanges {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     this.isCountryDropdownOpen = false;
-  }
-
-  getAvatarUrl(avatarUrl: string | null | undefined): string {
-    if (!avatarUrl) return '';
-    if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) {
-      return avatarUrl;
-    }
-    return `${environment.apiUrl}/storage-service/api/v1/files/download?key=${avatarUrl}`;
-  }
-
-  getFallbackAvatar(user: User): string {
-    return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.fullName || user.username)}`;
   }
 
   onAvatarSelected(event: any): void {

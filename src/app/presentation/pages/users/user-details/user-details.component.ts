@@ -1,7 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { RoleEnum } from '@application/dto/role/role.dto';
-import { GENDER_ENUM_OPTIONS, User } from '@application/dto/user/user.dto';
-import { environment } from '@environments/environment';
+import { User } from '@application/dto/user/user.dto';
+import { getDisplayAvatar, getGenderLabel, getRoleLabel } from '@shared/utils/user-display.utils';
 
 @Component({
   selector: 'app-user-details',
@@ -10,6 +9,9 @@ import { environment } from '@environments/environment';
   standalone: false
 })
 export class UserDetailsComponent {
+  readonly getDisplayAvatar = getDisplayAvatar;
+  readonly getFallbackRole = getRoleLabel;
+  readonly getFallbackGender = getGenderLabel;
   @Input() selectedUser!: User;
   @Input() loadingDetails = false;
 
@@ -19,32 +21,4 @@ export class UserDetailsComponent {
   @Output() changePassword = new EventEmitter<User>();
   @Output() toggleVerification = new EventEmitter<{ user: User; verified: boolean }>();
 
-  getAvatarUrl(avatarUrl: string | null | undefined): string {
-    if (!avatarUrl) return '';
-    if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) {
-      return avatarUrl;
-    }
-    return `${environment.apiUrl}/storage-service/api/v1/files/download?key=${avatarUrl}`;
-  }
-
-  getDisplayAvatar(user: User | null | undefined): string {
-    if (!user) return '';
-    if (user.avatarUrl) {
-      return this.getAvatarUrl(user.avatarUrl);
-    }
-    return this.getFallbackAvatar(user);
-  }
-
-  getFallbackAvatar(user: User): string {
-    return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.fullName || user.username)}`;
-  }
-
-  getFallbackRole(role?: string): string {
-    if (!role) return '';
-    return RoleEnum.find(r => r.value === role)?.label || role;
-  }
-
-  getFallbackGender(gender: string): string {
-    return GENDER_ENUM_OPTIONS.find(g => g.value === gender)?.label || gender;
-  }
 }

@@ -2,13 +2,12 @@ import { Component, OnInit, inject, ViewChild, TemplateRef, ViewContainerRef } f
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { AssignRoleDialogComponent } from '@presentation/pages/users/assign-role-dialog/assign-role-dialog.component';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
-import { RoleEnum } from '@application/dto/role/role.dto';
 import { Overlay, OverlayRef } from '@angular/cdk/overlay';
 import { TemplatePortal } from '@angular/cdk/portal';
 import { MatDialog } from '@angular/material/dialog';
-import { GENDER_ENUM_OPTIONS, User } from '@application/dto/user/user.dto';
+import { User } from '@application/dto/user/user.dto';
 import { UserService } from '@presentation/services/user.service';
-import { environment } from '@environments/environment';
+import { getDisplayAvatar, getGenderLabel, getRoleLabel } from '@shared/utils/user-display.utils';
 
 @Component({
   selector: 'app-users',
@@ -17,6 +16,9 @@ import { environment } from '@environments/environment';
   standalone: false
 })
 export class UsersComponent implements OnInit {
+  readonly getDisplayAvatar = getDisplayAvatar;
+  readonly getFallbackRole = getRoleLabel;
+  readonly getFallbackGender = getGenderLabel;
   @ViewChild('createUserTemplate') createUserTemplate!: TemplateRef<any>;
   @ViewChild('editUserTemplate') editUserTemplate!: TemplateRef<any>;
   @ViewChild('changePasswordTemplate') changePasswordTemplate!: TemplateRef<any>;
@@ -174,35 +176,6 @@ export class UsersComponent implements OnInit {
   goToPage(page: number): void {
     this.pageIndex = page;
     this.loadUsers();
-  }
-
-  getFallbackAvatar(user: User): string {
-    return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.fullName || user.username)}`;
-  }
-
-  getFallbackRole(role?: string): string {
-    if (!role) return '';
-    return RoleEnum.find(r => r.value === role)?.label || role;
-  }
-
-  getFallbackGender(gender: string): string {
-    return GENDER_ENUM_OPTIONS.find(g => g.value === gender)?.label || gender;
-  }
-
-  getAvatarUrl(avatarUrl: string | null | undefined): string {
-    if (!avatarUrl) return '';
-    if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) {
-      return avatarUrl;
-    }
-    return `${environment.apiUrl}/storage-service/api/v1/files/download?key=${avatarUrl}`;
-  }
-
-  getDisplayAvatar(user: User | null | undefined): string {
-    if (!user) return '';
-    if (user.avatarUrl) {
-      return this.getAvatarUrl(user.avatarUrl);
-    }
-    return this.getFallbackAvatar(user);
   }
 
   onCreateUser(): void {

@@ -144,19 +144,41 @@
       </div>
 
       <!-- Map Legend Row -->
-      <div class="flex flex-wrap items-center gap-4 text-xs font-extrabold text-slate-500 mt-2 shrink-0 select-none">
-        <div class="flex items-center gap-1.5">
+      <div class="mt-2 flex shrink-0 flex-wrap items-center gap-2 text-xs font-extrabold text-slate-500 select-none">
+        <button type="button" (click)="toggleMapStatus(OwnerApplicationStatus.APPROVED)"
+          [attr.aria-pressed]="selectedMapStatus() === OwnerApplicationStatus.APPROVED"
+          [ngClass]="selectedMapStatus() === OwnerApplicationStatus.APPROVED
+            ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+            : 'border-transparent bg-transparent hover:bg-slate-50'"
+          class="flex h-8 cursor-pointer items-center gap-1.5 rounded-full border px-2.5 transition-colors">
           <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
           <span>Sân đang hoạt động</span>
-        </div>
-        <div class="flex items-center gap-1.5">
+          <span class="text-[10px] opacity-60">({{ getMapMarkerCount(OwnerApplicationStatus.APPROVED) }})</span>
+        </button>
+        <button type="button" (click)="toggleMapStatus(OwnerApplicationStatus.PENDING)"
+          [attr.aria-pressed]="selectedMapStatus() === OwnerApplicationStatus.PENDING"
+          [ngClass]="selectedMapStatus() === OwnerApplicationStatus.PENDING
+            ? 'border-amber-200 bg-amber-50 text-amber-700'
+            : 'border-transparent bg-transparent hover:bg-slate-50'"
+          class="flex h-8 cursor-pointer items-center gap-1.5 rounded-full border px-2.5 transition-colors">
           <span class="h-2 w-2 rounded-full bg-amber-500"></span>
           <span>Sân chờ xét duyệt</span>
-        </div>
-        <div class="flex items-center gap-1.5">
+          <span class="text-[10px] opacity-60">({{ getMapMarkerCount(OwnerApplicationStatus.PENDING) }})</span>
+        </button>
+        <button type="button" (click)="toggleMapStatus(OwnerApplicationStatus.REJECTED)"
+          [attr.aria-pressed]="selectedMapStatus() === OwnerApplicationStatus.REJECTED"
+          [ngClass]="selectedMapStatus() === OwnerApplicationStatus.REJECTED
+            ? 'border-rose-200 bg-rose-50 text-rose-700'
+            : 'border-transparent bg-transparent hover:bg-slate-50'"
+          class="flex h-8 cursor-pointer items-center gap-1.5 rounded-full border px-2.5 transition-colors">
           <span class="h-2 w-2 rounded-full bg-rose-500"></span>
           <span>Sân bị từ chối</span>
-        </div>
+          <span class="text-[10px] opacity-60">({{ getMapMarkerCount(OwnerApplicationStatus.REJECTED) }})</span>
+        </button>
+
+        @if (selectedMapStatus() && filteredMapMarkers().length === 0) {
+        <span class="ml-auto text-[11px] font-bold text-slate-400">Không có sân ở trạng thái này</span>
+        }
       </div>
 
       <!-- Map canvas -->
