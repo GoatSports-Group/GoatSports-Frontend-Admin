@@ -150,11 +150,13 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit {
     status: string;
     district: string;
   }>>([]);
+  applicationDistricts = signal<string[]>([]);
+  unlocatedVenueCount = signal(0);
 
   districtBreakdown = computed(() => {
     const counts: { [key: string]: number } = {};
-    this.mapMarkers().forEach(m => {
-      let name = m.district.replace(/(quận|q\.|q)/i, '').trim();
+    this.applicationDistricts().forEach(district => {
+      let name = district.replace(/(quận|q\.|q)/i, '').trim();
       if (!name) name = 'Khác';
       counts[name] = (counts[name] || 0) + 1;
     });
@@ -227,24 +229,16 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit {
         this.rejectedAppsTrend.set(rejectedTrendRes.trendText);
         this.isRejectedAppsTrendPositive.set(rejectedTrendRes.isPositive);
 
-        // Map markers for geolocation using real coordinates
-        const markers = applications.result.map(app => {
-          const district = app.address?.district || 'Hồ Chí Minh';
-          const latLng = this.getDistrictLatLng(district);
-          // Add a tiny random offset to prevent direct overlaps in the same district
-          const jitterLat = latLng[0] + (Math.random() - 0.5) * 0.015;
-          const jitterLng = latLng[1] + (Math.random() - 0.5) * 0.015;
+        this.applicationDistricts.set(
+          applications.result.map(app => app.address?.district?.trim() || 'Chưa xác định')
+        );
 
-          return {
-            lat: jitterLat,
-            lng: jitterLng,
-            businessName: app.businessName,
-            fullName: app.fullName,
-            addressText: `${app.address?.address || ''}, ${app.address?.ward || ''}, ${district}, ${app.address?.city || ''}`,
-            status: app.status,
-            district: district
-          };
-        });
+        // Never infer a venue position from a district centre or random offset.
+        const markers = applications.result
+          .map(app => this.createMapMarker(app))
+          .filter((marker): marker is NonNullable<typeof marker> => marker !== null);
+
+        this.unlocatedVenueCount.set(applications.result.length - markers.length);
         this.mapMarkers.set(markers);
         this.renderMarkersOnMap();
 
@@ -310,6 +304,7 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit {
     if (!L || !this.leafletMap || !this.markersGroup) return;
 
     this.markersGroup.clearLayers();
+    const bounds: Array<[number, number]> = [];
 
     this.mapMarkers().forEach(marker => {
       // Color based on status
@@ -342,41 +337,59 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit {
       L.marker([marker.lat, marker.lng], { icon: customIcon })
         .bindPopup(popupContent, { closeButton: false })
         .addTo(this.markersGroup);
+      bounds.push([marker.lat, marker.lng]);
     });
+
+    if (bounds.length === 1) {
+      this.leafletMap.setView(bounds[0], 15);
+    } else if (bounds.length > 1) {
+      this.leafletMap.fitBounds(bounds, { padding: [32, 32], maxZoom: 15 });
+    }
   }
 
-  private getDistrictLatLng(district: string): [number, number] {
-    const d = district.toLowerCase();
+  private createMapMarker(app: OwnerApplication) {
+    const rawLat = app.address?.latitude;
+    const rawLng = app.address?.longitude;
 
-    // Core districts
-    if (d.includes('quận 1') || d.includes('q.1') || d.includes('q1')) return [10.7760, 106.7009];
-    if (d.includes('quận 3') || d.includes('q.3') || d.includes('q3')) return [10.7785, 106.6806];
-    if (d.includes('quận 5') || d.includes('q.5') || d.includes('q5')) return [10.7554, 106.6625];
-    if (d.includes('quận 10') || d.includes('q.10') || d.includes('q10')) return [10.7725, 106.6681];
-    if (d.includes('quận 11') || d.includes('q.11') || d.includes('q11')) return [10.7630, 106.6495];
-    if (d.includes('quận 4') || d.includes('q.4') || d.includes('q4')) return [10.7634, 106.7061];
-    if (d.includes('quận 6') || d.includes('q.6') || d.includes('q6')) return [10.7483, 106.6346];
-    if (d.includes('quận 8') || d.includes('q.8') || d.includes('q8')) return [10.7228, 106.6333];
-    if (d.includes('quận 7') || d.includes('q.7') || d.includes('q7')) return [10.7326, 106.7268];
+    if (rawLat === null || rawLat === undefined || rawLng === null || rawLng === undefined) {
+      return null;
+    }
 
-    // Surrounding districts
-    if (d.includes('thủ đức') || d.includes('quận 2') || d.includes('q.2') || d.includes('quận 9') || d.includes('q.9')) return [10.8494, 106.7719];
-    if (d.includes('bình thạnh')) return [10.8037, 106.7082];
-    if (d.includes('phú nhuận')) return [10.7992, 106.6803];
-    if (d.includes('gò vấp')) return [10.8388, 106.6669];
-    if (d.includes('tân bình')) return [10.8014, 106.6525];
-    if (d.includes('tân phú')) return [10.7900, 106.6187];
+    const lat = Number(rawLat);
+    const lng = Number(rawLng);
 
-    // Outer districts
-    if (d.includes('quận 12') || d.includes('q.12') || d.includes('q12')) return [10.8672, 106.6407];
-    if (d.includes('bình tân')) return [10.7761, 106.6001];
-    if (d.includes('hóc môn')) return [10.8833, 106.5917];
-    if (d.includes('củ chi')) return [11.0067, 106.5133];
-    if (d.includes('nhà bè')) return [10.6953, 106.7264];
-    if (d.includes('bình chánh')) return [10.6875, 106.5938];
-    if (d.includes('cần giờ')) return [10.4283, 106.9583];
+    if (!this.hasValidCoordinates(lat, lng)) {
+      return null;
+    }
 
-    return [10.7760, 106.7009];
+    const district = app.address?.district?.trim() || 'Chưa xác định';
+    const addressParts = [
+      app.address?.address,
+      app.address?.ward,
+      district,
+      app.address?.city,
+      app.address?.province
+    ].map(part => part?.trim()).filter((part): part is string => Boolean(part));
+
+    return {
+      lat,
+      lng,
+      businessName: app.businessName,
+      fullName: app.fullName,
+      addressText: [...new Set(addressParts)].join(', ') || 'Chưa có thông tin địa chỉ',
+      status: app.status,
+      district
+    };
+  }
+
+  private hasValidCoordinates(lat: number, lng: number): boolean {
+    return Number.isFinite(lat)
+      && Number.isFinite(lng)
+      && lat >= -90
+      && lat <= 90
+      && lng >= -180
+      && lng <= 180
+      && !(lat === 0 && lng === 0);
   }
 
   fetchWeather() {

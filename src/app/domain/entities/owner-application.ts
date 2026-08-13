@@ -9,6 +9,8 @@ export interface OwnerApplicationAddress {
   district: string;
   city: string;
   province: string;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface OwnerApplicationDocument {
