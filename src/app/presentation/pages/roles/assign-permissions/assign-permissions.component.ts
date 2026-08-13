@@ -5,7 +5,7 @@ import { RoleService } from '@presentation/services/role.service';
 import { PermissionService } from '@presentation/services/permission.service';
 import { Role } from '@application/dto/role/role.dto';
 import { Permission } from '@application/dto/permission/permission.dto';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotifyService } from '@shared/components/notify/notify.service';
 import { PageEvent } from '@angular/material/paginator';
 import { buildRsqlSearch } from '@shared/utils/api.helper';
 
@@ -20,7 +20,7 @@ export class AssignPermissionsComponent implements OnInit {
   private router = inject(Router);
   private roleAdminService = inject(RoleService);
   private permissionAdminService = inject(PermissionService);
-  private snackBar = inject(MatSnackBar);
+  private snackBar = inject(NotifyService);
 
   roleId = '';
   role?: Role;

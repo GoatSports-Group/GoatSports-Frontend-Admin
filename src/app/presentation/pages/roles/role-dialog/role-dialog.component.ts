@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Role } from '@application/dto/role/role.dto';
 import { RoleService } from '@presentation/services/role.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotifyService } from '@shared/components/notify/notify.service';
 
 export interface RoleDialogData {
   role?: Role;
@@ -18,7 +18,7 @@ export interface RoleDialogData {
 export class RoleDialogComponent implements OnInit {
   private fb = inject(FormBuilder);
   private roleAdminService = inject(RoleService);
-  private snackBar = inject(MatSnackBar);
+  private snackBar = inject(NotifyService);
 
   roleForm!: FormGroup;
   isEditMode = false;

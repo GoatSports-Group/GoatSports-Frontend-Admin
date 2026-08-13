@@ -5,7 +5,7 @@ import { ApproveOwnerApplicationUseCase } from '@application/usecase/owner-appli
 import { RejectOwnerApplicationUseCase } from '@application/usecase/owner-application/reject-owner-application.usecase';
 import { OwnerApplication, OWNER_APPLICATION_STATUS_OPTIONS, BUSINESS_TYPE_OPTIONS, DOCUMENT_TYPE_OPTIONS, OwnerApplicationStatus, BusinessType, DocumentType } from '@application/dto/owner-application/owner-application.dto';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotifyService } from '@shared/components/notify/notify.service';
 import { RejectReasonDialogComponent } from '@presentation/pages/owner-applications/owner-application-dialog/reject-reason-dialog.component';
 import { PageEvent } from '@angular/material/paginator';
 import { buildRsqlSearch } from '@shared/utils/api.helper';
@@ -25,7 +25,7 @@ export class OwnerApplicationsComponent implements OnInit {
   private rejectUseCase = inject(RejectOwnerApplicationUseCase);
   private getFileUrlUseCase = inject(GetFileUrlUseCase);
   private dialog = inject(MatDialog);
-  private snackBar = inject(MatSnackBar);
+  private snackBar = inject(NotifyService);
 
   readonly OwnerApplicationStatus = OwnerApplicationStatus;
   readonly OwnerApplicationStatusOp = OWNER_APPLICATION_STATUS_OPTIONS;

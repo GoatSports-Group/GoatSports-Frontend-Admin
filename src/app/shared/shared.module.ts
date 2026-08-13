@@ -14,7 +14,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatDialogModule } from '@angular/material/dialog';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTableModule } from '@angular/material/table';
@@ -43,7 +42,6 @@ const MATERIAL_MODULES = [
   MatMenuModule,
   MatBadgeModule,
   MatDialogModule,
-  MatSnackBarModule,
   MatPaginatorModule,
   MatTabsModule,
   MatTableModule,

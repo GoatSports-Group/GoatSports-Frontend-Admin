@@ -17,7 +17,7 @@ import { MarkAllNotificationsReadUseCase } from '@application/usecase/notificati
 import { DeleteNotificationUseCase } from '@application/usecase/notification/delete-notification.usecase';
 import { WEBSOCKET_SERVICE_TOKEN } from '@application/ports/websocket.service';
 import { AuthService } from './auth.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotifyService } from '@shared/components/notify/notify.service';
 import { PageFilter } from '@application/dto/page.filter';
 
 @Injectable({
@@ -34,7 +34,7 @@ export class NotificationService {
   // ─── Infrastructure ───────────────────────────────────────────────────────────
   private wsService   = inject(WEBSOCKET_SERVICE_TOKEN);
   private authService = inject(AuthService);
-  private snackBar    = inject(MatSnackBar);
+  private snackBar    = inject(NotifyService);
   private ngZone      = inject(NgZone);
 
   // ─── State ────────────────────────────────────────────────────────────────────

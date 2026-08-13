@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, inject } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotifyService } from '@shared/components/notify/notify.service';
 import { User } from '@application/dto/user/user.dto';
 import { UserService } from '@presentation/services/user.service';
 import { PASSWORD_PATTERN } from '@shared/constants/password.constants';
@@ -13,7 +13,7 @@ import { environment } from '@environments/environment';
 })
 export class ChangePasswordDrawerComponent implements OnChanges {
   private userAdminService = inject(UserService);
-  private snackBar = inject(MatSnackBar);
+  private snackBar = inject(NotifyService);
 
   @Input() isPasswordDrawerOpen = false;
   @Input() passwordEditingUser: User | null = null;

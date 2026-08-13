@@ -4,7 +4,7 @@ import { User } from '@application/dto/user/user.dto';
 import { Role, RoleEnum } from '@application/dto/role/role.dto';
 import { UserService } from '@presentation/services/user.service';
 import { RoleService } from '@presentation/services/role.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotifyService } from '@shared/components/notify/notify.service';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
 export interface AssignRoleDialogData {
@@ -21,7 +21,7 @@ export class AssignRoleDialogComponent implements OnInit {
   private roleAdminService = inject(RoleService);
   private userAdminService = inject(UserService);
   private dialog = inject(MatDialog);
-  private snackBar = inject(MatSnackBar);
+  private snackBar = inject(NotifyService);
 
   user: User;
   roles: Role[] = [];

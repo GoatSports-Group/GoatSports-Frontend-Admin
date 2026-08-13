@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotifyService } from '@shared/components/notify/notify.service';
 import { UserService } from '@presentation/services/user.service';
 import { PASSWORD_PATTERN } from '@shared/constants/password.constants';
 
@@ -11,7 +11,7 @@ import { PASSWORD_PATTERN } from '@shared/constants/password.constants';
 })
 export class CreateUserDrawerComponent {
   private userAdminService = inject(UserService);
-  private snackBar = inject(MatSnackBar);
+  private snackBar = inject(NotifyService);
 
   @Input() isCreateDrawerOpen = false;
   @Output() close = new EventEmitter<void>();

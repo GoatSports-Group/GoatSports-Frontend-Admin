@@ -9,6 +9,7 @@ import { ApiInterceptor } from '@presentation/interceptors/api.interceptor';
 import { ForbiddenComponent } from '@shared/components/forbidden/forbidden.component';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { NotifyComponent } from '@shared/components/notify/notify.component';
 
 import { AUTH_REPOSITORY_TOKEN } from '@application/ports/persistence/auth.repository';
 import { USER_REPOSITORY_TOKEN } from '@application/ports/persistence/user.repository';
@@ -119,7 +120,8 @@ import {
     BrowserAnimationsModule,
     MatButtonModule,
     MatProgressSpinnerModule,
-    LucideIconComponent
+    LucideIconComponent,
+    NotifyComponent
   ],
   providers: [
     {

@@ -3,7 +3,7 @@ import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router } from
 import { Observable } from 'rxjs';
 import { filter, map, take } from 'rxjs/operators';
 import { AuthService } from '@presentation/services/auth.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotifyService } from '@shared/components/notify/notify.service';
 import { environment } from "@environments/environment"
 
 @Injectable({
@@ -12,7 +12,7 @@ import { environment } from "@environments/environment"
 export class AdminGuard implements CanActivate {
   private authService = inject(AuthService);
   private router = inject(Router);
-  private snackBar = inject(MatSnackBar);
+  private snackBar = inject(NotifyService);
 
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> {
     return this.authService.sessionReady$.pipe(

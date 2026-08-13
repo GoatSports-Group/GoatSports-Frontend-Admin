@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotifyService } from '@shared/components/notify/notify.service';
 import { Log } from '@domain/entities/log';
 import { LogService } from '@presentation/services/log.service';
 import { LogStats, ChartDataPoint } from './components/models';
@@ -12,7 +12,7 @@ import { LogStats, ChartDataPoint } from './components/models';
 })
 export class LogsComponent implements OnInit {
   private logService = inject(LogService);
-  private snackBar = inject(MatSnackBar);
+  private snackBar = inject(NotifyService);
 
   logs: Log[] = [];
   loading = false;

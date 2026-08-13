@@ -4,7 +4,7 @@ import { Role } from '@application/dto/role/role.dto';
 import { Permission } from '@application/dto/permission/permission.dto';
 import { PermissionService } from '@presentation/services/permission.service';
 import { RoleService } from '@presentation/services/role.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotifyService } from '@shared/components/notify/notify.service';
 
 export interface RolePermissionsDialogData {
   role: Role;
@@ -25,7 +25,7 @@ export interface PermissionGroup {
 export class RolePermissionsDialogComponent implements OnInit {
   private permissionAdminService = inject(PermissionService);
   private roleAdminService = inject(RoleService);
-  private snackBar = inject(MatSnackBar);
+  private snackBar = inject(NotifyService);
 
   role!: Role;
   permissionGroups: PermissionGroup[] = [];

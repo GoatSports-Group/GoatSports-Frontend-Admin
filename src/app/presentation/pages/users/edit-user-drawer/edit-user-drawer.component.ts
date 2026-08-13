@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, inject, HostListener } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotifyService } from '@shared/components/notify/notify.service';
 import { forkJoin } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { User } from '@application/dto/user/user.dto';
@@ -17,7 +17,7 @@ import { environment } from '@environments/environment';
 export class EditUserDrawerComponent implements OnChanges {
   private userAdminService = inject(UserService);
   private storageService = inject(StorageService);
-  private snackBar = inject(MatSnackBar);
+  private snackBar = inject(NotifyService);
 
   @Input() isEditDrawerOpen = false;
   @Input() editingUser: User | null = null;

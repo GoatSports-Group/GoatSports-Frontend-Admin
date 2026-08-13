@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { RoleService } from '@presentation/services/role.service';
 import { Role } from '@application/dto/role/role.dto';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotifyService } from '@shared/components/notify/notify.service';
 import { RoleDialogComponent } from './role-dialog/role-dialog.component';
 import { RolePermissionsDialogComponent } from './role-permissions-dialog/role-permissions-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
@@ -20,7 +20,7 @@ import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 export class RolesComponent implements OnInit {
   private roleAdminService = inject(RoleService);
   private dialog = inject(MatDialog);
-  private snackBar = inject(MatSnackBar);
+  private snackBar = inject(NotifyService);
   private router = inject(Router);
 
   roles: Role[] = [];

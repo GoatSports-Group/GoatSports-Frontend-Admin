@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, ViewChild, TemplateRef, ViewContainerRef } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotifyService } from '@shared/components/notify/notify.service';
 import { AssignRoleDialogComponent } from '@presentation/pages/users/assign-role-dialog/assign-role-dialog.component';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { RoleEnum } from '@application/dto/role/role.dto';
@@ -23,7 +23,7 @@ export class UsersComponent implements OnInit {
   private overlay = inject(Overlay);
   private viewContainerRef = inject(ViewContainerRef);
   private dialog = inject(MatDialog);
-  private snackBar = inject(MatSnackBar);
+  private snackBar = inject(NotifyService);
   private userAdminService = inject(UserService);
 
   private overlayRef?: OverlayRef;
