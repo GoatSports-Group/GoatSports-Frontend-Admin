@@ -8,7 +8,7 @@ import { startWith, switchMap, catchError, map } from 'rxjs/operators';
 import { AuthService } from '@presentation/services/auth.service';
 import { NotificationService } from '@presentation/services/notification.service';
 import { User } from '@application/dto/user/user.dto';
-import { Notification, NotificationType } from '@application/dto/notification/notification.dto';
+import { Notification, NotificationStatus, NotificationType } from '@application/dto/notification/notification.dto';
 
 import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
@@ -416,15 +416,23 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isNotifOpen = false;
   }
 
-  onNotificationClick(notification: Notification) {
+  onNotificationClick(notification: Notification): void {
     this.isNotifOpen = false;
+
+    if (notification.status !== NotificationStatus.UNREAD) {
+      this.navigateFromNotification(notification);
+      return;
+    }
+
     this.notificationService.markAsRead(notification.notificationId).subscribe({
-      next: () => {
-        if (notification.type === NotificationType.OWNER_APPLICATION) {
-          this.router.navigate(['/owner-applications']);
-        }
-      }
+      next: () => this.navigateFromNotification(notification)
     });
+  }
+
+  private navigateFromNotification(notification: Notification): void {
+    if (notification.type === NotificationType.OWNER_APPLICATION) {
+      this.router.navigate(['/owner-applications']);
+    }
   }
 
   markAllRead() {

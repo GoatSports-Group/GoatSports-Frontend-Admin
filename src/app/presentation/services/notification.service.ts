@@ -187,6 +187,14 @@ export class NotificationService {
 
   /** Mark a single notification as read. Optimistically updates local state. */
   public markAsRead(id: string): Observable<Notification> {
+    const notification = this.notificationsSubject.value.find(
+      item => item.notificationId === id
+    );
+
+    if (!notification || notification.status !== NotificationStatus.UNREAD) {
+      return EMPTY;
+    }
+
     // Optimistic update before API call
     this.applyMarkAsRead(id);
 
