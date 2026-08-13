@@ -1,311 +1,281 @@
-<div class="flex flex-col lg:flex-row gap-6 animate-fade-in relative z-10 pl-4">
-
-  <!-- Sidebar Panel: List & Filters -->
-  <div
-    class="w-full lg:w-[380px] shrink-0 flex flex-col bg-white border border-slate-100 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.015)] overflow-hidden"
-    style="height: calc(100vh - 64px - 50px)">
-
-    <!-- Sidebar Header -->
-    <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-white select-none">
-      <div class="flex flex-col">
-        <h2 class="font-display text-xl font-black uppercase text-slate-900 tracking-tight leading-none">Duyệt Đơn Đối
-          Tác</h2>
-      </div>
-      <span
-        class="bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full shrink-0">
-        {{ filteredApplications.length }} hồ sơ
-      </span>
-    </div>
-
-    <!-- Search & Filter Controls -->
-    <div class="p-4 border-b border-slate-100 flex flex-col gap-3.5 bg-white">
-      <!-- Search Input -->
-      <div class="relative w-full">
-        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-          <lucide-icon name="search" class="text-slate-400 h-5 w-5"></lucide-icon>
+<div class="owner-review-page relative z-10 flex h-full min-h-[640px] flex-col gap-4 lg:flex-row">
+  <!-- Application inbox -->
+  <aside
+    class="flex min-h-0 w-full shrink-0 flex-col overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.05)] lg:w-[360px] xl:w-[390px]">
+    <header class="shrink-0 border-b border-slate-100 px-5 pb-4 pt-5">
+      <div class="flex items-start justify-between gap-4">
+        <div class="min-w-0">
+          <p class="text-[11px] font-extrabold uppercase tracking-[0.16em] text-emerald-600">Quản lý đối tác</p>
+          <h1 class="mt-1 text-xl font-black tracking-tight text-slate-900 font-display">Hồ sơ chủ sân</h1>
+          <p class="mt-1 text-xs font-medium text-slate-500">Kiểm tra và xử lý yêu cầu đăng ký.</p>
+        </div>
+        <span
+          class="inline-flex h-8 shrink-0 items-center rounded-full border border-emerald-100 bg-emerald-50 px-3 text-xs font-extrabold text-emerald-700">
+          {{ filteredApplications.length }} hồ sơ
         </span>
-        <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange()"
-          placeholder="Tìm tên, email, SĐT..."
-          class="w-full h-11 pl-10 pr-4 bg-slate-50/70 border-0 rounded-2xl text-sm font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-slate-100/80 transition-all">
       </div>
 
-      <!-- Filter status chips -->
-      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-        <button (click)="onFilterStatusChange('ALL')"
-          [ngClass]="filterStatus === 'ALL' ? 'bg-emerald-600 text-white font-bold shadow-md shadow-emerald-500/10' : 'bg-slate-50 hover:bg-slate-100/80 text-slate-600 border border-slate-200/40'"
-          class="px-3.5 py-1.5 rounded-full text-xs transition-all cursor-pointer whitespace-nowrap font-bold">
+      <div class="relative mt-4">
+        <lucide-icon name="search"
+          class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"></lucide-icon>
+        <input type="search" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange()"
+          placeholder="Tìm theo tên, email hoặc SĐT"
+          class="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50/80 pl-10 pr-4 text-sm font-semibold text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-500/10">
+      </div>
+
+      <div class="mt-3 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none" aria-label="Lọc trạng thái hồ sơ">
+        <button type="button" (click)="onFilterStatusChange('ALL')" [attr.aria-pressed]="filterStatus === 'ALL'"
+          [ngClass]="filterStatus === 'ALL' ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-200 hover:text-emerald-700'"
+          class="h-8 shrink-0 cursor-pointer rounded-full border px-3.5 text-xs font-bold transition-colors">
           Tất cả
         </button>
         @for (opt of OwnerApplicationStatusOp; track opt.value) {
-        <button (click)="onFilterStatusChange(opt.value)"
-          [ngClass]="filterStatus === opt.value ? 'bg-emerald-600 text-white font-bold shadow-md shadow-emerald-500/10' : 'bg-slate-50 hover:bg-slate-100/80 text-slate-600 border border-slate-200/40'"
-          class="px-3.5 py-1.5 rounded-full text-xs transition-all cursor-pointer whitespace-nowrap font-bold">
+        <button type="button" (click)="onFilterStatusChange(opt.value)"
+          [attr.aria-pressed]="filterStatus === opt.value"
+          [ngClass]="filterStatus === opt.value ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-200 hover:text-emerald-700'"
+          class="h-8 shrink-0 cursor-pointer rounded-full border px-3.5 text-xs font-bold transition-colors">
           {{ opt.label }}
         </button>
         }
       </div>
-    </div>
+    </header>
 
-    <!-- List of applications -->
-    <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 bg-slate-50/50">
+    <div class="flex-1 space-y-2.5 overflow-y-auto bg-slate-50/60 p-3.5">
       @if (loadingList) {
-      <div
-        class="h-[250px] flex flex-col items-center justify-center gap-3 bg-white rounded-3xl border border-slate-100 shadow-xs">
+      <div class="flex h-full min-h-64 flex-col items-center justify-center gap-3 rounded-2xl border border-slate-100 bg-white">
         <mat-spinner diameter="30" color="accent"></mat-spinner>
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider font-display">Đang tải danh sách...</p>
+        <p class="text-xs font-bold text-slate-400">Đang tải hồ sơ...</p>
       </div>
       } @else if (filteredApplications.length === 0) {
-      <div
-        class="h-[250px] flex flex-col items-center justify-center text-center text-slate-400 gap-2 bg-white rounded-3xl border border-slate-100 shadow-xs">
-        <lucide-icon name="ban" class="text-slate-300 h-10 w-10 mx-auto block mb-1"></lucide-icon>
-        <p class="text-xs font-semibold text-slate-500">Không tìm thấy hồ sơ nào phù hợp</p>
+      <div class="flex h-full min-h-64 flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white p-6 text-center">
+        <div class="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+          <lucide-icon name="inbox" class="h-5 w-5"></lucide-icon>
+        </div>
+        <p class="mt-3 text-sm font-extrabold text-slate-700">Không tìm thấy hồ sơ</p>
+        <p class="mt-1 text-xs font-medium leading-relaxed text-slate-400">Thử thay đổi từ khóa hoặc trạng thái lọc.</p>
       </div>
       } @else {
       @for (app of filteredApplications; track app.ownerApplicationId) {
-      <div (click)="selectApplication(app)" [ngClass]="selectedApplication?.ownerApplicationId === app.ownerApplicationId
-    ? 'bg-white border-emerald-500 ring-2 ring-emerald-500/5 shadow-xs'
-    : 'bg-white border-slate-100 hover:bg-slate-50/80 shadow-xs'"
-        class="p-4 transition-all cursor-pointer border rounded-2xl group">
-        <div class="flex justify-between items-start gap-3">
-          <!-- Left -->
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center justify-between gap-2">
-              <span class="font-bold text-slate-800 text-sm truncate leading-snug">
-                {{ app.businessName }}
-              </span>
-
-              <span
-                class="shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase border tracking-wide"
+      <button type="button" (click)="selectApplication(app)"
+        [attr.aria-current]="selectedApplication?.ownerApplicationId === app.ownerApplicationId ? 'true' : null"
+        [ngClass]="selectedApplication?.ownerApplicationId === app.ownerApplicationId
+          ? 'border-emerald-400 bg-white shadow-[0_8px_24px_rgba(5,150,105,0.10)] ring-1 ring-emerald-100'
+          : 'border-slate-200/80 bg-white hover:border-emerald-200 hover:shadow-sm'"
+        class="group w-full cursor-pointer rounded-2xl border p-3.5 text-left transition-all">
+        <div class="flex items-start gap-3">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-sm font-black uppercase"
+            [ngClass]="selectedApplication?.ownerApplicationId === app.ownerApplicationId ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-700'">
+            {{ app.businessName.charAt(0) || 'G' }}
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-start justify-between gap-2">
+              <p class="truncate text-sm font-extrabold text-slate-900">{{ app.businessName }}</p>
+              <span class="shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wide"
                 [ngClass]="{
-            'bg-emerald-50 text-emerald-700 border-emerald-100': app.status === 'APPROVED',
-            'bg-amber-50 text-amber-700 border-amber-100': app.status === 'PENDING',
-            'bg-rose-50 text-rose-700 border-rose-100': app.status === 'REJECTED'
-          }">
-                {{ app.status === 'APPROVED'
-                ? 'Đã duyệt'
-                : app.status === 'PENDING'
-                ? 'Chờ duyệt'
-                : 'Từ chối' }}
+                  'border-emerald-100 bg-emerald-50 text-emerald-700': app.status === 'APPROVED',
+                  'border-amber-100 bg-amber-50 text-amber-700': app.status === 'PENDING',
+                  'border-rose-100 bg-rose-50 text-rose-700': app.status === 'REJECTED'
+                }">
+                {{ getStatusLabel(app.status) }}
               </span>
             </div>
-
-            <div class="flex items-center justify-between mt-1 gap-2">
-              <span class="text-xs text-slate-550 truncate">
-                {{ app.fullName }}
-              </span>
-
-              <span class="shrink-0 text-slate-400 text-[12px] font-medium">
-                {{ app.reviewedAt ? (app.reviewedAt | date:'dd/MM/yyyy') : 'Mới nộp' }}
+            <p class="mt-1 truncate text-xs font-semibold text-slate-500">{{ app.fullName }}</p>
+            <div class="mt-2 flex items-center justify-between gap-2 border-t border-slate-100 pt-2">
+              <span class="truncate text-[11px] font-medium text-slate-400">{{ app.email }}</span>
+              <span class="shrink-0 text-[10px] font-bold text-slate-400">
+                {{ app.createdAt ? (app.createdAt | date:'dd/MM/yyyy') : 'Mới nộp' }}
               </span>
             </div>
           </div>
+          <lucide-icon name="chevron-right"
+            class="mt-3 h-4 w-4 shrink-0 text-slate-300 transition-colors group-hover:text-emerald-500"></lucide-icon>
         </div>
-      </div>
+      </button>
       }
       }
     </div>
 
-    <!-- Reusable Pagination Component -->
-    <app-pagination
-      [pageIndex]="pageIndex"
-      [pageSize]="pageSize"
-      [totalItems]="totalItems"
-      (pageChange)="goToPage($event)">
-    </app-pagination>
-  </div>
+    <app-pagination class="shrink-0" [pageIndex]="pageIndex" [pageSize]="pageSize" [totalItems]="totalItems"
+      (pageChange)="goToPage($event)"></app-pagination>
+  </aside>
 
-  <!-- Detail Panel: Document Review & Actions -->
-  <div
-    class="flex-1 flex flex-col bg-white border border-slate-100 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.015)] overflow-hidden"
-    style="height: calc(100vh - 64px - 50px)">
+  <!-- Review workspace -->
+  <section
+    class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.05)]">
     @if (selectedApplication) {
-    @if (loadingDetail) {
-    <div class="flex-1 flex flex-col items-center justify-center gap-3">
-      <mat-spinner diameter="40" color="accent"></mat-spinner>
-      <p class="text-sm font-extrabold text-slate-400 uppercase tracking-wider font-display">Đang tải tài liệu chi
-        tiết...</p>
-    </div>
-    } @else {
-    <div class="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
-      <!-- Detail Header Banner -->
-      <div
-        class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-850 rounded-3xl p-6 text-white shadow-md shadow-emerald-950/10">
-        <div>
-          <h1 class="font-display text-2xl font-black uppercase tracking-tight text-white">{{
-            selectedApplication.businessName }}</h1>
-          <p class="text-sm font-medium text-emerald-100/80 mt-1.5">
-            {{ getBusinessTypeLabel(selectedApplication.businessType) }}
-            <span class="mx-2 text-emerald-500/50">|</span>
-            Mã số thuế: <span class="text-white font-bold text-sm">{{ selectedApplication.taxCode }}</span>
-          </p>
-        </div>
-
-        <span
-          class="inline-flex items-center px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider border shrink-0"
-          [ngClass]="{
-                'bg-emerald-500/20 text-emerald-300 border-emerald-500/30': selectedApplication.status === 'APPROVED',
-                'bg-amber-500/20 text-amber-300 border-amber-500/30': selectedApplication.status === 'PENDING',
-                'bg-rose-500/20 text-rose-300 border-rose-500/30': selectedApplication.status === 'REJECTED'
-              }">
-          {{ selectedApplication.status === 'APPROVED' ? 'Đã duyệt' : (selectedApplication.status === 'PENDING' ? 'Chờ
-          duyệt' : 'Từ chối') }}
-        </span>
+      @if (loadingDetail) {
+      <div class="flex flex-1 flex-col items-center justify-center gap-3">
+        <mat-spinner diameter="38" color="accent"></mat-spinner>
+        <p class="text-sm font-bold text-slate-400">Đang tải chi tiết hồ sơ...</p>
       </div>
-
-      <!-- Reject Alert Box -->
-      @if (selectedApplication.status === 'REJECTED') {
-      <div
-        class="flex items-start gap-3 bg-rose-50 border-l-4 border-rose-500 rounded-r-2xl p-4 border border-rose-200">
-        <lucide-icon name="alert-triangle" class="text-rose-600 shrink-0 mt-0.5 h-5 w-5"></lucide-icon>
-        <div class="flex flex-col gap-1">
-          <h3 class="text-sm font-extrabold text-rose-950">Đơn đăng ký bị từ chối</h3>
-          <p class="text-xs text-rose-800 leading-relaxed font-semibold">
-            <strong>Lý do từ chối: </strong>{{ selectedApplication.rejectReason || 'Không có lý do chi tiết.' }}
-          </p>
-        </div>
-      </div>
-      }
-
-      <!-- Grid of Info Columns -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <!-- Rep Info -->
-        <div class="bg-white border border-slate-100 rounded-3xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.015)]">
-          <div class="flex items-center gap-2 border-b border-slate-100 pb-3 mb-3">
-            <lucide-icon name="user" class="text-emerald-600 h-4.5 w-4.5 shrink-0"></lucide-icon>
-            <h3 class="text-sm font-black uppercase text-slate-900 tracking-wide font-display">Người Đại Diện</h3>
-          </div>
-          <div class="flex flex-col gap-3 text-sm font-semibold">
-            <div class="flex justify-between border-b border-slate-100 pb-2">
-              <span class="text-slate-500 font-medium">Họ và tên:</span>
-              <span class="text-slate-800 font-bold">{{ selectedApplication.fullName }}</span>
+      } @else {
+      <header class="shrink-0 border-b border-slate-100 bg-white px-5 py-5 sm:px-6">
+        <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div class="flex min-w-0 items-center gap-4">
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-lg font-black uppercase text-white shadow-lg shadow-emerald-600/15">
+              {{ selectedApplication.businessName.charAt(0) || 'G' }}
             </div>
-            <div class="flex justify-between border-b border-slate-100 pb-2">
-              <span class="text-slate-500 font-medium">Số điện thoại:</span>
-              <span class="text-slate-800 font-bold">{{ selectedApplication.phone }}</span>
-            </div>
-            <div class=" flex justify-between border-b border-slate-100 pb-2">
-              <span class="text-slate-500 font-medium">Email liên hệ:</span>
-              <span class="text-slate-800 font-bold">{{ selectedApplication.email }}</span>
-            </div>
-            <div class="flex justify-between pb-0">
-              <span class="text-slate-500 font-medium">Số CCCD:</span>
-              <span class="text-slate-800 font-bold">{{ selectedApplication.identityNumber }}</span>
+            <div class="min-w-0">
+              <p class="text-[10px] font-extrabold uppercase tracking-[0.16em] text-emerald-600">Hồ sơ đối tác</p>
+              <h2 class="mt-0.5 truncate text-xl font-black tracking-tight text-slate-900 font-display sm:text-2xl">
+                {{ selectedApplication.businessName }}
+              </h2>
+              <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold text-slate-500">
+                <span>{{ getBusinessTypeLabel(selectedApplication.businessType) }}</span>
+                <span class="h-1 w-1 rounded-full bg-slate-300"></span>
+                <span>MST: <strong class="text-slate-700">{{ selectedApplication.taxCode || 'Chưa cập nhật' }}</strong></span>
+              </div>
             </div>
           </div>
+          <span class="inline-flex h-9 w-fit shrink-0 items-center gap-2 rounded-full border px-3.5 text-xs font-extrabold"
+            [ngClass]="{
+              'border-emerald-200 bg-emerald-50 text-emerald-700': selectedApplication.status === 'APPROVED',
+              'border-amber-200 bg-amber-50 text-amber-700': selectedApplication.status === 'PENDING',
+              'border-rose-200 bg-rose-50 text-rose-700': selectedApplication.status === 'REJECTED'
+            }">
+            <span class="h-2 w-2 rounded-full bg-current"></span>
+            {{ getStatusLabel(selectedApplication.status) }}
+          </span>
         </div>
+      </header>
 
-        <!-- Address Info -->
-        <div class="bg-white border border-slate-100 rounded-3xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.015)]">
-          <div class="flex items-center gap-2 border-b border-slate-100 pb-3 mb-3">
-            <lucide-icon name="map-pin" class="text-emerald-600 h-4.5 w-4.5 shrink-0"></lucide-icon>
-            <h3 class="text-sm font-black uppercase text-slate-900 tracking-wide font-display">Địa Chỉ Đăng Ký</h3>
-          </div>
-          <div class="flex flex-col gap-3 text-sm font-semibold">
-            <div class="flex justify-between border-b border-slate-100 pb-2">
-              <span class="text-slate-500 font-medium">Số nhà, đường:</span>
-              <span class="text-slate-808 font-bold">{{ selectedApplication.address.address }}</span>
-            </div>
-            <div class="flex justify-between border-b border-slate-100 pb-2">
-              <span class="text-slate-500 font-medium">Phường / Xã:</span>
-              <span class="text-slate-808 font-bold">{{ selectedApplication.address.ward }}</span>
-            </div>
-            <div class="flex justify-between border-b border-slate-100 pb-2">
-              <span class="text-slate-500 font-medium">Quận / Huyện:</span>
-              <span class="text-slate-808 font-bold">{{ selectedApplication.address.district }}</span>
-            </div>
-            <div class="flex justify-between pb-0">
-              <span class="text-slate-500 font-medium">Tỉnh / Thành phố:</span>
-              <span class="text-slate-808 font-bold">{{ selectedApplication.address.province }}</span>
+      <div class="flex-1 overflow-y-auto bg-slate-50/40 p-4 sm:p-5 lg:p-6">
+        <div class="mx-auto flex max-w-[1280px] flex-col gap-5">
+          @if (selectedApplication.status === 'REJECTED') {
+          <div class="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4">
+            <lucide-icon name="alert-triangle" class="mt-0.5 h-5 w-5 shrink-0 text-rose-600"></lucide-icon>
+            <div>
+              <p class="text-sm font-extrabold text-rose-900">Hồ sơ đã bị từ chối</p>
+              <p class="mt-1 text-xs font-semibold leading-relaxed text-rose-700">
+                {{ selectedApplication.rejectReason || 'Không có lý do chi tiết.' }}
+              </p>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Section: Attached Documents -->
-      <div
-        class="bg-white border border-slate-100 rounded-3xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.015)] flex flex-col gap-4">
-        <h3
-          class="font-display text-sm font-black uppercase text-slate-900 tracking-wider flex items-center gap-2 select-none">
-          <lucide-icon name="cloud" class="h-4.5 w-4.5 text-emerald-600 shrink-0"></lucide-icon> Tài Liệu Đính Kèm
-        </h3>
-
-        @if (!selectedApplication.documents || selectedApplication.documents.length === 0) {
-        <div
-          class="border border-dashed border-slate-200 rounded-2xl p-5 text-center text-sm font-semibold text-slate-400 flex items-center justify-center gap-2">
-          <lucide-icon name="alert-circle" class="h-5 w-5 shrink-0 text-slate-300"></lucide-icon> Không có tài liệu hoặc
-          giấy tờ đính kèm.
-        </div>
-        } @else {
-        <div class="flex flex-wrap gap-3">
-          <!-- CCCD grouped button (shows all ID_CARD docs in one dialog) -->
-          @if (getIdCardDocs(selectedApplication.documents).length > 0) {
-          <button (click)="viewIdCardDocuments(getIdCardDocs(selectedApplication.documents))"
-            class="inline-flex items-center gap-2.5 px-5 py-3.5 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-emerald-50/60 hover:text-emerald-700 hover:border-emerald-250 text-sm font-bold text-slate-700 transition-all cursor-pointer shadow-xs">
-            <lucide-icon name="credit-card" class="h-4.5 w-4.5 text-emerald-600 shrink-0"></lucide-icon>
-            CCCD
-          </button>
           }
-          <!-- Non-CCCD docs (individual buttons) -->
-          @for (doc of getNonIdCardDocs(selectedApplication.documents); track doc.ownerApplicationDocumentId) {
-          <button (click)="viewDocument(doc)"
-            class="inline-flex items-center gap-2.5 px-5 py-3.5 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-emerald-50/60 hover:text-emerald-700 hover:border-emerald-250 text-sm font-bold text-slate-700 transition-all cursor-pointer shadow-xs">
-            <lucide-icon name="file-text" class="h-4.5 w-4.5 text-emerald-600 shrink-0"></lucide-icon>
-            {{ getDocumentTypeLabel(doc.documentType) }}
-          </button>
-          }
+
+          <div class="grid grid-cols-1 gap-5 xl:grid-cols-2">
+            <article class="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm shadow-slate-200/40">
+              <div class="mb-4 flex items-center gap-3 border-b border-slate-100 pb-3">
+                <div class="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+                  <lucide-icon name="user-round" class="h-4 w-4"></lucide-icon>
+                </div>
+                <div>
+                  <h3 class="text-sm font-black text-emerald-700 font-display">Người đại diện</h3>
+                  <p class="text-[11px] font-medium text-slate-400">Thông tin liên hệ và định danh</p>
+                </div>
+              </div>
+              <dl class="space-y-3">
+                <div class="info-row"><dt>Họ và tên</dt><dd>{{ selectedApplication.fullName || 'Chưa cập nhật' }}</dd></div>
+                <div class="info-row"><dt>Số điện thoại</dt><dd>{{ selectedApplication.phone || 'Chưa cập nhật' }}</dd></div>
+                <div class="info-row"><dt>Email</dt><dd class="break-all">{{ selectedApplication.email || 'Chưa cập nhật' }}</dd></div>
+                <div class="info-row border-b-0 pb-0"><dt>Số CCCD</dt><dd>{{ selectedApplication.identityNumber || 'Chưa cập nhật' }}</dd></div>
+              </dl>
+            </article>
+
+            <article class="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm shadow-slate-200/40">
+              <div class="mb-4 flex items-center gap-3 border-b border-slate-100 pb-3">
+                <div class="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+                  <lucide-icon name="map-pin" class="h-4 w-4"></lucide-icon>
+                </div>
+                <div>
+                  <h3 class="text-sm font-black text-emerald-700 font-display">Địa chỉ đăng ký</h3>
+                  <p class="text-[11px] font-medium text-slate-400">Địa điểm cơ sở kinh doanh</p>
+                </div>
+              </div>
+              <dl class="space-y-3">
+                <div class="info-row"><dt>Số nhà, đường</dt><dd>{{ selectedApplication.address.address || 'Chưa cập nhật' }}</dd></div>
+                <div class="info-row"><dt>Phường / Xã</dt><dd>{{ selectedApplication.address.ward || 'Chưa cập nhật' }}</dd></div>
+                <div class="info-row"><dt>Quận / Huyện</dt><dd>{{ selectedApplication.address.district || 'Chưa cập nhật' }}</dd></div>
+                <div class="info-row border-b-0 pb-0"><dt>Tỉnh / Thành phố</dt><dd>{{ selectedApplication.address.province || selectedApplication.address.city || 'Chưa cập nhật' }}</dd></div>
+              </dl>
+            </article>
+          </div>
+
+          <article class="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm shadow-slate-200/40">
+            <div class="flex flex-col justify-between gap-2 border-b border-slate-100 pb-4 sm:flex-row sm:items-center">
+              <div class="flex items-center gap-3">
+                <div class="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+                  <lucide-icon name="folder-open" class="h-4 w-4"></lucide-icon>
+                </div>
+                <div>
+                  <h3 class="text-sm font-black text-emerald-700 font-display">Tài liệu đính kèm</h3>
+                  <p class="text-[11px] font-medium text-slate-400">Nhấn vào tài liệu để xem nội dung</p>
+                </div>
+              </div>
+              <span class="text-xs font-bold text-slate-400">{{ selectedApplication.documents.length || 0 }} tệp</span>
+            </div>
+
+            @if (!selectedApplication.documents || selectedApplication.documents.length === 0) {
+            <div class="mt-4 flex items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-sm font-semibold text-slate-400">
+              <lucide-icon name="file-x" class="h-5 w-5"></lucide-icon>
+              Chưa có tài liệu đính kèm
+            </div>
+            } @else {
+            <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-3">
+              @if (getIdCardDocs(selectedApplication.documents).length > 0) {
+              <button type="button" (click)="viewIdCardDocuments(getIdCardDocs(selectedApplication.documents))"
+                class="document-card">
+                <span class="document-icon"><lucide-icon name="credit-card" class="h-5 w-5"></lucide-icon></span>
+                <span class="min-w-0 flex-1"><strong>CCCD</strong><small>{{ getIdCardDocs(selectedApplication.documents).length }} mặt giấy tờ</small></span>
+                <lucide-icon name="eye" class="h-4 w-4 shrink-0 text-slate-400"></lucide-icon>
+              </button>
+              }
+              @for (doc of getNonIdCardDocs(selectedApplication.documents); track doc.ownerApplicationDocumentId) {
+              <button type="button" (click)="viewDocument(doc)" class="document-card">
+                <span class="document-icon"><lucide-icon name="file-text" class="h-5 w-5"></lucide-icon></span>
+                <span class="min-w-0 flex-1"><strong>{{ getDocumentTypeLabel(doc.documentType) }}</strong><small>Nhấn để xem tài liệu</small></span>
+                <lucide-icon name="eye" class="h-4 w-4 shrink-0 text-slate-400"></lucide-icon>
+              </button>
+              }
+            </div>
+            }
+          </article>
         </div>
-        }
       </div>
 
-      <!-- Review Action Controls -->
-      <div class="mt-auto">
-        @if (selectedApplication.status === 'PENDING') {
-        <div class="border border-amber-100 rounded-3xl p-5 bg-amber-50/40 flex flex-col gap-4 mb-4">
-          <div class="flex items-start gap-2.5 text-sm font-semibold text-amber-850 leading-relaxed">
-            <lucide-icon name="info" class="text-amber-600 shrink-0 mt-0.5 h-4.5 w-4.5">
-            </lucide-icon>
+      <footer class="shrink-0 border-t border-slate-200 bg-white px-5 py-4 sm:px-6">
+        <div class="flex flex-col justify-between gap-4 xl:flex-row xl:items-center">
+          <div class="flex min-w-0 items-start gap-2.5 text-xs font-semibold leading-relaxed"
+            [ngClass]="selectedApplication.status === 'PENDING' ? 'text-amber-700' : 'text-slate-500'">
+            <lucide-icon [name]="selectedApplication.status === 'PENDING' ? 'info' : 'circle-check'"
+              class="mt-0.5 h-4 w-4 shrink-0"></lucide-icon>
             <span>
-              Hồ sơ đang ở trạng thái chờ duyệt. Vui lòng đối chiếu kỹ thông tin và giấy tờ
-              đính kèm trước khi ra quyết định phê duyệt.
+              {{ selectedApplication.status === 'PENDING'
+                ? 'Hãy đối chiếu thông tin và tài liệu trước khi đưa ra quyết định.'
+                : 'Hồ sơ này đã được xử lý và không thể thực hiện lại thao tác duyệt.' }}
             </span>
           </div>
+          <div class="flex shrink-0 items-center justify-end gap-2.5">
+            <button type="button" (click)="reject(selectedApplication)"
+              [disabled]="processingAction || selectedApplication.status !== 'PENDING'"
+              class="h-11 cursor-pointer rounded-full border border-rose-200 bg-white px-5 text-xs font-extrabold text-rose-600 transition-colors hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-40">
+              Từ chối hồ sơ
+            </button>
+            <button type="button" (click)="approve(selectedApplication)"
+              [disabled]="processingAction || selectedApplication.status !== 'PENDING'"
+              class="flex h-11 min-w-36 cursor-pointer items-center justify-center gap-2 rounded-full bg-emerald-600 px-5 text-xs font-extrabold text-white shadow-lg shadow-emerald-600/15 transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40">
+              @if (processingAction) {
+              <mat-spinner diameter="17" class="btn-spinner"></mat-spinner>
+              Đang xử lý...
+              } @else {
+              <lucide-icon name="check" class="h-4 w-4"></lucide-icon>
+              Phê duyệt hồ sơ
+              }
+            </button>
+          </div>
         </div>
-        }
-
-        <div class="flex items-center justify-end gap-3 border-t border-amber-200/50 pt-4">
-          <button (click)="reject(selectedApplication)"
-            [disabled]="processingAction || selectedApplication.status !== 'PENDING'"
-            class="px-5 h-11 rounded-2xl border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 active:scale-[0.98] font-bold text-xs transition-all cursor-pointer disabled:opacity-50">
-            Từ Chối Hồ Sơ
-          </button>
-          <button (click)="approve(selectedApplication)"
-            [disabled]="processingAction || selectedApplication.status !== 'PENDING'"
-            class="px-6 h-11 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-600/10 cursor-pointer disabled:opacity-70">
-            @if (processingAction) {
-            <mat-spinner diameter="18" class="btn-spinner mr-1"></mat-spinner>
-            Đang xử lý...
-            } @else {
-            <lucide-icon name="check" class="h-4 w-4 shrink-0"></lucide-icon>
-            Phê Duyệt Hồ Sơ
-            }
-          </button>
-        </div>
-      </div>
-    </div>
-    }
+      </footer>
+      }
     } @else {
-    <!-- Empty Detail View -->
-    <div class="flex-1 flex flex-col items-center justify-center text-center p-8 gap-4 bg-slate-50/20">
-      <div
-        class="w-16 h-16 rounded-full bg-white flex items-center justify-center border border-slate-100 text-slate-400 shadow-sm">
-        <lucide-icon name="check-circle" class="h-8 w-8 text-emerald-500"></lucide-icon>
+    <div class="flex flex-1 flex-col items-center justify-center bg-slate-50/40 p-8 text-center">
+      <div class="flex h-16 w-16 items-center justify-center rounded-3xl border border-emerald-100 bg-emerald-50 text-emerald-600">
+        <lucide-icon name="clipboard-check" class="h-7 w-7"></lucide-icon>
       </div>
-      <div class="max-w-sm">
-        <h2 class="text-lg font-black text-slate-900 font-display">Chọn hồ sơ đối tác cần duyệt</h2>
-        <p class="text-sm text-slate-500 mt-2 leading-relaxed font-semibold">Hồ sơ của các chủ sân muốn tham gia kinh
-          doanh trên nền tảng GOAT Sports sẽ xuất hiện tại danh sách bên trái.</p>
-      </div>
+      <h2 class="mt-4 text-lg font-black text-slate-900 font-display">Chọn một hồ sơ để xem chi tiết</h2>
+      <p class="mt-2 max-w-sm text-sm font-medium leading-relaxed text-slate-500">
+        Thông tin đại diện, địa chỉ và tài liệu xác minh sẽ hiển thị tại đây.
+      </p>
     </div>
     }
-  </div>
+  </section>
 </div>

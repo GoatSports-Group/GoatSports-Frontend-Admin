@@ -4,6 +4,94 @@
   height: 100%;
 }
 
+.owner-review-page {
+  height: calc(100vh - 112px);
+}
+
+.info-row {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.7fr) minmax(0, 1.3fr);
+  gap: 1rem;
+  align-items: start;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+
+  dt {
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  dd {
+    margin: 0;
+    color: #1e293b;
+    font-size: 0.8125rem;
+    font-weight: 800;
+    line-height: 1.45;
+    text-align: right;
+  }
+}
+
+.document-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 4.25rem;
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  background: #f8fafc;
+  color: #334155;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
+
+  &:hover {
+    border-color: #a7f3d0;
+    background: #ecfdf5;
+    color: #047857;
+  }
+
+  strong,
+  small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    font-size: 0.8125rem;
+    font-weight: 800;
+  }
+
+  small {
+    margin-top: 0.2rem;
+    color: #94a3b8;
+    font-size: 0.6875rem;
+    font-weight: 600;
+  }
+}
+
+.document-icon {
+  display: flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.875rem;
+  background: #ecfdf5;
+  color: #059669;
+}
+
+@media (max-width: 1023px) {
+  .owner-review-page {
+    height: auto;
+  }
+}
+
 /* Cleaned and refactored stylesheet, styling migrated to Tailwind CSS classes */
 .animate-fade-in {
   animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
