@@ -25,6 +25,12 @@ export class OwnerApplicationRepositoryImpl implements OwnerApplicationRepositor
     );
   }
 
+  markViewed(id: string): Observable<void> {
+    return this.ownerApplicationApi.markViewed(id).pipe(
+      map(() => undefined)
+    );
+  }
+
   approve(id: string): Observable<void> {
     return this.ownerApplicationApi.approve(id).pipe(
       map(() => undefined)

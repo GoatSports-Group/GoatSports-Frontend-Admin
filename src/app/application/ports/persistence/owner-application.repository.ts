@@ -7,6 +7,7 @@ import { BaseListResponse } from '@application/dto/base/base-response';
 export interface OwnerApplicationRepository {
   getAllApplications(filter: PageFilter): Observable<BaseListResponse<OwnerApplication>>;
   getApplicationDetail(id: string): Observable<OwnerApplication>;
+  markViewed(id: string): Observable<void>;
   approve(id: string): Observable<void>;
   reject(id: string, rejectReason: string): Observable<void>;
   getFileUrl(key: string): Observable<string>;

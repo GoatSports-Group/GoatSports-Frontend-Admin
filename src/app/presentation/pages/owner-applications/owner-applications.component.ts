@@ -3,6 +3,7 @@ import { GetAllOwnerApplicationsUseCase } from '@application/usecase/owner-appli
 import { GetOwnerApplicationDetailUseCase } from '@application/usecase/owner-application/get-owner-application-detail.usecase';
 import { ApproveOwnerApplicationUseCase } from '@application/usecase/owner-application/approve-owner-application.usecase';
 import { RejectOwnerApplicationUseCase } from '@application/usecase/owner-application/reject-owner-application.usecase';
+import { MarkOwnerApplicationViewedUseCase } from '@application/usecase/owner-application/mark-owner-application-viewed.usecase';
 import {
   OwnerApplication,
   OwnerApplicationDocument,
@@ -35,6 +36,7 @@ export class OwnerApplicationsComponent implements OnInit {
   private getDetailUseCase = inject(GetOwnerApplicationDetailUseCase);
   private approveUseCase = inject(ApproveOwnerApplicationUseCase);
   private rejectUseCase = inject(RejectOwnerApplicationUseCase);
+  private markViewedUseCase = inject(MarkOwnerApplicationViewedUseCase);
   private dialog = inject(MatDialog);
   private snackBar = inject(NotifyService);
 
@@ -87,7 +89,7 @@ export class OwnerApplicationsComponent implements OnInit {
 
         const firstApp = this.filteredApplications.length > 0 ? this.filteredApplications[0] : null;
         if (firstApp) {
-          this.selectApplication(firstApp);
+          this.selectApplication(firstApp, false);
         } else {
           this.selectedApplication = null;
         }
@@ -113,9 +115,14 @@ export class OwnerApplicationsComponent implements OnInit {
     this.loadApplications();
   }
 
-  selectApplication(app: OwnerApplication) {
+  selectApplication(app: OwnerApplication, trackView = true) {
     this.loadingDetail = true;
     this.selectedApplication = app;
+    if (trackView && app.status === OwnerApplicationStatus.PENDING) {
+      this.markViewedUseCase.execute(app.ownerApplicationId).subscribe({
+        error: error => console.warn('Failed to mark owner application as viewed:', error)
+      });
+    }
     this.getDetailUseCase.execute(app.ownerApplicationId).subscribe({
       next: (fullDetails) => {
         this.selectedApplication = fullDetails;

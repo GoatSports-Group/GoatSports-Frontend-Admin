@@ -28,6 +28,13 @@ export class OwnerApplicationApi {
     );
   }
 
+  markViewed(id: string): Observable<BaseResponse<void>> {
+    return this.http.put<BaseResponse<void>>(
+      `${this.apiBase}/workflow-service/api/v1/workflows/owner-applications/${id}/viewed`,
+      {}
+    );
+  }
+
   approve(id: string): Observable<BaseResponse<void>> {
     return this.http.post<BaseResponse<void>>(
       `${this.apiBase}/workflow-service/api/v1/workflows/owner-applications/${id}/complete-review`,
