@@ -89,7 +89,7 @@ export class OwnerApplicationsComponent implements OnInit {
 
         const firstApp = this.filteredApplications.length > 0 ? this.filteredApplications[0] : null;
         if (firstApp) {
-          this.selectApplication(firstApp, false);
+          this.selectApplication(firstApp);
         } else {
           this.selectedApplication = null;
         }
@@ -115,10 +115,10 @@ export class OwnerApplicationsComponent implements OnInit {
     this.loadApplications();
   }
 
-  selectApplication(app: OwnerApplication, trackView = true) {
+  selectApplication(app: OwnerApplication) {
     this.loadingDetail = true;
     this.selectedApplication = app;
-    if (trackView && app.status === OwnerApplicationStatus.PENDING) {
+    if (app.status === OwnerApplicationStatus.PENDING) {
       this.markViewedUseCase.execute(app.ownerApplicationId).subscribe({
         error: error => console.warn('Failed to mark owner application as viewed:', error)
       });
