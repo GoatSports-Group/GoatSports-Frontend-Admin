@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { UserService } from '@presentation/services/user.service';
+import { CryptoService } from '@presentation/services/crypto.service';
 import { PASSWORD_PATTERN } from '@shared/constants/password.constants';
 import { calculatePasswordStrength } from '@shared/utils/password.utils';
 
@@ -13,6 +14,7 @@ import { calculatePasswordStrength } from '@shared/utils/password.utils';
 export class CreateUserDrawerComponent {
   private userAdminService = inject(UserService);
   private snackBar = inject(NotifyService);
+  private cryptoService = inject(CryptoService);
 
   @Input() isCreateDrawerOpen = false;
   @Output() close = new EventEmitter<void>();
@@ -107,30 +109,44 @@ export class CreateUserDrawerComponent {
 
     this.isSubmitting = true;
 
-    const payload = {
-      username: this.newUser.username.trim(),
-      fullName: this.newUser.fullName.trim(),
-      email: this.newUser.email.trim(),
-      gender: this.newUser.gender,
-      password: this.newUser.password
-    };
+    this.cryptoService.getPublicKey().subscribe({
+      next: (publicKey) => {
+        const encryptedPassword = this.cryptoService.encrypt(this.newUser.password, publicKey);
 
-    this.userAdminService.createUser(payload).subscribe({
-      next: () => {
-        this.isSubmitting = false;
-        this.snackBar.open(`Tạo tài khoản ${payload.username} thành công!`, 'Đóng', {
-          duration: 3000,
-          horizontalPosition: 'end',
-          verticalPosition: 'top'
+        const payload = {
+          username: this.newUser.username.trim(),
+          fullName: this.newUser.fullName.trim(),
+          email: this.newUser.email.trim(),
+          gender: this.newUser.gender,
+          password: encryptedPassword
+        };
+
+        this.userAdminService.createUser(payload).subscribe({
+          next: () => {
+            this.isSubmitting = false;
+            this.snackBar.open(`Tạo tài khoản ${payload.username} thành công!`, 'Đóng', {
+              duration: 3000,
+              horizontalPosition: 'end',
+              verticalPosition: 'top'
+            });
+            this.resetNewUserForm();
+            this.created.emit();
+            this.close.emit();
+          },
+          error: (err) => {
+            this.isSubmitting = false;
+            const msg = err.error?.message || err.error?.data || 'Tạo tài khoản thất bại, vui lòng thử lại!';
+            this.snackBar.open(msg, 'Đóng', {
+              duration: 4000,
+              horizontalPosition: 'end',
+              verticalPosition: 'top'
+            });
+          }
         });
-        this.resetNewUserForm();
-        this.created.emit();
-        this.close.emit();
       },
       error: (err) => {
         this.isSubmitting = false;
-        const msg = err.error?.message || err.error?.data || 'Tạo tài khoản thất bại, vui lòng thử lại!';
-        this.snackBar.open(msg, 'Đóng', {
+        this.snackBar.open('Không thể kết nối bảo mật để mã hóa mật khẩu!', 'Đóng', {
           duration: 4000,
           horizontalPosition: 'end',
           verticalPosition: 'top'

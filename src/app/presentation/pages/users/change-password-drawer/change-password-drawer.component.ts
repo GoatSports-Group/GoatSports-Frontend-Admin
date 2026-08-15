@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, injec
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { User } from '@application/dto/user/user.dto';
 import { UserService } from '@presentation/services/user.service';
+import { CryptoService } from '@presentation/services/crypto.service';
 import { PASSWORD_PATTERN } from '@shared/constants/password.constants';
 import { calculatePasswordStrength } from '@shared/utils/password.utils';
 import { getDisplayAvatar } from '@shared/utils/user-display.utils';
@@ -17,6 +18,7 @@ export class ChangePasswordDrawerComponent implements OnChanges {
   readonly getPasswordStrength = calculatePasswordStrength;
   private userAdminService = inject(UserService);
   private snackBar = inject(NotifyService);
+  private cryptoService = inject(CryptoService);
 
   @Input() isPasswordDrawerOpen = false;
   @Input() passwordEditingUser: User | null = null;
@@ -74,26 +76,42 @@ export class ChangePasswordDrawerComponent implements OnChanges {
 
     this.isSubmittingPassword = true;
 
-    this.userAdminService.updatePasswordByAdmin(
-      this.passwordEditingUser.userId,
-      this.newPassword,
-      this.confirmPassword
-    ).subscribe({
-      next: () => {
-        this.isSubmittingPassword = false;
-        this.snackBar.open(`Đổi mật khẩu thành công!`, 'Đóng', {
-          duration: 3000,
-          horizontalPosition: 'end',
-          verticalPosition: 'top',
-          panelClass: ['snackbar-success']
+    this.cryptoService.getPublicKey().subscribe({
+      next: (publicKey) => {
+        const encryptedNewPassword = this.cryptoService.encrypt(this.newPassword, publicKey);
+        const encryptedConfirmPassword = this.cryptoService.encrypt(this.confirmPassword, publicKey);
+
+        this.userAdminService.updatePasswordByAdmin(
+          this.passwordEditingUser!.userId,
+          encryptedNewPassword,
+          encryptedConfirmPassword
+        ).subscribe({
+          next: () => {
+            this.isSubmittingPassword = false;
+            this.snackBar.open(`Đổi mật khẩu thành công!`, 'Đóng', {
+              duration: 3000,
+              horizontalPosition: 'end',
+              verticalPosition: 'top',
+              panelClass: ['snackbar-success']
+            });
+            this.updated.emit();
+            this.close.emit();
+          },
+          error: (err) => {
+            this.isSubmittingPassword = false;
+            const msg = err.error?.message || err.error?.data || 'Đổi mật khẩu thất bại, vui lòng thử lại!';
+            this.snackBar.open(msg, 'Đóng', {
+              duration: 4000,
+              horizontalPosition: 'end',
+              verticalPosition: 'top',
+              panelClass: ['snackbar-error']
+            });
+          }
         });
-        this.updated.emit();
-        this.close.emit();
       },
       error: (err) => {
         this.isSubmittingPassword = false;
-        const msg = err.error?.message || err.error?.data || 'Đổi mật khẩu thất bại, vui lòng thử lại!';
-        this.snackBar.open(msg, 'Đóng', {
+        this.snackBar.open('Không thể kết nối bảo mật để mã hóa mật khẩu!', 'Đóng', {
           duration: 4000,
           horizontalPosition: 'end',
           verticalPosition: 'top',

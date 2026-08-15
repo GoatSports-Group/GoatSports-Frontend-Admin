@@ -27,4 +27,10 @@ export class AuthRepositoryImpl implements AuthRepository {
       map(response => response.data)
     );
   }
+
+  getPublicKey(): Observable<string> {
+    return this.authApi.getPublicKey().pipe(
+      map(response => response.data.publicKey)
+    );
+  }
 }
