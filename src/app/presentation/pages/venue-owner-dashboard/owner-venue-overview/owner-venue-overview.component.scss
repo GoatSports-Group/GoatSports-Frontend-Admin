@@ -1,0 +1,43 @@
+:host { display: block; min-width: 0; }
+.venue-overview { display: grid; gap: 18px; padding: clamp(20px, 3vw, 28px); border: 1px solid #dce8e3; border-radius: 26px; background: #fff; box-shadow: 0 14px 38px rgb(15 23 42 / 5%); }
+header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+header p, header h2, header span { margin: 0; }
+header p { color: #047857; font-size: 11px; font-weight: 750; letter-spacing: .13em; text-transform: uppercase; }
+header h2 { margin-top: 5px; color: #0f172a; font: 800 clamp(20px, 2vw, 25px)/1.3 'Be Vietnam Pro', sans-serif; }
+header span { display: block; margin-top: 5px; color: #64748b; font-size: 12px; }
+header > lucide-icon { display: grid; width: 44px; height: 44px; place-items: center; border-radius: 14px; background: #d1fae5; color: #047857; }
+.venue-state { display: flex; align-items: center; gap: 12px; min-height: 80px; padding: 16px; border-radius: 16px; background: #f8fafc; color: #475569; font-size: 13px; }
+.venue-state--error { display: grid; grid-template-columns: auto 1fr auto; border: 1px solid #fecdd3; background: #fff7f8; }
+.venue-state p { margin: 3px 0 0; color: #64748b; font-size: 11px; }
+.venue-state button { border: 0; border-radius: 11px; background: #059669; color: #fff; cursor: pointer; padding: 10px 13px; font-size: 11px; font-weight: 700; }
+.spinner { width: 22px; height: 22px; border: 3px solid #d1fae5; border-top-color: #059669; border-radius: 50%; animation: spin 700ms linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.venue-overview__identity { display: grid; grid-template-columns: 104px minmax(0, 1fr); align-items: center; gap: 16px; }
+.venue-overview__identity img, .venue-placeholder { width: 104px; height: 84px; border-radius: 17px; object-fit: cover; }
+.venue-placeholder { display: grid; place-items: center; background: #ecfdf5; color: #059669; }
+.venue-overview__identity h3 { margin: 7px 0 0; color: #172033; font-size: 19px; font-weight: 800; }
+.venue-overview__identity p { display: flex; align-items: center; gap: 7px; margin: 5px 0 0; color: #64748b; font-size: 12px; }
+.venue-overview__identity p lucide-icon { width: 14px; height: 14px; }
+.venue-status { display: inline-flex; padding: 5px 8px; border-radius: 999px; background: #f1f5f9; color: #64748b; font-size: 9px; font-weight: 750; text-transform: uppercase; }
+.venue-status.is-active { background: #d1fae5; color: #047857; }
+.venue-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 11px; }
+.venue-metrics div { padding: 14px; border: 1px solid #e2e8f0; border-radius: 15px; background: #f8fafc; }
+.venue-metrics span, .venue-metrics strong { display: block; }
+.venue-metrics span { color: #64748b; font-size: 10px; font-weight: 650; text-transform: uppercase; }
+.venue-metrics strong { margin-top: 5px; color: #0f172a; font-size: 18px; font-weight: 800; }
+.venue-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.venue-details > div { display: grid; grid-template-columns: 28px 1fr; column-gap: 8px; padding: 12px; border-radius: 14px; background: #f8fafc; }
+.venue-details lucide-icon { grid-row: 1 / 3; width: 17px; height: 17px; align-self: center; color: #059669; }
+.venue-details span { color: #64748b; font-size: 10px; }
+.venue-details strong { overflow: hidden; color: #334155; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.court-list { border-top: 1px solid #e2e8f0; padding-top: 16px; }
+.court-list > h3 { margin: 0 0 10px; color: #334155; font-size: 12px; font-weight: 750; }
+.court-list > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+.court-list article { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; align-items: center; gap: 9px; padding: 11px; border: 1px solid #e2e8f0; border-radius: 13px; }
+.court-list article > span { width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; }
+.court-list article > span.is-active { background: #10b981; }
+.court-list strong, .court-list p { display: block; margin: 0; }
+.court-list strong { color: #334155; font-size: 11px; }
+.court-list p, .court-list small { color: #64748b; font-size: 9px; }
+@media (max-width: 720px) { .venue-metrics { grid-template-columns: repeat(2, 1fr); } .venue-details, .court-list > div { grid-template-columns: 1fr; } }
+@media (max-width: 480px) { .venue-overview { padding: 18px 15px; } header > lucide-icon { display: none; } .venue-overview__identity { grid-template-columns: 72px minmax(0, 1fr); } .venue-overview__identity img, .venue-placeholder { width: 72px; height: 72px; } .venue-state--error { grid-template-columns: auto 1fr; } .venue-state button { grid-column: 1 / -1; } }

@@ -1,0 +1,40 @@
+<div class="owner-dashboard">
+  <section id="owner-application-progress" class="application-history" aria-labelledby="application-history-title">
+    <header class="history-heading">
+      <div class="history-heading__intro">
+        <p>Quản lý hồ sơ</p>
+        <h2 id="application-history-title">Lịch sử đăng ký</h2>
+        <span>Theo dõi những hồ sơ đã tạo và tiếp tục hoàn thiện khi cần.</span>
+      </div>
+      <a [href]="applicationUrl">Đăng ký chủ sân</a>
+    </header>
+
+    @if (applicationLoading() || applicationError() || applications().length === 0) {
+      <app-owner-application-progress
+        [application]="null"
+        [loading]="applicationLoading()"
+        [error]="applicationError()"
+        [applicationUrl]="applicationUrl"
+        (retry)="loadApplications()" />
+    } @else {
+      <div class="application-history__list">
+        @for (application of applications(); track application.ownerApplicationId) {
+          <app-owner-application-progress
+            [application]="application"
+            [applicationUrl]="applicationUrl"
+            (retry)="loadApplications()" />
+        }
+      </div>
+    }
+  </section>
+
+  @if (applicationApproved()) {
+    <app-owner-venue-overview
+      [venue]="venue()"
+      [loading]="venueLoading()"
+      [error]="venueError()"
+      (retry)="retryVenue()" />
+  }
+
+  <app-owner-feature-grid [features]="features" [applicationApproved]="applicationApproved()" />
+</div>

@@ -21,6 +21,7 @@ export interface OwnerApplicationDocument {
 
 export interface OwnerApplication {
   ownerApplicationId: string;
+  venueId?: string;
   userId: string;
   fullName: string;
   phone: string;
@@ -34,6 +35,8 @@ export interface OwnerApplication {
   reviewerId?: string;
   reviewedAt?: string;
   createdAt?: string;
+  receivedAt?: string;
+  viewedAt?: string;
   address: OwnerApplicationAddress;
   documents: OwnerApplicationDocument[];
 }

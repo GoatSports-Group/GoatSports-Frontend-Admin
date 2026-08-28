@@ -1,231 +1,98 @@
-<div class="space-y-6 relative z-10 pl-4">
-
-  <!-- ═══════════════════════════════════════════
-       1. HERO WELCOME & WEATHER BANNER
-  ═══════════════════════════════════════════ -->
-  <div
-    class="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-850 shadow-xl shadow-emerald-950/10 text-white">
-    <!-- Ambient Overlay Grid Pattern -->
-    <div
-      class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent">
-    </div>
-
-    <div class="relative z-10 flex flex-col md:flex-row items-stretch justify-between">
-
-      <!-- Welcome Headline -->
-      <div class="space-y-3 flex-1 p-6 md:p-8 max-w-2xl flex flex-col justify-center">
-        <div class="flex items-center gap-3">
-          <span class="text-sm font-semibold text-emerald-100">{{ formattedDateVi }}</span>
-        </div>
-
-        <h1 class="font-display text-2xl md:text-3xl font-black tracking-tight text-white">
-          Xin chào, {{ adminName }}! ⚽
-        </h1>
-
-        <p class="text-xs md:text-sm text-emerald-50 leading-relaxed font-medium">
-          Trung tâm điều hành GoatSports Admin. Theo dõi các đơn đăng ký chủ sân, người dùng mới và hiệu suất lấp đầy
-          các cơ sở thể thao.
-        </p>
-
-        <!-- Quick Action CTA Buttons -->
-        <div class="pt-2 flex flex-wrap items-center gap-3">
-          <a routerLink="/admin/owner-applications"
-            class="inline-flex items-center gap-2 rounded-2xl bg-emerald-800 hover:bg-emerald-700 text-white px-5 py-2.5 text-xs font-black shadow-lg transition-all hover:scale-[1.02] font-display">
-            <lucide-icon name="user-check" class="h-4 w-4 shrink-0"></lucide-icon>
-            Duyệt chủ sân
-            @if (pendingApps() > 0) {
-            <span class="ml-1 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-black text-white">{{
-              pendingApps() }}</span>
-            }
-          </a>
-
-          <a routerLink="/admin/users"
-            class="inline-flex items-center gap-2 rounded-2xl border border-white/30 bg-white/10 hover:bg-white/20 text-white px-5 py-2.5 text-xs font-extrabold backdrop-blur-md transition-all font-display">
-            <lucide-icon name="users" class="h-4 w-4 shrink-0"></lucide-icon>
-            Quản lý người dùng
-          </a>
-        </div>
-      </div>
-
-      <!-- Real-time Weather Widget (Seamless Right Column) -->
-      <div [ngClass]="'weather-' + weather().condition"
-        class="weather-widget self-stretch shrink-0 p-6 md:p-8 flex items-center justify-center gap-6 min-w-[260px] md:w-[300px] lg:w-[340px] cursor-pointer relative overflow-hidden">
-
-        <!-- Rain Drops Effect -->
-        @if (weather().condition === 'rain' || weather().condition === 'storm') {
-        <div class="rain-drops">
-          <span class="rain-drop"></span>
-          <span class="rain-drop"></span>
-          <span class="rain-drop"></span>
-          <span class="rain-drop"></span>
-          <span class="rain-drop"></span>
-          <span class="rain-drop"></span>
-          <span class="rain-drop"></span>
-          <span class="rain-drop"></span>
-        </div>
-        }
-
-        <div
-          class="weather-icon-container flex h-18 w-18 items-center justify-center rounded-[22px] bg-white/20 text-white border border-white/30 shadow-inner z-10">
-          <lucide-icon [name]="weather().icon" [ngClass]="{
-              'animate-weather-spin': weather().icon === 'sun',
-              'animate-weather-icon': ['cloud', 'cloud-fog'].includes(weather().icon),
-              'animate-weather-pulse': ['droplets', 'cloud-lightning'].includes(weather().icon)
-            }" class="h-10 w-10"></lucide-icon>
-        </div>
-        <div class="z-10 flex flex-col justify-center gap-0.5">
-          <span class="text-xs uppercase font-black tracking-widest text-emerald-100/90 font-display">TP. Hồ Chí
-            Minh</span>
-          <div class="flex items-baseline gap-1 my-0.5">
-            <span class="font-display text-4xl lg:text-5xl font-black text-white leading-none">{{ weather().temp
-              }}°C</span>
+@if (isVenueOwner()) {
+  <app-venue-owner-dashboard />
+} @else {
+  <div class="space-y-6 relative z-10 pl-4">
+    <section class="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-850 shadow-xl shadow-emerald-950/10 text-white">
+      <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent"></div>
+      <div class="relative z-10 flex flex-col md:flex-row items-stretch justify-between">
+        <div class="space-y-3 flex-1 p-6 md:p-8 max-w-2xl flex flex-col justify-center">
+          <div class="flex items-center gap-3">
+            <span class="text-sm font-semibold text-emerald-100">{{ formattedDateVi }}</span>
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-500 text-white">Quản Trị Viên Hệ Thống</span>
           </div>
-          <span class="text-sm text-white font-extrabold">{{ weather().description }}</span>
+          <h1 class="font-display text-2xl md:text-3xl font-black tracking-tight text-white">Xin chào, {{ adminName }}! ⚽</h1>
+          <p class="text-xs md:text-sm text-emerald-50 leading-relaxed font-medium">
+            Trung tâm điều hành GOAT Sports Admin. Theo dõi các đơn đăng ký chủ sân, người dùng mới và hiệu suất hệ thống.
+          </p>
+          <div class="pt-2 flex flex-wrap items-center gap-3">
+            <a routerLink="/admin/owner-applications" class="inline-flex items-center gap-2 rounded-2xl bg-emerald-800 hover:bg-emerald-700 text-white px-5 py-2.5 text-xs font-black shadow-lg transition-all hover:scale-[1.02] font-display">
+              <lucide-icon name="user-check" class="h-4 w-4 shrink-0" />Duyệt chủ sân
+              @if (pendingApps() > 0) { <span class="ml-1 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-black text-white">{{ pendingApps() }}</span> }
+            </a>
+            <a routerLink="/admin/users" class="inline-flex items-center gap-2 rounded-2xl border border-white/30 bg-white/10 hover:bg-white/20 text-white px-5 py-2.5 text-xs font-extrabold backdrop-blur-md transition-all font-display">
+              <lucide-icon name="users" class="h-4 w-4 shrink-0" />Quản lý người dùng
+            </a>
+          </div>
+        </div>
+        <div [ngClass]="'weather-' + weather().condition" class="weather-widget self-stretch shrink-0 p-6 md:p-8 flex items-center justify-center gap-6 min-w-[260px] md:w-[300px] lg:w-[340px] cursor-pointer relative overflow-hidden">
+          <div class="z-10 flex items-center gap-4">
+            <div class="weather-icon-wrapper"><lucide-icon [name]="weather().icon" class="h-12 w-12 text-white drop-shadow-md animate-pulse" /></div>
+            <div class="flex flex-col">
+              <div class="flex items-start"><span class="text-4xl font-black font-display text-white tracking-tighter">{{ weather().temp }}</span><span class="text-xl font-bold text-emerald-200 mt-1">°C</span></div>
+              <span class="text-xs font-bold text-emerald-100/90 capitalize">{{ weather().description }}</span>
+              <span class="text-[10px] text-emerald-200/70 font-medium">TP. Hồ Chí Minh</span>
+            </div>
+          </div>
         </div>
       </div>
+    </section>
 
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════════════════════
-       2. KPI METRIC CARDS GRID (4 Columns)
-  ═══════════════════════════════════════════ -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5" cdkDropList cdkDropListOrientation="horizontal"
-    (cdkDropListDropped)="drop($event)">
-
-    @for (card of metricCards; track card.id) {
-    <div cdkDrag cdkDragPreviewClass="cdk-dashboard-stat-preview" class="relative group cursor-default h-full">
-      <!-- Drag Handle -->
-      <div cdkDragHandle
-        class="absolute right-4 top-4 z-20 cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500 opacity-0 group-hover:opacity-100 p-1 rounded transition-opacity"
-        title="Kéo để di chuyển">
-        <lucide-icon name="grip-horizontal" class="h-4 w-4"></lucide-icon>
+    <!-- Metric Cards Grid -->
+    <div cdkDropList cdkDropListOrientation="mixed" (cdkDropListDropped)="drop($event)"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      @for (card of metricCards; track card.id) {
+      <div cdkDrag class="cursor-move">
+        <app-metric-card [title]="card.title" [value]="card.value()" [trendText]="card.trendText()"
+          [isPositiveTrend]="card.isPositiveTrend()" [description]="card.description" [colorScheme]="card.colorScheme"
+          [icon]="card.icon">
+        </app-metric-card>
       </div>
-
-      <!-- Drag Placeholder (Subtle drop zone) -->
-      <div *cdkDragPlaceholder class="h-full min-h-[140px] w-full"></div>
-
-      <app-metric-card [title]="card.title" [value]="card.value()" [icon]="card.icon" [trendText]="card.trendText()"
-        [isPositiveTrend]="card.isPositiveTrend()" [description]="card.description" [colorScheme]="card.colorScheme">
-      </app-metric-card>
+      }
     </div>
-    }
-  </div>
 
-  <!-- ═══════════════════════════════════════════
-       3. OWNER APPLICATION DISTRIBUTION MAP & REGIONAL BREAKDOWN
-  ═══════════════════════════════════════════ -->
-  <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-    <!-- Map Widget (col-span-2) -->
-    <div
-      class="lg:col-span-3 rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.015)] flex flex-col h-[420px]">
-      <div class="flex items-center justify-between pb-4 border-b border-slate-100 shrink-0">
-        <div class="flex items-center gap-3">
-          <div
-            class="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200">
-            <lucide-icon name="map-pin" class="h-5 w-5 shrink-0"></lucide-icon>
-          </div>
+    <!-- Admin Map & District Breakdown -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="lg:col-span-2 rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
           <div>
-            <h2 class="text-sm font-black text-slate-900 font-display">Bản đồ phân bố sân thể thao</h2>
-            <p class="text-xs font-semibold text-slate-500">Vị trí địa lý thực tế các cơ sở sân thể thao</p>
+            <h3 class="text-base font-black text-slate-900 font-display">Bản Đồ Phân Bố Sân Bãi & Đơn Đăng Ký</h3>
+            <p class="text-xs text-slate-400">Mật độ các cơ sở thể thao và yêu cầu xét duyệt trên địa bàn</p>
           </div>
-        </div>
-        <div class="flex flex-wrap items-center justify-end gap-3">
-          @if (unlocatedVenueCount() > 0) {
-          <span class="text-xs font-bold text-amber-600">
-            {{ unlocatedVenueCount() }} vị trí tạm tại TP.HCM
-          </span>
-          }
-          <div class="flex items-center gap-1.5">
-            <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span class="text-xs font-bold text-emerald-600 tracking-wider">Thời gian thực</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Map Legend Row -->
-      <div class="mt-2 flex shrink-0 flex-wrap items-center gap-2 text-xs font-extrabold text-slate-500 select-none">
-        <button type="button" (click)="toggleMapStatus(OwnerApplicationStatus.APPROVED)"
-          [attr.aria-pressed]="selectedMapStatus() === OwnerApplicationStatus.APPROVED"
-          [ngClass]="selectedMapStatus() === OwnerApplicationStatus.APPROVED
-            ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-            : 'border-transparent bg-transparent hover:bg-slate-50'"
-          class="flex h-8 cursor-pointer items-center gap-1.5 rounded-full border px-2.5 transition-colors">
-          <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-          <span>Sân đang hoạt động</span>
-          <span class="text-[10px] opacity-60">({{ getMapMarkerCount(OwnerApplicationStatus.APPROVED) }})</span>
-        </button>
-        <button type="button" (click)="toggleMapStatus(OwnerApplicationStatus.PENDING)"
-          [attr.aria-pressed]="selectedMapStatus() === OwnerApplicationStatus.PENDING"
-          [ngClass]="selectedMapStatus() === OwnerApplicationStatus.PENDING
-            ? 'border-amber-200 bg-amber-50 text-amber-700'
-            : 'border-transparent bg-transparent hover:bg-slate-50'"
-          class="flex h-8 cursor-pointer items-center gap-1.5 rounded-full border px-2.5 transition-colors">
-          <span class="h-2 w-2 rounded-full bg-amber-500"></span>
-          <span>Sân chờ xét duyệt</span>
-          <span class="text-[10px] opacity-60">({{ getMapMarkerCount(OwnerApplicationStatus.PENDING) }})</span>
-        </button>
-        <button type="button" (click)="toggleMapStatus(OwnerApplicationStatus.REJECTED)"
-          [attr.aria-pressed]="selectedMapStatus() === OwnerApplicationStatus.REJECTED"
-          [ngClass]="selectedMapStatus() === OwnerApplicationStatus.REJECTED
-            ? 'border-rose-200 bg-rose-50 text-rose-700'
-            : 'border-transparent bg-transparent hover:bg-slate-50'"
-          class="flex h-8 cursor-pointer items-center gap-1.5 rounded-full border px-2.5 transition-colors">
-          <span class="h-2 w-2 rounded-full bg-rose-500"></span>
-          <span>Sân bị từ chối</span>
-          <span class="text-[10px] opacity-60">({{ getMapMarkerCount(OwnerApplicationStatus.REJECTED) }})</span>
-        </button>
-
-        @if (selectedMapStatus() && filteredMapMarkers().length === 0) {
-        <span class="ml-auto text-[11px] font-bold text-slate-400">Không có sân ở trạng thái này</span>
-        }
-      </div>
-
-      <!-- Map canvas -->
-      <div
-        class="flex-1 min-h-0 mt-3 relative bg-slate-50/50 rounded-2xl border border-slate-100/60 select-none overflow-hidden">
-        <div id="real-leaflet-map" class="w-full h-full rounded-2xl z-10"></div>
-      </div>
-    </div>
-
-    <!-- Regional Breakdown Stats Card (col-span-1) -->
-    <div
-      class="lg:col-span-1 rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.015)] flex flex-col h-[420px]">
-      <div class="flex items-center justify-between pb-4 border-b border-slate-100 shrink-0">
-        <div class="flex items-center gap-3">
-          <div
-            class="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200">
-            <lucide-icon name="table" class="h-5 w-5 shrink-0"></lucide-icon>
-          </div>
-          <div>
-            <h2 class="text-sm font-black text-slate-900 font-display">Phân bố khu vực</h2>
-            <p class="text-xs font-semibold text-slate-500">Số lượng sân theo Quận/Huyện</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="flex-1 overflow-y-auto mt-4 pr-1 space-y-2.5">
-        @if (districtBreakdown().length === 0) {
-        <div class="h-full flex flex-col items-center justify-center text-center text-sm text-slate-400 p-6">
-          <lucide-icon name="info" class="h-8 w-8 text-slate-300 mb-2"></lucide-icon>
-          <p class="font-bold">Chưa có dữ liệu địa lý</p>
-        </div>
-        } @else {
-        @for (item of districtBreakdown(); track item.name) {
-        <div
-          class="flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 border border-slate-50/50 transition-colors">
           <div class="flex items-center gap-2">
-            <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-            <span class="text-sm font-bold text-slate-800">{{ item.name }}</span>
+            <button (click)="toggleMapStatus(OwnerApplicationStatus.APPROVED)"
+              [class]="selectedMapStatus() === OwnerApplicationStatus.APPROVED ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-700'"
+              class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all">
+              Đã duyệt ({{ getMapMarkerCount(OwnerApplicationStatus.APPROVED) }})
+            </button>
+            <button (click)="toggleMapStatus(OwnerApplicationStatus.PENDING)"
+              [class]="selectedMapStatus() === OwnerApplicationStatus.PENDING ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-700'"
+              class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all">
+              Chờ duyệt ({{ getMapMarkerCount(OwnerApplicationStatus.PENDING) }})
+            </button>
           </div>
-          <span
-            class="text-sm font-extrabold text-emerald-600 bg-emerald-50/60 border border-emerald-100/50 px-2.5 py-1 rounded-full font-mono">{{
-            item.count }} sân</span>
         </div>
-        }
-        }
+
+        <div id="real-leaflet-map" class="w-full h-[320px] rounded-2xl overflow-hidden border border-slate-100"></div>
+      </div>
+
+      <!-- District Breakdown List -->
+      <div class="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm">
+        <h3 class="text-base font-black text-slate-900 font-display mb-4">Cơ Sở Theo Quận / Huyện</h3>
+        <div class="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+          @for (item of districtBreakdown(); track item.name) {
+          <div class="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 transition-colors">
+            <span class="text-xs font-bold text-slate-700">{{ item.name }}</span>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-black text-emerald-600">{{ item.count }} sân</span>
+              <div class="w-16 h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div class="h-full bg-emerald-500 rounded-full" [style.width.%]="(item.count / (totalUsers() || 1)) * 100 + 20"></div>
+              </div>
+            </div>
+          </div>
+          }
+        </div>
       </div>
     </div>
-  </div>
 
-</div>
+  </div>
+}

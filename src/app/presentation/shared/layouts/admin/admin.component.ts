@@ -19,6 +19,11 @@ import { environment } from "@environments/environment"
 import { BallType, SportsParticle } from './admin.models';
 import { formatRelativeTime } from '@shared/utils/date-trend.utils';
 import { getFallbackAvatar } from '@shared/utils/user-display.utils';
+import {
+  AdminNavigationItem,
+  PLATFORM_ADMIN_NAVIGATION,
+  VENUE_OWNER_NAVIGATION
+} from './admin-navigation.config';
 
 @Component({
   selector: 'app-admin',
@@ -77,44 +82,18 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
   searchQuery = signal('');
   isSearchOpen = signal(false);
   selectedSearchIndex = signal(0);
+  userRole = signal('');
+  isPlatformAdmin = computed(() => this.userRole() === 'ADMIN');
 
-  searchItems = [
-    {
-      title: 'Tổng quan',
-      description: 'Xem số liệu thống kê, dự báo thời tiết và phân tích hệ thống',
-      icon: 'layout-dashboard',
-      route: '/dashboard'
-    },
-    {
-      title: 'Chủ Sân',
-      description: 'Duyệt đơn đăng ký, quản lý hồ sơ và thông tin chủ sân thể thao',
-      icon: 'land-plot',
-      route: '/owner-applications',
-    },
-    {
-      title: 'Người dùng',
-      description: 'Quản lý tài khoản người dùng, phân vai trò thành viên hệ thống',
-      icon: 'users',
-      route: '/users',
-    },
-    {
-      title: 'Vai trò',
-      description: 'Quản lý các nhóm vai trò quyền hạn của quản trị viên',
-      icon: 'shield',
-      route: '/roles',
-    },
-    {
-      title: 'Nhật ký hệ thống',
-      description: 'Theo dõi và giám sát nhật ký hoạt động, lỗi hệ thống',
-      icon: 'activity',
-      route: '/logs',
-    }
-  ];
+  readonly visibleNavigationItems = computed(() =>
+    this.isPlatformAdmin() ? PLATFORM_ADMIN_NAVIGATION : VENUE_OWNER_NAVIGATION
+  );
 
   filteredItems = computed(() => {
     const q = this.searchQuery().toLowerCase().trim();
-    if (!q) return this.searchItems;
-    return this.searchItems.filter(item =>
+    const roleItems = this.visibleNavigationItems();
+    if (!q) return roleItems;
+    return roleItems.filter(item =>
       item.title.toLowerCase().includes(q) ||
       item.description.toLowerCase().includes(q)
     );
@@ -158,7 +137,7 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
     try {
       if (this.router && this.router.url) {
         const currentUrl = this.router.url.split('?')[0]; // strip query parameters
-        const activeIndex = this.searchItems.findIndex(item =>
+        const activeIndex = this.visibleNavigationItems().findIndex(item =>
           currentUrl === '/admin' + item.route || currentUrl.startsWith('/admin' + item.route + '/')
         );
         this.selectedSearchIndex.set(activeIndex !== -1 ? activeIndex : 0);
@@ -180,7 +159,7 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isSearchOpen.set(false);
   }
 
-  selectSearchItem(item: any) {
+  selectSearchItem(item: AdminNavigationItem) {
     this.router.navigate(["/admin" + item.route]);
     this.closeSearch();
   }
@@ -194,6 +173,10 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit() {
     this.userProfile = this.authService.currentUser;
+    this.userRole.set(this.userProfile?.role?.name?.toUpperCase() ?? '');
+    if (window.innerWidth < 1024) {
+      this.sidebarCollapsed.set(true);
+    }
 
     this.statusSub = interval(10000)
       .pipe(
@@ -422,7 +405,8 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private navigateFromNotification(notification: Notification): void {
     if (notification.type === NotificationType.OWNER_APPLICATION) {
-      this.router.navigate(['/owner-applications']);
+      const route = this.isPlatformAdmin() ? '/admin/owner-applications' : '/admin/dashboard';
+      this.router.navigate([route]);
     }
   }
 

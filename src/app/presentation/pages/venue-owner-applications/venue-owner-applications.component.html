@@ -1,0 +1,39 @@
+<section class="owner-page">
+  <div class="owner-page__container">
+    <header class="owner-page__header">
+      <div>
+        <p class="owner-page__eyebrow">{{ activeView() === 'history' ? 'Quản lý hồ sơ' : 'Hồ sơ đối tác' }}</p>
+        <h1>{{ activeView() === 'history' ? 'Lịch sử đăng ký' : 'Đăng ký trở thành chủ sân' }}</h1>
+        <p>{{ activeView() === 'history'
+          ? 'Theo dõi những hồ sơ đã tạo và tiếp tục hoàn thiện khi cần.'
+          : 'Hoàn tất vài thông tin thiết yếu để GOAT SPORTS xác minh và đưa sân của bạn lên hệ thống.' }}</p>
+      </div>
+      <button type="button" (click)="activeView() === 'history' ? openForm() : openHistory()">
+        {{ activeView() === 'history' ? 'Đăng ký chủ sân' : '◷  Xem lịch sử đăng ký' }}
+      </button>
+    </header>
+
+    @if (activeView() === 'form') {
+      <app-venue-owner-application-form (submitted)="handleSubmitted($event)" />
+    } @else if (loading() || error()) {
+      <app-owner-application-progress
+        [application]="null" [loading]="loading()" [error]="error()"
+        applicationUrl="/admin/applications" (retry)="loadApplications()" />
+    } @else if (applications().length === 0) {
+      <div class="empty-state">
+        <span aria-hidden="true">＋</span>
+        <h2>Chưa có hồ sơ đăng ký</h2>
+        <p>Tạo hồ sơ đầu tiên để bắt đầu quá trình xét duyệt đối tác chủ sân.</p>
+        <button type="button" (click)="openForm()">Tạo hồ sơ đầu tiên</button>
+      </div>
+    } @else {
+      <div class="application-list">
+        @for (application of applications(); track application.ownerApplicationId) {
+          <app-owner-application-progress
+            [application]="application" [loading]="false" [error]="null"
+            applicationUrl="/admin/applications" />
+        }
+      </div>
+    }
+  </div>
+</section>

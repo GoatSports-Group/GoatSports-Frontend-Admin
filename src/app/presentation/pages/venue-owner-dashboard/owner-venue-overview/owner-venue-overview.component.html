@@ -1,0 +1,68 @@
+<section class="venue-overview" aria-labelledby="owner-venue-title">
+  <header>
+    <div>
+      <p>Cơ sở đã xác minh</p>
+      <h2 id="owner-venue-title">Tổng quan cơ sở của bạn</h2>
+      <span>Dữ liệu đọc trực tiếp từ Venue Service.</span>
+    </div>
+    <lucide-icon name="land-plot" />
+  </header>
+
+  @if (loading()) {
+    <div class="venue-state" role="status"><span class="spinner"></span><strong>Đang tải thông tin cơ sở…</strong></div>
+  } @else if (error()) {
+    <div class="venue-state venue-state--error" role="alert">
+      <lucide-icon name="alert-triangle" />
+      <div><strong>Chưa thể tải cơ sở</strong><p>{{ error() }}</p></div>
+      <button type="button" (click)="retry.emit()">Thử lại</button>
+    </div>
+  } @else if (venue(); as venueData) {
+    <div class="venue-overview__identity">
+      @if (venueData.imageUrls[0]) {
+        <img [src]="venueData.imageUrls[0]" [alt]="venueData.name">
+      } @else {
+        <span class="venue-placeholder"><lucide-icon name="image" /></span>
+      }
+      <div>
+        <span class="venue-status" [class.is-active]="venueData.active">
+          {{ venueData.active ? 'Đang hoạt động' : 'Tạm ngưng' }}
+        </span>
+        <h3>{{ venueData.name }}</h3>
+        <p><lucide-icon name="map-pin" />{{ addressText() || 'Địa chỉ đang cập nhật' }}</p>
+      </div>
+    </div>
+
+    <div class="venue-metrics">
+      <div><span>Tổng sân con</span><strong>{{ venueData.courts.length || 0 }}</strong></div>
+      <div><span>Sân hoạt động</span><strong>{{ activeCourtCount() }}</strong></div>
+      <div><span>Đánh giá</span><strong>{{ venueData.averageRating ?? 'Chưa có' }}</strong></div>
+      <div><span>Lượt đánh giá</span><strong>{{ venueData.totalReviews || 0 }}</strong></div>
+    </div>
+
+    <div class="venue-details">
+      <div><lucide-icon name="clock" /><span>Giờ hoạt động</span><strong>{{ venueData.openTime || '--:--' }} – {{ venueData.closeTime || '--:--' }}</strong></div>
+      <div><lucide-icon name="credit-card" /><span>Khoảng giá</span><strong>
+        @if (venueData.minPrice != null && venueData.maxPrice != null) {
+          {{ venueData.minPrice | currency:'VND':'symbol-narrow':'1.0-0' }} – {{ venueData.maxPrice | currency:'VND':'symbol-narrow':'1.0-0' }}
+        } @else { Chưa cập nhật }
+      </strong></div>
+      <div><lucide-icon name="phone" /><span>Điện thoại</span><strong>{{ venueData.phone || 'Chưa cập nhật' }}</strong></div>
+      <div><lucide-icon name="mail" /><span>Email cơ sở</span><strong>{{ venueData.email || 'Chưa cập nhật' }}</strong></div>
+    </div>
+
+    @if (venueData.courts.length) {
+      <div class="court-list">
+        <h3>Sân thi đấu hiện có</h3>
+        <div>
+          @for (court of venueData.courts; track court.venueCourtId) {
+            <article>
+              <span [class.is-active]="court.active"></span>
+              <div><strong>{{ court.name }}</strong><p>{{ court.sportType }} · {{ court.surfaceType || 'Chưa cập nhật mặt sân' }}</p></div>
+              <small>{{ court.capacity }} người</small>
+            </article>
+          }
+        </div>
+      </div>
+    }
+  }
+</section>

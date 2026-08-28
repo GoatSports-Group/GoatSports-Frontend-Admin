@@ -30,13 +30,14 @@
           class="h-4 w-4 transition-colors shrink-0 cursor-pointer"></lucide-icon>
       </button>
 
-      <a routerLink="/dashboard" class="flex items-center group">
+      <a routerLink="/admin/dashboard" class="flex items-center group">
         <div class="flex items-center gap-3.5 select-none group transition-all duration-300">
           <img src="assets/images/goat.png" alt="GoatSports"
             class="h-10 w-auto object-contain transition-all duration-500 group-hover:scale-105">
         </div>
-        <span class="font-sports-display text-sm font-black tracking-widest text-emerald-600 ml-2 uppercase">Trang quản
-          trị</span>
+        <span class="hidden sm:inline font-sports-display text-sm font-black tracking-widest text-emerald-600 ml-2 uppercase">
+          {{ isPlatformAdmin() ? 'Trang quản trị' : 'Không gian chủ sân' }}
+        </span>
       </a>
     </div>
 
@@ -140,50 +141,26 @@
   </header>
 
   <!-- SIDEBAR (Cố định lề bên trái bên dưới Header) -->
+  @if (!sidebarCollapsed()) {
+    <button type="button" class="fixed inset-0 z-20 bg-slate-950/25 backdrop-blur-[2px] lg:hidden" aria-label="Đóng menu" (click)="toggleSidebar()"></button>
+  }
   <aside
     class="fixed top-[92px] left-4 bottom-4 z-30 flex flex-col border border-slate-200/80 bg-white text-slate-700 backdrop-blur-2xl transition-all duration-300 ease-in-out shadow-md rounded-2xl"
-    [ngClass]="sidebarCollapsed() ? 'w-20 sidebar-collapsed' : 'w-64 sidebar-expanded'">
+    [ngClass]="sidebarCollapsed() ? 'w-20 sidebar-collapsed max-lg:-translate-x-[calc(100%+2rem)]' : 'w-64 sidebar-expanded translate-x-0'">
     <nav class="flex-1 overflow-y-auto px-3 py-2 space-y-6 scrollbar-thin scrollbar-thumb-slate-200">
       <div class="space-y-1">
-        <a routerLink="./dashboard"
-          routerLinkActive="bg-emerald-50 text-emerald-600 shadow-[0_4px_12px_rgba(16,185,129,0.08)]"
-          class="flex items-center rounded-xl text-black hover:text-emerald-600 hover:bg-emerald-50/50 focus:text-emerald-600 focus:bg-emerald-50/50 outline-none transition-all group"
-          [ngClass]="sidebarCollapsed() ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5'" [title]="'Tổng quan'">
-          <lucide-icon name="layout-dashboard" class="h-5 w-5 transition-colors shrink-0"></lucide-icon>
-          <span class="sidebar-text text-[14px] ml-3">Tổng quan</span>
-        </a>
-
-        <a routerLink="./owner-applications"
-          routerLinkActive="bg-emerald-50 text-emerald-600 shadow-[0_4px_12px_rgba(16,185,129,0.08)]"
-          class="flex items-center rounded-xl text-black hover:text-emerald-600 hover:bg-emerald-50/50 focus:text-emerald-600 focus:bg-emerald-50/50 outline-none transition-all group"
-          [ngClass]="sidebarCollapsed() ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5'" [title]="'Chủ sân'">
-          <lucide-icon name="user-check" class="h-5 w-5 transition-colors shrink-0"></lucide-icon>
-          <span class="sidebar-text text-[14px] ml-3">Chủ Sân</span>
-        </a>
-
-        <a routerLink="./users"
-          routerLinkActive="bg-emerald-50 text-emerald-600 shadow-[0_4px_12px_rgba(16,185,129,0.08)]"
-          class="flex items-center rounded-xl text-black hover:text-emerald-600 hover:bg-emerald-50/50 focus:text-emerald-600 focus:bg-emerald-50/50 outline-none transition-all group"
-          [ngClass]="sidebarCollapsed() ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5'" [title]="'Người dùng'">
-          <lucide-icon name="users" class="h-5 w-5 transition-colors shrink-0"></lucide-icon>
-          <span class="sidebar-text text-[14px] ml-3">Người dùng</span>
-        </a>
-
-        <a routerLink="./roles"
-          routerLinkActive="bg-emerald-50 text-emerald-600 shadow-[0_4px_12px_rgba(16,185,129,0.08)]"
-          class="flex items-center rounded-xl text-black hover:text-emerald-600 hover:bg-emerald-50/50 focus:text-emerald-600 focus:bg-emerald-50/50 outline-none transition-all group"
-          [ngClass]="sidebarCollapsed() ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5'" [title]="'Vai trò'">
-          <lucide-icon name="shield" class="h-5 w-5 transition-colors shrink-0"></lucide-icon>
-          <span class="sidebar-text text-[14px] ml-3">Vai trò</span>
-        </a>
-
-        <a routerLink="./logs"
-          routerLinkActive="bg-emerald-50 text-emerald-600 shadow-[0_4px_12px_rgba(16,185,129,0.08)]"
-          class="flex items-center rounded-xl text-black hover:text-emerald-600 hover:bg-emerald-50/50 focus:text-emerald-600 focus:bg-emerald-50/50 outline-none transition-all group"
-          [ngClass]="sidebarCollapsed() ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5'" [title]="'Nhật ký hệ thống'">
-          <lucide-icon name="activity" class="h-5 w-5 transition-colors shrink-0"></lucide-icon>
-          <span class="sidebar-text text-[14px] ml-3">Nhật ký</span>
-        </a>
+        @for (item of visibleNavigationItems(); track item.route) {
+          <a [routerLink]="'/admin' + item.route"
+            routerLinkActive="bg-emerald-50 text-emerald-600 shadow-[0_4px_12px_rgba(16,185,129,0.08)]"
+            class="flex items-center rounded-xl text-black hover:text-emerald-600 hover:bg-emerald-50/50 focus:text-emerald-600 focus:bg-emerald-50/50 outline-none transition-all group"
+            [ngClass]="sidebarCollapsed() ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5'" [title]="item.title">
+            <lucide-icon [name]="item.icon" class="h-5 w-5 transition-colors shrink-0"></lucide-icon>
+            <span class="sidebar-text text-[14px] ml-3 flex-1">{{ item.title }}</span>
+            @if (item.developing && !sidebarCollapsed()) {
+              <span class="sidebar-text rounded-full bg-amber-50 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide text-amber-700">Dev</span>
+            }
+          </a>
+        }
 
       </div>
     </nav>
@@ -200,7 +177,7 @@
 
   <!-- MAIN LAYOUT AREA -->
   <div
-    class="flex-1 min-w-0 overflow-y-auto scrollbar-none bg-transparent transition-all duration-300 ease-in-out relative z-10 mt-[96px] h-[calc(100vh-112px)] px-4 pb-0"
+    class="flex-1 min-w-0 overflow-x-hidden overflow-y-auto scrollbar-none bg-transparent transition-all duration-300 ease-in-out relative z-10 mt-[96px] h-[calc(100vh-112px)] px-4 pb-0"
     [ngClass]="sidebarCollapsed() ? 'lg:pl-[104px]' : 'lg:pl-[280px]'">
     <main class="flex-1">
       <router-outlet></router-outlet>

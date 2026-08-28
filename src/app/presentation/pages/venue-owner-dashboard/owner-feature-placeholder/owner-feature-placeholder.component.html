@@ -1,0 +1,35 @@
+<main class="feature-page">
+  @if (feature(); as item) {
+    <section class="feature-hero" aria-labelledby="feature-title">
+      <a routerLink="/admin/dashboard"><lucide-icon name="arrow-left" />Quay lại tổng quan</a>
+      <span class="feature-hero__icon"><lucide-icon [name]="item.icon" /></span>
+      <p>Không gian chủ sân</p>
+      <h1 id="feature-title">{{ item.title }}</h1>
+      <span class="feature-hero__badge">Đang phát triển</span>
+      <strong>{{ item.description }}</strong>
+      <small>
+        Chức năng này chưa có đầy đủ API dành riêng cho chủ sân nên hiện chưa mở thao tác.
+        GOAT Sports không hiển thị số liệu giả hoặc sử dụng nhầm API quản trị hệ thống.
+      </small>
+    </section>
+
+    <section class="feature-roadmap" aria-labelledby="feature-roadmap-title">
+      <header>
+        <div>
+          <p>Phạm vi dự kiến</p>
+          <h2 id="feature-roadmap-title">Những chức năng sẽ được cung cấp</h2>
+        </div>
+        <lucide-icon name="construction" />
+      </header>
+      <ul>
+        @for (capability of item.plannedCapabilities; track capability; let index = $index) {
+          <li><span>{{ index + 1 }}</span><strong>{{ capability }}</strong><small>Đang chờ API owner hoàn chỉnh</small></li>
+        }
+      </ul>
+      <div class="feature-roadmap__note">
+        <lucide-icon name="info" />
+        <p>Khi backend cung cấp contract thật, module sẽ được nối theo luồng Use case → Repository → Repository implementation → API.</p>
+      </div>
+    </section>
+  }
+</main>

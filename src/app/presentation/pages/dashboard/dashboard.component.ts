@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, inject, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, AfterViewInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -26,6 +26,7 @@ import {
   formatVietnameseMonthYear
 } from './dashboard.utils';
 import { DashboardMapService } from './dashboard-map.service';
+import { VenueOwnerDashboardComponent } from '../venue-owner-dashboard/venue-owner-dashboard.component';
 
 @Component({
   selector: 'app-dashboard-overview',
@@ -37,11 +38,13 @@ import { DashboardMapService } from './dashboard-map.service';
     MatProgressSpinnerModule,
     MetricCardComponent,
     LucideIconComponent,
-    DragDropModule
+    DragDropModule,
+    VenueOwnerDashboardComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
-  providers: [DashboardMapService]
+  providers: [DashboardMapService],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DashboardOverviewComponent implements OnInit, AfterViewInit, OnDestroy {
   private userService = inject(UserService);
@@ -52,6 +55,11 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit, OnDest
   currentDate = new Date();
   adminName = 'Quản Trị Viên';
   readonly getFallbackAvatar = getFallbackAvatar;
+
+  // Role State
+  userRole = signal<string>('ADMIN');
+  isVenueOwner = computed(() => this.userRole() === 'VENUE_OWNER');
+  isAdmin = computed(() => this.userRole() === 'ADMIN');
 
   get formattedDateVi(): string {
     return formatVietnameseDate(this.currentDate);
@@ -168,10 +176,16 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit, OnDest
   readonly OwnerApplicationStatus = OwnerApplicationStatus;
 
   ngOnInit() {
-    this.adminName = this.authService.currentUser?.fullName || 'Quản Trị Viên';
-    this.generateCalendar();
-    this.loadDashboardData();
-    this.fetchWeather();
+    const currentUser = this.authService.currentUser;
+    this.adminName = currentUser?.fullName || 'Quản Trị Viên';
+    const roleName = currentUser?.role?.name || 'ADMIN';
+    this.userRole.set(roleName);
+
+    if (roleName === 'ADMIN') {
+      this.generateCalendar();
+      this.fetchWeather();
+      this.loadDashboardData();
+    }
   }
 
   loadDashboardData() {
@@ -222,7 +236,9 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit, OnDest
 
         this.unlocatedVenueCount.set(markers.filter(marker => marker.isFallback).length);
         this.mapMarkers.set(markers);
-        this.dashboardMap.render(markers);
+        if (this.isAdmin()) {
+          this.dashboardMap.render(markers);
+        }
 
         this.loading.set(false);
       },
@@ -234,11 +250,15 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit, OnDest
   }
 
   ngAfterViewInit() {
-    this.dashboardMap.init('real-leaflet-map');
+    if (this.isAdmin()) {
+      this.dashboardMap.init('real-leaflet-map');
+    }
   }
 
   ngOnDestroy(): void {
-    this.dashboardMap.destroy();
+    if (this.isAdmin()) {
+      this.dashboardMap.destroy();
+    }
   }
 
   toggleMapStatus(status: OwnerApplicationStatus): void {

@@ -7,6 +7,16 @@ import { PageFilter } from '@application/dto/page.filter';
 import { buildPageParams } from '@infrastructure/api/build-page-params';
 import { environment } from "@environments/environment"
 
+export type OwnerApplicationProgressItem = {
+  ownerApplicationId: string;
+  receivedAt?: string;
+  viewedAt?: string;
+};
+
+export type OwnerApplicationProgressResponse = {
+  items: OwnerApplicationProgressItem[];
+};
+
 @Injectable({
   providedIn: 'root'
 })
@@ -19,6 +29,21 @@ export class OwnerApplicationApi {
     return this.http.get<BaseResponse<BaseListResponse<OwnerApplication>>>(
       `${this.apiBase}/venue-service/api/v1/admin/owner-applications`,
       { params }
+    );
+  }
+
+  getMyApplications(filter?: PageFilter): Observable<BaseResponse<BaseListResponse<OwnerApplication>>> {
+    const params = buildPageParams(filter || { page: 0, size: 20 });
+    return this.http.get<BaseResponse<BaseListResponse<OwnerApplication>>>(
+      `${this.apiBase}/venue-service/api/v1/owner-applications/me`,
+      { params }
+    );
+  }
+
+  getMyApplicationProgress(ownerApplicationIds: string[]): Observable<BaseResponse<OwnerApplicationProgressResponse>> {
+    return this.http.post<BaseResponse<OwnerApplicationProgressResponse>>(
+      `${this.apiBase}/workflow-service/api/v1/workflows/owner-applications/my/progress/search`,
+      { ownerApplicationIds }
     );
   }
 

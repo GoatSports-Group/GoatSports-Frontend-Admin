@@ -1,0 +1,36 @@
+<section aria-labelledby="owner-workspace-title">
+  <header class="workspace-heading">
+    <div>
+      <p>Không gian vận hành</p>
+      <h2 id="owner-workspace-title">Chức năng dành cho chủ sân</h2>
+      <span>Chỉ các chức năng có API owner hoàn chỉnh mới được mở để thao tác.</span>
+    </div>
+    @if (!applicationApproved()) {
+      <span class="approval-note">Hồ sơ cần được duyệt để kích hoạt vận hành</span>
+    }
+  </header>
+
+  <div class="feature-grid">
+    @for (feature of features(); track feature.id) {
+      <article class="feature-card" [class.feature-card--available]="feature.status === 'AVAILABLE'">
+        <div class="feature-card__topline">
+          <span class="feature-card__icon"><lucide-icon [name]="feature.icon" /></span>
+          <span class="feature-card__status" [class.is-live]="feature.status === 'AVAILABLE'">
+            {{ feature.status === 'AVAILABLE' ? 'Đang hoạt động' : 'Đang phát triển' }}
+          </span>
+        </div>
+        <h3>{{ feature.title }}</h3>
+        <p>{{ feature.description }}</p>
+        <ul>
+          @for (capability of feature.plannedCapabilities; track capability) {
+            <li><span aria-hidden="true"></span>{{ capability }}</li>
+          }
+        </ul>
+        <a [routerLink]="feature.route">
+          {{ feature.status === 'AVAILABLE' ? 'Mở chức năng' : 'Xem kế hoạch' }}
+          <lucide-icon name="arrow-right" />
+        </a>
+      </article>
+    }
+  </div>
+</section>

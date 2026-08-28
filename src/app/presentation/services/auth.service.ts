@@ -99,21 +99,7 @@ export class AuthService {
             this.sessionStateService.setSessionReady(true);
           },
           error: () => {
-            // Development fallback admin user to allow local rendering
-            const fallbackAdmin: User = {
-              userId: 'admin-dev-01',
-              username: 'admin',
-              email: 'admin@goatsports.com',
-              fullName: 'Quản Trị Viên GOAT Sports',
-              avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
-              status: 'ACTIVE',
-              gender: 'MALE',
-              authProviders: ['LOCAL'],
-              role: { roleId: 'role-admin', name: 'ADMIN' },
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            };
-            this.sessionStateService.setCurrentUser(fallbackAdmin);
+            this.clearSession();
             this.sessionStateService.setSessionReady(true);
           }
         });

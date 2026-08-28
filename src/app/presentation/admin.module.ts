@@ -15,6 +15,7 @@ import { RolePermissionsDialogComponent } from '@presentation/pages/roles/role-p
 import { OwnerApplicationsComponent } from '@presentation/pages/owner-applications/owner-applications.component';
 import { DocumentPreviewDialogComponent } from '@presentation/pages/owner-applications/document-preview-dialog/document-preview-dialog.component';
 import { LogsComponent } from '@presentation/pages/logs/logs.component';
+import { AdminBookingsComponent } from '@presentation/pages/bookings/bookings.component';
 import { StatusBadgeComponent } from '@shared/components/ui/status-badge/status-badge.component';
 import { OverviewStatsComponent } from '@presentation/pages/logs/components/overview-stats/overview-stats.component';
 import { LogFilterComponent } from '@presentation/pages/logs/components/log-filter/log-filter.component';
@@ -40,6 +41,7 @@ import { OverlayModule } from '@angular/cdk/overlay';
     OwnerApplicationsComponent,
     DocumentPreviewDialogComponent,
     LogsComponent,
+    AdminBookingsComponent,
     UserDetailsComponent,
     CreateUserDrawerComponent,
     EditUserDrawerComponent,

@@ -1,0 +1,111 @@
+@if (loading()) {
+  <div class="history-state" role="status" aria-live="polite">
+    <span class="history-spinner" aria-hidden="true"></span>
+    <h2>Đang tải hồ sơ</h2>
+    <p>Vui lòng chờ trong giây lát.</p>
+  </div>
+} @else if (error()) {
+  <div class="history-state history-state--error" role="alert">
+    <span class="history-state__icon"><lucide-icon name="alert-triangle" /></span>
+    <h2>Chưa thể tải tiến trình</h2>
+    <p>{{ error() }}</p>
+    <button type="button" (click)="retry.emit()">Thử lại</button>
+  </div>
+} @else if (!application()) {
+  <div class="history-state history-state--empty">
+    <span class="history-state__icon" aria-hidden="true"><lucide-icon name="file-plus-2" /></span>
+    <h2>Chưa có hồ sơ đăng ký</h2>
+    <p>Khi bạn gửi hồ sơ, trạng thái xử lý sẽ xuất hiện tại đây.</p>
+    <a [href]="applicationUrl()">Tạo hồ sơ đầu tiên</a>
+  </div>
+} @else if (progress(); as progressData) {
+  <article class="application-card" [attr.aria-label]="'Hồ sơ ' + application()!.businessName">
+    <section class="application-card__information">
+      <header class="application-card__header">
+        <div class="application-card__identity">
+          <span class="application-card__logo" aria-hidden="true"><lucide-icon name="store" /></span>
+          <div>
+            <span class="application-card__eyebrow">{{ getBusinessTypeLabel(application()!.businessType) }}</span>
+            <h2>{{ application()!.businessName }}</h2>
+          </div>
+        </div>
+        @if (application()!.status === 'REJECTED') {
+          <div class="application-card__rejection" role="note">
+            <lucide-icon name="alert-triangle" aria-hidden="true" />
+            <div>
+              <span>Lý do từ chối</span>
+              <strong [attr.title]="application()!.rejectReason || null">{{ application()!.rejectReason || 'Chưa có lý do cụ thể' }}</strong>
+            </div>
+          </div>
+        } @else {
+          <span class="status" [class]="'status status--' + application()!.status.toLowerCase()">
+            {{ getStatusLabel(application()!.status) }}
+          </span>
+        }
+      </header>
+
+      <div class="application-card__details">
+        <div class="detail-row">
+          <lucide-icon name="user-round" aria-hidden="true" />
+          <div><span>Người đại diện</span><strong>{{ application()!.fullName }}</strong></div>
+        </div>
+        <div class="detail-row">
+          <lucide-icon name="phone" aria-hidden="true" />
+          <div>
+            <span>Liên hệ</span>
+            <div class="detail-row__contact">
+              <a [href]="'tel:' + application()!.phone">{{ application()!.phone }}</a>
+              <span aria-hidden="true">·</span>
+              <a [href]="'mailto:' + application()!.email">{{ application()!.email }}</a>
+            </div>
+          </div>
+        </div>
+        <div class="detail-row">
+          <lucide-icon name="map-pin" aria-hidden="true" />
+          <div><span>Địa chỉ sân</span><strong>{{ getAddress(application()!) }}</strong></div>
+        </div>
+        <div class="detail-row">
+          <lucide-icon name="calendar" aria-hidden="true" />
+          <div>
+            <span>Nộp hồ sơ</span>
+            <strong>{{ application()!.createdAt ? (application()!.createdAt | date:'dd/MM/yyyy HH:mm') : 'Đang cập nhật' }}</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="application-progress" [class]="'application-progress application-progress--' + progressData.tone">
+      <header class="application-progress__header">
+        <div><span>Tiến trình hồ sơ</span><h3>{{ progressData.summary }}</h3></div>
+        <lucide-icon name="activity" aria-hidden="true" />
+      </header>
+
+      <ol class="progress-steps" [attr.aria-label]="progressData.summary">
+        @for (step of progressData.steps; track step.title; let last = $last) {
+          <li class="progress-step" [class]="'progress-step progress-step--' + step.state"
+            [attr.aria-current]="step.state === 'current' ? 'step' : null" [attr.title]="step.description">
+            <div class="progress-step__rail" aria-hidden="true">
+              <span class="progress-step__dot">
+                @if (step.state === 'completed') { <lucide-icon name="check" /> }
+                @else if (step.state === 'rejected' || step.state === 'cancelled') { <lucide-icon name="x" /> }
+              </span>
+              @if (!last) { <span class="progress-step__line"></span> }
+            </div>
+            <div class="progress-step__content">
+              <strong>{{ step.title }}</strong>
+              @if (step.timestamp) { <time [attr.datetime]="step.timestamp">{{ step.timestamp | date:'dd/MM/yyyy HH:mm' }}</time> }
+            </div>
+          </li>
+        }
+      </ol>
+
+      <div class="application-progress__update">
+        <span class="application-progress__update-icon" aria-hidden="true"><lucide-icon name="info" /></span>
+        <div><span>Cập nhật gần nhất</span><strong>{{ progressData.detail }}</strong></div>
+        @if (progressData.updatedAt) {
+          <time [attr.datetime]="progressData.updatedAt">{{ progressData.updatedAt | date:'dd/MM/yyyy HH:mm' }}</time>
+        }
+      </div>
+    </aside>
+  </article>
+}

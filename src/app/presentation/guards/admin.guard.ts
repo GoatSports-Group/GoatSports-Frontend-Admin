@@ -27,19 +27,20 @@ export class AdminGuard implements CanActivate {
           return false;
         }
 
-        const roleName = this.authService.currentUser?.role?.name?.toUpperCase();
-        if (roleName === 'ADMIN') {
+        const roleName = this.authService.currentUser?.role?.name?.toUpperCase() ?? '';
+        const allowedRoles = (route.data['allowedRoles'] as string[] | undefined) ?? ['ADMIN'];
+        if (allowedRoles.includes(roleName)) {
           return true;
         }
 
-        this.snackBar.open('Bạn không có quyền truy cập vào trang quản trị!', 'Đóng', {
+        this.snackBar.open('Bạn không có quyền truy cập khu vực này.', 'Đóng', {
           duration: 2000,
           horizontalPosition: 'end',
           verticalPosition: 'top',
           panelClass: ['snackbar-error']
         });
 
-        this.router.navigate(['/forbidden']);
+        this.router.navigate(roleName === 'VENUE_OWNER' ? ['/admin/dashboard'] : ['/forbidden']);
         return false;
       })
     );
