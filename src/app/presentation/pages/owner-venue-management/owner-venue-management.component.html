@@ -86,13 +86,45 @@
       <section class="form-card">
         <header class="card-heading">
           <span class="card-icon"><lucide-icon name="image" /></span>
-          <div><h2>Hình ảnh và tiện ích</h2><p>Mỗi dòng là một đường dẫn hình ảnh hoặc một tiện ích; cũng có thể phân tách bằng dấu phẩy.</p></div>
+          <div><h2>Hình ảnh và tiện ích</h2><p>Chọn nhiều ảnh để tải nền lên kho lưu trữ; tiện ích có thể nhập mỗi dòng hoặc phân tách bằng dấu phẩy.</p></div>
         </header>
         <div class="form-grid">
-          <label class="field field--wide">
-            <span>Đường dẫn hình ảnh (tối đa 12)</span>
-            <textarea formControlName="imageUrls" rows="5" placeholder="https://.../venue-front.jpg hoặc storage/venue-front.jpg"></textarea>
-          </label>
+          <div class="image-field field--wide">
+            <div class="image-field__heading">
+              <div><strong>Hình ảnh cơ sở</strong><small>{{ images().length }}/12 ảnh · PNG, JPG, WEBP · tối đa 10 MB/ảnh</small></div>
+              <label class="image-picker" [class.is-disabled]="saving() || images().length >= 12">
+                <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple
+                  (change)="selectImages($event)" [disabled]="saving() || images().length >= 12" />
+                Chọn ảnh
+              </label>
+            </div>
+
+            @if (images().length) {
+              <div class="image-grid" aria-live="polite">
+                @for (image of images(); track image.id) {
+                  <article class="image-card" [class.is-uploading]="image.uploading">
+                    @if (image.displayUrl) {
+                      <img [src]="image.displayUrl" [alt]="image.fileName" />
+                    } @else if (image.resolving) {
+                      <div class="image-placeholder"><span class="spinner"></span><span>Đang lấy ảnh</span></div>
+                    } @else {
+                      <div class="image-placeholder image-placeholder--error"><lucide-icon name="image" /><span>Không tải được ảnh</span></div>
+                    }
+                    <div class="image-card__footer">
+                      <span [title]="image.fileName">{{ image.fileName }}</span>
+                      @if (image.uploading) {
+                        <small><span class="mini-spinner"></span> Đang tải lên</small>
+                      } @else {
+                        <button type="button" (click)="removeImage(image)" [disabled]="saving()" aria-label="Xóa ảnh">×</button>
+                      }
+                    </div>
+                  </article>
+                }
+              </div>
+            } @else {
+              <div class="image-empty"><lucide-icon name="image" /><span>Chưa có hình ảnh cơ sở</span></div>
+            }
+          </div>
           <label class="field field--wide">
             <span>Tiện ích (tối đa 30)</span>
             <textarea formControlName="amenities" rows="4" placeholder="Bãi giữ xe&#10;Phòng thay đồ&#10;Wifi"></textarea>
@@ -112,9 +144,11 @@
       </section>
 
       <footer class="form-actions">
-        <button type="button" class="button button--secondary" (click)="reset()" [disabled]="saving() || !form.dirty">Hoàn tác</button>
-        <button type="submit" class="button button--primary" [disabled]="saving() || form.invalid || !form.dirty">
-          @if (saving()) { <span class="button-spinner"></span> Đang lưu... } @else { <lucide-icon name="save" /> Lưu thay đổi }
+        <button type="button" class="button button--secondary" (click)="reset()" [disabled]="saving() || uploadingImages() || !form.dirty">Hoàn tác</button>
+        <button type="submit" class="button button--primary" [disabled]="saving() || uploadingImages() || form.invalid || !form.dirty">
+          @if (saving()) { <span class="button-spinner"></span> Đang lưu... }
+          @else if (uploadingImages()) { <span class="button-spinner"></span> Đang tải ảnh... }
+          @else { <lucide-icon name="save" /> Lưu thay đổi }
         </button>
       </footer>
     </form>
