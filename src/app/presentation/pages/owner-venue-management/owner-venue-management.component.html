@@ -1,0 +1,122 @@
+<main class="owner-page" aria-labelledby="venue-page-title">
+  <header class="page-heading">
+    <div>
+      <span class="eyebrow">Không gian vận hành</span>
+      <h1 id="venue-page-title">Quản lý cơ sở</h1>
+      <p>Cập nhật thông tin của cơ sở được tạo sau khi hồ sơ chủ sân được phê duyệt.</p>
+    </div>
+    @if (venue()) {
+      <span class="status-pill" [class.is-active]="venue()?.active">
+        <span></span>{{ venue()?.active ? 'Đang hoạt động' : 'Chưa hoạt động' }}
+      </span>
+    }
+  </header>
+
+  @if (loading()) {
+    <section class="state-card" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      <h2>Đang tải thông tin cơ sở</h2>
+      <p>GoatSports đang đồng bộ dữ liệu Venue của bạn.</p>
+    </section>
+  } @else if (loadError()) {
+    <section class="state-card state-card--error" role="alert">
+      <lucide-icon name="alert-circle" />
+      <h2>Chưa thể tải dữ liệu</h2>
+      <p>{{ loadError() }}</p>
+      <button type="button" (click)="load()">Thử lại</button>
+    </section>
+  } @else if (!venue()) {
+    <section class="state-card">
+      <lucide-icon name="inbox" />
+      <h2>Bạn chưa có cơ sở được phê duyệt</h2>
+      <p>Hãy kiểm tra trạng thái hồ sơ hoặc nộp đơn tại tab Đơn đăng ký. Venue chỉ được tạo khi quản trị viên phê duyệt.</p>
+      <a routerLink="/admin/applications">Đi đến Đơn đăng ký</a>
+    </section>
+  } @else {
+    <form class="venue-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <section class="form-card">
+        <header class="card-heading">
+          <span class="card-icon"><lucide-icon name="store" /></span>
+          <div><h2>Thông tin vận hành</h2><p>Tên, mô tả, giờ mở cửa và trạng thái hiển thị.</p></div>
+        </header>
+        <div class="form-grid">
+          <label class="field field--wide">
+            <span>Tên cơ sở <b>*</b></span>
+            <input formControlName="name" maxlength="255" [attr.aria-invalid]="fieldInvalid('name')" />
+            @if (fieldInvalid('name')) { <small>Vui lòng nhập tên cơ sở (tối đa 255 ký tự).</small> }
+          </label>
+          <label class="field field--wide">
+            <span>Mô tả</span>
+            <textarea formControlName="description" rows="4" maxlength="2000"></textarea>
+            <em>{{ form.controls.description.value.length }}/2000</em>
+          </label>
+          <label class="field">
+            <span>Giờ mở cửa <b>*</b></span>
+            <input type="time" formControlName="openTime" />
+          </label>
+          <label class="field">
+            <span>Giờ đóng cửa <b>*</b></span>
+            <input type="time" formControlName="closeTime" />
+          </label>
+          <label class="switch-field field--wide">
+            <input type="checkbox" formControlName="active" />
+            <span class="switch" aria-hidden="true"></span>
+            <span><strong>Cho phép cơ sở hoạt động</strong><small>Tắt trạng thái này để tạm ẩn cơ sở khỏi danh sách công khai.</small></span>
+          </label>
+        </div>
+      </section>
+
+      <section class="form-card">
+        <header class="card-heading">
+          <span class="card-icon"><lucide-icon name="map-pin" /></span>
+          <div><h2>Địa chỉ và liên hệ</h2><p>Thông tin khách hàng dùng để tìm và liên hệ cơ sở.</p></div>
+        </header>
+        <div class="form-grid">
+          <label class="field field--wide"><span>Địa chỉ <b>*</b></span><input formControlName="address" maxlength="500" /></label>
+          <label class="field"><span>Phường / xã</span><input formControlName="ward" maxlength="255" /></label>
+          <label class="field"><span>Quận / huyện</span><input formControlName="district" maxlength="255" /></label>
+          <label class="field"><span>Tỉnh / thành phố <b>*</b></span><input formControlName="city" maxlength="255" /></label>
+          <label class="field"><span>Số điện thoại <b>*</b></span><input formControlName="phone" maxlength="30" inputmode="tel" /></label>
+          <label class="field field--wide"><span>Email <b>*</b></span><input type="email" formControlName="email" maxlength="255" /></label>
+          <label class="field"><span>Vĩ độ</span><input type="number" formControlName="latitude" min="-90" max="90" step="any" /></label>
+          <label class="field"><span>Kinh độ</span><input type="number" formControlName="longitude" min="-180" max="180" step="any" /></label>
+        </div>
+      </section>
+
+      <section class="form-card">
+        <header class="card-heading">
+          <span class="card-icon"><lucide-icon name="image" /></span>
+          <div><h2>Hình ảnh và tiện ích</h2><p>Mỗi dòng là một đường dẫn hình ảnh hoặc một tiện ích; cũng có thể phân tách bằng dấu phẩy.</p></div>
+        </header>
+        <div class="form-grid">
+          <label class="field field--wide">
+            <span>Đường dẫn hình ảnh (tối đa 12)</span>
+            <textarea formControlName="imageUrls" rows="5" placeholder="https://.../venue-front.jpg hoặc storage/venue-front.jpg"></textarea>
+          </label>
+          <label class="field field--wide">
+            <span>Tiện ích (tối đa 30)</span>
+            <textarea formControlName="amenities" rows="4" placeholder="Bãi giữ xe&#10;Phòng thay đồ&#10;Wifi"></textarea>
+          </label>
+        </div>
+      </section>
+
+      <section class="form-card">
+        <header class="card-heading">
+          <span class="card-icon"><lucide-icon name="receipt" /></span>
+          <div><h2>Khoảng giá tham khảo</h2><p>Giá chi tiết theo sân và khung giờ thuộc task bảng giá sau này.</p></div>
+        </header>
+        <div class="form-grid">
+          <label class="field"><span>Giá tối thiểu (VNĐ) <b>*</b></span><input type="number" formControlName="minPrice" min="0" /></label>
+          <label class="field"><span>Giá tối đa (VNĐ) <b>*</b></span><input type="number" formControlName="maxPrice" min="0" /></label>
+        </div>
+      </section>
+
+      <footer class="form-actions">
+        <button type="button" class="button button--secondary" (click)="reset()" [disabled]="saving() || !form.dirty">Hoàn tác</button>
+        <button type="submit" class="button button--primary" [disabled]="saving() || form.invalid || !form.dirty">
+          @if (saving()) { <span class="button-spinner"></span> Đang lưu... } @else { <lucide-icon name="save" /> Lưu thay đổi }
+        </button>
+      </footer>
+    </form>
+  }
+</main>

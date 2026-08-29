@@ -11,6 +11,8 @@ import { AdminBookingsComponent } from '@presentation/pages/bookings/bookings.co
 import { AdminGuard } from '@presentation/guards/admin.guard';
 import { OwnerFeaturePlaceholderComponent } from '@presentation/pages/venue-owner-dashboard/owner-feature-placeholder/owner-feature-placeholder.component';
 import { VenueOwnerApplicationsComponent } from '@presentation/pages/venue-owner-applications/venue-owner-applications.component';
+import { OwnerVenueManagementComponent } from '@presentation/pages/owner-venue-management/owner-venue-management.component';
+import { OwnerCourtManagementComponent } from '@presentation/pages/owner-court-management/owner-court-management.component';
 
 const routes: Routes = [
   {
@@ -30,8 +32,8 @@ const routes: Routes = [
       { path: 'roles', component: RolesComponent, canActivate: [AdminGuard], data: { allowedRoles: ['ADMIN'] } },
       { path: 'roles/:id/permissions', component: AssignPermissionsComponent, canActivate: [AdminGuard], data: { allowedRoles: ['ADMIN'] } },
       { path: 'logs', component: LogsComponent, canActivate: [AdminGuard], data: { allowedRoles: ['ADMIN'] } },
-      { path: 'venues', component: OwnerFeaturePlaceholderComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'], featureId: 'venues' } },
-      { path: 'courts', component: OwnerFeaturePlaceholderComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'], featureId: 'courts' } },
+      { path: 'venues', component: OwnerVenueManagementComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
+      { path: 'courts', component: OwnerCourtManagementComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
       { path: 'schedule', component: OwnerFeaturePlaceholderComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'], featureId: 'schedule' } },
       { path: 'owner-bookings', component: OwnerFeaturePlaceholderComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'], featureId: 'bookings' } },
       { path: 'check-in', component: OwnerFeaturePlaceholderComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'], featureId: 'check-in' } },

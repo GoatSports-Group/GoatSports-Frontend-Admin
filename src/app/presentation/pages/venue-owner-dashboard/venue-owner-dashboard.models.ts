@@ -26,7 +26,7 @@ export const OWNER_WORKSPACE_FEATURES: readonly OwnerWorkspaceFeature[] = [
     description: 'Thông tin vận hành, hình ảnh, tiện ích và trạng thái cụm sân.',
     icon: 'land-plot',
     route: '/admin/venues',
-    status: 'DEVELOPING',
+    status: 'AVAILABLE',
     plannedCapabilities: ['Chỉnh sửa cơ sở', 'Hình ảnh và tiện ích', 'Giờ hoạt động']
   },
   {
@@ -35,7 +35,7 @@ export const OWNER_WORKSPACE_FEATURES: readonly OwnerWorkspaceFeature[] = [
     description: 'Quản lý từng sân con, môn thể thao, mặt sân và sức chứa.',
     icon: 'activity',
     route: '/admin/courts',
-    status: 'DEVELOPING',
+    status: 'AVAILABLE',
     plannedCapabilities: ['Danh sách sân con', 'Trạng thái hoạt động', 'Bảo trì sân']
   },
   {
