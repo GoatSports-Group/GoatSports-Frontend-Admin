@@ -15,7 +15,7 @@ export interface OwnerApplicationRepository {
   submit(
     form: Record<string, unknown>,
     files: { idCardFront: File; idCardBack: File; businessLicense: File; venueImage: File }
-  ): Observable<BaseListResponse<OwnerApplication>>;
+  ): Observable<void>;
 }
 
 export const OWNER_APPLICATION_REPOSITORY_TOKEN = new InjectionToken<OwnerApplicationRepository>('OwnerApplicationRepository');

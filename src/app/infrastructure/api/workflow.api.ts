@@ -8,6 +8,13 @@ export interface WorkflowStartResponse { processInstanceKey: number; }
 export interface WorkflowVariables {
   ownerApplicationId?: string;
   presignedUrls?: { uploadUrl: string; objectKey: string }[];
+  workflowStatus?: 'RETRYING' | 'FAILED' | 'SUBMITTED';
+  workflowErrorCode?: string;
+  workflowErrorMessage?: string;
+  workflowErrorSource?: string;
+  workflowErrorStatus?: number;
+  workflowInstanceState?: 'ACTIVE' | 'COMPLETED' | 'TERMINATED';
+  workflowHasIncident?: boolean;
 }
 export interface WorkflowTask { key: number; elementId: string; }
 

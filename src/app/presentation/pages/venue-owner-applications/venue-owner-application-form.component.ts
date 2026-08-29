@@ -1,7 +1,9 @@
-import { ChangeDetectionStrategy, Component, HostListener, inject, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, HostListener, inject, output, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { defer, finalize } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { BusinessType, OwnerApplication } from '@application/dto/owner-application/owner-application.dto';
+import { BusinessType } from '@application/dto/owner-application/owner-application.dto';
 import { SubmitOwnerApplicationUseCase } from '@application/usecase/owner-application/submit-owner-application.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
 
@@ -23,8 +25,9 @@ type ApplicationForm = {
 export class VenueOwnerApplicationFormComponent {
   private readonly submitApplication = inject(SubmitOwnerApplicationUseCase);
   private readonly notify = inject(NotifyService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  readonly submitted = output<OwnerApplication[]>();
+  readonly submitted = output<void>();
   readonly currentStep = signal(1);
   readonly submitting = signal(false);
   readonly steps = ['Người đại diện', 'Cơ sở', 'Địa chỉ', 'Hồ sơ'];
@@ -80,23 +83,24 @@ export class VenueOwnerApplicationFormComponent {
       key, typeof value === 'string' ? value.trim() : value
     ]));
 
-    this.submitApplication.execute(form, {
+    defer(() => this.submitApplication.execute(form, {
       idCardFront: this.files.idCardFront!,
       idCardBack: this.files.idCardBack!,
       businessLicense: this.files.businessLicense!,
       venueImage: this.files.venueImage!
-    }).subscribe({
-      next: response => {
-        this.submitting.set(false);
+    })).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.submitting.set(false))
+    ).subscribe({
+      next: () => {
         this.form = this.emptyForm();
         this.files = this.emptyFiles();
         this.currentStep.set(1);
         this.notify.success('Đã nộp đơn đăng ký chủ sân thành công.');
-        this.submitted.emit(response.result ?? []);
+        this.submitted.emit();
       },
       error: error => {
-        this.submitting.set(false);
-        this.notify.error(error?.error?.message || 'Đã xảy ra lỗi khi gửi đơn đăng ký.');
+        this.notify.error(error?.error?.message || error?.message || 'Đã xảy ra lỗi khi gửi đơn đăng ký.');
       }
     });
   }

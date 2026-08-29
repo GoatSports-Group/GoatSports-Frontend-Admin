@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { OwnerApplication } from '@application/dto/owner-application/owner-application.dto';
+import { OwnerApplication, OwnerApplicationStatus } from '@application/dto/owner-application/owner-application.dto';
 import { GetMyOwnerApplicationsUseCase } from '@application/usecase/owner-application/get-my-owner-applications.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { OwnerApplicationProgressComponent } from '@presentation/pages/dashboard/owner-application-progress/owner-application-progress.component';
@@ -22,6 +22,9 @@ export class VenueOwnerApplicationsComponent implements OnInit {
   readonly applications = signal<OwnerApplication[]>([]);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
+  readonly hasPendingApplication = computed(() => this.applications().some(
+    application => application.status === OwnerApplicationStatus.PENDING
+  ));
 
   ngOnInit(): void { this.loadApplications(); }
 
@@ -31,13 +34,17 @@ export class VenueOwnerApplicationsComponent implements OnInit {
   }
 
   openForm(): void {
+    if (this.hasPendingApplication()) {
+      this.notify.warning('Bạn đang có một đơn đăng ký chờ duyệt. Vui lòng theo dõi đơn hiện tại trước khi tạo đơn mới.');
+      return;
+    }
     this.activeView.set('form');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  handleSubmitted(result: OwnerApplication[]): void {
-    this.applications.set(this.newestFirst(result));
+  handleSubmitted(): void {
     this.openHistory();
+    this.loadApplications();
   }
 
   loadApplications(showLoading = true): void {

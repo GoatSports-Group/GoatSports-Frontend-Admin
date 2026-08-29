@@ -8,13 +8,17 @@
           ? 'Theo dõi những hồ sơ đã tạo và tiếp tục hoàn thiện khi cần.'
           : 'Hoàn tất vài thông tin thiết yếu để GOAT SPORTS xác minh và đưa sân của bạn lên hệ thống.' }}</p>
       </div>
-      <button type="button" (click)="activeView() === 'history' ? openForm() : openHistory()">
-        {{ activeView() === 'history' ? 'Đăng ký chủ sân' : '◷  Xem lịch sử đăng ký' }}
+      <button type="button" (click)="activeView() === 'history' ? openForm() : openHistory()"
+        [disabled]="activeView() === 'history' && hasPendingApplication()"
+        [title]="hasPendingApplication() ? 'Bạn đang có một đơn chờ duyệt' : ''">
+        {{ activeView() === 'history'
+          ? (hasPendingApplication() ? 'Đang có đơn chờ duyệt' : 'Đăng ký chủ sân')
+          : '◷  Xem lịch sử đăng ký' }}
       </button>
     </header>
 
     @if (activeView() === 'form') {
-      <app-venue-owner-application-form (submitted)="handleSubmitted($event)" />
+      <app-venue-owner-application-form (submitted)="handleSubmitted()" />
     } @else if (loading() || error()) {
       <app-owner-application-progress
         [application]="null" [loading]="loading()" [error]="error()"

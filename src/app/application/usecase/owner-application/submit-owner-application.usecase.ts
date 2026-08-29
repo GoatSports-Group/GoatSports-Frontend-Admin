@@ -1,8 +1,6 @@
 import { Inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { BaseListResponse } from '@application/dto/base/base-response';
 import { OWNER_APPLICATION_REPOSITORY_TOKEN, OwnerApplicationRepository } from '@application/ports/persistence/owner-application.repository';
-import { OwnerApplication } from '@domain/entities/owner-application';
 
 @Injectable({ providedIn: 'root' })
 export class SubmitOwnerApplicationUseCase {
@@ -13,7 +11,7 @@ export class SubmitOwnerApplicationUseCase {
   execute(
     form: Record<string, unknown>,
     files: { idCardFront: File; idCardBack: File; businessLicense: File; venueImage: File }
-  ): Observable<BaseListResponse<OwnerApplication>> {
+  ): Observable<void> {
     return this.repository.submit(form, files);
   }
 }
