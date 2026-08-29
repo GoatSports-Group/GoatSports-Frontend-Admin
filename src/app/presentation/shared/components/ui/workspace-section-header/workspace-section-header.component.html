@@ -1,0 +1,20 @@
+<header class="section-header">
+  <div class="section-header__copy">
+    @if (eyebrow()) {
+      <p>{{ eyebrow() }}</p>
+    }
+    <h2 [id]="headingId()">{{ title() }}</h2>
+    @if (description()) {
+      <span>{{ description() }}</span>
+    }
+  </div>
+
+  <div class="section-header__aside">
+    <ng-content />
+    @if (icon()) {
+      <span class="section-header__icon" aria-hidden="true">
+        <lucide-icon [name]="icon()!" />
+      </span>
+    }
+  </div>
+</header>

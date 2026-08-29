@@ -1,0 +1,44 @@
+<section
+  class="weather-widget"
+  [attr.data-condition]="weather()?.condition || 'neutral'"
+  aria-label="Thời tiết hôm nay">
+  <span class="weather-widget__glow" aria-hidden="true"></span>
+
+  @if (loading() && !weather()) {
+    <div class="weather-loading" role="status" aria-live="polite">
+      <span class="weather-skeleton weather-skeleton--icon" aria-hidden="true"></span>
+      <div>
+        <span class="weather-skeleton weather-skeleton--label" aria-hidden="true"></span>
+        <span class="weather-skeleton weather-skeleton--value" aria-hidden="true"></span>
+        <span class="weather-skeleton weather-skeleton--location" aria-hidden="true"></span>
+      </div>
+      <span class="sr-only">Đang tải thời tiết</span>
+    </div>
+  } @else if (error() || !weather()) {
+    <div class="weather-error" role="alert">
+      <span class="weather-error__icon" aria-hidden="true"><lucide-icon name="alert-triangle" /></span>
+      <div>
+        <small>Thời tiết hôm nay</small>
+        <strong>Chưa thể tải thời tiết</strong>
+        <p>{{ error() || 'Dữ liệu thời tiết hiện không khả dụng.' }}</p>
+        <button type="button" (click)="retry.emit()">
+          <lucide-icon name="rotate-ccw" /> Thử lại
+        </button>
+      </div>
+    </div>
+  } @else if (weather(); as currentWeather) {
+    <div class="weather-content">
+      <span class="weather-content__icon" aria-hidden="true">
+        <lucide-icon [name]="currentWeather.icon" />
+      </span>
+      <div class="weather-content__copy">
+        <small>Thời tiết hôm nay</small>
+        <div class="weather-content__temperature">
+          <strong>{{ currentWeather.temp }}</strong><span>°C</span>
+        </div>
+        <p>{{ currentWeather.description }}</p>
+        <span class="weather-content__location"><lucide-icon name="map-pin" />{{ location() }}</span>
+      </div>
+    </div>
+  }
+</section>

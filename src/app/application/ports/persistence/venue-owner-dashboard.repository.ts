@@ -9,6 +9,7 @@ import {
 
 export interface VenueOwnerDashboardRepository {
   getVenueOverview(venueId: string): Observable<OwnerVenueOverview>;
+  getMyVenues(): Observable<OwnerVenueOverview[]>;
   getMyVenue(): Observable<OwnerVenueOverview | null>;
   updateVenue(venueId: string, request: OwnerVenueUpdate): Observable<OwnerVenueOverview>;
   getVenueCourts(venueId: string): Observable<OwnerVenueCourt[]>;

@@ -1,0 +1,147 @@
+.application-card.application-card--compact {
+  display: grid;
+  grid-template-columns: 1fr;
+  overflow: hidden;
+  border: 1px solid #d8ebe3;
+  border-radius: 17px;
+  background: #fbfefd;
+  box-shadow: none;
+  transform: none;
+}
+
+.application-card.application-card--compact:hover {
+  border-color: #a7f3d0;
+  box-shadow: none;
+  transform: none;
+}
+
+.compact-application__hero {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid #d8ebe3;
+  background: linear-gradient(145deg, #ecfdf5, #f8fffc);
+}
+
+.compact-application__icon {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border: 1px solid #a7f3d0;
+  border-radius: 50%;
+  background: #059669;
+  color: #fff;
+  box-shadow: 0 0 0 5px rgb(16 185 129 / 10%);
+}
+
+.compact-application__icon lucide-icon { width: 21px; height: 21px; }
+.compact-application__hero span,
+.compact-application__hero h3,
+.compact-application__hero p { display: block; margin: 0; }
+.compact-application__hero span { color: #047857; font-size: 8px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+.compact-application__hero h3 { margin-top: 3px; color: #0f513f !important; font-size: 13px; font-weight: 850; line-height: 1.4; }
+.compact-application__hero p { margin-top: 2px; overflow: hidden; color: #64748b; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+
+.compact-application__hero--danger,
+.compact-application__hero--rejected { border-color: #fecdd3; background: #fff7f8; }
+.compact-application__hero--danger .compact-application__icon,
+.compact-application__hero--rejected .compact-application__icon { border-color: #fda4af; background: #e11d48; box-shadow: 0 0 0 5px rgb(225 29 72 / 9%); }
+
+.compact-progress {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 14px 16px;
+  list-style: none;
+}
+
+.compact-progress__step {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 9px;
+  padding-bottom: 13px;
+}
+
+.compact-progress__step:last-child { padding-bottom: 0; }
+.compact-progress__step:not(:last-child)::after {
+  position: absolute;
+  top: 19px;
+  bottom: 1px;
+  left: 9px;
+  width: 1px;
+  background: #dbe5e1;
+  content: '';
+}
+
+.compact-progress__dot {
+  display: grid;
+  z-index: 1;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+  background: #fff;
+  color: #fff;
+}
+
+.compact-progress__dot lucide-icon { width: 10px; height: 10px; stroke-width: 3; }
+.compact-progress__step--completed .compact-progress__dot { border-color: #059669; background: #059669; }
+.compact-progress__step--current .compact-progress__dot { border: 5px solid #a7f3d0; background: #059669; }
+.compact-progress__step--rejected .compact-progress__dot,
+.compact-progress__step--cancelled .compact-progress__dot { border-color: #e11d48; background: #e11d48; }
+.compact-progress__step strong,
+.compact-progress__step time { display: block; }
+.compact-progress__step strong { color: #475569; font-size: 9px; font-weight: 750; line-height: 1.4; }
+.compact-progress__step time { margin-top: 2px; color: #94a3b8; font-size: 8px; }
+
+.compact-application__update {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  margin: 0 16px 16px;
+  padding: 9px;
+  border-radius: 11px;
+  background: #f1f5f9;
+}
+
+.compact-application__update > lucide-icon { width: 15px; height: 15px; justify-self: center; color: #059669; }
+.compact-application__update span,
+.compact-application__update strong { display: block; }
+.compact-application__update span { color: #94a3b8; font-size: 8px; }
+.compact-application__update strong { display: -webkit-box; margin-top: 2px; overflow: hidden; color: #475569; font-size: 9px; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+
+.compact-application__rejection {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 8px;
+  margin: 12px 16px 0;
+  padding: 10px;
+  border: 1px solid #fecdd3;
+  border-radius: 10px;
+  background: #fff7f8;
+  color: #be123c;
+}
+
+.compact-application__rejection lucide-icon { width: 16px; height: 16px; }
+.compact-application__rejection span,
+.compact-application__rejection strong { display: block; }
+.compact-application__rejection span { font-size: 8px; font-weight: 750; }
+.compact-application__rejection strong { margin-top: 2px; color: #881337; font-size: 9px; line-height: 1.45; }
+
+@media (max-width: 640px) {
+  .compact-application__hero { padding: 15px; }
+  .compact-application__hero h3 { font-size: 15px; }
+  .compact-application__hero p,
+  .compact-progress__step strong,
+  .compact-application__update strong { font-size: 11px; }
+  .compact-progress__step time,
+  .compact-application__update span { font-size: 9px; }
+}

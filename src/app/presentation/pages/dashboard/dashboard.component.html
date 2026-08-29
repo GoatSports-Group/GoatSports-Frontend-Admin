@@ -1,5 +1,10 @@
 @if (isVenueOwner()) {
-  <app-venue-owner-dashboard />
+  <app-venue-owner-dashboard
+    [ownerName]="adminName"
+    [weather]="weather()"
+    [weatherLoading]="weatherLoading()"
+    [weatherError]="weatherError()"
+    (retryWeather)="fetchWeather()" />
 } @else {
   <div class="space-y-6 relative z-10 pl-4">
     <section class="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-850 shadow-xl shadow-emerald-950/10 text-white">
@@ -24,16 +29,12 @@
             </a>
           </div>
         </div>
-        <div [ngClass]="'weather-' + weather().condition" class="weather-widget self-stretch shrink-0 p-6 md:p-8 flex items-center justify-center gap-6 min-w-[260px] md:w-[300px] lg:w-[340px] cursor-pointer relative overflow-hidden">
-          <div class="z-10 flex items-center gap-4">
-            <div class="weather-icon-wrapper"><lucide-icon [name]="weather().icon" class="h-12 w-12 text-white drop-shadow-md animate-pulse" /></div>
-            <div class="flex flex-col">
-              <div class="flex items-start"><span class="text-4xl font-black font-display text-white tracking-tighter">{{ weather().temp }}</span><span class="text-xl font-bold text-emerald-200 mt-1">°C</span></div>
-              <span class="text-xs font-bold text-emerald-100/90 capitalize">{{ weather().description }}</span>
-              <span class="text-[10px] text-emerald-200/70 font-medium">TP. Hồ Chí Minh</span>
-            </div>
-          </div>
-        </div>
+        <app-weather-widget
+          class="admin-weather"
+          [weather]="weather()"
+          [loading]="weatherLoading()"
+          [error]="weatherError()"
+          (retry)="fetchWeather()" />
       </div>
     </section>
 

@@ -1,68 +1,105 @@
 <section class="venue-overview" aria-labelledby="owner-venue-title">
-  <header>
+  <header class="panel-heading">
     <div>
-      <p>Cơ sở đã xác minh</p>
-      <h2 id="owner-venue-title">Tổng quan cơ sở của bạn</h2>
-      <span>Dữ liệu đọc trực tiếp từ Venue Service.</span>
+      <span class="panel-heading__icon" aria-hidden="true"><lucide-icon name="land-plot" /></span>
+      <h2 id="owner-venue-title">Tổng quan cơ sở</h2>
     </div>
-    <lucide-icon name="land-plot" />
+    <a class="edit-link" routerLink="/admin/venues"><lucide-icon name="pencil" /> Chỉnh sửa cơ sở</a>
   </header>
 
   @if (loading()) {
-    <div class="venue-state" role="status"><span class="spinner"></span><strong>Đang tải thông tin cơ sở…</strong></div>
+    <div class="venue-skeleton" role="status" aria-live="polite">
+      <span class="skeleton skeleton--media" aria-hidden="true"></span>
+      <div>
+        <span class="skeleton skeleton--label" aria-hidden="true"></span>
+        <span class="skeleton skeleton--title" aria-hidden="true"></span>
+        <span class="skeleton skeleton--line" aria-hidden="true"></span>
+      </div>
+      <span class="sr-only">Đang tải thông tin cơ sở</span>
+    </div>
   } @else if (error()) {
     <div class="venue-state venue-state--error" role="alert">
-      <lucide-icon name="alert-triangle" />
+      <span aria-hidden="true"><lucide-icon name="alert-triangle" /></span>
       <div><strong>Chưa thể tải cơ sở</strong><p>{{ error() }}</p></div>
       <button type="button" (click)="retry.emit()">Thử lại</button>
     </div>
   } @else if (venue(); as venueData) {
-    <div class="venue-overview__identity">
-      @if (venueData.imageUrls[0]) {
-        <img [src]="venueData.imageUrls[0]" [alt]="venueData.name">
-      } @else {
-        <span class="venue-placeholder"><lucide-icon name="image" /></span>
-      }
-      <div>
-        <span class="venue-status" [class.is-active]="venueData.active">
-          {{ venueData.active ? 'Đang hoạt động' : 'Tạm ngưng' }}
-        </span>
-        <h3>{{ venueData.name }}</h3>
-        <p><lucide-icon name="map-pin" />{{ addressText() || 'Địa chỉ đang cập nhật' }}</p>
-      </div>
-    </div>
+    <div class="venue-layout">
+      <div class="venue-main">
+        <div class="venue-identity">
+          @if (venueData.imageUrls[0]) {
+            <img [src]="venueData.imageUrls[0]" [alt]="'Ảnh đại diện của ' + venueData.name" loading="lazy">
+          } @else {
+            <span class="venue-placeholder" aria-hidden="true"><lucide-icon name="image" /></span>
+          }
 
-    <div class="venue-metrics">
-      <div><span>Tổng sân con</span><strong>{{ venueData.courts.length || 0 }}</strong></div>
-      <div><span>Sân hoạt động</span><strong>{{ activeCourtCount() }}</strong></div>
-      <div><span>Đánh giá</span><strong>{{ venueData.averageRating ?? 'Chưa có' }}</strong></div>
-      <div><span>Lượt đánh giá</span><strong>{{ venueData.totalReviews || 0 }}</strong></div>
-    </div>
+          <div class="venue-identity__copy">
+            <span class="venue-status" [class.is-active]="venueData.active">
+              <i aria-hidden="true"></i>{{ venueData.active ? 'Đang hoạt động' : 'Chưa kích hoạt' }}
+            </span>
+            <h3>{{ venueData.name }}</h3>
+            <p class="venue-address"><lucide-icon name="map-pin" />{{ addressText() || 'Địa chỉ đang cập nhật' }}</p>
+            <p class="venue-description">{{ venueData.description || 'Thêm mô tả để người chơi hiểu rõ hơn về cơ sở của bạn.' }}</p>
+          </div>
 
-    <div class="venue-details">
-      <div><lucide-icon name="clock" /><span>Giờ hoạt động</span><strong>{{ venueData.openTime || '--:--' }} – {{ venueData.closeTime || '--:--' }}</strong></div>
-      <div><lucide-icon name="credit-card" /><span>Khoảng giá</span><strong>
-        @if (venueData.minPrice != null && venueData.maxPrice != null) {
-          {{ venueData.minPrice | currency:'VND':'symbol-narrow':'1.0-0' }} – {{ venueData.maxPrice | currency:'VND':'symbol-narrow':'1.0-0' }}
-        } @else { Chưa cập nhật }
-      </strong></div>
-      <div><lucide-icon name="phone" /><span>Điện thoại</span><strong>{{ venueData.phone || 'Chưa cập nhật' }}</strong></div>
-      <div><lucide-icon name="mail" /><span>Email cơ sở</span><strong>{{ venueData.email || 'Chưa cập nhật' }}</strong></div>
-    </div>
+          <div class="venue-rating" aria-label="Điểm đánh giá cơ sở">
+            <lucide-icon name="star" aria-hidden="true" />
+            <strong>{{ venueData.averageRating ?? '—' }}</strong>
+            <span>{{ venueData.totalReviews || 0 }} lượt đánh giá</span>
+          </div>
+        </div>
 
-    @if (venueData.courts.length) {
-      <div class="court-list">
-        <h3>Sân thi đấu hiện có</h3>
-        <div>
-          @for (court of venueData.courts; track court.venueCourtId) {
-            <article>
-              <span [class.is-active]="court.active"></span>
-              <div><strong>{{ court.name }}</strong><p>{{ court.sportType }} · {{ court.surfaceType || 'Chưa cập nhật mặt sân' }}</p></div>
-              <small>{{ court.capacity }} người</small>
-            </article>
+        <div class="venue-facts" aria-label="Thông tin liên hệ và vận hành">
+          <div><lucide-icon name="clock" /><span>Giờ hoạt động</span><strong>{{ venueData.openTime || '--:--' }} – {{ venueData.closeTime || '--:--' }}</strong></div>
+          <div><lucide-icon name="phone" /><span>Điện thoại</span><strong>{{ venueData.phone || 'Chưa cập nhật' }}</strong></div>
+          <div><lucide-icon name="mail" /><span>Email cơ sở</span><strong>{{ venueData.email || 'Chưa cập nhật' }}</strong></div>
+        </div>
+
+        <div class="venue-amenities">
+          <span>Tiện ích của cơ sở</span>
+          @if (venueData.amenities.length) {
+            <div>
+              @for (amenity of venueData.amenities; track amenity) {
+                <small><lucide-icon name="check" />{{ amenity }}</small>
+              }
+            </div>
+          } @else {
+            <p>Chưa có tiện ích được công bố.</p>
           }
         </div>
       </div>
-    }
+
+      <aside class="court-preview" aria-labelledby="court-preview-title">
+        <div class="court-preview__heading">
+          <div><h3 id="court-preview-title">Sân thi đấu ({{ venueData.courts.length }})</h3><p>Trạng thái vận hành hiện tại</p></div>
+          <a routerLink="/admin/courts">Xem tất cả <lucide-icon name="arrow-right" /></a>
+        </div>
+
+        @if (previewCourts().length) {
+          <div class="court-list">
+            @for (court of previewCourts(); track court.venueCourtId) {
+              <article>
+                <span class="court-list__icon" aria-hidden="true"><lucide-icon name="activity" /></span>
+                <div class="court-list__copy">
+                  <strong>{{ court.name }}</strong>
+                  <p>{{ court.sportType }} · {{ court.surfaceType || 'Chưa cập nhật mặt sân' }}</p>
+                  <span [class.is-active]="court.active"><i aria-hidden="true"></i>{{ court.active ? 'Đang hoạt động' : 'Tạm ngưng' }}</span>
+                </div>
+                <small>{{ court.capacity }} người</small>
+              </article>
+            }
+          </div>
+          @if (remainingCourtCount() > 0) {
+            <a class="court-more" routerLink="/admin/courts">Xem thêm {{ remainingCourtCount() }} sân</a>
+          }
+        } @else {
+          <div class="court-empty">
+            <span aria-hidden="true"><lucide-icon name="activity" /></span>
+            <div><strong>Chưa có sân thi đấu</strong><p>Tạo sân đầu tiên để chuẩn bị vận hành cơ sở.</p></div>
+            <a routerLink="/admin/courts">Tạo sân</a>
+          </div>
+        }
+      </aside>
+    </div>
   }
 </section>

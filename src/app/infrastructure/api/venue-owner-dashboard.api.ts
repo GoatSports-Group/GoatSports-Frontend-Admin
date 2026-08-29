@@ -21,7 +21,7 @@ export class VenueOwnerDashboardApi {
     );
   }
 
-  getMyVenue(): Observable<BaseResponse<OwnerVenueOverview[]>> {
+  getMyVenues(): Observable<BaseResponse<OwnerVenueOverview[]>> {
     return this.http.get<BaseResponse<OwnerVenueOverview[]>>(
       `${this.apiBase}/venue-service/api/v1/owner/venues`
     );

@@ -1,12 +1,5 @@
 import { OwnerApplicationStatus } from '@application/dto/owner-application/owner-application.dto';
 
-export interface WeatherInfo {
-  temp: number;
-  condition: string;
-  icon: string;
-  description: string;
-}
-
 export interface VenueMapMarker {
   lat: number;
   lng: number;

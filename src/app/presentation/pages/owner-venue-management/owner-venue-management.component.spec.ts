@@ -3,11 +3,12 @@ import { provideRouter } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  LucideAlertCircle, LucideImage, LucideInbox, LucideMapPin,
-  LucideReceipt, LucideSave, LucideStore, provideLucideIcons
+  LucideAlertCircle, LucideChevronRight, LucideClipboardCheck, LucideImage, LucideInbox, LucideMapPin,
+  LucideReceipt, LucideSave, LucideStore, LucideX, provideLucideIcons
 } from '@lucide/angular';
 import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
-import { GetMyOwnerVenueUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venue.usecase';
+import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
+import { GetOwnerVenueOverviewUseCase } from '@application/usecase/venue-owner-dashboard/get-owner-venue-overview.usecase';
 import { UpdateOwnerVenueUseCase } from '@application/usecase/venue-owner-dashboard/update-owner-venue.usecase';
 import { GetStorageFileUrlUseCase } from '@application/usecase/storage/get-storage-file-url.usecase';
 import { UploadVenueImageUseCase } from '@application/usecase/storage/upload-venue-image.usecase';
@@ -22,14 +23,16 @@ describe('OwnerVenueManagementComponent', () => {
     address: '1 Goat Street', ward: 'Bến Nghé', district: 'Quận 1', city: 'Hồ Chí Minh',
     imageUrls: [], amenities: [], courts: []
   };
-  const getMyVenue = { execute: vi.fn() };
+  const getMyVenues = { execute: vi.fn() };
+  const getVenueOverview = { execute: vi.fn() };
   const updateVenue = { execute: vi.fn() };
   const getFileUrl = { execute: vi.fn() };
   const uploadVenueImage = { execute: vi.fn() };
   const notify = { success: vi.fn(), error: vi.fn(), warning: vi.fn() };
 
   beforeEach(async () => {
-    getMyVenue.execute.mockReset().mockReturnValue(of(venue));
+    getMyVenues.execute.mockReset().mockReturnValue(of([venue]));
+    getVenueOverview.execute.mockReset().mockReturnValue(of(venue));
     updateVenue.execute.mockReset().mockReturnValue(of(venue));
     getFileUrl.execute.mockReset().mockReturnValue(of('https://cdn.goat.test/venue.png'));
     uploadVenueImage.execute.mockReset().mockReturnValue(of('temp/venues/owner/new.png'));
@@ -38,8 +41,12 @@ describe('OwnerVenueManagementComponent', () => {
       imports: [OwnerVenueManagementComponent],
       providers: [
         provideRouter([]),
-        provideLucideIcons(LucideAlertCircle, LucideImage, LucideInbox, LucideMapPin, LucideReceipt, LucideSave, LucideStore),
-        { provide: GetMyOwnerVenueUseCase, useValue: getMyVenue },
+        provideLucideIcons(
+          LucideAlertCircle, LucideChevronRight, LucideClipboardCheck, LucideImage, LucideInbox,
+          LucideMapPin, LucideReceipt, LucideSave, LucideStore, LucideX
+        ),
+        { provide: GetMyOwnerVenuesUseCase, useValue: getMyVenues },
+        { provide: GetOwnerVenueOverviewUseCase, useValue: getVenueOverview },
         { provide: UpdateOwnerVenueUseCase, useValue: updateVenue },
         { provide: GetStorageFileUrlUseCase, useValue: getFileUrl },
         { provide: UploadVenueImageUseCase, useValue: uploadVenueImage },
@@ -49,7 +56,7 @@ describe('OwnerVenueManagementComponent', () => {
   });
 
   it('hiển thị empty state thật khi owner chưa có Venue', () => {
-    getMyVenue.execute.mockReturnValue(of(null));
+    getMyVenues.execute.mockReturnValue(of([]));
     const fixture = TestBed.createComponent(OwnerVenueManagementComponent);
     fixture.detectChanges();
     expect(fixture.componentInstance.venue()).toBeNull();
@@ -73,7 +80,9 @@ describe('OwnerVenueManagementComponent', () => {
   });
 
   it('lấy public URL từ storage key để hiển thị ảnh sân có sẵn', () => {
-    getMyVenue.execute.mockReturnValue(of({ ...venue, imageUrls: ['venues/owner/old.png'] }));
+    const venueWithImage = { ...venue, imageUrls: ['venues/owner/old.png'] };
+    getMyVenues.execute.mockReturnValue(of([venueWithImage]));
+    getVenueOverview.execute.mockReturnValue(of(venueWithImage));
     const fixture = TestBed.createComponent(OwnerVenueManagementComponent);
     fixture.detectChanges();
 
@@ -94,5 +103,44 @@ describe('OwnerVenueManagementComponent', () => {
 
     expect(fixture.componentInstance.images()).toEqual([]);
     expect(notify.error).toHaveBeenCalledWith('Không thể tải ảnh venue.png. Ảnh đã được hủy khỏi lựa chọn.');
+  });
+
+  it('hiển thị nhiều cơ sở và tải đúng chi tiết khi owner chuyển lựa chọn', () => {
+    const secondVenue: OwnerVenueOverview = {
+      ...venue,
+      venueId: 'venue-2',
+      name: 'Goat Arena Thủ Đức',
+      district: 'Thủ Đức',
+      active: true,
+      courts: [{ venueCourtId: 'court-2', venueId: 'venue-2', name: 'Sân 2', sportType: 'BADMINTON', capacity: 4, surfaceType: 'PVC', active: true }]
+    };
+    getMyVenues.execute.mockReturnValue(of([venue, secondVenue]));
+    getVenueOverview.execute.mockImplementation((venueId: string) => of(venueId === 'venue-2' ? secondVenue : venue));
+    const fixture = TestBed.createComponent(OwnerVenueManagementComponent);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelectorAll('.venue-option')).toHaveLength(2);
+    fixture.componentInstance.selectVenue('venue-2');
+    fixture.detectChanges();
+
+    expect(getVenueOverview.execute).toHaveBeenLastCalledWith('venue-2');
+    expect(fixture.componentInstance.selectedVenueId()).toBe('venue-2');
+    expect(fixture.componentInstance.form.controls.name.value).toBe('Goat Arena Thủ Đức');
+  });
+
+  it('không chuyển cơ sở khi người dùng giữ lại thay đổi chưa lưu', () => {
+    const secondVenue = { ...venue, venueId: 'venue-2', name: 'Goat Arena 2' };
+    getMyVenues.execute.mockReturnValue(of([venue, secondVenue]));
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const fixture = TestBed.createComponent(OwnerVenueManagementComponent);
+    fixture.detectChanges();
+    fixture.componentInstance.form.controls.name.setValue('Tên chưa lưu');
+    fixture.componentInstance.form.markAsDirty();
+
+    fixture.componentInstance.selectVenue('venue-2');
+
+    expect(confirm).toHaveBeenCalledOnce();
+    expect(fixture.componentInstance.selectedVenueId()).toBe('venue-1');
+    expect(getVenueOverview.execute).toHaveBeenCalledTimes(1);
   });
 });

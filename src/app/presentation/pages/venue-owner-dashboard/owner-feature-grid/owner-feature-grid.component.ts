@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { OwnerWorkspaceFeature } from '../venue-owner-dashboard.models';
@@ -14,4 +14,13 @@ import { OwnerWorkspaceFeature } from '../venue-owner-dashboard.models';
 export class OwnerFeatureGridComponent {
   readonly features = input.required<readonly OwnerWorkspaceFeature[]>();
   readonly applicationApproved = input(false);
+
+  readonly availableFeatures = computed(() => this.features().filter(
+    feature => feature.status === 'AVAILABLE' && feature.id !== 'application'
+  ));
+  readonly developingFeatures = computed(() => this.features().filter(feature => feature.status === 'DEVELOPING'));
+
+  isFeatureEnabled(feature: OwnerWorkspaceFeature): boolean {
+    return this.applicationApproved();
+  }
 }

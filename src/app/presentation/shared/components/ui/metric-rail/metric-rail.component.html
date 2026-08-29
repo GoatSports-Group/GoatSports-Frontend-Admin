@@ -1,0 +1,16 @@
+<section class="metric-rail" [attr.aria-label]="label()">
+  <div class="metric-rail__scroller" tabindex="0" [attr.aria-label]="label() + ', vuốt ngang để xem thêm trên thiết bị di động'">
+    @for (item of items(); track item.label) {
+      <article class="metric-rail__item">
+        <span class="metric-rail__icon" aria-hidden="true">
+          <lucide-icon [name]="item.icon" />
+        </span>
+        <div class="metric-rail__copy">
+          <span>{{ item.label }}</span>
+          <strong>{{ item.value }}</strong>
+          <small><i aria-hidden="true"></i>{{ item.description }}</small>
+        </div>
+      </article>
+    }
+  </div>
+</section>

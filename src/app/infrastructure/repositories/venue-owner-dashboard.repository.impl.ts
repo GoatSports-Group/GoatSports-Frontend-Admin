@@ -17,8 +17,12 @@ export class VenueOwnerDashboardRepositoryImpl implements VenueOwnerDashboardRep
     return this.api.getVenueOverview(venueId).pipe(map(response => response.data));
   }
 
+  getMyVenues(): Observable<OwnerVenueOverview[]> {
+    return this.api.getMyVenues().pipe(map(response => response.data ?? []));
+  }
+
   getMyVenue(): Observable<OwnerVenueOverview | null> {
-    return this.api.getMyVenue().pipe(map(response => response.data?.[0] ?? null));
+    return this.getMyVenues().pipe(map(venues => venues[0] ?? null));
   }
 
   updateVenue(venueId: string, request: OwnerVenueUpdate): Observable<OwnerVenueOverview> {

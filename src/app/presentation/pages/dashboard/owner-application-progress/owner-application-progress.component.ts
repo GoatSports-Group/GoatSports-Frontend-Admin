@@ -25,6 +25,7 @@ export class OwnerApplicationProgressComponent {
   readonly loading = input(false);
   readonly error = input<string | null>(null);
   readonly applicationUrl = input.required<string>();
+  readonly compact = input(false);
   readonly retry = output<void>();
 
   readonly progress = computed(() => {

@@ -18,6 +18,42 @@
     <p>Khi bạn gửi hồ sơ, trạng thái xử lý sẽ xuất hiện tại đây.</p>
     <a [href]="applicationUrl()">Tạo hồ sơ đầu tiên</a>
   </div>
+} @else if (compact() && progress(); as progressData) {
+  <article class="application-card application-card--compact" [attr.aria-label]="'Hồ sơ ' + application()!.businessName">
+    <header class="compact-application__hero" [class]="'compact-application__hero compact-application__hero--' + progressData.tone">
+      <span class="compact-application__icon" aria-hidden="true"><lucide-icon name="clipboard-check" /></span>
+      <div>
+        <span>Trạng thái hồ sơ</span>
+        <h3>{{ progressData.summary }}</h3>
+        <p>{{ application()!.businessName }}</p>
+      </div>
+    </header>
+
+    @if (application()!.status === 'REJECTED') {
+      <div class="compact-application__rejection" role="note">
+        <lucide-icon name="alert-triangle" aria-hidden="true" />
+        <div><span>Lý do từ chối</span><strong>{{ application()!.rejectReason || 'Chưa có lý do cụ thể' }}</strong></div>
+      </div>
+    }
+
+    <ol class="compact-progress" [attr.aria-label]="progressData.summary">
+      @for (step of progressData.steps; track step.title) {
+        <li [class]="'compact-progress__step compact-progress__step--' + step.state"
+          [attr.aria-current]="step.state === 'current' ? 'step' : null">
+          <span class="compact-progress__dot" aria-hidden="true">
+            @if (step.state === 'completed') { <lucide-icon name="check" /> }
+            @else if (step.state === 'rejected' || step.state === 'cancelled') { <lucide-icon name="x" /> }
+          </span>
+          <div><strong>{{ step.title }}</strong>@if (step.timestamp) { <time [attr.datetime]="step.timestamp">{{ step.timestamp | date:'dd/MM/yyyy HH:mm' }}</time> }</div>
+        </li>
+      }
+    </ol>
+
+    <div class="compact-application__update">
+      <lucide-icon name="info" aria-hidden="true" />
+      <div><span>Cập nhật gần nhất</span><strong>{{ progressData.detail }}</strong></div>
+    </div>
+  </article>
 } @else if (progress(); as progressData) {
   <article class="application-card" [attr.aria-label]="'Hồ sơ ' + application()!.businessName">
     <section class="application-card__information">

@@ -77,6 +77,7 @@ import {
   LucideUser,
   LucideMapPin,
   LucideCloud,
+  LucideCloudFog,
   LucideAlertCircle,
   LucideEye,
   LucideInfo,
@@ -119,7 +120,8 @@ import {
   LucideFilePlus2,
   LucideMessageSquareWarning,
   LucideStore,
-  LucideReceipt
+  LucideReceipt,
+  LucideSparkles
 } from '@lucide/angular';
 
 @NgModule({
@@ -202,6 +204,7 @@ import {
       LucideUser,
       LucideMapPin,
       LucideCloud,
+      LucideCloudFog,
       LucideAlertCircle,
       LucideEye,
       LucideInfo,
@@ -244,7 +247,8 @@ import {
       LucideFilePlus2,
       LucideMessageSquareWarning,
       LucideStore,
-      LucideReceipt
+      LucideReceipt,
+      LucideSparkles
     )
   ],
   bootstrap: [AppComponent]

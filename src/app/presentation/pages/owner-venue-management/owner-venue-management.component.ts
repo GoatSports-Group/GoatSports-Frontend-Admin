@@ -4,7 +4,8 @@ import { RouterLink } from '@angular/router';
 import { finalize, take } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { OwnerVenueOverview, OwnerVenueUpdate } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
-import { GetMyOwnerVenueUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venue.usecase';
+import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
+import { GetOwnerVenueOverviewUseCase } from '@application/usecase/venue-owner-dashboard/get-owner-venue-overview.usecase';
 import { UpdateOwnerVenueUseCase } from '@application/usecase/venue-owner-dashboard/update-owner-venue.usecase';
 import { GetStorageFileUrlUseCase } from '@application/usecase/storage/get-storage-file-url.usecase';
 import { UploadVenueImageUseCase } from '@application/usecase/storage/upload-venue-image.usecase';
@@ -17,12 +18,17 @@ import { VenueImageItem } from './venue-image.model';
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink, LucideIconComponent],
   templateUrl: './owner-venue-management.component.html',
-  styleUrl: './owner-venue-management.component.scss',
+  styleUrls: [
+    './owner-venue-management.component.scss',
+    './owner-venue-form.component.scss',
+    './owner-venue-responsive.component.scss'
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OwnerVenueManagementComponent {
   private readonly formBuilder = inject(FormBuilder);
-  private readonly getMyVenue = inject(GetMyOwnerVenueUseCase);
+  private readonly getMyVenues = inject(GetMyOwnerVenuesUseCase);
+  private readonly getVenueOverview = inject(GetOwnerVenueOverviewUseCase);
   private readonly updateVenue = inject(UpdateOwnerVenueUseCase);
   private readonly getFileUrl = inject(GetStorageFileUrlUseCase);
   private readonly uploadVenueImage = inject(UploadVenueImageUseCase);
@@ -32,9 +38,15 @@ export class OwnerVenueManagementComponent {
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly loadError = signal<string | null>(null);
+  readonly detailLoading = signal(false);
+  readonly detailError = signal<string | null>(null);
+  readonly venues = signal<OwnerVenueOverview[]>([]);
+  readonly selectedVenueId = signal<string | null>(null);
   readonly venue = signal<OwnerVenueOverview | null>(null);
   readonly images = signal<VenueImageItem[]>([]);
   readonly uploadingImages = computed(() => this.images().some(image => image.uploading));
+  readonly activeVenueCount = computed(() => this.venues().filter(venue => venue.active).length);
+  readonly selectionLocked = computed(() => this.saving() || this.uploadingImages() || this.detailLoading());
 
   readonly form = this.formBuilder.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(255)]],
@@ -61,23 +73,57 @@ export class OwnerVenueManagementComponent {
   }
 
   load(): void {
-    if (this.loading() && this.venue()) return;
+    if (this.loading() && this.venues().length) return;
     this.loading.set(true);
     this.loadError.set(null);
-    this.getMyVenue.execute().pipe(
+    this.getMyVenues.execute().pipe(
       take(1),
       takeUntilDestroyed(this.destroyRef),
       finalize(() => this.loading.set(false))
     ).subscribe({
-      next: venue => {
-        this.venue.set(venue);
-        if (venue) this.patchForm(venue);
+      next: venues => {
+        this.venues.set(venues);
+        if (!venues.length) {
+          this.selectedVenueId.set(null);
+          this.venue.set(null);
+          this.syncImages([]);
+          return;
+        }
+
+        const selectedId = venues.some(item => item.venueId === this.selectedVenueId())
+          ? this.selectedVenueId()!
+          : venues[0].venueId;
+        this.loadVenueDetail(selectedId);
       },
       error: error => {
+        this.venues.set([]);
+        this.selectedVenueId.set(null);
         this.venue.set(null);
-        this.loadError.set(this.errorMessage(error, 'Không thể tải thông tin cơ sở.'));
+        this.syncImages([]);
+        this.loadError.set(this.errorMessage(error, 'Không thể tải danh sách cơ sở.'));
       }
     });
+  }
+
+  selectVenue(venueId: string): void {
+    if (venueId === this.selectedVenueId() || this.selectionLocked()) return;
+    if (this.form.dirty && !window.confirm('Bạn có thay đổi chưa lưu. Chuyển cơ sở sẽ hủy các thay đổi này.')) {
+      return;
+    }
+    this.loadVenueDetail(venueId);
+  }
+
+  retrySelectedVenue(): void {
+    const venueId = this.selectedVenueId();
+    if (venueId && !this.detailLoading()) this.loadVenueDetail(venueId);
+  }
+
+  venueAddress(venue: OwnerVenueOverview): string {
+    return [venue.district, venue.city]
+      .map(value => value?.trim())
+      .filter((value): value is string => Boolean(value))
+      .filter((value, index, values) => values.indexOf(value) === index)
+      .join(', ') || 'Địa chỉ đang cập nhật';
   }
 
   submit(): void {
@@ -98,6 +144,7 @@ export class OwnerVenueManagementComponent {
     ).subscribe({
       next: updated => {
         this.venue.set(updated);
+        this.venues.update(venues => venues.map(item => item.venueId === updated.venueId ? updated : item));
         this.patchForm(updated);
         this.form.markAsPristine();
         this.notify.success('Thông tin cơ sở đã được cập nhật.');
@@ -142,6 +189,30 @@ export class OwnerVenueManagementComponent {
     if (image.localPreview && image.displayUrl) URL.revokeObjectURL(image.displayUrl);
     this.images.update(items => items.filter(item => item.id !== image.id));
     this.form.markAsDirty();
+  }
+
+  private loadVenueDetail(venueId: string): void {
+    this.selectedVenueId.set(venueId);
+    this.detailLoading.set(true);
+    this.detailError.set(null);
+    this.venue.set(null);
+    this.syncImages([]);
+
+    this.getVenueOverview.execute(venueId).pipe(
+      take(1),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.detailLoading.set(false))
+    ).subscribe({
+      next: venue => {
+        this.venue.set(venue);
+        this.venues.update(venues => venues.map(item => item.venueId === venue.venueId ? venue : item));
+        this.patchForm(venue);
+        this.form.markAsPristine();
+      },
+      error: error => {
+        this.detailError.set(this.errorMessage(error, 'Không thể tải chi tiết cơ sở đã chọn.'));
+      }
+    });
   }
 
   private validateBusinessRules(): boolean {
@@ -207,8 +278,8 @@ export class OwnerVenueManagementComponent {
       this.notify.error(`${file.name} không phải là tệp hình ảnh hợp lệ.`);
       return;
     }
-    if (file.size > 2 * 1024 * 1024) {
-      this.notify.error(`${file.name} vượt quá giới hạn 2 MB.`);
+    if (file.size > 10 * 1024 * 1024) {
+      this.notify.error(`${file.name} vượt quá giới hạn 10 MB.`);
       return;
     }
 

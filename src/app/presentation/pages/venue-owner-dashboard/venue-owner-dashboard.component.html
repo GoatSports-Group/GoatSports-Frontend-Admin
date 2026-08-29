@@ -1,40 +1,71 @@
 <div class="owner-dashboard">
-  <section id="owner-application-progress" class="application-history" aria-labelledby="application-history-title">
-    <header class="history-heading">
-      <div class="history-heading__intro">
-        <p>Quản lý hồ sơ</p>
-        <h2 id="application-history-title">Lịch sử đăng ký</h2>
-        <span>Theo dõi những hồ sơ đã tạo và tiếp tục hoàn thiện khi cần.</span>
-      </div>
-      <a [href]="applicationUrl">Đăng ký chủ sân</a>
-    </header>
+  <section class="owner-hero" aria-labelledby="owner-dashboard-title">
+    <div class="owner-hero__glow" aria-hidden="true"></div>
+    <div class="owner-hero__court-lines" aria-hidden="true"></div>
+    <div class="owner-hero__content">
+      <span class="owner-hero__badge"><lucide-icon name="store" /> Không gian chủ sân</span>
+      <h1 id="owner-dashboard-title">Xin chào, {{ displayName() }}!</h1>
+      <p>{{ heroDescription() }}</p>
 
-    @if (applicationLoading() || applicationError() || applications().length === 0) {
-      <app-owner-application-progress
-        [application]="null"
-        [loading]="applicationLoading()"
-        [error]="applicationError()"
-        [applicationUrl]="applicationUrl"
-        (retry)="loadApplications()" />
-    } @else {
-      <div class="application-history__list">
-        @for (application of applications(); track application.ownerApplicationId) {
-          <app-owner-application-progress
-            [application]="application"
-            [applicationUrl]="applicationUrl"
-            (retry)="loadApplications()" />
+      <div class="owner-hero__actions">
+        @if (applicationApproved()) {
+          <a class="owner-hero__action owner-hero__action--primary" routerLink="/admin/venues">
+            <lucide-icon name="land-plot" /> <span>Quản lý cơ sở</span><lucide-icon class="owner-hero__action-arrow" name="arrow-right" />
+          </a>
+          <a class="owner-hero__action owner-hero__action--secondary" routerLink="/admin/courts">
+            <lucide-icon name="activity" /> <span>Sân thi đấu</span><lucide-icon class="owner-hero__action-arrow" name="arrow-right" />
+          </a>
+        } @else {
+          <a class="owner-hero__action owner-hero__action--primary" [routerLink]="applicationUrl">
+            <lucide-icon name="clipboard-check" />
+            <span>{{ latestApplication() ? 'Xem hồ sơ' : 'Đăng ký chủ sân' }}</span>
+            <lucide-icon class="owner-hero__action-arrow" name="arrow-right" />
+          </a>
         }
       </div>
-    }
+    </div>
+
+    <app-weather-widget
+      class="owner-hero__weather"
+      [weather]="weather()"
+      [loading]="weatherLoading()"
+      [error]="weatherError()"
+      (retry)="retryWeather.emit()" />
   </section>
 
   @if (applicationApproved()) {
-    <app-owner-venue-overview
-      [venue]="venue()"
-      [loading]="venueLoading()"
-      [error]="venueError()"
-      (retry)="retryVenue()" />
+    <app-metric-rail [items]="metricItems()" />
   }
+
+  <section class="owner-workbench" [class.owner-workbench--application-only]="!applicationApproved()">
+    @if (applicationApproved()) {
+      <app-owner-venue-overview
+        [venue]="venue()"
+        [loading]="venueLoading()"
+        [error]="venueError()"
+        (retry)="retryVenue()" />
+    }
+
+    <section id="owner-application-progress" class="application-summary" aria-labelledby="application-summary-title">
+      <header class="application-summary__heading">
+        <div>
+          <span class="application-summary__icon" aria-hidden="true"><lucide-icon name="clipboard-check" /></span>
+          <h2 id="application-summary-title">Tiến độ đơn đăng ký</h2>
+        </div>
+        <a class="section-link" [routerLink]="applicationUrl" aria-label="Xem tất cả hồ sơ đăng ký">
+          Xem lịch sử <lucide-icon name="arrow-right" />
+        </a>
+      </header>
+
+      <app-owner-application-progress
+        [application]="latestApplication()"
+        [loading]="applicationLoading()"
+        [error]="applicationError()"
+        [applicationUrl]="applicationUrl"
+        [compact]="applicationApproved()"
+        (retry)="loadApplications()" />
+    </section>
+  </section>
 
   <app-owner-feature-grid [features]="features" [applicationApproved]="applicationApproved()" />
 </div>

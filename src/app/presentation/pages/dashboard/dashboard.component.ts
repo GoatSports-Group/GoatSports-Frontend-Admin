@@ -17,7 +17,9 @@ import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-
 import { calculateWeeklyTrend } from '@shared/utils/date-trend.utils';
 import { parseWeatherCode } from '@shared/utils/weather-parser.utils';
 import { getFallbackAvatar } from '@shared/utils/user-display.utils';
-import { VenueMapMarker, WeatherInfo } from './dashboard.models';
+import { VenueMapMarker } from './dashboard.models';
+import { WeatherInfo } from '@shared/components/ui/weather-widget/weather-widget.models';
+import { WeatherWidgetComponent } from '@shared/components/ui/weather-widget/weather-widget.component';
 import {
   buildDistrictBreakdown,
   createCalendarGrid,
@@ -39,7 +41,8 @@ import { VenueOwnerDashboardComponent } from '../venue-owner-dashboard/venue-own
     MetricCardComponent,
     LucideIconComponent,
     DragDropModule,
-    VenueOwnerDashboardComponent
+    VenueOwnerDashboardComponent,
+    WeatherWidgetComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
@@ -161,12 +164,9 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit, OnDest
     return buildDistrictBreakdown(this.applicationDistricts());
   });
 
-  weather = signal<WeatherInfo>({
-    temp: 28,
-    condition: 'cloudy',
-    icon: 'cloud',
-    description: 'Nhiều mây ☁️'
-  });
+  weather = signal<WeatherInfo | null>(null);
+  weatherLoading = signal(false);
+  weatherError = signal<string | null>(null);
 
   // Calendar State
   calendarDays: number[] = [];
@@ -180,10 +180,10 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit, OnDest
     this.adminName = currentUser?.fullName || 'Quản Trị Viên';
     const roleName = currentUser?.role?.name || 'ADMIN';
     this.userRole.set(roleName);
+    this.fetchWeather();
 
     if (roleName === 'ADMIN') {
       this.generateCalendar();
-      this.fetchWeather();
       this.loadDashboardData();
     }
   }
@@ -270,19 +270,30 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit, OnDest
     return this.mapMarkers().filter(marker => marker.status === status).length;
   }
 
-  fetchWeather() {
+  fetchWeather(): void {
+    if (this.weatherLoading()) return;
+    this.weatherLoading.set(true);
+    this.weatherError.set(null);
     fetch('https://api.open-meteo.com/v1/forecast?latitude=10.823&longitude=106.63&current_weather=true')
-      .then(res => res.json())
-      .then(data => {
-        if (data?.current_weather) {
-          const parsed = parseWeatherCode(data.current_weather.weathercode);
-          this.weather.set({
-            temp: Math.round(data.current_weather.temperature),
-            ...parsed
-          });
-        }
+      .then(response => {
+        if (!response.ok) throw new Error(`WEATHER_HTTP_${response.status}`);
+        return response.json();
       })
-      .catch(() => { /* default fallback */ });
+      .then(data => {
+        if (!data?.current_weather || !Number.isFinite(data.current_weather.temperature)) {
+          throw new Error('WEATHER_RESPONSE_INVALID');
+        }
+        const parsed = parseWeatherCode(data.current_weather.weathercode);
+        this.weather.set({
+          temp: Math.round(data.current_weather.temperature),
+          ...parsed
+        });
+      })
+      .catch(() => {
+        this.weather.set(null);
+        this.weatherError.set('Không thể kết nối nhà cung cấp thời tiết.');
+      })
+      .finally(() => this.weatherLoading.set(false));
   }
 
   generateCalendar() {

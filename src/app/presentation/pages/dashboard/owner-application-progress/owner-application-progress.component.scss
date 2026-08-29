@@ -1,5 +1,6 @@
 @use './owner-application-card';
 @use './owner-application-timeline';
+@use './owner-application-compact';
 
 :host {
   --primary: #059669;
