@@ -118,7 +118,8 @@ import {
   LucideConstruction,
   LucideFilePlus2,
   LucideMessageSquareWarning,
-  LucideStore
+  LucideStore,
+  LucideReceipt
 } from '@lucide/angular';
 
 @NgModule({
@@ -242,7 +243,8 @@ import {
       LucideConstruction,
       LucideFilePlus2,
       LucideMessageSquareWarning,
-      LucideStore
+      LucideStore,
+      LucideReceipt
     )
   ],
   bootstrap: [AppComponent]

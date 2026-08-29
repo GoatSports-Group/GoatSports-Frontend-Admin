@@ -1,11 +1,14 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, HostListener, inject, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, HostListener, ViewContainerRef, inject, output, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Overlay, OverlayModule, OverlayRef } from '@angular/cdk/overlay';
+import { ComponentPortal } from '@angular/cdk/portal';
 import { defer, finalize } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BusinessType } from '@application/dto/owner-application/owner-application.dto';
 import { SubmitOwnerApplicationUseCase } from '@application/usecase/owner-application/submit-owner-application.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
+import { VenueOwnerSubmissionLoaderComponent } from './venue-owner-submission-loader.component';
 
 type FileKey = 'idCardFront' | 'idCardBack' | 'businessLicense' | 'venueImage';
 type ApplicationForm = {
@@ -17,7 +20,7 @@ type ApplicationForm = {
 @Component({
   selector: 'app-venue-owner-application-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, OverlayModule],
   templateUrl: './venue-owner-application-form.component.html',
   styleUrl: './venue-owner-application-form.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -26,6 +29,9 @@ export class VenueOwnerApplicationFormComponent {
   private readonly submitApplication = inject(SubmitOwnerApplicationUseCase);
   private readonly notify = inject(NotifyService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly overlay = inject(Overlay);
+  private readonly viewContainerRef = inject(ViewContainerRef);
+  private submissionOverlayRef: OverlayRef | null = null;
 
   readonly submitted = output<void>();
   readonly currentStep = signal(1);
@@ -79,6 +85,7 @@ export class VenueOwnerApplicationFormComponent {
   submit(): void {
     if (this.submitting() || !this.validateAll()) return;
     this.submitting.set(true);
+    this.showSubmissionLoader();
     const form = Object.fromEntries(Object.entries(this.form).map(([key, value]) => [
       key, typeof value === 'string' ? value.trim() : value
     ]));
@@ -90,7 +97,10 @@ export class VenueOwnerApplicationFormComponent {
       venueImage: this.files.venueImage!
     })).pipe(
       takeUntilDestroyed(this.destroyRef),
-      finalize(() => this.submitting.set(false))
+      finalize(() => {
+        this.submitting.set(false);
+        this.hideSubmissionLoader();
+      })
     ).subscribe({
       next: () => {
         this.form = this.emptyForm();
@@ -157,5 +167,26 @@ export class VenueOwnerApplicationFormComponent {
 
   private emptyFiles(): Record<FileKey, File | null> {
     return { idCardFront: null, idCardBack: null, businessLicense: null, venueImage: null };
+  }
+
+  private showSubmissionLoader(): void {
+    if (this.submissionOverlayRef?.hasAttached()) return;
+    this.submissionOverlayRef = this.overlay.create({
+      hasBackdrop: true,
+      backdropClass: 'owner-submission-backdrop',
+      panelClass: 'owner-submission-panel',
+      positionStrategy: this.overlay.position().global().centerHorizontally().centerVertically(),
+      scrollStrategy: this.overlay.scrollStrategies.block(),
+      disposeOnNavigation: true
+    });
+    this.submissionOverlayRef.attach(new ComponentPortal(
+      VenueOwnerSubmissionLoaderComponent,
+      this.viewContainerRef
+    ));
+  }
+
+  private hideSubmissionLoader(): void {
+    this.submissionOverlayRef?.dispose();
+    this.submissionOverlayRef = null;
   }
 }

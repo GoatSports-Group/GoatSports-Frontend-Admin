@@ -55,18 +55,31 @@ export class StompWebSocketService implements WebSocketService {
   private socket: WebSocket | null = null;
   private isConnected = false;
   private reconnectTimeout: any = null;
+  private reconnectEnabled = false;
   private apiBase = environment.apiUrl;
   private subscriptionId = 'sub-admin-notifications';
+  private destination: string | null = null;
 
   private notificationSubject = new Subject<Notification>();
   public notifications$: Observable<Notification> = this.notificationSubject.asObservable();
 
   constructor() { }
 
-  public connect(): void {
-    if (this.socket || this.isConnected) {
+  public connect(destination: string): void {
+    if (!destination) return;
+    if ((this.socket || this.isConnected) && this.destination === destination) {
       return;
     }
+
+    this.disconnect();
+    this.destination = destination;
+    this.subscriptionId = `sub-notifications-${this.destination.replace(/[^a-zA-Z0-9]/g, '-')}`;
+    this.reconnectEnabled = true;
+    this.openSocket();
+  }
+
+  private openSocket(): void {
+    if (!this.reconnectEnabled || !this.destination || this.socket) return;
 
     let wsUrl = this.apiBase.replace(/^http/, 'ws');
     if (!wsUrl.endsWith('/')) {
@@ -77,32 +90,37 @@ export class StompWebSocketService implements WebSocketService {
     console.log('Connecting to WebSocket at:', wsUrl);
 
     try {
-      this.socket = new WebSocket(wsUrl);
+      const socket = new WebSocket(wsUrl);
+      this.socket = socket;
 
-      this.socket.onopen = () => {
+      socket.onopen = () => {
+        if (this.socket !== socket || !this.reconnectEnabled) return;
         console.log('WebSocket connection opened. Sending STOMP CONNECT...');
         this.sendConnectFrame();
       };
 
-      this.socket.onmessage = (event: MessageEvent) => {
+      socket.onmessage = (event: MessageEvent) => {
+        if (this.socket !== socket) return;
         this.handleMessage(event.data);
       };
 
-      this.socket.onclose = (event: CloseEvent) => {
+      socket.onclose = (event: CloseEvent) => {
         console.log('WebSocket connection closed:', event.reason);
-        this.handleDisconnect();
+        this.handleDisconnect(socket);
       };
 
-      this.socket.onerror = (error: Event) => {
+      socket.onerror = (error: Event) => {
         console.error('WebSocket error occurred:', error);
       };
     } catch (err) {
       console.error('Error starting WebSocket connection:', err);
-      this.handleDisconnect();
+      this.socket = null;
+      this.scheduleReconnect();
     }
   }
 
   public disconnect(): void {
+    this.reconnectEnabled = false;
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = null;
@@ -116,6 +134,7 @@ export class StompWebSocketService implements WebSocketService {
       this.socket = null;
     }
     this.isConnected = false;
+    this.destination = null;
   }
 
   private sendConnectFrame(): void {
@@ -130,15 +149,15 @@ export class StompWebSocketService implements WebSocketService {
   }
 
   private sendSubscribeFrame(): void {
-    if (!this.socket) return;
+    if (!this.socket || !this.destination) return;
 
     const subscribeFrame = new StompFrame('SUBSCRIBE', {
       id: this.subscriptionId,
-      destination: '/topic/admin/notifications'
+      destination: this.destination
     }, '');
 
     this.socket.send(subscribeFrame.toString());
-    console.log('STOMP SUBSCRIBE sent for /topic/admin/notifications');
+    console.log(`STOMP SUBSCRIBE sent for ${this.destination}`);
   }
 
   private sendUnsubscribeFrame(): void {
@@ -172,7 +191,7 @@ export class StompWebSocketService implements WebSocketService {
           this.sendSubscribeFrame();
           break;
         case 'MESSAGE':
-          if (frame.headers['destination'] === '/topic/admin/notifications') {
+          if (frame.headers['destination'] === this.destination) {
             console.log('STOMP MESSAGE received:', frame.body);
             try {
               const notification: Notification = JSON.parse(frame.body);
@@ -193,15 +212,19 @@ export class StompWebSocketService implements WebSocketService {
     }
   }
 
-  private handleDisconnect(): void {
+  private handleDisconnect(socket: WebSocket): void {
+    if (this.socket !== socket) return;
     this.isConnected = false;
     this.socket = null;
+    this.scheduleReconnect();
+  }
 
-    if (!this.reconnectTimeout) {
+  private scheduleReconnect(): void {
+    if (this.reconnectEnabled && this.destination && !this.reconnectTimeout) {
       console.log('Attempting reconnection in 5 seconds...');
       this.reconnectTimeout = setTimeout(() => {
         this.reconnectTimeout = null;
-        this.connect();
+        this.openSocket();
       }, 5000);
     }
   }

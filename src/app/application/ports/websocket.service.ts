@@ -4,7 +4,7 @@ import { Notification } from '@domain/entities/notification';
 
 export interface WebSocketService {
   notifications$: Observable<Notification>;
-  connect(): void;
+  connect(destination: string): void;
   disconnect(): void;
 }
 

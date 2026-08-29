@@ -67,9 +67,11 @@ export class NotificationService {
   private monitorUserSession(): void {
     this.userSubscription = this.authService.currentUser$.subscribe(user => {
       if (user) {
+        this.disconnectWebSocket();
+        this.clearState();
         this.resetPagination();
         this.loadInitialData();
-        this.connectWebSocket();
+        this.connectWebSocket(this.notificationDestination(user.role?.name, user.userId));
       } else {
         this.disconnectWebSocket();
         this.clearState();
@@ -86,17 +88,15 @@ export class NotificationService {
   // WEBSOCKET
   // ══════════════════════════════════════════════════════════════════════════════
 
-  private connectWebSocket(): void {
-    this.wsService.connect();
-
+  private connectWebSocket(destination: string): void {
     this.wsSubscription?.unsubscribe();
-
     this.wsSubscription = this.wsService.notifications$.subscribe({
       next: (notification) => {
         this.ngZone.run(() => this.handleRealTimeNotification(notification));
       },
       error: (err) => console.error('[NotificationService] WebSocket error:', err),
     });
+    this.wsService.connect(destination);
   }
 
   private disconnectWebSocket(): void {
@@ -305,6 +305,12 @@ export class NotificationService {
     this.notificationsSubject.next([]);
     this.unreadCountSubject.next(0);
     this.resetPagination();
+  }
+
+  private notificationDestination(roleName: string | undefined, userId: string): string {
+    return roleName?.toUpperCase() === 'ADMIN'
+      ? '/topic/admin/notifications'
+      : `/topic/user/notifications/${userId}`;
   }
 
   // ══════════════════════════════════════════════════════════════════════════════

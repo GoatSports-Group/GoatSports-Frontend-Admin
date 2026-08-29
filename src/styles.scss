@@ -590,3 +590,13 @@ body div.cdk-overlay-pane.custom-assign-role-dialog,
 body div.cdk-overlay-pane.custom-assign-role-dialog .mat-mdc-dialog-content {
   overflow: visible !important;
 }
+
+/* Owner Application submit overlay must cover the entire admin shell. */
+.cdk-overlay-container {
+  z-index: 2000 !important;
+}
+
+.owner-submission-backdrop.cdk-overlay-backdrop {
+  background: rgb(15 23 42 / 58%);
+  backdrop-filter: blur(4px);
+}
