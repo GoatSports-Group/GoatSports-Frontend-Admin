@@ -15,6 +15,7 @@ import { OwnerVenueManagementComponent } from '@presentation/pages/owner-venue-m
 import { OwnerCourtManagementComponent } from '@presentation/pages/owner-court-management/owner-court-management.component';
 import { OwnerScheduleComponent } from '@presentation/pages/owner-schedule/owner-schedule.component';
 import { OwnerBookingsComponent } from '@presentation/pages/owner-bookings/owner-bookings.component';
+import { OwnerCheckInComponent } from '@presentation/pages/owner-check-in/owner-check-in.component';
 
 const routes: Routes = [
   {
@@ -38,7 +39,7 @@ const routes: Routes = [
       { path: 'courts', component: OwnerCourtManagementComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
       { path: 'schedule', component: OwnerScheduleComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
       { path: 'owner-bookings', component: OwnerBookingsComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
-      { path: 'check-in', component: OwnerFeaturePlaceholderComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'], featureId: 'check-in' } },
+      { path: 'check-in', component: OwnerCheckInComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
       { path: 'finance', component: OwnerFeaturePlaceholderComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'], featureId: 'finance' } },
       { path: 'reviews', component: OwnerFeaturePlaceholderComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'], featureId: 'reviews' } },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }

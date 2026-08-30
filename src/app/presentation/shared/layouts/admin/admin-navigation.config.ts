@@ -22,7 +22,7 @@ export const VENUE_OWNER_NAVIGATION: readonly AdminNavigationItem[] = [
   { title: 'Sân thi đấu', description: 'Quản lý từng sân con và trạng thái vận hành', icon: 'activity', route: '/courts' },
   { title: 'Lịch và bảng giá', description: 'Khung giờ, ngày nghỉ và quy tắc giá', icon: 'calendar', route: '/schedule' },
   { title: 'Đơn đặt sân', description: 'Theo dõi đơn thuộc cơ sở của bạn', icon: 'file-text', route: '/owner-bookings' },
-  { title: 'Check-in khách', description: 'Xác nhận khách đến sân theo mã đặt chỗ', icon: 'shield-check', route: '/check-in', developing: true },
+  { title: 'Check-in khách', description: 'QR, Booking Code và khách walk-in', icon: 'shield-check', route: '/check-in' },
   { title: 'Doanh thu', description: 'Doanh thu và dữ liệu đối soát thực tế', icon: 'credit-card', route: '/finance', developing: true },
   { title: 'Đánh giá', description: 'Phản hồi và chất lượng cơ sở', icon: 'star', route: '/reviews', developing: true }
 ];

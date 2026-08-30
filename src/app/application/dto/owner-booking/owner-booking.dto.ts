@@ -17,7 +17,7 @@ export interface OwnerPayment {
 
 export interface OwnerBooking {
   bookingId: string;
-  playerId: string;
+  playerId?: string;
   venueId: string;
   venueCourtId: string;
   venueName: string;

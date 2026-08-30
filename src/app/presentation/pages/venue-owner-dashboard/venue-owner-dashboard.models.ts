@@ -62,8 +62,8 @@ export const OWNER_WORKSPACE_FEATURES: readonly OwnerWorkspaceFeature[] = [
     description: 'Xác nhận khách đến sân bằng mã đặt chỗ hoặc QR hợp lệ.',
     icon: 'shield-check',
     route: '/admin/check-in',
-    status: 'DEVELOPING',
-    plannedCapabilities: ['Quét QR', 'Xác nhận thủ công', 'Lịch sử check-in']
+    status: 'AVAILABLE',
+    plannedCapabilities: ['Quét QR có chữ ký', 'Booking Code và walk-in', 'Lịch sử check-in']
   },
   {
     id: 'finance',

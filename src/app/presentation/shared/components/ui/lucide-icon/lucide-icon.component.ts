@@ -2,7 +2,7 @@ import { Component, Input } from '@angular/core';
 import { LucideDynamicIcon } from '@lucide/angular';
 
 @Component({
-  selector: 'lucide-icon',
+  selector: 'lucide-icon, app-lucide-icon',
   standalone: true,
   imports: [LucideDynamicIcon],
   templateUrl: './lucide-icon.component.html',
@@ -11,4 +11,5 @@ import { LucideDynamicIcon } from '@lucide/angular';
 export class LucideIconComponent {
   @Input() name!: string;
   @Input() class: string = '';
+  @Input() size?: number;
 }

@@ -192,7 +192,7 @@ export class OwnerBookingsComponent {
     return value ? new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)) : '—';
   }
   timeValue(value: string): string { return value.slice(0, 5); }
-  shortId(value: string): string { return value.slice(0, 8).toUpperCase(); }
+  shortId(value?: string): string { return value ? value.slice(0, 8).toUpperCase() : 'WALK-IN'; }
 
   timeline(booking: OwnerBooking): TimelineEntry[] {
     const entries: TimelineEntry[] = [{
