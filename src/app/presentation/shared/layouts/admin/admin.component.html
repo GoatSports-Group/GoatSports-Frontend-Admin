@@ -1,257 +1,159 @@
-<div
-  class="h-screen bg-[#f8fafc] text-slate-900 font-sports-body antialiased selection:bg-emerald-500 selection:text-white flex overflow-hidden relative">
+<div class="admin-shell" [class.admin-shell--owner]="!isPlatformAdmin()">
+  <a class="skip-link" href="#main-content">Đi thẳng đến nội dung chính</a>
+  <div class="admin-shell__ambient" aria-hidden="true"></div>
 
-  <!-- Ambient Blur Background Blobs -->
-  <div
-    class="pointer-events-none fixed top-0 left-1/3 w-[650px] h-[650px] bg-emerald-300/20 rounded-full blur-[140px] z-0">
-  </div>
-  <div
-    class="pointer-events-none fixed bottom-0 right-1/4 w-[650px] h-[650px] bg-sky-300/20 rounded-full blur-[140px] z-0">
-  </div>
-
-  <!-- Interactive 3D perspective grid canvas -->
-  <canvas id="admin-canvas" class="fixed inset-0 w-full h-full pointer-events-none opacity-40 z-0"></canvas>
-
-  <!-- FLOATING LIGHT TOPBAR NAVBAR (Z-Index cao hơn hẳn) -->
-  <header
-    class="fixed top-4 left-4 right-4 h-16 z-[200] flex items-center justify-between border border-slate-200/80 bg-white/95 px-4 rounded-2xl shadow-md backdrop-blur-xl transition-all duration-300">
-    <!-- Left: Logo, Toggle, Divider, Breadcrumbs -->
-    <div class="flex items-center gap-2">
-      <button (click)="toggleSidebar()"
-        class="lg:hidden p-2 text-slate-600 hover:text-slate-900 rounded-xl hover:bg-slate-100 border border-slate-200 cursor-pointer flex items-center justify-center"
-        aria-label="Toggle Navigation">
-        <lucide-icon name="menu" class="h-5 w-5"></lucide-icon>
+  <header class="admin-topbar">
+    <div class="admin-topbar__brand-cluster">
+      <button type="button" class="shell-icon-button shell-menu-button" (click)="toggleSidebar()"
+        aria-label="Mở menu điều hướng">
+        <lucide-icon name="menu" />
       </button>
 
-      <button (click)="toggleSidebar()"
-        class="hidden lg:flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:text-slate-800 hover:scale-105 shadow-sm transition-all"
+      <button type="button" class="shell-icon-button shell-collapse-button" (click)="toggleSidebar()"
+        [attr.aria-label]="sidebarCollapsed() ? 'Mở rộng menu' : 'Thu gọn menu'"
         [title]="sidebarCollapsed() ? 'Mở rộng' : 'Thu gọn'">
-        <lucide-icon [name]="sidebarCollapsed() ? 'chevron-right' : 'chevron-left'"
-          class="h-4 w-4 transition-colors shrink-0 cursor-pointer"></lucide-icon>
+        <lucide-icon [name]="sidebarCollapsed() ? 'chevron-right' : 'chevron-left'" />
       </button>
 
-      <a routerLink="/admin/dashboard" class="flex items-center group">
-        <div class="flex items-center gap-3.5 select-none group transition-all duration-300">
-          <img src="assets/images/goat.png" alt="GoatSports"
-            class="h-10 w-auto object-contain transition-all duration-500 group-hover:scale-105">
-        </div>
-        <span class="hidden sm:inline font-sports-display text-sm font-black tracking-widest text-emerald-600 ml-2 uppercase">
-          {{ isPlatformAdmin() ? 'Trang quản trị' : 'Không gian chủ sân' }}
-        </span>
+      <a routerLink="/admin/dashboard" class="admin-brand" aria-label="Về trang tổng quan">
+        <img src="assets/images/goat.png" alt="GoatSports">
+        <span>{{ isPlatformAdmin() ? 'Trang quản trị' : 'Không gian chủ sân' }}</span>
       </a>
     </div>
 
-    <!-- Center: Command Search Bar -->
-    <div class="hidden md:flex flex-1 max-w-md mx-6 cursor-pointer" (click)="openSearch()">
-      <div class="relative w-full pointer-events-none">
-        <div class="absolute inset-y-0 left-0 flex items-center pl-3.5">
-          <lucide-icon name="search" class="h-4 w-4 text-slate-400 shrink-0"></lucide-icon>
-        </div>
-        <div
-          class="w-full rounded-2xl border border-slate-200/80 bg-slate-100/70 py-2 px-12 text-xs font-semibold text-slate-400 select-none">
-          Tìm kiếm trang...
-        </div>
-        <kbd
-          class="absolute right-3 top-1.5 hidden rounded-md border border-slate-300 bg-white px-1.5 py-0.5 text-[10px] font-mono text-slate-500 sm:inline-block shadow-sm">Ctrl+K</kbd>
-      </div>
-    </div>
+    <button type="button" class="admin-search-trigger" (click)="openSearch()" aria-label="Mở tìm kiếm trang">
+      <lucide-icon name="search" />
+      <span>Tìm kiếm trang...</span>
+      <kbd>Ctrl+K</kbd>
+    </button>
 
-    <!-- Right: Actions & Profile Menu -->
-    <div class="flex items-center gap-3">
-      <!-- Notification Dropdown Container -->
-      <div class="relative">
-        <button (click)="toggleNotifDropdown($event)"
-          class="relative p-2 rounded-2xl border border-slate-200 bg-slate-100 text-slate-700 hover:text-emerald-600 hover:border-emerald-300 transition-all shadow-sm cursor-pointer flex items-center justify-center"
-          aria-label="Notifications">
-          <lucide-icon name="bell" class="h-5 w-5"></lucide-icon>
+    <div class="admin-topbar__actions">
+      <div class="notification-menu">
+        <button type="button" class="shell-icon-button notification-trigger" (click)="toggleNotifDropdown($event)"
+          aria-label="Mở thông báo" [attr.aria-expanded]="isNotifOpen">
+          <lucide-icon name="bell" />
           @if ((notificationService.unreadCount$ | async)! > 0) {
-          <span
-            class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white ring-2 ring-white shadow-md">
-            {{ notificationService.unreadCount$ | async }}
-          </span>
+            <span class="notification-count">{{ notificationService.unreadCount$ | async }}</span>
           }
         </button>
 
-        <!-- Custom Dropdown Panel -->
         @if (isNotifOpen) {
-        <div
-          class="absolute right-0 top-full mt-4 w-[400px] max-w-[calc(100vw-32px)] bg-white border border-slate-200 rounded-2xl shadow-xl z-[250] overflow-hidden"
-          (click)="$event.stopPropagation()">
-          <div class="px-3 py-2.5 border-b border-slate-100 flex items-center justify-between bg-white">
-            <span class="text-sm font-normal text-black font-sports-display tracking-wide">Thông báo</span>
-            <button (click)="markAllRead()"
-              class="text-xs text-slate-500 hover:text-emerald-600 hover:underline transition-all cursor-pointer outline-none bg-transparent border-0 p-0 font-normal">
-              Đánh dấu tất cả
-            </button>
-          </div>
+          <section class="notification-panel" aria-label="Thông báo" (click)="$event.stopPropagation()">
+            <header class="notification-panel__header">
+              <h2>Thông báo</h2>
+              <button type="button" (click)="markAllRead()">Đánh dấu tất cả đã đọc</button>
+            </header>
 
-          <div class="max-h-80 overflow-y-auto divide-y divide-slate-100/60 bg-white"
-            (scroll)="onNotificationScroll($event)">
-            @if ((notificationService.notifications$ | async)?.length === 0) {
-            <div class="p-8 text-center text-xs text-slate-400 bg-white">
-              <lucide-icon name="bell-off" class="h-8 w-8 text-slate-300 mb-1 mx-auto"></lucide-icon>
-              <p>Không có thông báo mới nào</p>
-            </div>
-            } @else {
-            @for (notif of notificationService.notifications$ | async; track notif.notificationId) {
-            <div (click)="onNotificationClick(notif)"
-              class="px-3 py-2.5 hover:bg-emerald-50/60 bg-white transition-colors text-left flex items-start gap-3 cursor-pointer relative group">
-              <span class="h-2 w-2 rounded-full shrink-0 mt-1.5 transition-all duration-300"
-                [ngClass]="notif.status === 'UNREAD' ? 'bg-[#059669]' : 'opacity-0'"></span>
-
-              <div class="flex-1 min-w-0 pr-2">
-                <span class="block text-[13px] font-semibold text-slate-800 leading-snug truncate">{{ notif.title
-                  }}</span>
-                <p class="text-[12px] text-slate-500 leading-normal mt-0.5 line-clamp-2">{{ notif.content }}</p>
-                <span class="block text-[11px] text-slate-400 mt-1 font-sports-body">{{ getRelativeTime(notif.createdAt)
-                  }}</span>
-              </div>
-
-              <div class="flex items-center gap-1.5 shrink-0" (click)="$event.stopPropagation()">
-                @if (notif.status === 'UNREAD') {
-                <button (click)="onNotificationClick(notif)"
-                  class="h-7 w-7 rounded-full bg-slate-100 hover:bg-emerald-300 text-slate-600 flex items-center justify-center transition-all cursor-pointer outline-none border-0 p-0"
-                  title="Đánh dấu đã đọc">
-                  <lucide-icon name="check" class="h-3.5 w-3.5"></lucide-icon>
-                </button>
+            <div class="notification-panel__list" (scroll)="onNotificationScroll($event)">
+              @if ((notificationService.notifications$ | async)?.length === 0) {
+                <div class="notification-empty" role="status">
+                  <lucide-icon name="bell-off" aria-hidden="true" />
+                  <strong>Chưa có thông báo mới</strong>
+                  <p>Các cập nhật quan trọng sẽ xuất hiện tại đây.</p>
+                </div>
+              } @else {
+                @for (notif of notificationService.notifications$ | async; track notif.notificationId) {
+                  <article class="notification-item" [class.is-unread]="notif.status === 'UNREAD'"
+                    (click)="onNotificationClick(notif)">
+                    <i aria-hidden="true"></i>
+                    <div class="notification-item__copy">
+                      <strong>{{ notif.title }}</strong>
+                      <p>{{ notif.content }}</p>
+                      <time>{{ getRelativeTime(notif.createdAt) }}</time>
+                    </div>
+                    <div class="notification-item__actions" (click)="$event.stopPropagation()">
+                      @if (notif.status === 'UNREAD') {
+                        <button type="button" (click)="onNotificationClick(notif)" aria-label="Đánh dấu đã đọc">
+                          <lucide-icon name="check" />
+                        </button>
+                      }
+                      <button type="button" (click)="deleteNotification(notif)" aria-label="Xóa thông báo">
+                        <lucide-icon name="x" />
+                      </button>
+                    </div>
+                  </article>
                 }
-                <button (click)="deleteNotification(notif)"
-                  class="h-7 w-7 rounded-full bg-slate-100 hover:bg-red-300 text-slate-600 flex items-center justify-center transition-all cursor-pointer outline-none border-0 p-0"
-                  title="Xóa thông báo">
-                  <lucide-icon name="x" class="h-3.5 w-3.5"></lucide-icon>
-                </button>
-              </div>
+              }
             </div>
-            }
-            }
-          </div>
-        </div>
+          </section>
         }
       </div>
 
-      <!-- Admin Profile Button -->
-      <div
-        class="flex items-center gap-2.5 p-1.5 rounded-2xl border border-slate-200 bg-slate-100 hover:border-emerald-300 transition-all shadow-sm">
-        <img [src]="userProfile?.avatarUrl || fallbackAvatar" [alt]="userProfile?.fullName || 'Admin'"
-          class="h-7 w-7 rounded-xl object-cover ring-1 ring-emerald-500/40">
-        <span class="hidden md:inline text-sm font-extrabold text-slate-800">{{ userProfile?.fullName?.split('
-          ')?.slice(-1)?.[0] }}</span>
+      <div class="admin-profile" aria-label="Tài khoản hiện tại">
+        <img [src]="userProfile?.avatarUrl || fallbackAvatar" [alt]="userProfile?.fullName || 'Tài khoản'">
+        <span>{{ userProfile?.fullName?.split(' ')?.slice(-1)?.[0] || 'Owner' }}</span>
       </div>
     </div>
   </header>
 
-  <!-- SIDEBAR (Cố định lề bên trái bên dưới Header) -->
   @if (!sidebarCollapsed()) {
-    <button type="button" class="fixed inset-0 z-20 bg-slate-950/25 backdrop-blur-[2px] lg:hidden" aria-label="Đóng menu" (click)="toggleSidebar()"></button>
+    <button type="button" class="sidebar-backdrop" aria-label="Đóng menu" (click)="toggleSidebar()"></button>
   }
-  <aside
-    class="fixed top-[92px] left-4 bottom-4 z-30 flex flex-col border border-slate-200/80 bg-white text-slate-700 backdrop-blur-2xl transition-all duration-300 ease-in-out shadow-md rounded-2xl"
-    [ngClass]="sidebarCollapsed() ? 'w-20 sidebar-collapsed max-lg:-translate-x-[calc(100%+2rem)]' : 'w-64 sidebar-expanded translate-x-0'">
-    <nav class="flex-1 overflow-y-auto px-3 py-2 space-y-6 scrollbar-thin scrollbar-thumb-slate-200">
-      <div class="space-y-1">
-        @for (item of visibleNavigationItems(); track item.route) {
-          <a [routerLink]="'/admin' + item.route"
-            routerLinkActive="bg-emerald-50 text-emerald-600 shadow-[0_4px_12px_rgba(16,185,129,0.08)]"
-            class="flex items-center rounded-xl text-black hover:text-emerald-600 hover:bg-emerald-50/50 focus:text-emerald-600 focus:bg-emerald-50/50 outline-none transition-all group"
-            [ngClass]="sidebarCollapsed() ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5'" [title]="item.title">
-            <lucide-icon [name]="item.icon" class="h-5 w-5 transition-colors shrink-0"></lucide-icon>
-            <span class="sidebar-text text-[14px] ml-3 flex-1">{{ item.title }}</span>
-            @if (item.developing && !sidebarCollapsed()) {
-              <span class="sidebar-text rounded-full bg-amber-50 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide text-amber-700">Dev</span>
-            }
-          </a>
-        }
 
-      </div>
+  <aside class="admin-sidebar" [class.is-collapsed]="sidebarCollapsed()"
+    [class.is-open]="!sidebarCollapsed()" aria-label="Điều hướng chính">
+    <nav>
+      @for (item of visibleNavigationItems(); track item.route) {
+        <a [routerLink]="'/admin' + item.route" routerLinkActive="is-active"
+          [title]="item.title" [attr.aria-label]="item.title">
+          <lucide-icon [name]="item.icon" />
+          <span class="sidebar-text">{{ item.title }}</span>
+          @if (item.developing && !sidebarCollapsed()) {
+            <small class="sidebar-text">Sắp có</small>
+          }
+        </a>
+      }
     </nav>
 
-    <div class="p-3 border-t border-slate-200/80 bg-slate-50 space-y-2 shrink-0">
-      <button (click)="logout()"
-        class="w-full flex items-center rounded-xl text-black hover:text-rose-600 hover:bg-rose-50/80 focus:text-rose-600 focus:bg-rose-50/80 border border-transparent hover:border-rose-200/50 outline-none transition-all cursor-pointer"
-        [ngClass]="sidebarCollapsed() ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5'" [title]="'Đăng xuất'">
-        <lucide-icon name="log-out" class="h-5 w-5 shrink-0"></lucide-icon>
-        <span class="sidebar-text text-[14px] ml-3">Đăng xuất</span>
+    <footer>
+      <button type="button" (click)="logout()" title="Đăng xuất">
+        <lucide-icon name="log-out" />
+        <span class="sidebar-text">Đăng xuất</span>
       </button>
-    </div>
+    </footer>
   </aside>
 
-  <!-- MAIN LAYOUT AREA -->
-  <div
-    class="flex-1 min-w-0 overflow-x-hidden overflow-y-auto scrollbar-none bg-transparent transition-all duration-300 ease-in-out relative mt-[96px] h-[calc(100vh-112px)] px-4 pb-0"
-    [ngClass]="sidebarCollapsed() ? 'lg:pl-[104px]' : 'lg:pl-[280px]'">
-    <main class="flex-1">
+  <div class="admin-content" [class.is-sidebar-collapsed]="sidebarCollapsed()">
+    <main id="main-content">
       <router-outlet></router-outlet>
     </main>
   </div>
 
-  <!-- COMMAND PALETTE SEARCH MODAL DIALOG -->
   @if (isSearchOpen()) {
-  <div class="fixed inset-0 z-50 flex items-start justify-center pt-24 transition-opacity duration-300"
-    (click)="closeSearch()">
-    <div
-      class="bg-white w-full max-w-xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col mx-4 transform transition-all duration-300 scale-100"
-      (click)="$event.stopPropagation()">
-      <div class="px-4 py-3.5 border-b border-slate-100 flex items-center gap-3">
-        <lucide-icon name="search" class="h-5 w-5 text-slate-400 shrink-0"></lucide-icon>
-        <input id="search-palette-input" type="text" placeholder="Tìm kiếm mọi thứ..." [value]="searchQuery()"
-          (input)="searchQuery.set($any($event.target).value); selectedSearchIndex.set(0)"
-          class="flex-1 text-sm font-normal text-slate-800 placeholder-slate-400 bg-transparent border-0 outline-none p-0 focus:ring-0">
-        <button (click)="closeSearch()"
-          class="h-7 w-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-all cursor-pointer border-0 p-0 outline-none">
-          <lucide-icon name="x" class="h-4 w-4"></lucide-icon>
-        </button>
-      </div>
+    <div class="command-backdrop" (click)="closeSearch()">
+      <section class="command-dialog" role="dialog" aria-modal="true" aria-labelledby="command-title"
+        (click)="$event.stopPropagation()">
+        <header class="command-dialog__search">
+          <lucide-icon name="search" aria-hidden="true" />
+          <label id="command-title" class="sr-only" for="search-palette-input">Tìm kiếm trang</label>
+          <input id="search-palette-input" type="text" placeholder="Nhập tên trang..." [value]="searchQuery()"
+            (input)="searchQuery.set($any($event.target).value); selectedSearchIndex.set(0)">
+          <button type="button" (click)="closeSearch()" aria-label="Đóng tìm kiếm">
+            <lucide-icon name="x" />
+          </button>
+        </header>
 
-      <div class="max-h-96 overflow-y-auto p-2 space-y-0.5">
-        @if (filteredItems().length === 0) {
-        <div class="p-8 text-center text-sm text-slate-400">
-          Không tìm thấy kết quả nào cho "{{ searchQuery() }}"
+        <div class="command-results">
+          @if (filteredItems().length === 0) {
+            <div class="command-empty" role="status">Không tìm thấy trang phù hợp với “{{ searchQuery() }}”.</div>
+          } @else {
+            @for (item of filteredItems(); track item.route; let idx = $index) {
+              <button type="button" class="command-result" (click)="selectSearchItem(item)"
+                (mouseenter)="selectedSearchIndex.set(idx)" [class.is-selected]="selectedSearchIndex() === idx">
+                <span><lucide-icon [name]="item.icon" /></span>
+                <span><strong>{{ item.title }}</strong><small>{{ item.description }}</small></span>
+                <lucide-icon name="arrow-right" aria-hidden="true" />
+              </button>
+            }
+          }
         </div>
-        } @else {
-        @for (item of filteredItems(); track item.route; let idx = $index) {
-        <div (click)="selectSearchItem(item)" (mouseenter)="selectedSearchIndex.set(idx)"
-          class="px-4 py-3 rounded-xl flex items-center justify-between transition-all cursor-pointer"
-          [ngClass]="selectedSearchIndex() === idx ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/10' : 'hover:bg-slate-50'">
-          <div class="flex items-center gap-3.5 min-w-0 flex-1">
-            <div class="h-9 w-9 rounded-xl flex items-center justify-center shrink-0 transition-colors"
-              [ngClass]="selectedSearchIndex() === idx ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'">
-              <lucide-icon [name]="item.icon" class="h-4 w-4"></lucide-icon>
-            </div>
-            <div class="min-w-0">
-              <span class="block text-sm font-normal leading-snug transition-colors"
-                [ngClass]="selectedSearchIndex() === idx ? 'text-white font-semibold' : 'text-slate-800'">{{ item.title
-                }}</span>
-              <span class="block text-xs truncate mt-0.5 transition-colors"
-                [ngClass]="selectedSearchIndex() === idx ? 'text-emerald-100/90' : 'text-slate-500'">{{ item.description
-                }}</span>
-            </div>
-          </div>
-        </div>
-        }
-        }
-      </div>
 
-      <div
-        class="px-4 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 select-none">
-        <div class="flex items-center gap-4">
-          <span class="inline-flex items-center gap-1.5">
-            <kbd
-              class="bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-sm text-[9px] font-mono text-slate-500">↑↓</kbd>
-            to navigate
-          </span>
-          <span class="inline-flex items-center gap-1.5">
-            <kbd
-              class="bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-sm text-[9px] font-mono text-slate-500">↵</kbd>
-            to select
-          </span>
-          <span class="inline-flex items-center gap-1.5">
-            <kbd
-              class="bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-sm text-[9px] font-mono text-slate-500">esc</kbd>
-            to close
-          </span>
-        </div>
-      </div>
+        <footer class="command-dialog__footer">
+          <span><kbd>↑↓</kbd> Di chuyển</span>
+          <span><kbd>Enter</kbd> Chọn</span>
+          <span><kbd>Esc</kbd> Đóng</span>
+        </footer>
+      </section>
     </div>
-  </div>
   }
 </div>

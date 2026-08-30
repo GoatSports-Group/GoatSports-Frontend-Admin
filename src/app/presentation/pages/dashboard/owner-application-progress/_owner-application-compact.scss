@@ -17,18 +17,18 @@
 
 .compact-application__hero {
   display: grid;
-  grid-template-columns: 46px minmax(0, 1fr);
+  grid-template-columns: 48px minmax(0, 1fr);
   align-items: center;
   gap: 12px;
-  padding: 16px;
+  padding: 18px;
   border-bottom: 1px solid #d8ebe3;
   background: linear-gradient(145deg, #ecfdf5, #f8fffc);
 }
 
 .compact-application__icon {
   display: grid;
-  width: 46px;
-  height: 46px;
+  width: 48px;
+  height: 48px;
   place-items: center;
   border: 1px solid #a7f3d0;
   border-radius: 50%;
@@ -41,9 +41,9 @@
 .compact-application__hero span,
 .compact-application__hero h3,
 .compact-application__hero p { display: block; margin: 0; }
-.compact-application__hero span { color: #047857; font-size: 8px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
-.compact-application__hero h3 { margin-top: 3px; color: #0f513f !important; font-size: 13px; font-weight: 850; line-height: 1.4; }
-.compact-application__hero p { margin-top: 2px; overflow: hidden; color: #64748b; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.compact-application__hero span { color: #047857; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.compact-application__hero h3 { margin-top: 3px; color: #0f513f !important; font-size: 17px; font-weight: 750; line-height: 1.4; }
+.compact-application__hero p { margin-top: 2px; overflow: hidden; color: #5d6b66; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
 
 .compact-application__hero--danger,
 .compact-application__hero--rejected { border-color: #fecdd3; background: #fff7f8; }
@@ -62,9 +62,9 @@
   position: relative;
   display: grid;
   min-width: 0;
-  grid-template-columns: 20px minmax(0, 1fr);
-  gap: 9px;
-  padding-bottom: 13px;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 10px;
+  padding-bottom: 15px;
 }
 
 .compact-progress__step:last-child { padding-bottom: 0; }
@@ -72,7 +72,7 @@
   position: absolute;
   top: 19px;
   bottom: 1px;
-  left: 9px;
+  left: 10px;
   width: 1px;
   background: #dbe5e1;
   content: '';
@@ -81,8 +81,8 @@
 .compact-progress__dot {
   display: grid;
   z-index: 1;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   place-items: center;
   border: 2px solid #cbd5e1;
   border-radius: 50%;
@@ -97,17 +97,17 @@
 .compact-progress__step--cancelled .compact-progress__dot { border-color: #e11d48; background: #e11d48; }
 .compact-progress__step strong,
 .compact-progress__step time { display: block; }
-.compact-progress__step strong { color: #475569; font-size: 9px; font-weight: 750; line-height: 1.4; }
-.compact-progress__step time { margin-top: 2px; color: #94a3b8; font-size: 8px; }
+.compact-progress__step strong { color: #3f4e48; font-size: 13px; font-weight: 650; line-height: 1.45; }
+.compact-progress__step time { margin-top: 3px; color: #71807a; font-size: 12px; }
 
 .compact-application__update {
   display: grid;
   min-width: 0;
-  grid-template-columns: 28px minmax(0, 1fr);
+  grid-template-columns: 32px minmax(0, 1fr);
   align-items: center;
   gap: 9px;
   margin: 0 16px 16px;
-  padding: 9px;
+  padding: 11px;
   border-radius: 11px;
   background: #f1f5f9;
 }
@@ -115,8 +115,8 @@
 .compact-application__update > lucide-icon { width: 15px; height: 15px; justify-self: center; color: #059669; }
 .compact-application__update span,
 .compact-application__update strong { display: block; }
-.compact-application__update span { color: #94a3b8; font-size: 8px; }
-.compact-application__update strong { display: -webkit-box; margin-top: 2px; overflow: hidden; color: #475569; font-size: 9px; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.compact-application__update span { color: #71807a; font-size: 12px; }
+.compact-application__update strong { display: -webkit-box; margin-top: 2px; overflow: hidden; color: #3f4e48; font-size: 13px; line-height: 1.5; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 
 .compact-application__rejection {
   display: grid;
@@ -133,15 +133,10 @@
 .compact-application__rejection lucide-icon { width: 16px; height: 16px; }
 .compact-application__rejection span,
 .compact-application__rejection strong { display: block; }
-.compact-application__rejection span { font-size: 8px; font-weight: 750; }
-.compact-application__rejection strong { margin-top: 2px; color: #881337; font-size: 9px; line-height: 1.45; }
+.compact-application__rejection span { font-size: 12px; font-weight: 700; }
+.compact-application__rejection strong { margin-top: 2px; color: #881337; font-size: 13px; line-height: 1.5; }
 
 @media (max-width: 640px) {
   .compact-application__hero { padding: 15px; }
-  .compact-application__hero h3 { font-size: 15px; }
-  .compact-application__hero p,
-  .compact-progress__step strong,
-  .compact-application__update strong { font-size: 11px; }
-  .compact-progress__step time,
-  .compact-application__update span { font-size: 9px; }
+  .compact-application__hero h3 { font-size: 17px; }
 }

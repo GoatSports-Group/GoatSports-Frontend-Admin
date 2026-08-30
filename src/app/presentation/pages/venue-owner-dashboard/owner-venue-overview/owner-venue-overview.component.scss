@@ -1,302 +1,172 @@
-:host {
-  display: block;
-  min-width: 0;
-  height: 100%;
-}
+:host { display: block; min-width: 0; height: 100%; }
 
 .venue-overview {
   display: grid;
   box-sizing: border-box;
   height: 100%;
-  gap: 18px;
-  padding: 22px;
-  border: 1px solid #dce8e3;
-  border-radius: 24px;
-  background: rgb(255 255 255 / 95%);
-  box-shadow: 0 14px 38px rgb(15 23 42 / 5%);
+  gap: 20px;
+  padding: 24px;
+  border: 1px solid #dce5e1;
+  border-radius: 22px;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 14px 38px rgb(15 81 63 / 5%);
 }
 
 .panel-heading,
-.panel-heading > div {
-  display: flex;
-  align-items: center;
-}
-
+.panel-heading > div { display: flex; align-items: center; }
 .panel-heading { justify-content: space-between; gap: 16px; }
-.panel-heading > div { min-width: 0; gap: 10px; }
+.panel-heading > div { min-width: 0; gap: 11px; }
+.panel-heading h2 { margin: 0; color: #173d31 !important; font-size: 22px; font-weight: 750 !important; letter-spacing: -.025em; line-height: 1.3; }
+.panel-heading__icon { display: grid; width: 44px; height: 44px; flex: 0 0 44px; place-items: center; border-radius: 12px; background: #e8f8f1; color: #047857; }
+.panel-heading__icon lucide-icon { width: 20px; height: 20px; }
 
-.panel-heading h2 {
-  margin: 0;
-  color: #0f513f !important;
-  font: 800 14px / 1.35 'Be Vietnam Pro', sans-serif;
-  letter-spacing: -.015em;
-}
-
-.panel-heading__icon {
-  display: grid;
-  width: 36px;
-  height: 36px;
-  flex: 0 0 36px;
-  place-items: center;
-  border-radius: 11px;
-  background: #ecfdf5;
-  color: #059669;
-}
-
-.panel-heading__icon lucide-icon { width: 17px; height: 17px; }
-
-.edit-link {
-  display: inline-flex;
-  min-height: 44px;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 7px;
-  padding: 0 12px;
-  border: 1px solid #d1fae5;
-  border-radius: 10px;
-  background: #f0fdf7;
-  color: #047857;
-  font-size: 9px;
-  font-weight: 800;
-  text-decoration: none;
-  transition: border-color 180ms ease, background-color 180ms ease, transform 180ms ease;
-}
-
-.edit-link:hover { border-color: #6ee7b7; background: #ecfdf5; }
+.edit-link { display: inline-flex; min-height: 44px; flex: 0 0 auto; align-items: center; gap: 8px; padding: 0 13px; border: 1px solid #ccebdd; border-radius: 11px; background: #f3fbf7; color: #047857; font-size: 14px; font-weight: 700; text-decoration: none; transition: border-color 180ms ease, background-color 180ms ease, transform 180ms ease; }
+.edit-link:hover { border-color: #7dd3b2; background: #eaf8f2; }
 .edit-link:active { transform: translateY(1px); }
 .edit-link:focus-visible { outline: 3px solid rgb(16 185 129 / 30%); outline-offset: 2px; }
-.edit-link lucide-icon { width: 14px; height: 14px; }
+.edit-link lucide-icon { width: 16px; height: 16px; }
 
-.venue-switcher {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border: 1px solid #dce8e3;
-  border-radius: 14px;
-  background: #f8fcfa;
-}
-
-.venue-switcher > span { flex: 0 0 auto; color: #64748b; font-size: 9px; font-weight: 800; text-transform: uppercase; }
-.venue-switcher > div { display: flex; min-width: 0; gap: 7px; overflow-x: auto; padding: 2px; }
-.venue-switcher button { display: inline-flex; min-height: 44px; flex: 0 0 auto; align-items: center; gap: 7px; padding: 0 11px; border: 1px solid #dce8e3; border-radius: 10px; background: #fff; color: #475569; cursor: pointer; font: inherit; font-size: 9px; font-weight: 750; }
-.venue-switcher button.is-selected { border-color: #6ee7b7; background: #ecfdf5; color: #047857; }
+.venue-switcher { display: flex; min-width: 0; align-items: center; gap: 14px; padding: 11px 13px; border: 1px solid #dce5e1; border-radius: 14px; background: #f8fbfa; }
+.venue-switcher > span { flex: 0 0 auto; color: #56645f; font-size: 13px; font-weight: 700; }
+.venue-switcher > div { display: flex; min-width: 0; gap: 8px; overflow-x: auto; padding: 2px; }
+.venue-switcher button { display: inline-flex; min-height: 44px; flex: 0 0 auto; align-items: center; gap: 8px; padding: 0 13px; border: 1px solid #d5dfda; border-radius: 10px; background: #fff; color: #47554f; cursor: pointer; font: 650 14px/1.3 'Be Vietnam Pro', sans-serif; }
+.venue-switcher button.is-selected { border-color: #6fcea9; background: #eaf8f2; color: #047857; }
 .venue-switcher button:focus-visible { outline: 3px solid rgb(16 185 129 / 30%); outline-offset: 2px; }
-.venue-switcher i { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: #94a3b8; }
+.venue-switcher i { width: 8px; height: 8px; flex: 0 0 8px; border-radius: 50%; background: #94a3b8; }
 .venue-switcher i.is-active { background: #10b981; }
 
-.venue-layout {
-  display: grid;
-  min-width: 0;
-  grid-template-columns: minmax(0, 1.18fr) minmax(245px, .82fr);
-  gap: 20px;
-}
-
-.venue-main {
-  display: grid;
-  min-width: 0;
-  align-content: start;
-  gap: 17px;
-  padding-right: 20px;
-  border-right: 1px solid #e2e8f0;
-}
-
-.venue-identity {
-  display: grid;
-  min-width: 0;
-  grid-template-columns: 112px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 16px;
-}
-
+.venue-layout { display: grid; min-width: 0; grid-template-columns: 1fr; gap: 20px; }
+.venue-main { display: grid; min-width: 0; align-content: start; gap: 18px; padding-bottom: 20px; border-bottom: 1px solid #e1e8e5; }
+.venue-identity { display: grid; min-width: 0; grid-template-columns: 120px minmax(0, 1fr) auto; align-items: center; gap: 18px; }
 .venue-identity img,
-.venue-placeholder {
-  width: 112px;
-  height: 112px;
-  border-radius: 18px;
-  object-fit: cover;
-}
-
-.venue-placeholder {
-  display: grid;
-  place-items: center;
-  border: 1px solid #d1fae5;
-  background: linear-gradient(145deg, #d1fae5, #f0fdf7);
-  color: #059669;
-}
-
-.venue-placeholder lucide-icon { width: 29px; height: 29px; }
+.venue-placeholder { width: 120px; height: 120px; border-radius: 18px; object-fit: cover; }
+.venue-placeholder { display: grid; place-items: center; border: 1px solid #ccebdd; background: #e8f8f1; color: #047857; }
+.venue-placeholder lucide-icon { width: 30px; height: 30px; }
 .venue-identity__copy { min-width: 0; }
 
-.venue-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: #64748b;
-  font-size: 8px;
-  font-weight: 800;
-  letter-spacing: .05em;
-  text-transform: uppercase;
-}
-
+.venue-status { display: inline-flex; align-items: center; gap: 7px; color: #64716c; font-size: 12px; font-weight: 700; letter-spacing: .035em; text-transform: uppercase; }
 .venue-status i,
-.court-list__copy span i {
-  width: 7px;
-  height: 7px;
-  flex: 0 0 7px;
-  border-radius: 50%;
-  background: #94a3b8;
-}
-
+.court-list__copy span i { width: 8px; height: 8px; flex: 0 0 8px; border-radius: 50%; background: #94a3b8; }
 .venue-status.is-active { color: #047857; }
 .venue-status.is-active i,
 .court-list__copy span.is-active i { background: #10b981; }
-
-.venue-identity h3 {
-  overflow: hidden;
-  margin: 7px 0 0;
-  color: #0f513f;
-  font: 850 clamp(18px, 2vw, 24px) / 1.25 'Be Vietnam Pro', sans-serif;
-  letter-spacing: -.025em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
+.venue-identity h3 { margin: 7px 0 0; color: #0f513f; font-size: clamp(1.25rem, 2vw, 1.55rem); font-weight: 800; letter-spacing: -.03em; line-height: 1.25; text-wrap: balance; }
 .venue-address,
-.venue-description {
-  margin: 0;
-  color: #64748b;
-  font-size: 10px;
-  line-height: 1.55;
-}
+.venue-description { margin: 0; color: #5c6b65; font-size: 14px; line-height: 1.55; }
+.venue-address { display: flex; align-items: flex-start; gap: 7px; margin-top: 7px; }
+.venue-address lucide-icon { width: 16px; height: 16px; flex: 0 0 16px; margin-top: 2px; }
+.venue-description { display: -webkit-box; margin-top: 7px; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 
-.venue-address {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  margin-top: 6px;
-}
+.venue-rating { display: grid; min-width: 88px; justify-items: center; padding-left: 17px; border-left: 1px solid #e1e8e5; }
+.venue-rating lucide-icon { width: 25px; height: 25px; color: #047857; }
+.venue-rating strong { margin-top: 5px; color: #047857; font-size: 1.75rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.venue-rating span { max-width: 90px; margin-top: 3px; color: #64716c; font-size: 12px; line-height: 1.4; text-align: center; }
 
-.venue-address lucide-icon { width: 13px; height: 13px; flex: 0 0 13px; margin-top: 1px; }
-.venue-description { display: -webkit-box; margin-top: 6px; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.venue-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid #e1e8e5; border-bottom: 1px solid #e1e8e5; }
+.venue-facts > div { display: grid; min-width: 0; min-height: 72px; grid-template-columns: 24px minmax(0, 1fr); align-content: center; gap: 3px 8px; padding: 12px; }
+.venue-facts > div + div { border-left: 1px solid #e1e8e5; }
+.venue-facts lucide-icon { width: 18px; height: 18px; grid-row: 1 / 3; align-self: center; color: #047857; }
+.venue-facts span { color: #71807a; font-size: 12px; font-weight: 650; }
+.venue-facts strong { overflow: hidden; color: #304039; font-size: 14px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
 
-.venue-rating {
-  display: grid;
-  min-width: 72px;
-  justify-items: center;
-  padding-left: 15px;
-  border-left: 1px solid #e2e8f0;
-}
+.venue-amenities > span { color: #56645f; font-size: 14px; font-weight: 650; }
+.venue-amenities > div { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.venue-amenities small { display: inline-flex; min-height: 36px; align-items: center; gap: 6px; padding: 0 10px; border-radius: 9px; background: #eaf8f2; color: #047857; font-size: 13px; font-weight: 650; }
+.venue-amenities small lucide-icon { width: 14px; height: 14px; }
+.venue-amenities p { margin: 8px 0 0; color: #71807a; font-size: 13px; }
 
-.venue-rating lucide-icon { width: 22px; height: 22px; color: #059669; }
-.venue-rating strong { margin-top: 4px; color: #047857; font-size: 21px; font-weight: 900; font-variant-numeric: tabular-nums; }
-.venue-rating span { margin-top: 2px; color: #64748b; font-size: 7px; text-align: center; }
+.court-preview { display: grid; min-width: 0; align-content: start; gap: 14px; }
+.court-preview__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.court-preview__heading h3,
+.court-preview__heading p { margin: 0; }
+.court-preview__heading h3 { color: #25362f; font-size: 18px; font-weight: 750; }
+.court-preview__heading p { margin-top: 4px; color: #71807a; font-size: 13px; }
+.court-preview__heading a,
+.court-more { display: inline-flex; min-height: 44px; align-items: center; gap: 6px; color: #047857; font-size: 13px; font-weight: 700; text-decoration: none; }
+.court-preview__heading a:focus-visible,
+.court-more:focus-visible,
+.court-empty a:focus-visible { outline: 3px solid rgb(16 185 129 / 30%); outline-offset: 2px; }
+.court-preview__heading a lucide-icon { width: 15px; height: 15px; }
 
-.venue-facts {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  border-top: 1px solid #e2e8f0;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.venue-facts > div {
-  display: grid;
-  min-width: 0;
-  grid-template-columns: 22px minmax(0, 1fr);
-  align-content: center;
-  gap: 2px 7px;
-  padding: 13px 10px;
-}
-
-.venue-facts > div + div { border-left: 1px solid #e2e8f0; }
-.venue-facts lucide-icon { width: 16px; height: 16px; grid-row: 1 / 3; align-self: center; color: #059669; }
-.venue-facts span { color: #94a3b8; font-size: 7px; font-weight: 750; text-transform: uppercase; }
-.venue-facts strong { overflow: hidden; color: #334155; font-size: 9px; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
-
-.venue-amenities > span { color: #64748b; font-size: 9px; font-weight: 750; }
-.venue-amenities > div { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 9px; }
-.venue-amenities small { display: inline-flex; align-items: center; gap: 5px; min-height: 28px; padding: 0 9px; border-radius: 9px; background: #ecfdf5; color: #047857; font-size: 8px; font-weight: 700; }
-.venue-amenities small lucide-icon { width: 11px; height: 11px; }
-.venue-amenities p { margin: 8px 0 0; color: #94a3b8; font-size: 9px; }
-
-.court-preview { display: grid; min-width: 0; align-content: start; gap: 12px; }
-.court-preview__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
-.court-preview__heading h3, .court-preview__heading p { margin: 0; }
-.court-preview__heading h3 { color: #334155; font-size: 12px; font-weight: 800; }
-.court-preview__heading p { margin-top: 3px; color: #94a3b8; font-size: 8px; }
-.court-preview__heading a, .court-more { display: inline-flex; min-height: 44px; align-items: center; gap: 5px; color: #047857; font-size: 8px; font-weight: 800; text-decoration: none; }
-.court-preview__heading a:focus-visible, .court-more:focus-visible, .court-empty a:focus-visible { outline: 3px solid rgb(16 185 129 / 30%); outline-offset: 2px; }
-.court-preview__heading a lucide-icon { width: 12px; height: 12px; }
-
-.court-list { display: grid; gap: 9px; }
-.court-list article { display: grid; min-width: 0; grid-template-columns: 38px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 14px; background: #fbfefd; }
-.court-list__icon { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 11px; background: #ecfdf5; color: #059669; }
-.court-list__icon lucide-icon { width: 17px; height: 17px; }
+.court-list { display: grid; gap: 10px; }
+.court-list article { display: grid; min-width: 0; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 13px; border: 1px solid #dfe7e3; border-radius: 14px; background: #fbfdfc; }
+.court-list__icon { display: grid; width: 44px; height: 44px; place-items: center; border-radius: 12px; background: #e8f8f1; color: #047857; }
+.court-list__icon lucide-icon { width: 20px; height: 20px; }
 .court-list__copy { min-width: 0; }
-.court-list__copy strong, .court-list__copy p { display: block; overflow: hidden; margin: 0; text-overflow: ellipsis; white-space: nowrap; }
-.court-list__copy strong { color: #334155; font-size: 10px; }
-.court-list__copy p, .court-list article > small { color: #64748b; font-size: 8px; }
-.court-list__copy span { display: flex; align-items: center; gap: 5px; margin-top: 5px; color: #64748b; font-size: 8px; font-weight: 700; }
+.court-list__copy strong,
+.court-list__copy p { display: block; overflow: hidden; margin: 0; text-overflow: ellipsis; white-space: nowrap; }
+.court-list__copy strong { color: #2f3d38; font-size: 14px; font-weight: 700; }
+.court-list__copy p,
+.court-list article > small { color: #64716c; font-size: 12px; }
+.court-list__copy span { display: flex; align-items: center; gap: 6px; margin-top: 5px; color: #64716c; font-size: 12px; font-weight: 650; }
 .court-list__copy span.is-active { color: #047857; }
 .court-more { width: fit-content; }
 
-.court-empty { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 10px; padding: 14px; border: 1px dashed #cbd5e1; border-radius: 14px; background: #f8fafc; }
-.court-empty > span { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 11px; background: #ecfdf5; color: #059669; }
-.court-empty strong, .court-empty p { display: block; margin: 0; }
-.court-empty strong { color: #334155; font-size: 10px; }
-.court-empty p { margin-top: 3px; color: #64748b; font-size: 8px; }
-.court-empty a { grid-column: 1 / -1; min-height: 44px; color: #047857; font-size: 9px; font-weight: 800; text-align: center; text-decoration: none; }
+.court-empty { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 12px; padding: 16px; border: 1px dashed #b9cac2; border-radius: 14px; background: #f8fbfa; }
+.court-empty > span { display: grid; width: 44px; height: 44px; place-items: center; border-radius: 12px; background: #e8f8f1; color: #047857; }
+.court-empty strong,
+.court-empty p { display: block; margin: 0; }
+.court-empty strong { color: #304039; font-size: 15px; }
+.court-empty p { margin-top: 3px; color: #64716c; font-size: 13px; }
+.court-empty a { grid-column: 1 / -1; display: inline-flex; min-height: 44px; align-items: center; justify-content: center; color: #047857; font-size: 14px; font-weight: 700; text-decoration: none; }
 
-.venue-skeleton { display: grid; min-height: 180px; grid-template-columns: 112px minmax(0, 1fr); align-items: center; gap: 16px; }
-.skeleton { display: block; border-radius: 8px; background: linear-gradient(90deg, #eef4f1, #f8fbfa, #eef4f1); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; }
-.skeleton--media { width: 112px; height: 112px; border-radius: 18px; }
-.skeleton--label { width: 82px; height: 10px; }
-.skeleton--title { width: min(240px, 70%); height: 25px; margin-top: 12px; }
-.skeleton--line { width: min(360px, 90%); height: 10px; margin-top: 12px; }
+.venue-skeleton { display: grid; min-height: 190px; grid-template-columns: 120px minmax(0, 1fr); align-items: center; gap: 18px; }
+.skeleton { display: block; border-radius: 8px; background: linear-gradient(90deg, #eaf1ee, #f8fbfa, #eaf1ee); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; }
+.skeleton--media { width: 120px; height: 120px; border-radius: 18px; }
+.skeleton--label { width: 96px; height: 12px; }
+.skeleton--title { width: min(260px, 70%); height: 28px; margin-top: 13px; }
+.skeleton--line { width: min(380px, 90%); height: 12px; margin-top: 13px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 
-.venue-state { display: grid; min-height: 150px; grid-template-columns: auto 1fr auto; align-items: center; gap: 13px; padding: 18px; border-radius: 16px; }
+.venue-state { display: grid; min-height: 170px; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; padding: 20px; border-radius: 16px; }
 .venue-state--error { border: 1px solid #fecdd3; background: #fff7f8; }
 .venue-state > span { color: #d92d4c; }
-.venue-state strong, .venue-state p { display: block; margin: 0; }
-.venue-state strong { color: #881337; font-size: 12px; }
-.venue-state p { margin-top: 4px; color: #9f1239; font-size: 9px; line-height: 1.5; }
-.venue-state button { min-height: 44px; padding: 0 14px; border: 0; border-radius: 10px; background: #059669; color: #fff; cursor: pointer; font: inherit; font-size: 9px; font-weight: 800; }
-.venue-state button:focus-visible, .venue-state > a:focus-visible { outline: 3px solid rgb(16 185 129 / 30%); outline-offset: 2px; }
-.venue-state--empty { border: 1px dashed #a7f3d0; background: #f0fdf7; }
-.venue-state--empty > span { color: #059669; }
+.venue-state strong,
+.venue-state p { display: block; margin: 0; }
+.venue-state strong { color: #881337; font-size: 16px; }
+.venue-state p { margin-top: 5px; color: #9f1239; font-size: 14px; line-height: 1.55; }
+.venue-state button,
+.venue-state > a { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; padding: 0 15px; border: 0; border-radius: 11px; background: #047857; color: #fff; cursor: pointer; font: 700 14px/1 'Be Vietnam Pro', sans-serif; text-decoration: none; }
+.venue-state button:focus-visible,
+.venue-state > a:focus-visible { outline: 3px solid rgb(16 185 129 / 30%); outline-offset: 2px; }
+.venue-state--empty { border: 1px dashed #8bd4b7; background: #effaf5; }
+.venue-state--empty > span { color: #047857; }
 .venue-state--empty strong { color: #065f46; }
-.venue-state--empty p { color: #047857; }
-.venue-state > a { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; padding: 0 14px; border-radius: 10px; background: #059669; color: #fff; font-size: 9px; font-weight: 800; text-decoration: none; }
+.venue-state--empty p { color: #356c5b; }
 
 @keyframes shimmer { to { background-position: -200% 0; } }
 
 @media (max-width: 860px) {
   .venue-layout { grid-template-columns: 1fr; }
-  .venue-main { padding-right: 0; padding-bottom: 18px; border-right: 0; border-bottom: 1px solid #e2e8f0; }
 }
 
 @media (max-width: 640px) {
-  .venue-overview { padding: 17px 15px; border-radius: 20px; }
+  .venue-overview { gap: 18px; padding: 20px 16px; border-radius: 18px; }
+  .panel-heading { align-items: flex-start; }
+  .panel-heading h2 { font-size: 20px; }
+  .panel-heading__icon { width: 40px; height: 40px; flex-basis: 40px; }
+  .edit-link { padding: 0 9px; font-size: 13px; }
   .venue-switcher { align-items: flex-start; flex-direction: column; }
   .venue-switcher > div { width: 100%; }
-  .panel-heading { align-items: flex-start; }
-  .panel-heading h2 { font-size: 16px; }
-  .edit-link { padding: 0 9px; }
-  .venue-identity { grid-template-columns: 84px minmax(0, 1fr); gap: 12px; }
-  .venue-identity img, .venue-placeholder { width: 84px; height: 84px; border-radius: 15px; }
-  .venue-rating { grid-column: 1 / -1; grid-template-columns: auto auto 1fr; justify-items: start; align-items: center; gap: 7px; padding: 10px 0 0; border-top: 1px solid #e2e8f0; border-left: 0; }
-  .venue-rating strong { margin: 0; }
-  .venue-rating span { margin: 0; font-size: 9px; }
+  .venue-switcher button { flex: 1 0 auto; justify-content: center; font-size: 13px; }
+  .venue-identity { grid-template-columns: 92px minmax(0, 1fr); gap: 13px; }
+  .venue-identity img,
+  .venue-placeholder { width: 92px; height: 92px; border-radius: 15px; }
+  .venue-status { font-size: 12px; }
+  .venue-identity h3 { font-size: 1.25rem; white-space: normal; }
+  .venue-address,
+  .venue-description { font-size: 14px; }
+  .venue-rating { grid-column: 1 / -1; grid-template-columns: auto auto 1fr; justify-items: start; align-items: center; gap: 8px; padding: 12px 0 0; border-top: 1px solid #e1e8e5; border-left: 0; }
+  .venue-rating strong,
+  .venue-rating span { margin: 0; }
   .venue-facts { grid-template-columns: 1fr; }
-  .venue-facts > div + div { border-top: 1px solid #e2e8f0; border-left: 0; }
-  .venue-facts span { font-size: 9px; }
-  .venue-facts strong { font-size: 11px; }
-  .court-list article { grid-template-columns: 38px minmax(0, 1fr); }
+  .venue-facts > div + div { border-top: 1px solid #e1e8e5; border-left: 0; }
+  .venue-facts > div { min-height: 64px; }
+  .court-list article { grid-template-columns: 44px minmax(0, 1fr); }
   .court-list article > small { grid-column: 2; }
   .venue-state { grid-template-columns: auto 1fr; }
-  .venue-state button, .venue-state > a { grid-column: 1 / -1; }
+  .venue-state button,
+  .venue-state > a { grid-column: 1 / -1; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -145,7 +145,17 @@ async function verifyMultiVenue(cdp, name, width, height) {
     quickAction: document.querySelector('.owner-hero__action')?.getAttribute('href'),
     devVisible: [...document.querySelectorAll('*')].some(node => ['DEV', 'Đang phát triển'].includes(node.textContent?.trim()) && node.getBoundingClientRect().width > 0),
     horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
-    minInteractiveHeight: Math.min(...[...document.querySelectorAll('.owner-dashboard a, .owner-dashboard button')].filter(node => node.getBoundingClientRect().width > 0).map(node => node.getBoundingClientRect().height))
+    minInteractiveHeight: Math.min(...[...document.querySelectorAll('.owner-dashboard a, .owner-dashboard button')].filter(node => node.getBoundingClientRect().width > 0).map(node => node.getBoundingClientRect().height)),
+    smallestInteractive: [...document.querySelectorAll('.owner-dashboard a, .owner-dashboard button')]
+      .filter(node => node.getBoundingClientRect().width > 0)
+      .map(node => ({
+        element: node.tagName.toLowerCase(),
+        className: node.className,
+        text: node.textContent.trim().replace(/\s+/g, ' ').slice(0, 60),
+        height: node.getBoundingClientRect().height
+      }))
+      .sort((left, right) => left.height - right.height)
+      .slice(0, 5)
   }))()`);
   await evaluate(cdp, `document.querySelectorAll('.venue-switcher button')[1].click()`);
   await waitFor(cdp, "document.querySelector('.venue-identity h3')?.textContent.includes('GOAT Riverside')");
