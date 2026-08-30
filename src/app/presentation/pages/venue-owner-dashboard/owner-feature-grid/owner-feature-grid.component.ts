@@ -13,14 +13,8 @@ import { OwnerWorkspaceFeature } from '../venue-owner-dashboard.models';
 })
 export class OwnerFeatureGridComponent {
   readonly features = input.required<readonly OwnerWorkspaceFeature[]>();
-  readonly applicationApproved = input(false);
+  readonly operationsEnabled = input(false);
+  readonly lockReason = input('Chưa thể mở khóa vận hành');
 
-  readonly availableFeatures = computed(() => this.features().filter(
-    feature => feature.status === 'AVAILABLE' && feature.id !== 'application'
-  ));
-  readonly developingFeatures = computed(() => this.features().filter(feature => feature.status === 'DEVELOPING'));
-
-  isFeatureEnabled(feature: OwnerWorkspaceFeature): boolean {
-    return this.applicationApproved();
-  }
+  readonly operationFeatures = computed(() => this.features().filter(feature => feature.id !== 'application'));
 }

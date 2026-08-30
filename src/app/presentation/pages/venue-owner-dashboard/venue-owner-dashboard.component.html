@@ -8,20 +8,11 @@
       <p>{{ heroDescription() }}</p>
 
       <div class="owner-hero__actions">
-        @if (applicationApproved()) {
-          <a class="owner-hero__action owner-hero__action--primary" routerLink="/admin/venues">
-            <lucide-icon name="land-plot" /> <span>Quản lý cơ sở</span><lucide-icon class="owner-hero__action-arrow" name="arrow-right" />
-          </a>
-          <a class="owner-hero__action owner-hero__action--secondary" routerLink="/admin/courts">
-            <lucide-icon name="activity" /> <span>Sân thi đấu</span><lucide-icon class="owner-hero__action-arrow" name="arrow-right" />
-          </a>
-        } @else {
-          <a class="owner-hero__action owner-hero__action--primary" [routerLink]="applicationUrl">
-            <lucide-icon name="clipboard-check" />
-            <span>{{ latestApplication() ? 'Xem hồ sơ' : 'Đăng ký chủ sân' }}</span>
-            <lucide-icon class="owner-hero__action-arrow" name="arrow-right" />
-          </a>
-        }
+        <a class="owner-hero__action owner-hero__action--primary" [routerLink]="quickAction().route">
+          <lucide-icon [name]="quickAction().icon" />
+          <span>{{ quickAction().label }}</span>
+          <lucide-icon class="owner-hero__action-arrow" name="arrow-right" />
+        </a>
       </div>
     </div>
 
@@ -40,10 +31,10 @@
   <section class="owner-workbench" [class.owner-workbench--application-only]="!applicationApproved()">
     @if (applicationApproved()) {
       <app-owner-venue-overview
-        [venue]="venue()"
+        [venues]="venues()"
         [loading]="venueLoading()"
         [error]="venueError()"
-        (retry)="retryVenue()" />
+        (retry)="retryVenues()" />
     }
 
     <section id="owner-application-progress" class="application-summary" aria-labelledby="application-summary-title">
@@ -67,5 +58,8 @@
     </section>
   </section>
 
-  <app-owner-feature-grid [features]="features" [applicationApproved]="applicationApproved()" />
+  <app-owner-feature-grid
+    [features]="features"
+    [operationsEnabled]="operationsEnabled()"
+    [lockReason]="toolLockReason()" />
 </div>

@@ -4,7 +4,9 @@
       <span class="panel-heading__icon" aria-hidden="true"><lucide-icon name="land-plot" /></span>
       <h2 id="owner-venue-title">Tổng quan cơ sở</h2>
     </div>
-    <a class="edit-link" routerLink="/admin/venues"><lucide-icon name="pencil" /> Chỉnh sửa cơ sở</a>
+    @if (venues().length) {
+      <a class="edit-link" routerLink="/admin/venues"><lucide-icon name="pencil" /> Chỉnh sửa cơ sở</a>
+    }
   </header>
 
   @if (loading()) {
@@ -23,7 +25,33 @@
       <div><strong>Chưa thể tải cơ sở</strong><p>{{ error() }}</p></div>
       <button type="button" (click)="retry.emit()">Thử lại</button>
     </div>
+  } @else if (!venues().length) {
+    <div class="venue-state venue-state--empty" role="status">
+      <span aria-hidden="true"><lucide-icon name="land-plot" /></span>
+      <div>
+        <strong>Chưa có cơ sở được liên kết</strong>
+        <p>Hồ sơ đã được duyệt nhưng danh mục cơ sở hiện đang trống. Hãy kiểm tra lịch sử hồ sơ hoặc liên hệ hỗ trợ.</p>
+      </div>
+      <a routerLink="/admin/applications">Kiểm tra hồ sơ</a>
+    </div>
   } @else if (venue(); as venueData) {
+    @if (venues().length > 1) {
+      <div class="venue-switcher" aria-label="Chọn cơ sở để xem chi tiết">
+        <span>{{ venues().length }} cơ sở</span>
+        <div>
+          @for (venueOption of venues(); track venueOption.venueId) {
+            <button
+              type="button"
+              [class.is-selected]="venueData.venueId === venueOption.venueId"
+              [attr.aria-pressed]="venueData.venueId === venueOption.venueId"
+              (click)="selectVenue(venueOption.venueId)">
+              <i [class.is-active]="venueOption.active" aria-hidden="true"></i>{{ venueOption.name }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+
     <div class="venue-layout">
       <div class="venue-main">
         <div class="venue-identity">

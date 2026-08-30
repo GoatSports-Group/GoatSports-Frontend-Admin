@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
@@ -12,11 +12,16 @@ import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-ic
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OwnerVenueOverviewComponent {
-  readonly venue = input<OwnerVenueOverview | null>(null);
+  readonly venues = input<readonly OwnerVenueOverview[]>([]);
   readonly loading = input(false);
   readonly error = input<string | null>(null);
   readonly retry = output<void>();
+  readonly selectedVenueId = signal<string | null>(null);
 
+  readonly venue = computed(() => {
+    const venues = this.venues();
+    return venues.find(venue => venue.venueId === this.selectedVenueId()) ?? venues[0] ?? null;
+  });
   readonly previewCourts = computed(() => this.venue()?.courts?.slice(0, 2) ?? []);
   readonly remainingCourtCount = computed(() => Math.max((this.venue()?.courts?.length ?? 0) - 2, 0));
   readonly addressText = computed(() => {
@@ -28,4 +33,8 @@ export class OwnerVenueOverviewComponent {
       .filter((value, index, values) => values.indexOf(value) === index)
       .join(', ');
   });
+
+  selectVenue(venueId: string): void {
+    this.selectedVenueId.set(venueId);
+  }
 }

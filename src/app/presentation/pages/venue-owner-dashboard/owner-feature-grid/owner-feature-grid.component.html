@@ -1,17 +1,17 @@
 <section class="owner-workspace" aria-labelledby="owner-workspace-title">
   <header class="workspace-heading">
     <div>
-      <span class="workspace-heading__icon" aria-hidden="true"><lucide-icon name="construction" /></span>
-      <div><h2 id="owner-workspace-title">Công cụ dành cho chủ sân</h2><p>Truy cập nhanh các tác vụ quản lý và theo dõi lộ trình sắp tới.</p></div>
+      <span class="workspace-heading__icon" aria-hidden="true"><lucide-icon name="layout-grid" /></span>
+      <div><h2 id="owner-workspace-title">Công cụ dành cho chủ sân</h2><p>Truy cập nhanh các tác vụ quản lý và vận hành cơ sở.</p></div>
     </div>
-    @if (!applicationApproved()) {
-      <span class="approval-note"><lucide-icon name="clock" /> Chờ duyệt để mở khóa vận hành</span>
+    @if (!operationsEnabled()) {
+      <span class="approval-note"><lucide-icon name="clock" /> {{ lockReason() }}</span>
     }
   </header>
 
   <div class="feature-list">
-    @for (feature of availableFeatures(); track feature.id) {
-      @if (isFeatureEnabled(feature)) {
+    @for (feature of operationFeatures(); track feature.id) {
+      @if (operationsEnabled()) {
         <a class="feature-card" [routerLink]="feature.route">
           <span class="feature-card__icon" aria-hidden="true"><lucide-icon [name]="feature.icon" /></span>
           <span class="feature-card__copy"><strong>{{ feature.title }}</strong><small>{{ feature.description }}</small></span>
@@ -24,14 +24,6 @@
           <span class="feature-card__state"><lucide-icon name="clock" /> Chưa mở khóa</span>
         </article>
       }
-    }
-
-    @for (feature of developingFeatures(); track feature.id) {
-      <article class="feature-card feature-card--developing" aria-disabled="true">
-        <span class="feature-card__icon" aria-hidden="true"><lucide-icon [name]="feature.icon" /></span>
-        <span class="feature-card__copy"><strong>{{ feature.title }}</strong><small>{{ feature.description }}</small></span>
-        <span class="feature-card__state"><lucide-icon name="construction" /> Đang phát triển</span>
-      </article>
     }
   </div>
 </section>

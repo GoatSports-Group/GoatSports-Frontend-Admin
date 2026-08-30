@@ -124,13 +124,9 @@ a.feature-card:focus-visible { z-index: 1; outline: 3px solid rgb(16 185 129 / 3
 .feature-card__state { display: inline-flex; align-items: center; gap: 4px; color: #94a3b8; font-size: 7px; font-weight: 750; white-space: nowrap; }
 .feature-card__state lucide-icon { width: 11px; height: 11px; }
 
-.feature-card--locked,
-.feature-card--developing { background: #fbfcfd; }
-.feature-card--locked .feature-card__icon,
-.feature-card--developing .feature-card__icon { background: #f1f5f9; color: #94a3b8; }
-.feature-card--locked .feature-card__copy strong,
-.feature-card--developing .feature-card__copy strong { color: #64748b; }
-.feature-card--developing { opacity: .82; }
+.feature-card--locked { background: #fbfcfd; }
+.feature-card--locked .feature-card__icon { background: #f1f5f9; color: #94a3b8; }
+.feature-card--locked .feature-card__copy strong { color: #64748b; }
 
 @media (max-width: 1180px) {
   .feature-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
