@@ -1,12 +1,12 @@
 import { Component, OnInit, AfterViewInit, OnDestroy, inject, signal, computed, HostListener } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { Subscription, interval, of } from 'rxjs';
 import { startWith, switchMap, catchError, map } from 'rxjs/operators';
 
 import { AuthService } from '@presentation/services/auth.service';
 import { NotificationService } from '@presentation/services/notification.service';
+import { GetCurrentUserUseCase } from '@application/usecase/auth/get-current-user.usecase';
 import { User } from '@application/dto/user/user.dto';
 import { Notification, NotificationStatus, NotificationType } from '@application/dto/notification/notification.dto';
 
@@ -45,8 +45,7 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
   public authService = inject(AuthService);
   public notificationService = inject(NotificationService);
   private router = inject(Router);
-  private http = inject(HttpClient);
-  private apiBase = environment.apiUrl;
+  private getCurrentUser = inject(GetCurrentUserUseCase);
 
   // Canvas Background Animation State
   private canvas!: HTMLCanvasElement;
@@ -182,7 +181,7 @@ export class AdminComponent implements OnInit, AfterViewInit, OnDestroy {
       .pipe(
         startWith(0),
         switchMap(() =>
-          this.http.get(`${this.apiBase}/auth-service/api/v1/auth/me`).pipe(
+          this.getCurrentUser.execute().pipe(
             map(() => true),
             catchError((err: any) => {
               const isReachable = err.status !== 0;

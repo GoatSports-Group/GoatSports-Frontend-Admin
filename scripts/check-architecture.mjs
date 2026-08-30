@@ -20,6 +20,7 @@ const aliases = new Map([
   ['@shared', 'presentation']
 ]);
 const importPattern = /(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s*)['"]([^'"]+)['"]/g;
+const directHttpClientPattern = /import\s*\{[^}]*\bHttpClient\b[^}]*\}\s*from\s*['"]@angular\/common\/http['"]/g;
 const violations = [];
 
 for (const file of walk(appRoot)) {
@@ -29,6 +30,19 @@ for (const file of walk(appRoot)) {
   if (!sourceLayer) continue; // src/app root is the composition root.
 
   const source = readFileSync(file, 'utf8');
+  if (sourceLayer === 'presentation') {
+    for (const match of source.matchAll(directHttpClientPattern)) {
+      const line = source.slice(0, match.index).split(/\r?\n/).length;
+      violations.push({
+        file: relative(projectRoot, file),
+        line,
+        sourceLayer,
+        targetLayer: 'infrastructure',
+        dependency: 'HttpClient'
+      });
+    }
+  }
+
   for (const match of source.matchAll(importPattern)) {
     const dependency = match[1];
     const targetLayer = getDependencyLayer(dependency, file);
