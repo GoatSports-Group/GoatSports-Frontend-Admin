@@ -1,0 +1,133 @@
+<main class="revenue-page">
+  <section class="hero">
+    <div>
+      <p class="eyebrow"><lucide-icon name="credit-card" /> Dữ liệu vận hành thật</p>
+      <h1>Doanh thu</h1>
+      <p>Theo dõi payment của booking thuộc đúng cơ sở bạn sở hữu.</p>
+    </div>
+    <div class="scope-note">
+      <lucide-icon name="shield-check" />
+      <div><strong>Payment source-of-truth</strong><span>Chỉ trạng thái SUCCEEDED được cộng doanh thu.</span></div>
+    </div>
+  </section>
+
+  <section class="filter-panel" aria-label="Bộ lọc doanh thu">
+    <label>
+      Cơ sở
+      <select [value]="selectedVenueId()" [disabled]="loading()" (change)="selectVenue($event)">
+        <option value="">Tất cả cơ sở</option>
+        @for (venue of venues(); track venue.venueId) {
+          <option [value]="venue.venueId">{{ venue.name }}</option>
+        }
+      </select>
+    </label>
+    <label>
+      Từ ngày
+      <input type="date" [value]="fromDate()" [disabled]="loading()" (change)="selectFromDate($event)" />
+    </label>
+    <label>
+      Đến ngày
+      <input type="date" [value]="toDate()" [disabled]="loading()" (change)="selectToDate($event)" />
+    </label>
+    <button type="button" class="primary" [disabled]="loading() || invalidRange() || !venues().length" (click)="loadReport()">
+      @if (loading()) { <lucide-icon name="loader-2" class="spin" /> Đang tải }
+      @else { <lucide-icon name="filter" /> Áp dụng }
+    </button>
+    @if (invalidRange()) {
+      <p class="filter-error">Khoảng ngày phải hợp lệ và không vượt quá 366 ngày.</p>
+    }
+  </section>
+
+  @if (loading()) {
+    <section class="loading-grid" aria-label="Đang tải doanh thu">
+      @for (item of [1, 2, 3, 4]; track item) { <span class="skeleton metric-skeleton"></span> }
+      <span class="skeleton chart-skeleton"></span>
+    </section>
+  } @else if (error()) {
+    <section class="state-card error-state">
+      <lucide-icon name="alert-circle" />
+      <div><h2>Chưa tải được doanh thu</h2><p>{{ error() }}</p></div>
+      <button type="button" class="secondary" (click)="retry()"><lucide-icon name="rotate-ccw" /> Thử lại</button>
+    </section>
+  } @else if (!venues().length) {
+    <section class="state-card empty-state">
+      <lucide-icon name="land-plot" />
+      <div><h2>Chưa có cơ sở để tổng hợp</h2><p>Doanh thu sẽ xuất hiện sau khi tài khoản có Venue thuộc quyền sở hữu.</p></div>
+    </section>
+  } @else if (report(); as data) {
+    <section class="period-strip">
+      <div><span>Phạm vi</span><strong>{{ selectedVenueName() }}</strong></div>
+      <div><span>Kỳ hiện tại</span><strong>{{ shortDate(data.currentPeriod.fromDate) }} – {{ shortDate(data.currentPeriod.toDate) }}</strong></div>
+      <div><span>Kỳ so sánh</span><strong>{{ shortDate(data.previousPeriod.fromDate) }} – {{ shortDate(data.previousPeriod.toDate) }}</strong></div>
+      <p><lucide-icon name="info" /> Doanh thu được gắn theo ngày chơi sân của booking; số tiền và trạng thái lấy từ payment-service.</p>
+    </section>
+
+    <section class="metric-grid" aria-label="Chỉ số doanh thu">
+      <article class="metric-card primary-metric">
+        <span class="metric-icon"><lucide-icon name="credit-card" /></span>
+        <div><span>Doanh thu xác nhận</span><strong>{{ money(data.currentPeriod.totalRevenue) }}</strong></div>
+        <small [class]="trendClass(data.revenueChangePercentage)">
+          <lucide-icon [name]="trendIcon(data.revenueChangePercentage)" /> {{ percentage(data.revenueChangePercentage) }}
+        </small>
+      </article>
+      <article class="metric-card">
+        <span class="metric-icon"><lucide-icon name="file-text" /></span>
+        <div><span>Booking trong kỳ</span><strong>{{ data.currentPeriod.bookingCount }}</strong></div>
+        <small [class]="trendClass(data.bookingCountChangePercentage)">{{ percentage(data.bookingCountChangePercentage) }}</small>
+      </article>
+      <article class="metric-card">
+        <span class="metric-icon"><lucide-icon name="circle-check" /></span>
+        <div><span>Booking có payment thành công</span><strong>{{ data.currentPeriod.paidBookingCount }}</strong></div>
+        <small>{{ data.currentPeriod.bookingCount ? (data.currentPeriod.paidBookingCount * 100 / data.currentPeriod.bookingCount).toFixed(0) : 0 }}% booking</small>
+      </article>
+      <article class="metric-card">
+        <span class="metric-icon"><lucide-icon name="calendar" /></span>
+        <div><span>Doanh thu kỳ trước</span><strong>{{ money(data.previousPeriod.totalRevenue) }}</strong></div>
+        <small>{{ data.previousPeriod.bookingCount }} booking</small>
+      </article>
+    </section>
+
+    @if (!data.currentPeriod.bookingCount) {
+      <section class="state-card empty-state report-empty">
+        <lucide-icon name="inbox" />
+        <div><h2>Không có booking trong khoảng đã chọn</h2><p>Hãy chọn cơ sở hoặc khoảng ngày khác để xem dữ liệu.</p></div>
+      </section>
+    } @else {
+      <section class="report-grid">
+        <article class="panel chart-panel">
+          <header><div><p class="eyebrow">Theo ngày chơi sân</p><h2>Nhịp doanh thu</h2></div><span>{{ data.dailyRevenue.length }} ngày</span></header>
+          <div class="chart-scroll" role="img" aria-label="Biểu đồ doanh thu theo ngày">
+            <div class="bar-chart">
+              @for (point of data.dailyRevenue; track point.date) {
+                <div class="bar-item" [title]="shortDate(point.date) + ': ' + money(point.revenue)">
+                  <span class="bar-value">{{ point.revenue ? compactMoney(point.revenue) : '' }}</span>
+                  <span class="bar-track"><i [style.height.%]="barHeight(point.revenue)"></i></span>
+                  <span class="bar-label">{{ shortDate(point.date) }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        </article>
+
+        <article class="panel breakdown-panel">
+          <header><div><p class="eyebrow">Đối soát</p><h2>Payment status</h2></div><lucide-icon name="receipt" /></header>
+          @if (!data.paymentStatusBreakdown.length) {
+            <p class="muted">Booking trong kỳ chưa có payment record.</p>
+          } @else {
+            <div class="status-table" role="table" aria-label="Phân rã trạng thái payment">
+              <div class="table-head" role="row"><span>Trạng thái</span><span>Số payment</span><span>Giá trị danh nghĩa</span></div>
+              @for (row of data.paymentStatusBreakdown; track row.status) {
+                <div class="status-row" role="row">
+                  <div><strong>{{ statusLabel(row.status) }}</strong><span>{{ statusShare(row) }}% số payment</span></div>
+                  <span>{{ row.paymentCount }}</span>
+                  <strong>{{ money(row.nominalAmount) }}</strong>
+                </div>
+              }
+            </div>
+          }
+          <p class="reconciliation-note"><lucide-icon name="info" /> Giá trị danh nghĩa của trạng thái hoàn tiền không phải doanh thu ròng; chỉ SUCCEEDED được cộng ở chỉ số tổng.</p>
+        </article>
+      </section>
+    }
+  }
+</main>

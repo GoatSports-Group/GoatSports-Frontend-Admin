@@ -71,8 +71,8 @@ export const OWNER_WORKSPACE_FEATURES: readonly OwnerWorkspaceFeature[] = [
     description: 'Báo cáo dòng tiền chỉ từ giao dịch được provider xác nhận.',
     icon: 'credit-card',
     route: '/admin/finance',
-    status: 'DEVELOPING',
-    plannedCapabilities: ['Doanh thu', 'Đối soát', 'Hoàn tiền']
+    status: 'AVAILABLE',
+    plannedCapabilities: ['Doanh thu payment thực', 'So sánh kỳ trước', 'Phân rã payment status']
   },
   {
     id: 'reviews',

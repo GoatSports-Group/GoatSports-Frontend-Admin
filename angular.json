@@ -84,7 +84,8 @@
           "builder": "@angular/build:unit-test",
           "options": {
             "buildTarget": "goat-admin-web:test-build:development",
-            "runner": "vitest"
+            "runner": "vitest",
+            "runnerConfig": "vitest.config.ts"
           }
         }
       }

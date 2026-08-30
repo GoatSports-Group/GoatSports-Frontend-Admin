@@ -24,6 +24,7 @@ import { VENUE_OWNER_DASHBOARD_REPOSITORY_TOKEN } from '@application/ports/persi
 import { OWNER_SCHEDULE_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-schedule.repository';
 import { OWNER_BOOKING_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-booking.repository';
 import { OWNER_CHECK_IN_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-check-in.repository';
+import { OWNER_REVENUE_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-revenue.repository';
 import { WEBSOCKET_SERVICE_TOKEN } from '@application/ports/websocket.service';
 
 import { AuthRepositoryImpl } from '@infrastructure/repositories/auth.repository.impl';
@@ -39,6 +40,7 @@ import { VenueOwnerDashboardRepositoryImpl } from '@infrastructure/repositories/
 import { OwnerScheduleRepositoryImpl } from '@infrastructure/repositories/owner-schedule.repository.impl';
 import { OwnerBookingRepositoryImpl } from '@infrastructure/repositories/owner-booking.repository.impl';
 import { OwnerCheckInRepositoryImpl } from '@infrastructure/repositories/owner-check-in.repository.impl';
+import { OwnerRevenueRepositoryImpl } from '@infrastructure/repositories/owner-revenue.repository.impl';
 import { StompWebSocketService } from '@infrastructure/websocket/stomp-websocket.service';
 import { IMAGE_CONFIG } from '@angular/common';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
@@ -165,6 +167,7 @@ import {
     { provide: OWNER_SCHEDULE_REPOSITORY_TOKEN, useClass: OwnerScheduleRepositoryImpl },
     { provide: OWNER_BOOKING_REPOSITORY_TOKEN, useClass: OwnerBookingRepositoryImpl },
     { provide: OWNER_CHECK_IN_REPOSITORY_TOKEN, useClass: OwnerCheckInRepositoryImpl },
+    { provide: OWNER_REVENUE_REPOSITORY_TOKEN, useClass: OwnerRevenueRepositoryImpl },
     { provide: WEBSOCKET_SERVICE_TOKEN, useClass: StompWebSocketService },
     {
       provide: IMAGE_CONFIG,
