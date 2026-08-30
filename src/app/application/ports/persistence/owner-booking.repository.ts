@@ -1,0 +1,18 @@
+import { InjectionToken } from '@angular/core';
+import { Observable } from 'rxjs';
+import {
+  OwnerBooking,
+  OwnerBookingFilter,
+  OwnerBookingPage,
+  OwnerBookingStatus
+} from '@application/dto/owner-booking/owner-booking.dto';
+
+export interface OwnerBookingRepository {
+  getBookings(filter: OwnerBookingFilter): Observable<OwnerBookingPage>;
+  getBooking(bookingId: string): Observable<OwnerBooking>;
+  updateStatus(bookingId: string, status: OwnerBookingStatus): Observable<OwnerBooking>;
+}
+
+export const OWNER_BOOKING_REPOSITORY_TOKEN = new InjectionToken<OwnerBookingRepository>(
+  'OWNER_BOOKING_REPOSITORY_TOKEN'
+);

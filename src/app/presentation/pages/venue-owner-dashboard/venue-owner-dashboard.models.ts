@@ -44,8 +44,8 @@ export const OWNER_WORKSPACE_FEATURES: readonly OwnerWorkspaceFeature[] = [
     description: 'Thiết lập khung giờ, giá theo ngày và khả năng nhận đặt sân.',
     icon: 'calendar',
     route: '/admin/schedule',
-    status: 'DEVELOPING',
-    plannedCapabilities: ['Khung giờ', 'Quy tắc giá', 'Ngày nghỉ']
+    status: 'AVAILABLE',
+    plannedCapabilities: ['Khung giờ', 'Quy tắc giá', 'Bảo trì slot']
   },
   {
     id: 'bookings',
@@ -53,8 +53,8 @@ export const OWNER_WORKSPACE_FEATURES: readonly OwnerWorkspaceFeature[] = [
     description: 'Theo dõi đơn thuộc cơ sở của bạn và trạng thái thanh toán thực tế.',
     icon: 'file-text',
     route: '/admin/owner-bookings',
-    status: 'DEVELOPING',
-    plannedCapabilities: ['Danh sách đơn', 'Chi tiết khách đặt', 'Hủy và hoàn tiền']
+    status: 'AVAILABLE',
+    plannedCapabilities: ['Danh sách và bộ lọc', 'Chi tiết và timeline', 'Trạng thái payment thật']
   },
   {
     id: 'check-in',

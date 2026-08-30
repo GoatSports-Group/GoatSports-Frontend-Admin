@@ -13,6 +13,8 @@ import { OwnerFeaturePlaceholderComponent } from '@presentation/pages/venue-owne
 import { VenueOwnerApplicationsComponent } from '@presentation/pages/venue-owner-applications/venue-owner-applications.component';
 import { OwnerVenueManagementComponent } from '@presentation/pages/owner-venue-management/owner-venue-management.component';
 import { OwnerCourtManagementComponent } from '@presentation/pages/owner-court-management/owner-court-management.component';
+import { OwnerScheduleComponent } from '@presentation/pages/owner-schedule/owner-schedule.component';
+import { OwnerBookingsComponent } from '@presentation/pages/owner-bookings/owner-bookings.component';
 
 const routes: Routes = [
   {
@@ -34,8 +36,8 @@ const routes: Routes = [
       { path: 'logs', component: LogsComponent, canActivate: [AdminGuard], data: { allowedRoles: ['ADMIN'] } },
       { path: 'venues', component: OwnerVenueManagementComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
       { path: 'courts', component: OwnerCourtManagementComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
-      { path: 'schedule', component: OwnerFeaturePlaceholderComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'], featureId: 'schedule' } },
-      { path: 'owner-bookings', component: OwnerFeaturePlaceholderComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'], featureId: 'bookings' } },
+      { path: 'schedule', component: OwnerScheduleComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
+      { path: 'owner-bookings', component: OwnerBookingsComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
       { path: 'check-in', component: OwnerFeaturePlaceholderComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'], featureId: 'check-in' } },
       { path: 'finance', component: OwnerFeaturePlaceholderComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'], featureId: 'finance' } },
       { path: 'reviews', component: OwnerFeaturePlaceholderComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'], featureId: 'reviews' } },

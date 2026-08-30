@@ -1,0 +1,205 @@
+<main class="owner-bookings-page">
+  <header class="page-hero">
+    <div>
+      <span class="eyebrow"><lucide-icon name="file-text" /> Vận hành booking</span>
+      <h1>Đơn đặt sân</h1>
+      <p>Theo dõi booking thuộc cơ sở của bạn và đối chiếu trạng thái thanh toán trực tiếp từ payment-service.</p>
+    </div>
+    <div class="hero-metric">
+      <span>Booking theo bộ lọc</span>
+      <strong>{{ total() }}</strong>
+      <small>{{ selectedVenue()?.name || 'Chưa chọn cơ sở' }}</small>
+    </div>
+  </header>
+
+  @if (contextLoading()) {
+    <section class="state-card" aria-live="polite">
+      <span class="spinner"></span><strong>Đang tải cơ sở và sân thi đấu…</strong>
+    </section>
+  } @else if (!venues().length) {
+    <section class="state-card state-card--empty">
+      <lucide-icon name="land-plot" /><h2>Chưa có cơ sở được duyệt</h2>
+      <p>Booking sẽ xuất hiện sau khi hồ sơ owner được duyệt và Venue được tạo.</p>
+    </section>
+  } @else {
+    <form class="filter-panel" [formGroup]="filterForm" (ngSubmit)="applyFilters()">
+      <label class="filter-panel__venue">
+        <span>Cơ sở</span>
+        <select formControlName="venueId" (change)="selectVenue($any($event.target).value)">
+          @for (venue of venues(); track venue.venueId) {
+            <option [value]="venue.venueId">{{ venue.name }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        <span>Sân thi đấu</span>
+        <select formControlName="venueCourtId">
+          <option value="">Tất cả sân</option>
+          @for (court of courts(); track court.venueCourtId) {
+            <option [value]="court.venueCourtId">{{ court.name }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        <span>Trạng thái</span>
+        <select formControlName="status">
+          @for (status of statuses; track status.value) {
+            <option [value]="status.value">{{ status.label }}</option>
+          }
+        </select>
+      </label>
+      <label class="filter-panel__search">
+        <span>Mã booking / khách walk-in</span>
+        <div class="search-input"><lucide-icon name="search" /><input formControlName="query" maxlength="100" placeholder="Ví dụ GS12AB34" /></div>
+      </label>
+      <label><span>Từ ngày</span><input type="date" formControlName="fromDate" /></label>
+      <label><span>Đến ngày</span><input type="date" formControlName="toDate" /></label>
+      <div class="filter-actions">
+        <button type="button" class="secondary-button" (click)="clearFilters()" [disabled]="loading()">Xóa lọc</button>
+        <button type="submit" class="primary-button" [disabled]="loading()"><lucide-icon name="filter" /> Áp dụng</button>
+      </div>
+    </form>
+
+    @if (loadError()) {
+      <section class="error-state" role="alert">
+        <lucide-icon name="alert-circle" />
+        <div><strong>Không thể tải danh sách booking</strong><p>{{ loadError() }}</p></div>
+        <button type="button" (click)="loadBookings()">Thử lại</button>
+      </section>
+    } @else if (loading()) {
+      <section class="booking-grid loading-grid" aria-live="polite">
+        @for (item of [1, 2, 3, 4]; track item) { <span></span> }
+      </section>
+    } @else if (!bookings().length) {
+      <section class="state-card state-card--empty">
+        <lucide-icon name="inbox" /><h2>Không có booking phù hợp</h2>
+        <p>Đổi trạng thái, khoảng ngày hoặc từ khóa để kiểm tra phạm vi khác.</p>
+        <button type="button" (click)="clearFilters()">Xóa bộ lọc</button>
+      </section>
+    } @else {
+      <section class="booking-grid" aria-label="Danh sách booking">
+        @for (booking of bookings(); track booking.bookingId) {
+          <article class="booking-card">
+            <header>
+              <div><span class="booking-code">{{ booking.bookingCode }}</span><small>{{ booking.source }}</small></div>
+              <span class="status-badge" [attr.data-status]="booking.status">{{ statusLabel(booking.status) }}</span>
+            </header>
+            <div class="booking-card__court">
+              <lucide-icon name="land-plot" />
+              <div><strong>{{ booking.courtName }}</strong><span>{{ booking.venueName }}</span></div>
+            </div>
+            <dl class="booking-facts">
+              <div><dt>Ngày chơi</dt><dd>{{ formatDate(booking.playDate) }}</dd></div>
+              <div><dt>Khung giờ</dt><dd>{{ timeValue(booking.startTime) }} – {{ timeValue(booking.endTime) }}</dd></div>
+              <div><dt>Tổng tiền</dt><dd>{{ formatMoney(booking.totalPrice) }}</dd></div>
+            </dl>
+            <div class="payment-strip">
+              @if (paymentFor(booking, 'BOOKING_DEPOSIT'); as deposit) {
+                <span><small>Tiền cọc</small><strong [attr.data-payment]="deposit.status">{{ deposit.status }}</strong></span>
+              } @else {
+                <span><small>Tiền cọc</small><strong data-payment="NONE">Chưa có payment</strong></span>
+              }
+              @if (paymentFor(booking, 'BOOKING_REMAINING'); as remaining) {
+                <span><small>Còn lại</small><strong [attr.data-payment]="remaining.status">{{ remaining.status }}</strong></span>
+              } @else {
+                <span><small>Còn lại</small><strong data-payment="NONE">Chưa có payment</strong></span>
+              }
+            </div>
+            <footer>
+              <span>Khách #{{ shortId(booking.playerId) }}</span>
+              <button type="button" (click)="openDetail(booking.bookingId)" [disabled]="detailLoading()">
+                Xem chi tiết <lucide-icon name="arrow-right" />
+              </button>
+            </footer>
+          </article>
+        }
+      </section>
+
+      @if (pages() > 1) {
+        <nav class="pagination" aria-label="Phân trang booking">
+          <button type="button" (click)="loadBookings(page() - 1)" [disabled]="page() === 0 || loading()" aria-label="Trang trước"><lucide-icon name="chevron-left" /></button>
+          <span>Trang <strong>{{ page() + 1 }}</strong> / {{ pages() }}</span>
+          <button type="button" (click)="loadBookings(page() + 1)" [disabled]="page() + 1 >= pages() || loading()" aria-label="Trang sau"><lucide-icon name="chevron-right" /></button>
+        </nav>
+      }
+    }
+  }
+</main>
+
+@if (detailLoading() || detailError() || selectedBooking()) {
+  <div class="detail-backdrop" (click)="closeDetail()">
+    <aside class="detail-panel" aria-label="Chi tiết booking" (click)="$event.stopPropagation()">
+      <header class="detail-panel__header">
+        <div><span>Chi tiết booking</span><h2>{{ selectedBooking()?.bookingCode || 'Đang tải…' }}</h2></div>
+        <button type="button" (click)="closeDetail()" [disabled]="!!completingId()" aria-label="Đóng"><lucide-icon name="x" /></button>
+      </header>
+
+      @if (detailLoading()) {
+        <div class="detail-state"><span class="spinner"></span><strong>Đang đối chiếu booking và payment…</strong></div>
+      } @else if (detailError()) {
+        <div class="detail-state detail-state--error" role="alert">
+          <lucide-icon name="alert-circle" /><strong>Không thể tải chi tiết</strong><p>{{ detailError() }}</p>
+          <button type="button" (click)="retryDetail(requestedBookingId()!)">Thử lại</button>
+        </div>
+      } @else if (selectedBooking(); as booking) {
+        <div class="detail-panel__body">
+          <section class="detail-summary">
+            <span class="status-badge" [attr.data-status]="booking.status">{{ statusLabel(booking.status) }}</span>
+            <h3>{{ booking.courtName }}</h3><p>{{ booking.venueName }}</p>
+            <div><strong>{{ formatDate(booking.playDate) }}</strong><span>{{ timeValue(booking.startTime) }} – {{ timeValue(booking.endTime) }}</span></div>
+          </section>
+
+          <section class="detail-section">
+            <header><lucide-icon name="user" /><h3>Người đặt</h3></header>
+            <dl class="detail-list">
+              <div><dt>Player ID</dt><dd>{{ booking.playerId }}</dd></div>
+              @if (booking.walkInCustomerName) { <div><dt>Khách walk-in</dt><dd>{{ booking.walkInCustomerName }}</dd></div> }
+              @if (booking.walkInCustomerPhone) { <div><dt>Điện thoại</dt><dd>{{ booking.walkInCustomerPhone }}</dd></div> }
+              <div><dt>Nguồn</dt><dd>{{ booking.source }}</dd></div>
+            </dl>
+          </section>
+
+          <section class="detail-section">
+            <header><lucide-icon name="credit-card" /><h3>Thanh toán từ payment-service</h3></header>
+            @if (!booking.payments.length) {
+              <div class="inline-empty"><strong>Chưa có payment</strong><p>Booking chưa có giao dịch cọc hoặc thanh toán còn lại.</p></div>
+            } @else {
+              <div class="payment-list">
+                @for (payment of booking.payments; track payment.paymentId) {
+                  <article>
+                    <div><strong>{{ payment.purpose === 'BOOKING_DEPOSIT' ? 'Tiền cọc' : 'Thanh toán còn lại' }}</strong><span>{{ formatMoney(payment.amount) }}</span></div>
+                    <span class="payment-status" [attr.data-payment]="payment.status">{{ payment.status }}</span>
+                    <small>{{ payment.paidAt ? 'Đã thanh toán ' + formatDateTime(payment.paidAt) : 'Tạo lúc ' + formatDateTime(payment.createdAt) }}</small>
+                  </article>
+                }
+              </div>
+            }
+            <dl class="money-breakdown">
+              <div><dt>Tổng tiền</dt><dd>{{ formatMoney(booking.totalPrice) }}</dd></div>
+              <div><dt>Tiền cọc</dt><dd>{{ formatMoney(booking.depositAmount) }}</dd></div>
+              <div><dt>Còn lại</dt><dd>{{ formatMoney(booking.remainingAmount) }}</dd></div>
+            </dl>
+          </section>
+
+          <section class="detail-section">
+            <header><lucide-icon name="clock" /><h3>Timeline từ dữ liệu thật</h3></header>
+            <ol class="timeline">
+              @for (entry of timeline(booking); track $index) {
+                <li><span></span><div><strong>{{ entry.label }}</strong><p>{{ entry.detail }}</p><small>{{ formatDateTime(entry.time) }}</small></div></li>
+              }
+            </ol>
+          </section>
+        </div>
+
+        <footer class="detail-panel__footer">
+          <span>Owner không thể sửa trạng thái payment.</span>
+          @if (booking.allowedTransitions.includes('COMPLETED')) {
+            <button type="button" class="primary-button" (click)="completeBooking(booking)" [disabled]="!!completingId()">
+              @if (completingId()) { <span class="spinner-small"></span> Đang hoàn tất… } @else { <lucide-icon name="circle-check" /> Xác nhận hoàn tất }
+            </button>
+          }
+        </footer>
+      }
+    </aside>
+  </div>
+}

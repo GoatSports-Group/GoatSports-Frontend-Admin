@@ -138,7 +138,7 @@ describe('VenueOwnerDashboardComponent', () => {
     const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.querySelectorAll('.feature-card--locked')).toHaveLength(2);
+    expect(fixture.nativeElement.querySelectorAll('.feature-card--locked')).toHaveLength(4);
     expect(fixture.nativeElement.querySelectorAll('a.feature-card')).toHaveLength(0);
     expect(fixture.nativeElement.querySelector('.application-summary .section-link')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('.owner-workbench--application-only')).toBeTruthy();

@@ -1,0 +1,163 @@
+<main class="schedule-page">
+  <header class="page-hero">
+    <div class="page-hero__copy">
+      <span class="eyebrow"><lucide-icon name="calendar" /> Vận hành sân</span>
+      <h1>Lịch và bảng giá</h1>
+      <p>Thiết lập quy tắc giá theo ngày, sau đó sinh slot có giá snapshot để người chơi đặt sân.</p>
+    </div>
+    <div class="opening-card">
+      <span>Giờ hoạt động</span>
+      <strong>{{ selectedVenue()?.openTime?.slice(0, 5) || '—' }} – {{ selectedVenue()?.closeTime?.slice(0, 5) || '—' }}</strong>
+      <small>{{ selectedVenue()?.name || 'Chưa chọn cơ sở' }}</small>
+    </div>
+  </header>
+
+  @if (loadingContext()) {
+    <section class="state-card" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span><strong>Đang tải cơ sở và sân thi đấu…</strong>
+    </section>
+  } @else if (!venues().length) {
+    <section class="state-card state-card--empty">
+      <lucide-icon name="land-plot" />
+      <h2>Chưa có cơ sở được duyệt</h2>
+      <p>Hoàn tất hồ sơ chủ sân trước khi thiết lập lịch vận hành.</p>
+      <a routerLink="/admin/applications">Xem đơn đăng ký</a>
+    </section>
+  } @else {
+    <section class="context-bar" aria-label="Chọn phạm vi lịch">
+      <label>
+        <span>Cơ sở</span>
+        <select [value]="selectedVenueId()" (change)="selectVenue($any($event.target).value)"
+          [disabled]="loadingData() || savingRule() || generating()">
+          @for (venue of venues(); track venue.venueId) {
+            <option [value]="venue.venueId">{{ venue.name }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        <span>Sân thi đấu</span>
+        <select [value]="selectedCourtId()" (change)="selectCourt($any($event.target).value)"
+          [disabled]="loadingData() || savingRule() || generating() || !courts().length">
+          @if (!courts().length) { <option value="">Chưa có sân thi đấu</option> }
+          @for (court of courts(); track court.venueCourtId) {
+            <option [value]="court.venueCourtId">{{ court.name }}</option>
+          }
+        </select>
+      </label>
+      <button type="button" class="icon-button" (click)="loadSchedule()" [disabled]="loadingData() || !selectedCourtId()"
+        aria-label="Tải lại lịch và bảng giá">
+        <lucide-icon name="rotate-ccw" />
+      </button>
+    </section>
+
+    @if (!courts().length) {
+      <section class="state-card state-card--empty">
+        <lucide-icon name="activity" />
+        <h2>Cơ sở chưa có sân thi đấu</h2>
+        <p>Tạo sân con trước, sau đó quay lại cấu hình giá và lịch.</p>
+        <a routerLink="/admin/courts">Quản lý sân thi đấu</a>
+      </section>
+    } @else {
+      <nav class="schedule-tabs" aria-label="Nội dung lịch và bảng giá">
+        <button type="button" [class.active]="activeTab() === 'pricing'" (click)="activeTab.set('pricing')">
+          <lucide-icon name="receipt" /> Bảng giá <span>{{ rules().length }}</span>
+        </button>
+        <button type="button" [class.active]="activeTab() === 'calendar'" (click)="activeTab.set('calendar')">
+          <lucide-icon name="calendar" /> Lịch slot <span>{{ slots().length }}</span>
+        </button>
+      </nav>
+
+      @if (loadError()) {
+        <section class="error-state" role="alert">
+          <lucide-icon name="alert-circle" />
+          <div><strong>Không thể tải dữ liệu</strong><p>{{ loadError() }}</p></div>
+          <button type="button" (click)="loadSchedule()">Thử lại</button>
+        </section>
+      } @else if (loadingData()) {
+        <section class="loading-grid" aria-live="polite">
+          @for (item of [1, 2, 3]; track item) { <span></span> }
+        </section>
+      } @else if (activeTab() === 'pricing') {
+        <section class="workspace-grid">
+          <div class="workspace-panel">
+            <header class="section-heading">
+              <div><span>Quy tắc giá</span><h2>{{ selectedCourt()?.name }}</h2><p>Khung giờ không được chồng lấn trong cùng ngày hiệu lực.</p></div>
+              <button type="button" class="primary-button" (click)="openRuleEditor()" [disabled]="savingRule()">
+                <lucide-icon name="plus" /> Thêm quy tắc
+              </button>
+            </header>
+
+            @if (!rules().length) {
+              <div class="inline-empty">
+                <lucide-icon name="receipt" /><strong>Chưa có quy tắc giá</strong>
+                <p>Thêm giá theo ngày để có thể sinh lịch nhận đặt sân.</p>
+              </div>
+            } @else {
+              <div class="rule-list">
+                @for (rule of rules(); track rule.pricingRuleId) {
+                  <article class="rule-card">
+                    <div class="rule-card__day"><span>{{ dayLabel(rule.dayOfWeek) }}</span><strong>{{ timeValue(rule.startTime) }} – {{ timeValue(rule.endTime) }}</strong></div>
+                    <div class="rule-card__price"><small>Giá áp dụng</small><strong>{{ formatMoney(rule.pricePerHour) }}<em>/giờ</em></strong><span>Giá cơ sở {{ formatMoney(rule.basePricePerHour) }}</span></div>
+                    <div class="rule-card__dates"><small>Hiệu lực</small><span>{{ rule.effectiveFrom }} → {{ rule.effectiveTo }}</span></div>
+                    <div class="rule-card__actions">
+                      <button type="button" (click)="openRuleEditor(rule)" [disabled]="savingRule() || !!deletingRuleId()" aria-label="Sửa quy tắc giá"><lucide-icon name="pencil" /></button>
+                      <button type="button" class="danger" (click)="deleteRule(rule)" [disabled]="!!deletingRuleId()" aria-label="Xóa quy tắc giá"><lucide-icon name="trash-2" /></button>
+                    </div>
+                  </article>
+                }
+              </div>
+            }
+          </div>
+
+          @if (ruleEditorOpen()) {
+            <aside class="editor-panel" aria-labelledby="rule-editor-title">
+              <header><div><span>{{ editingRule() ? 'Chỉnh sửa' : 'Tạo mới' }}</span><h2 id="rule-editor-title">Quy tắc giá</h2></div><button type="button" (click)="closeRuleEditor()" [disabled]="savingRule()" aria-label="Đóng"><lucide-icon name="x" /></button></header>
+              <form [formGroup]="ruleForm" (ngSubmit)="saveRule()">
+                <label><span>Ngày trong tuần</span><select formControlName="dayOfWeek">@for (day of days; track day.value) { <option [value]="day.value">{{ day.label }}</option> }</select></label>
+                <div class="form-row"><label><span>Bắt đầu</span><input type="time" formControlName="startTime" /></label><label><span>Kết thúc</span><input type="time" formControlName="endTime" /></label></div>
+                <div class="form-row"><label><span>Giá cơ sở/giờ</span><input type="number" min="1" step="1000" formControlName="basePricePerHour" /></label><label><span>Giá áp dụng/giờ</span><input type="number" min="1" step="1000" formControlName="pricePerHour" /></label></div>
+                <div class="form-row"><label><span>Hiệu lực từ</span><input type="date" formControlName="effectiveFrom" /></label><label><span>Hiệu lực đến</span><input type="date" formControlName="effectiveTo" /></label></div>
+                <p class="form-note"><lucide-icon name="info" /> Giá của slot đã sinh là snapshot và không đổi khi sửa quy tắc sau này.</p>
+                <div class="form-actions"><button type="button" class="secondary-button" (click)="closeRuleEditor()" [disabled]="savingRule()">Hủy</button><button type="submit" class="primary-button" [disabled]="savingRule() || ruleForm.invalid"><span [class.spinner-small]="savingRule()"></span>{{ savingRule() ? 'Đang lưu…' : 'Lưu quy tắc' }}</button></div>
+              </form>
+            </aside>
+          }
+        </section>
+      } @else {
+        <section class="calendar-workspace">
+          <form class="generation-bar" [formGroup]="generationForm" (ngSubmit)="generateSlots()">
+            <div><span>Sinh lịch từ bảng giá</span><strong>{{ selectedCourt()?.name }}</strong></div>
+            <label><span>Từ ngày</span><input type="date" formControlName="fromDate" /></label>
+            <label><span>Đến ngày</span><input type="date" formControlName="toDate" /></label>
+            <label><span>Thời lượng</span><select formControlName="slotDurationMinutes"><option [value]="30">30 phút</option><option [value]="60">60 phút</option><option [value]="90">90 phút</option><option [value]="120">120 phút</option></select></label>
+            <button type="submit" class="primary-button" [disabled]="generating() || generationForm.invalid"><span [class.spinner-small]="generating()"></span>{{ generating() ? 'Đang sinh…' : 'Sinh / đồng bộ slot' }}</button>
+          </form>
+
+          @if (!slotGroups().length) {
+            <div class="inline-empty"><lucide-icon name="calendar" /><strong>Chưa có slot trong khoảng ngày này</strong><p>Đảm bảo đã có quy tắc giá hiệu lực, rồi sinh lịch.</p></div>
+          } @else {
+            <div class="calendar-list">
+              @for (group of slotGroups(); track group.date) {
+                <article class="day-card">
+                  <header><div><span>{{ formatDate(group.date) }}</span><small>{{ group.slots.length }} slot</small></div><span class="day-card__available">{{ group.slots.length }} khung giờ</span></header>
+                  <div class="slot-grid">
+                    @for (slot of group.slots; track slot.timeSlotId) {
+                      <div class="slot-card" [class.slot-card--maintenance]="slot.status === 'MAINTENANCE'" [class.slot-card--locked]="slot.status === 'LOCKED' || slot.status === 'BOOKED'">
+                        <div><strong>{{ timeValue(slot.startTime) }} – {{ timeValue(slot.endTime) }}</strong><span>{{ formatMoney(slot.pricePerHour) }}/giờ</span></div>
+                        <span class="status" [attr.data-status]="slot.status">{{ slot.status === 'AVAILABLE' ? 'Khả dụng' : slot.status === 'MAINTENANCE' ? 'Bảo trì' : slot.status === 'LOCKED' ? 'Đang giữ' : 'Đã đặt' }}</span>
+                        <div class="slot-actions">
+                          <button type="button" (click)="toggleMaintenance(slot)" [disabled]="!!mutatingSlotId() || slot.status === 'LOCKED' || slot.status === 'BOOKED'" [attr.aria-label]="slot.status === 'MAINTENANCE' ? 'Mở lại slot' : 'Đặt slot bảo trì'"><lucide-icon [name]="slot.status === 'MAINTENANCE' ? 'rotate-ccw' : 'shield-off'" /></button>
+                          <button type="button" class="danger" (click)="deleteSlot(slot)" [disabled]="!!mutatingSlotId() || slot.status === 'LOCKED' || slot.status === 'BOOKED'" aria-label="Xóa slot"><lucide-icon name="trash-2" /></button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </article>
+              }
+            </div>
+          }
+        </section>
+      }
+    }
+  }
+</main>

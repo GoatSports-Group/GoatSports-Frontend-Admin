@@ -21,6 +21,8 @@ import { NOTIFICATION_REPOSITORY_TOKEN } from '@application/ports/persistence/no
 import { LOG_REPOSITORY_TOKEN } from '@application/ports/persistence/log.repository';
 import { ADMIN_BOOKING_REPOSITORY_TOKEN } from '@application/ports/persistence/admin-booking.repository';
 import { VENUE_OWNER_DASHBOARD_REPOSITORY_TOKEN } from '@application/ports/persistence/venue-owner-dashboard.repository';
+import { OWNER_SCHEDULE_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-schedule.repository';
+import { OWNER_BOOKING_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-booking.repository';
 import { WEBSOCKET_SERVICE_TOKEN } from '@application/ports/websocket.service';
 
 import { AuthRepositoryImpl } from '@infrastructure/repositories/auth.repository.impl';
@@ -33,6 +35,8 @@ import { NotificationRepositoryImpl } from '@infrastructure/repositories/notific
 import { LogRepositoryImpl } from '@infrastructure/repositories/log.repository.impl';
 import { AdminBookingRepositoryImpl } from '@infrastructure/repositories/admin-booking.repository.impl';
 import { VenueOwnerDashboardRepositoryImpl } from '@infrastructure/repositories/venue-owner-dashboard.repository.impl';
+import { OwnerScheduleRepositoryImpl } from '@infrastructure/repositories/owner-schedule.repository.impl';
+import { OwnerBookingRepositoryImpl } from '@infrastructure/repositories/owner-booking.repository.impl';
 import { StompWebSocketService } from '@infrastructure/websocket/stomp-websocket.service';
 import { IMAGE_CONFIG } from '@angular/common';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
@@ -156,6 +160,8 @@ import {
     { provide: LOG_REPOSITORY_TOKEN, useClass: LogRepositoryImpl },
     { provide: ADMIN_BOOKING_REPOSITORY_TOKEN, useClass: AdminBookingRepositoryImpl },
     { provide: VENUE_OWNER_DASHBOARD_REPOSITORY_TOKEN, useClass: VenueOwnerDashboardRepositoryImpl },
+    { provide: OWNER_SCHEDULE_REPOSITORY_TOKEN, useClass: OwnerScheduleRepositoryImpl },
+    { provide: OWNER_BOOKING_REPOSITORY_TOKEN, useClass: OwnerBookingRepositoryImpl },
     { provide: WEBSOCKET_SERVICE_TOKEN, useClass: StompWebSocketService },
     {
       provide: IMAGE_CONFIG,
