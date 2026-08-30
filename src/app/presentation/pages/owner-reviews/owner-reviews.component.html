@@ -1,0 +1,96 @@
+<main class="reviews-page">
+  <section class="hero">
+    <div>
+      <p class="eyebrow"><lucide-icon name="star" /> Phản hồi từ booking thật</p>
+      <h1>Đánh giá cơ sở</h1>
+      <p>Theo dõi chất lượng Venue và sân thi đấu từ người chơi đã hoàn tất booking.</p>
+    </div>
+    <div class="privacy-note">
+      <lucide-icon name="shield-check" />
+      <div><strong>Quyền riêng tư được giữ</strong><span>Không hiển thị định danh người chơi và không cho sửa số sao.</span></div>
+    </div>
+  </section>
+
+  <section class="filter-panel" aria-label="Bộ lọc đánh giá">
+    <label>Cơ sở
+      <select [value]="selectedVenueId()" [disabled]="loading()" (change)="selectVenue($event)">
+        <option value="">Tất cả cơ sở</option>
+        @for (venue of venues(); track venue.venueId) { <option [value]="venue.venueId">{{ venue.name }}</option> }
+      </select>
+    </label>
+    <label>Sân thi đấu
+      <select [value]="selectedCourtId()" [disabled]="loading() || !selectedVenueId()" (change)="selectCourt($event)">
+        <option value="">Tất cả sân</option>
+        @for (court of courts(); track court.venueCourtId) { <option [value]="court.venueCourtId">{{ court.name }}</option> }
+      </select>
+    </label>
+    <label>Số sao
+      <select [value]="selectedRating() ?? ''" [disabled]="loading()" (change)="selectRating($event)">
+        <option value="">Tất cả mức</option>
+        @for (star of stars; track star) { <option [value]="star">{{ star }} sao</option> }
+      </select>
+    </label>
+    <label>Từ ngày<input type="date" [value]="fromDate()" [disabled]="loading()" (change)="selectFromDate($event)" /></label>
+    <label>Đến ngày<input type="date" [value]="toDate()" [disabled]="loading()" (change)="selectToDate($event)" /></label>
+    <button type="button" class="primary" [disabled]="loading() || invalidRange() || !venues().length" (click)="loadReviews(0)">
+      @if (loading()) { <lucide-icon name="loader-2" class="spin" /> Đang tải }
+      @else { <lucide-icon name="filter" /> Áp dụng }
+    </button>
+    @if (invalidRange()) { <p class="filter-error">Khoảng ngày phải hợp lệ và không vượt quá 366 ngày.</p> }
+  </section>
+
+  @if (loading()) {
+    <section class="review-grid" aria-label="Đang tải đánh giá">
+      @for (item of [1, 2, 3]; track item) { <span class="skeleton"></span> }
+    </section>
+  } @else if (error()) {
+    <section class="state-card error-state">
+      <lucide-icon name="alert-circle" />
+      <div><h2>Chưa tải được đánh giá</h2><p>{{ error() }}</p></div>
+      <button type="button" class="secondary" (click)="retry()"><lucide-icon name="rotate-ccw" /> Thử lại</button>
+    </section>
+  } @else if (!venues().length) {
+    <section class="state-card empty-state">
+      <lucide-icon name="land-plot" /><div><h2>Chưa có cơ sở</h2><p>Đánh giá sẽ xuất hiện khi tài khoản có Venue thuộc quyền sở hữu.</p></div>
+    </section>
+  } @else if (!reviews().length) {
+    <section class="state-card empty-state">
+      <lucide-icon name="message-square" /><div><h2>Chưa có đánh giá phù hợp</h2><p>Hãy thử cơ sở, sân, mức sao hoặc khoảng ngày khác.</p></div>
+    </section>
+  } @else {
+    <section class="result-strip">
+      <div><span>Kết quả</span><strong>{{ total() }} đánh giá</strong></div>
+      <p><lucide-icon name="info" /> Chỉ booking COMPLETED của đúng Player mới có thể tạo một đánh giá.</p>
+    </section>
+
+    <section class="review-grid" aria-label="Danh sách đánh giá">
+      @for (review of reviews(); track review.reviewId) {
+        <article class="review-card">
+          <header>
+            <div class="rating" [attr.aria-label]="review.rating + ' trên 5 sao'">
+              @for (star of stars; track star) { <lucide-icon name="star" [class.filled]="star <= review.rating" /> }
+              <strong>{{ review.rating }}/5</strong>
+            </div>
+            <span class="status" [class]="'status status--' + review.status.toLowerCase()">{{ statusLabel(review.status) }}</span>
+          </header>
+          <blockquote>{{ review.content || 'Người chơi không để lại nội dung.' }}</blockquote>
+          <dl>
+            <div><dt><lucide-icon name="land-plot" /> Cơ sở</dt><dd>{{ review.venueName }}</dd></div>
+            <div><dt><lucide-icon name="activity" /> Sân</dt><dd>{{ review.courtName }}</dd></div>
+            <div><dt><lucide-icon name="calendar" /> Lịch chơi</dt><dd>{{ playTime(review) }}</dd></div>
+            <div><dt><lucide-icon name="hash" /> Booking</dt><dd>{{ review.bookingCode }}</dd></div>
+          </dl>
+          <footer><lucide-icon name="clock" /> Gửi lúc {{ dateTime(review.createdAt) }}</footer>
+        </article>
+      }
+    </section>
+
+    @if (pages() > 1) {
+      <nav class="pagination" aria-label="Phân trang đánh giá">
+        <button type="button" class="secondary" [disabled]="page() === 0 || loading()" (click)="goToPage(page() - 1)"><lucide-icon name="chevron-left" /> Trước</button>
+        <span>Trang {{ page() + 1 }} / {{ pages() }}</span>
+        <button type="button" class="secondary" [disabled]="page() + 1 >= pages() || loading()" (click)="goToPage(page() + 1)">Sau <lucide-icon name="chevron-right" /></button>
+      </nav>
+    }
+  }
+</main>

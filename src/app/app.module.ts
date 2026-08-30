@@ -25,6 +25,7 @@ import { OWNER_SCHEDULE_REPOSITORY_TOKEN } from '@application/ports/persistence/
 import { OWNER_BOOKING_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-booking.repository';
 import { OWNER_CHECK_IN_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-check-in.repository';
 import { OWNER_REVENUE_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-revenue.repository';
+import { OWNER_REVIEW_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-review.repository';
 import { WEBSOCKET_SERVICE_TOKEN } from '@application/ports/websocket.service';
 
 import { AuthRepositoryImpl } from '@infrastructure/repositories/auth.repository.impl';
@@ -41,6 +42,7 @@ import { OwnerScheduleRepositoryImpl } from '@infrastructure/repositories/owner-
 import { OwnerBookingRepositoryImpl } from '@infrastructure/repositories/owner-booking.repository.impl';
 import { OwnerCheckInRepositoryImpl } from '@infrastructure/repositories/owner-check-in.repository.impl';
 import { OwnerRevenueRepositoryImpl } from '@infrastructure/repositories/owner-revenue.repository.impl';
+import { OwnerReviewRepositoryImpl } from '@infrastructure/repositories/owner-review.repository.impl';
 import { StompWebSocketService } from '@infrastructure/websocket/stomp-websocket.service';
 import { IMAGE_CONFIG } from '@angular/common';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
@@ -127,6 +129,7 @@ import {
   LucideConstruction,
   LucideFilePlus2,
   LucideMessageSquareWarning,
+  LucideMessageSquare,
   LucideStore,
   LucideReceipt,
   LucideSparkles
@@ -168,6 +171,7 @@ import {
     { provide: OWNER_BOOKING_REPOSITORY_TOKEN, useClass: OwnerBookingRepositoryImpl },
     { provide: OWNER_CHECK_IN_REPOSITORY_TOKEN, useClass: OwnerCheckInRepositoryImpl },
     { provide: OWNER_REVENUE_REPOSITORY_TOKEN, useClass: OwnerRevenueRepositoryImpl },
+    { provide: OWNER_REVIEW_REPOSITORY_TOKEN, useClass: OwnerReviewRepositoryImpl },
     { provide: WEBSOCKET_SERVICE_TOKEN, useClass: StompWebSocketService },
     {
       provide: IMAGE_CONFIG,
@@ -258,6 +262,7 @@ import {
       LucideConstruction,
       LucideFilePlus2,
       LucideMessageSquareWarning,
+      LucideMessageSquare,
       LucideStore,
       LucideReceipt,
       LucideSparkles

@@ -80,8 +80,8 @@ export const OWNER_WORKSPACE_FEATURES: readonly OwnerWorkspaceFeature[] = [
     description: 'Theo dõi phản hồi của người chơi và chất lượng từng sân.',
     icon: 'star',
     route: '/admin/reviews',
-    status: 'DEVELOPING',
-    plannedCapabilities: ['Điểm đánh giá', 'Phản hồi khách hàng', 'Thống kê chất lượng']
+    status: 'AVAILABLE',
+    plannedCapabilities: ['Review từ booking hoàn tất', 'Lọc Venue, sân và số sao', 'Không lộ định danh Player']
   }
 ];
 

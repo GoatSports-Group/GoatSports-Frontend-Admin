@@ -9,7 +9,6 @@ import { OwnerApplicationsComponent } from '@presentation/pages/owner-applicatio
 import { LogsComponent } from '@presentation/pages/logs/logs.component';
 import { AdminBookingsComponent } from '@presentation/pages/bookings/bookings.component';
 import { AdminGuard } from '@presentation/guards/admin.guard';
-import { OwnerFeaturePlaceholderComponent } from '@presentation/pages/venue-owner-dashboard/owner-feature-placeholder/owner-feature-placeholder.component';
 import { VenueOwnerApplicationsComponent } from '@presentation/pages/venue-owner-applications/venue-owner-applications.component';
 import { OwnerVenueManagementComponent } from '@presentation/pages/owner-venue-management/owner-venue-management.component';
 import { OwnerCourtManagementComponent } from '@presentation/pages/owner-court-management/owner-court-management.component';
@@ -17,6 +16,7 @@ import { OwnerScheduleComponent } from '@presentation/pages/owner-schedule/owner
 import { OwnerBookingsComponent } from '@presentation/pages/owner-bookings/owner-bookings.component';
 import { OwnerCheckInComponent } from '@presentation/pages/owner-check-in/owner-check-in.component';
 import { OwnerRevenueComponent } from '@presentation/pages/owner-revenue/owner-revenue.component';
+import { OwnerReviewsComponent } from '@presentation/pages/owner-reviews/owner-reviews.component';
 
 const routes: Routes = [
   {
@@ -42,7 +42,7 @@ const routes: Routes = [
       { path: 'owner-bookings', component: OwnerBookingsComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
       { path: 'check-in', component: OwnerCheckInComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
       { path: 'finance', component: OwnerRevenueComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
-      { path: 'reviews', component: OwnerFeaturePlaceholderComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'], featureId: 'reviews' } },
+      { path: 'reviews', component: OwnerReviewsComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   }
