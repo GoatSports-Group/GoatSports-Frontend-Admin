@@ -52,4 +52,10 @@ export class OwnerBookingApi {
       `${this.baseUrl}/${bookingId}/payments`, { method }
     );
   }
+
+  confirmVietQrPayment(bookingId: string): Observable<BaseResponse<OwnerBookingPaymentResult>> {
+    return this.http.post<BaseResponse<OwnerBookingPaymentResult>>(
+      `${this.baseUrl}/${bookingId}/payments/vietqr/confirm`, {}
+    );
+  }
 }

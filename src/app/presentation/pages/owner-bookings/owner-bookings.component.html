@@ -214,7 +214,7 @@
           <h2 id="payment-title">Thu tiền đơn walk-in</h2>
           <p>{{ booking.courtName }} · {{ formatDate(booking.playDate) }} · {{ timeValue(booking.startTime) }}–{{ timeValue(booking.endTime) }}</p>
         </div>
-        <button type="button" class="icon-button" (click)="closePayment()" [disabled]="!!paymentLoading()" aria-label="Đóng"><lucide-icon name="x" /></button>
+        <button type="button" class="icon-button" (click)="closePayment()" [disabled]="!!paymentLoading() || confirmingTransfer()" aria-label="Đóng"><lucide-icon name="x" /></button>
       </header>
 
       <div class="payment-total"><span>Khách cần thanh toán</span><strong>{{ formatMoney(booking.remainingAmount) }}</strong></div>
@@ -226,31 +226,20 @@
           <p>Đơn đã được xác nhận và sẵn sàng check-in khi đến giờ.</p>
           <button type="button" class="primary-button" (click)="closePayment()">Hoàn tất</button>
         </div>
-      } @else if (checkoutUrl()) {
-        <div class="momo-checkout" [class.momo-checkout--legacy]="legacyCheckout()">
-          @if (legacyCheckout()) {
-            <div class="legacy-qr-icon"><lucide-icon name="history" /></div>
-          } @else {
-            <div class="qr-frame">
-              @if (checkoutQr()) { <img [src]="checkoutQr()" alt="Mã QR thanh toán MoMo" /> }
-              @else { <span class="spinner"></span> }
-            </div>
-          }
+      } @else if (checkoutQr()) {
+        <div class="vietqr-checkout">
+          <div class="qr-frame">
+            <img [src]="checkoutQr()" alt="Mã VietQR chuyển khoản ngân hàng" />
+          </div>
           <div>
-            <span class="momo-label">{{ legacyCheckout() ? 'MOMO HOSTED CHECKOUT' : 'MOMO DIRECT QR' }}</span>
-            <h3>{{ legacyCheckout() ? 'Mở trang thanh toán MoMo' : 'Quét mã bằng ứng dụng MoMo' }}</h3>
-            <p>
-              @if (legacyCheckout()) {
-                Tài khoản MoMo hiện chưa trả Direct QR. Mở trang thanh toán trên máy tính, sau đó dùng ứng dụng MoMo trên điện thoại quét mã do MoMo hiển thị.
+            <span class="vietqr-label">CHUYỂN KHOẢN VIETQR</span>
+            <h3>Quét bằng ứng dụng ngân hàng</h3>
+            <p>QR đã điền sẵn tài khoản nhận, số tiền và nội dung chuyển khoản. VietQR không tự báo giao dịch thành công; hãy kiểm tra tài khoản ngân hàng trước khi xác nhận.</p>
+            <button type="button" class="vietqr-button" (click)="confirmVietQrPayment()" [disabled]="confirmingTransfer()">
+              @if (confirmingTransfer()) {
+                <span class="spinner-small"></span> Đang xác nhận…
               } @else {
-                Trang này tự kiểm tra trạng thái mỗi 2,5 giây. Không đóng cửa sổ cho đến khi có xác nhận.
-              }
-            </p>
-            <button type="button" class="momo-button" (click)="openMomoCheckout()" [disabled]="!!paymentLoading()">
-              @if (paymentLoading() === 'MOMO') {
-                <span class="spinner-small"></span> Đang kiểm tra…
-              } @else {
-                <lucide-icon name="external-link" /> {{ legacyCheckout() ? 'Kiểm tra & mở MoMo' : 'Mở ứng dụng MoMo' }}
+                <lucide-icon name="circle-check-big" /> Tôi đã kiểm tra và nhận tiền
               }
             </button>
           </div>
@@ -266,16 +255,16 @@
           } @else {
             <div class="pending-payment-note">
               <lucide-icon name="shield-alert" />
-              <span><strong>Đang có giao dịch MoMo chờ thanh toán</strong><small>Tiếp tục giao dịch hiện tại để tránh thu tiền hai lần.</small></span>
+              <span><strong>Đang có giao dịch VietQR chờ xác nhận</strong><small>Tiếp tục giao dịch hiện tại để tránh thu tiền hai lần.</small></span>
             </div>
           }
-          <button type="button" (click)="collectPayment('MOMO')" [disabled]="!!paymentLoading()">
-            <span class="method-icon method-icon--momo"><lucide-icon name="qr-code" /></span>
+          <button type="button" (click)="collectPayment('VIETQR')" [disabled]="!!paymentLoading()">
+            <span class="method-icon method-icon--vietqr"><lucide-icon name="qr-code" /></span>
             <span>
-              <strong>{{ hasPendingOnlinePayment(booking) ? 'Tiếp tục thanh toán MoMo' : 'Quét mã MoMo' }}</strong>
-              <small>{{ hasPendingOnlinePayment(booking) ? 'Mở lại checkout đã tạo trước đó' : 'Hiện QR để khách quét và thanh toán' }}</small>
+              <strong>{{ hasPendingOnlinePayment(booking) ? 'Hiện lại mã VietQR' : 'Chuyển khoản VietQR' }}</strong>
+              <small>{{ hasPendingOnlinePayment(booking) ? 'Mở lại mã chuyển khoản đã tạo trước đó' : 'Hiện QR đã điền sẵn số tiền và nội dung' }}</small>
             </span>
-            @if (paymentLoading() === 'MOMO') { <span class="spinner"></span> } @else { <lucide-icon name="chevron-right" /> }
+            @if (paymentLoading() === 'VIETQR') { <span class="spinner"></span> } @else { <lucide-icon name="chevron-right" /> }
           </button>
         </div>
       }

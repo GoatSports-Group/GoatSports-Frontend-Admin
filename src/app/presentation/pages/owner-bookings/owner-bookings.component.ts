@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Subscription, finalize, map, of, switchMap, take, timer } from 'rxjs';
-import * as QRCode from 'qrcode';
+import { finalize, map, of, switchMap, take, timer } from 'rxjs';
 import {
   OwnerBooking,
   OwnerBookingFilter,
@@ -41,7 +40,6 @@ export class OwnerBookingsComponent {
   private readonly manageSchedule = inject(ManageOwnerScheduleUseCase);
   private readonly notify = inject(NotifyService);
   private readonly destroyRef = inject(DestroyRef);
-  private paymentPolling?: Subscription;
 
   readonly statuses: readonly StatusOption[] = [
     { value: '', label: 'Tất cả trạng thái' },
@@ -75,10 +73,8 @@ export class OwnerBookingsComponent {
   readonly slotsLoading = signal(false);
   readonly paymentBooking = signal<OwnerBooking | null>(null);
   readonly paymentLoading = signal<OwnerBookingPaymentMethod | null>(null);
-  readonly checkoutUrl = signal<string | null>(null);
-  readonly checkoutDeeplink = signal<string | null>(null);
   readonly checkoutQr = signal<string | null>(null);
-  readonly legacyCheckout = signal(false);
+  readonly confirmingTransfer = signal(false);
   readonly paymentCompleted = signal(false);
 
   readonly filterForm = this.formBuilder.nonNullable.group({
@@ -247,23 +243,15 @@ export class OwnerBookingsComponent {
   }
 
   openPayment(booking: OwnerBooking): void {
-    this.stopPaymentPolling();
     this.paymentBooking.set(booking);
-    this.checkoutUrl.set(null);
-    this.checkoutDeeplink.set(null);
     this.checkoutQr.set(null);
-    this.legacyCheckout.set(false);
     this.paymentCompleted.set(this.isPaid(booking));
   }
 
   closePayment(): void {
-    if (this.paymentLoading()) return;
-    this.stopPaymentPolling();
+    if (this.paymentLoading() || this.confirmingTransfer()) return;
     this.paymentBooking.set(null);
-    this.checkoutUrl.set(null);
-    this.checkoutDeeplink.set(null);
     this.checkoutQr.set(null);
-    this.legacyCheckout.set(false);
     this.paymentCompleted.set(false);
   }
 
@@ -277,126 +265,44 @@ export class OwnerBookingsComponent {
       next: result => {
         if (result.status === 'SUCCEEDED') {
           this.finishPayment(booking.bookingId);
-          this.notify.success(method === 'CASH'
-            ? 'Đã ghi nhận thanh toán tiền mặt.'
-            : 'MoMo đã xác nhận thanh toán thành công.');
+          this.notify.success('Đã ghi nhận thanh toán tiền mặt.');
           return;
         }
-        if (!result.qrCodeContent && !result.checkoutUrl) {
-          this.notify.error('Payment-service không trả liên kết thanh toán MoMo.');
-          return;
-        }
-        this.checkoutUrl.set(result.checkoutUrl ?? null);
-        this.checkoutDeeplink.set(result.deeplink ?? null);
         if (!result.qrCodeContent) {
-          this.legacyCheckout.set(true);
-          this.notify.info('MoMo chưa cung cấp Direct QR. Hãy mở trang thanh toán MoMo để khách quét mã.');
-          this.startPaymentPolling(booking.bookingId);
+          this.notify.error('Payment-service không trả ảnh thanh toán VietQR.');
           return;
         }
-        void QRCode.toDataURL(result.qrCodeContent, {
-          width: 240, margin: 1, errorCorrectionLevel: 'M',
-          color: { dark: '#111827', light: '#ffffff' }
-        }).then(dataUrl => this.checkoutQr.set(dataUrl));
-        this.startPaymentPolling(booking.bookingId);
+        this.checkoutQr.set(result.qrCodeContent);
       },
       error: error => this.notify.error(this.errorMessage(error, 'Không thể khởi tạo thanh toán.'))
     });
   }
 
-  openMomoCheckout(): void {
-    if (this.legacyCheckout()) {
-      this.refreshHostedCheckoutAndOpen();
-      return;
-    }
-    const url = this.checkoutDeeplink() || this.checkoutUrl();
-    if (url) window.open(url, '_blank', 'noopener,noreferrer');
-  }
-
-  private refreshHostedCheckoutAndOpen(): void {
+  confirmVietQrPayment(): void {
     const booking = this.paymentBooking();
-    if (!booking || this.paymentLoading()) return;
-
-    const popup = window.open('about:blank', '_blank');
-    if (!popup) {
-      this.notify.error('Trình duyệt đang chặn cửa sổ thanh toán. Hãy cho phép pop-up rồi thử lại.');
+    if (!booking || this.paymentLoading() || this.confirmingTransfer()) return;
+    if (!window.confirm(
+      'Chỉ xác nhận sau khi bạn đã kiểm tra tài khoản ngân hàng và thấy đúng số tiền. Tiếp tục?'
+    )) {
       return;
     }
-    popup.opener = null;
-    popup.document.title = 'Đang kiểm tra giao dịch MoMo…';
-    popup.document.body.textContent = 'Đang kiểm tra và làm mới giao dịch MoMo…';
-
-    this.paymentLoading.set('MOMO');
-    this.manageBookings.createPayment(booking.bookingId, 'MOMO').pipe(
+    this.confirmingTransfer.set(true);
+    this.manageBookings.confirmVietQrPayment(booking.bookingId).pipe(
       take(1),
       takeUntilDestroyed(this.destroyRef),
-      finalize(() => this.paymentLoading.set(null))
+      finalize(() => this.confirmingTransfer.set(false))
     ).subscribe({
       next: result => {
-        if (result.status === 'SUCCEEDED') {
-          popup.close();
-          this.finishPayment(booking.bookingId);
-          this.notify.success('MoMo đã xác nhận thanh toán thành công.');
+        if (result.status !== 'SUCCEEDED') {
+          this.notify.error('Payment-service chưa xác nhận giao dịch VietQR.');
           return;
         }
-        const url = result.checkoutUrl || result.deeplink;
-        if (!url) {
-          popup.close();
-          this.notify.error('Payment-service không trả liên kết thanh toán MoMo.');
-          return;
-        }
-
-        this.checkoutUrl.set(result.checkoutUrl ?? null);
-        this.checkoutDeeplink.set(result.deeplink ?? null);
-        this.legacyCheckout.set(!result.qrCodeContent);
-        if (result.qrCodeContent) {
-          void QRCode.toDataURL(result.qrCodeContent, {
-            width: 240, margin: 1, errorCorrectionLevel: 'M',
-            color: { dark: '#111827', light: '#ffffff' }
-          }).then(dataUrl => this.checkoutQr.set(dataUrl));
-        }
-        popup.location.replace(url);
-        this.startPaymentPolling(booking.bookingId);
+        this.finishPayment(booking.bookingId);
+        this.notify.success('Đã xác nhận nhận tiền qua VietQR.');
       },
-      error: error => {
-        popup.close();
-        this.notify.error(this.errorMessage(error, 'Không thể làm mới giao dịch MoMo.'));
-      }
-    });
-  }
-
-  private startPaymentPolling(bookingId: string): void {
-    this.stopPaymentPolling();
-    this.paymentPolling = timer(1500, 2500).pipe(
-      switchMap(() => this.manageBookings.detail(bookingId)),
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: booking => {
-        this.paymentBooking.set(booking);
-        if (this.isPaid(booking) || booking.status === 'CONFIRMED') {
-          this.stopPaymentPolling();
-          this.paymentCompleted.set(true);
-          this.loadBookings(this.page());
-          this.notify.success('MoMo đã xác nhận thanh toán thành công.');
-          return;
-        }
-        const remainingPayments = booking.payments.filter(
-          payment => payment.purpose === 'BOOKING_REMAINING'
-        );
-        const checkoutFinished = remainingPayments.length > 0
-          && remainingPayments.every(payment =>
-            payment.status !== 'CREATED' && payment.status !== 'PENDING'
-          );
-        if (this.checkoutUrl() && checkoutFinished) {
-          this.stopPaymentPolling();
-          this.checkoutUrl.set(null);
-          this.checkoutDeeplink.set(null);
-          this.checkoutQr.set(null);
-          this.legacyCheckout.set(false);
-          this.loadBookings(this.page());
-          this.notify.info('Giao dịch MoMo đã kết thúc. Hãy chọn MoMo lần nữa để tạo mã thanh toán mới.');
-        }
-      }
+      error: error => this.notify.error(
+        this.errorMessage(error, 'Không thể xác nhận thanh toán VietQR.')
+      )
     });
   }
 
@@ -406,11 +312,6 @@ export class OwnerBookingsComponent {
       next: booking => this.paymentBooking.set(booking)
     });
     this.loadBookings(this.page());
-  }
-
-  private stopPaymentPolling(): void {
-    this.paymentPolling?.unsubscribe();
-    this.paymentPolling = undefined;
   }
 
   private isPaid(booking: OwnerBooking): boolean {
