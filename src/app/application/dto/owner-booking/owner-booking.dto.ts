@@ -3,6 +3,23 @@ export type OwnerBookingStatus =
   | 'CANCELLED' | 'REFUND_PENDING' | 'REFUNDED' | 'EXPIRED';
 
 export type OwnerBookingSource = 'DIRECT' | 'AI_MATCHMAKING' | 'WALK_IN';
+export type OwnerBookingPaymentMethod = 'CASH' | 'MOMO';
+
+export interface CreateOwnerWalkInBooking {
+  venueCourtId: string;
+  timeSlotId: string;
+  customerName: string;
+  customerPhone: string;
+}
+
+export interface OwnerBookingPaymentResult {
+  bookingId: string;
+  paymentId: string;
+  method: OwnerBookingPaymentMethod;
+  status: string;
+  checkoutUrl?: string;
+  expiresAt?: string;
+}
 
 export interface OwnerPayment {
   paymentId: string;

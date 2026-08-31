@@ -5,7 +5,10 @@ import { BaseListResponse, BaseResponse } from '@application/dto/base/base-respo
 import {
   OwnerBooking,
   OwnerBookingFilter,
-  OwnerBookingStatus
+  OwnerBookingStatus,
+  CreateOwnerWalkInBooking,
+  OwnerBookingPaymentMethod,
+  OwnerBookingPaymentResult
 } from '@application/dto/owner-booking/owner-booking.dto';
 import { environment } from '@environments/environment';
 
@@ -34,6 +37,19 @@ export class OwnerBookingApi {
   ): Observable<BaseResponse<OwnerBooking>> {
     return this.http.patch<BaseResponse<OwnerBooking>>(
       `${this.baseUrl}/${bookingId}/status`, { status }
+    );
+  }
+
+  createWalkIn(request: CreateOwnerWalkInBooking): Observable<BaseResponse<{ booking: OwnerBooking }>> {
+    const url = `${environment.apiUrl}/venue-service/api/v1/owner/check-ins/walk-ins`;
+    return this.http.post<BaseResponse<{ booking: OwnerBooking }>>(url, request);
+  }
+
+  createPayment(
+    bookingId: string, method: OwnerBookingPaymentMethod
+  ): Observable<BaseResponse<OwnerBookingPaymentResult>> {
+    return this.http.post<BaseResponse<OwnerBookingPaymentResult>>(
+      `${this.baseUrl}/${bookingId}/payments`, { method }
     );
   }
 }

@@ -4,7 +4,10 @@ import {
   OwnerBooking,
   OwnerBookingFilter,
   OwnerBookingPage,
-  OwnerBookingStatus
+  OwnerBookingStatus,
+  CreateOwnerWalkInBooking,
+  OwnerBookingPaymentMethod,
+  OwnerBookingPaymentResult
 } from '@application/dto/owner-booking/owner-booking.dto';
 import { OwnerBookingRepository } from '@application/ports/persistence/owner-booking.repository';
 import { OwnerBookingApi } from '@infrastructure/api/owner-booking.api';
@@ -29,5 +32,15 @@ export class OwnerBookingRepositoryImpl implements OwnerBookingRepository {
 
   updateStatus(bookingId: string, status: OwnerBookingStatus): Observable<OwnerBooking> {
     return this.api.updateStatus(bookingId, status).pipe(map(response => response.data));
+  }
+
+  createWalkIn(request: CreateOwnerWalkInBooking): Observable<OwnerBooking> {
+    return this.api.createWalkIn(request).pipe(map(response => response.data.booking));
+  }
+
+  createPayment(
+    bookingId: string, method: OwnerBookingPaymentMethod
+  ): Observable<OwnerBookingPaymentResult> {
+    return this.api.createPayment(bookingId, method).pipe(map(response => response.data));
   }
 }

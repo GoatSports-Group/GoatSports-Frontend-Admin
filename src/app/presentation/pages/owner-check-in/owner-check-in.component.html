@@ -29,9 +29,6 @@
     <button type="button" [class.active]="activeTab() === 'check-in'" (click)="setTab('check-in')">
       <app-lucide-icon name="user-check" [size]="18" /> Đối soát
     </button>
-    <button type="button" [class.active]="activeTab() === 'walk-in'" (click)="setTab('walk-in')">
-      <app-lucide-icon name="file-plus-2" [size]="18" /> Khách walk-in
-    </button>
     <button type="button" [class.active]="activeTab() === 'history'" (click)="setTab('history')">
       <app-lucide-icon name="clock" [size]="18" /> Lịch sử
     </button>
@@ -176,42 +173,6 @@
             }
           }
         </article>
-      </section>
-    }
-
-    @if (activeTab() === 'walk-in') {
-      <section class="panel walkin-panel">
-        <div class="panel-heading">
-          <div><p class="step">Xếp lịch thủ công</p><h2>Khách gọi điện hoặc đến quầy</h2></div>
-          <span class="scope-badge">{{ selectedCourt()?.name }}</span>
-        </div>
-        <p class="section-copy">Chỉ slot AVAILABLE của hôm nay được gửi lên. Backend khóa slot trước khi tạo booking WALK_IN.</p>
-        @if (loadingCourt()) {
-          <div class="loading-lines"><span class="skeleton wide"></span><span class="skeleton"></span></div>
-        } @else if (!availableSlots().length) {
-          <div class="empty-reconciliation"><app-lucide-icon name="calendar" [size]="28" /><p>Hôm nay không còn slot khả dụng.</p></div>
-        } @else {
-          <form [formGroup]="walkInForm" (ngSubmit)="createWalkIn()" class="walkin-form">
-            <label class="full">
-              <span>Khung giờ</span>
-              <select formControlName="timeSlotId">
-                <option value="">Chọn slot AVAILABLE</option>
-                @for (slot of availableSlots(); track slot.timeSlotId) {
-                  <option [value]="slot.timeSlotId">
-                    {{ time(slot.startTime) }}–{{ time(slot.endTime) }} · {{ money(slot.pricePerHour) }}/giờ
-                  </option>
-                }
-              </select>
-            </label>
-            <label><span>Tên khách</span><input formControlName="customerName" placeholder="Nguyễn Văn A" /></label>
-            <label><span>Số điện thoại</span><input formControlName="customerPhone" inputmode="tel" placeholder="0901234567" /></label>
-            <button type="submit" class="primary full" [disabled]="creatingWalkIn() || walkInForm.invalid">
-              @if (creatingWalkIn()) { <app-lucide-icon name="loader-2" class="spin" [size]="18" /> }
-              @else { <app-lucide-icon name="file-plus-2" [size]="18" /> }
-              {{ creatingWalkIn() ? 'Đang khóa slot…' : 'Tạo booking walk-in' }}
-            </button>
-          </form>
-        }
       </section>
     }
 

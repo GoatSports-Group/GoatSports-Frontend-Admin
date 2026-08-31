@@ -1,18 +1,22 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { finalize, of, switchMap, take } from 'rxjs';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Subscription, finalize, of, switchMap, take, timer } from 'rxjs';
+import * as QRCode from 'qrcode';
 import {
   OwnerBooking,
   OwnerBookingFilter,
   OwnerBookingStatus,
-  OwnerPayment
+  OwnerPayment,
+  OwnerBookingPaymentMethod
 } from '@application/dto/owner-booking/owner-booking.dto';
+import { OwnerTimeSlot } from '@application/dto/owner-schedule/owner-schedule.dto';
 import {
   OwnerVenueCourt,
   OwnerVenueOverview
 } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { ManageOwnerBookingsUseCase } from '@application/usecase/owner-booking/manage-owner-bookings.usecase';
+import { ManageOwnerScheduleUseCase } from '@application/usecase/owner-schedule/manage-owner-schedule.usecase';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
 import { ManageOwnerVenueCourtsUseCase } from '@application/usecase/venue-owner-dashboard/manage-owner-venue-courts.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
@@ -34,8 +38,10 @@ export class OwnerBookingsComponent {
   private readonly getVenues = inject(GetMyOwnerVenuesUseCase);
   private readonly manageCourts = inject(ManageOwnerVenueCourtsUseCase);
   private readonly manageBookings = inject(ManageOwnerBookingsUseCase);
+  private readonly manageSchedule = inject(ManageOwnerScheduleUseCase);
   private readonly notify = inject(NotifyService);
   private readonly destroyRef = inject(DestroyRef);
+  private paymentPolling?: Subscription;
 
   readonly statuses: readonly StatusOption[] = [
     { value: '', label: 'Tất cả trạng thái' },
@@ -62,14 +68,39 @@ export class OwnerBookingsComponent {
   readonly detailLoading = signal(false);
   readonly detailError = signal<string | null>(null);
   readonly completingId = signal<string | null>(null);
+  readonly createOpen = signal(false);
+  readonly createCourts = signal<OwnerVenueCourt[]>([]);
+  readonly createSlots = signal<OwnerTimeSlot[]>([]);
+  readonly createLoading = signal(false);
+  readonly slotsLoading = signal(false);
+  readonly paymentBooking = signal<OwnerBooking | null>(null);
+  readonly paymentLoading = signal<OwnerBookingPaymentMethod | null>(null);
+  readonly checkoutUrl = signal<string | null>(null);
+  readonly checkoutQr = signal<string | null>(null);
+  readonly paymentCompleted = signal(false);
 
   readonly filterForm = this.formBuilder.nonNullable.group({
     venueId: [''], venueCourtId: [''], status: ['' as '' | OwnerBookingStatus],
     query: [''], fromDate: [''], toDate: ['']
   });
+  readonly createForm = this.formBuilder.nonNullable.group({
+    venueId: ['', Validators.required],
+    venueCourtId: ['', Validators.required],
+    playDate: [this.today(), Validators.required],
+    timeSlotId: ['', Validators.required],
+    customerName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(120)]],
+    customerPhone: ['', [Validators.required, Validators.pattern(/^\+?[0-9 .-]{8,20}$/)]]
+  });
   readonly selectedVenue = computed(() =>
     this.venues().find(venue => venue.venueId === this.filterForm.controls.venueId.value) ?? null
   );
+  readonly availableCreateSlots = computed(() =>
+    this.createSlots().filter(slot => slot.status === 'AVAILABLE')
+  );
+  readonly selectedCreateSlot = computed(() => {
+    const slotId = this.createForm.controls.timeSlotId.value;
+    return this.createSlots().find(slot => slot.timeSlotId === slotId) ?? null;
+  });
 
   constructor() { this.loadContext(); }
 
@@ -102,6 +133,180 @@ export class OwnerBookingsComponent {
       next: courts => { this.courts.set(courts); this.loadBookings(0); },
       error: error => this.loadError.set(this.errorMessage(error, 'Không thể tải sân thi đấu.'))
     });
+  }
+
+  openCreateBooking(): void {
+    const venueId = this.filterForm.controls.venueId.value || this.venues()[0]?.venueId || '';
+    const courts = venueId === this.filterForm.controls.venueId.value ? this.courts() : [];
+    this.createCourts.set(courts);
+    this.createSlots.set([]);
+    this.createForm.reset({
+      venueId,
+      venueCourtId: courts[0]?.venueCourtId ?? '',
+      playDate: this.today(),
+      timeSlotId: '',
+      customerName: '',
+      customerPhone: ''
+    });
+    this.createOpen.set(true);
+    if (courts.length) this.loadCreateSlots();
+    else if (venueId) this.selectCreateVenue(venueId);
+  }
+
+  closeCreateBooking(): void {
+    if (!this.createLoading()) this.createOpen.set(false);
+  }
+
+  selectCreateVenue(venueId: string): void {
+    if (this.createLoading()) return;
+    this.createForm.patchValue({ venueId, venueCourtId: '', timeSlotId: '' });
+    this.createCourts.set([]);
+    this.createSlots.set([]);
+    this.slotsLoading.set(true);
+    this.manageCourts.list(venueId).pipe(
+      take(1), takeUntilDestroyed(this.destroyRef), finalize(() => this.slotsLoading.set(false))
+    ).subscribe({
+      next: courts => {
+        this.createCourts.set(courts);
+        this.createForm.controls.venueCourtId.setValue(courts[0]?.venueCourtId ?? '');
+        this.loadCreateSlots();
+      },
+      error: error => this.notify.error(this.errorMessage(error, 'Không thể tải sân thi đấu.'))
+    });
+  }
+
+  loadCreateSlots(): void {
+    const courtId = this.createForm.controls.venueCourtId.value;
+    const date = this.createForm.controls.playDate.value;
+    this.createForm.controls.timeSlotId.setValue('');
+    this.createSlots.set([]);
+    if (!courtId || !date) return;
+    this.slotsLoading.set(true);
+    this.manageSchedule.listSlots(courtId, date, date).pipe(
+      take(1), takeUntilDestroyed(this.destroyRef), finalize(() => this.slotsLoading.set(false))
+    ).subscribe({
+      next: slots => this.createSlots.set(slots),
+      error: error => this.notify.error(this.errorMessage(error, 'Không thể tải khung giờ khả dụng.'))
+    });
+  }
+
+  createWalkInBooking(): void {
+    if (this.createLoading() || this.createForm.invalid) {
+      this.createForm.markAllAsTouched();
+      return;
+    }
+    const value = this.createForm.getRawValue();
+    this.createLoading.set(true);
+    this.manageBookings.createWalkIn({
+      venueCourtId: value.venueCourtId,
+      timeSlotId: value.timeSlotId,
+      customerName: value.customerName.trim(),
+      customerPhone: value.customerPhone.trim()
+    }).pipe(
+      take(1), takeUntilDestroyed(this.destroyRef), finalize(() => this.createLoading.set(false))
+    ).subscribe({
+      next: booking => {
+        this.createOpen.set(false);
+        this.notify.success('Đã tạo đơn walk-in. Hãy chọn cách thanh toán.');
+        this.loadBookings(0);
+        this.openPayment(booking);
+      },
+      error: error => this.notify.error(this.errorMessage(error, 'Không thể tạo đơn walk-in.'))
+    });
+  }
+
+  canCollectPayment(booking: OwnerBooking): boolean {
+    return booking.source === 'WALK_IN'
+      && booking.status === 'PENDING_PAYMENT'
+      && booking.remainingAmount > 0
+      && !this.isPaid(booking);
+  }
+
+  openPayment(booking: OwnerBooking): void {
+    this.stopPaymentPolling();
+    this.paymentBooking.set(booking);
+    this.checkoutUrl.set(null);
+    this.checkoutQr.set(null);
+    this.paymentCompleted.set(this.isPaid(booking));
+  }
+
+  closePayment(): void {
+    if (this.paymentLoading()) return;
+    this.stopPaymentPolling();
+    this.paymentBooking.set(null);
+    this.checkoutUrl.set(null);
+    this.checkoutQr.set(null);
+    this.paymentCompleted.set(false);
+  }
+
+  collectPayment(method: OwnerBookingPaymentMethod): void {
+    const booking = this.paymentBooking();
+    if (!booking || this.paymentLoading()) return;
+    this.paymentLoading.set(method);
+    this.manageBookings.createPayment(booking.bookingId, method).pipe(
+      take(1), takeUntilDestroyed(this.destroyRef), finalize(() => this.paymentLoading.set(null))
+    ).subscribe({
+      next: result => {
+        if (result.status === 'SUCCEEDED') {
+          this.finishPayment(booking.bookingId);
+          this.notify.success('Đã ghi nhận thanh toán tiền mặt.');
+          return;
+        }
+        if (!result.checkoutUrl) {
+          this.notify.error('Payment-service không trả liên kết thanh toán MoMo.');
+          return;
+        }
+        this.checkoutUrl.set(result.checkoutUrl);
+        void QRCode.toDataURL(result.checkoutUrl, {
+          width: 240, margin: 1, errorCorrectionLevel: 'M',
+          color: { dark: '#111827', light: '#ffffff' }
+        }).then(dataUrl => this.checkoutQr.set(dataUrl));
+        this.startPaymentPolling(booking.bookingId);
+      },
+      error: error => this.notify.error(this.errorMessage(error, 'Không thể khởi tạo thanh toán.'))
+    });
+  }
+
+  openMomoCheckout(): void {
+    const url = this.checkoutUrl();
+    if (url) window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
+  private startPaymentPolling(bookingId: string): void {
+    this.stopPaymentPolling();
+    this.paymentPolling = timer(1500, 2500).pipe(
+      switchMap(() => this.manageBookings.detail(bookingId)),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: booking => {
+        this.paymentBooking.set(booking);
+        if (this.isPaid(booking) || booking.status === 'CONFIRMED') {
+          this.stopPaymentPolling();
+          this.paymentCompleted.set(true);
+          this.loadBookings(this.page());
+          this.notify.success('MoMo đã xác nhận thanh toán thành công.');
+        }
+      }
+    });
+  }
+
+  private finishPayment(bookingId: string): void {
+    this.paymentCompleted.set(true);
+    this.manageBookings.detail(bookingId).pipe(take(1), takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: booking => this.paymentBooking.set(booking)
+    });
+    this.loadBookings(this.page());
+  }
+
+  private stopPaymentPolling(): void {
+    this.paymentPolling?.unsubscribe();
+    this.paymentPolling = undefined;
+  }
+
+  private isPaid(booking: OwnerBooking): boolean {
+    return !!booking.remainingPaymentId || booking.payments.some(payment =>
+      payment.purpose === 'BOOKING_REMAINING' && payment.status === 'SUCCEEDED'
+    );
   }
 
   applyFilters(): void {
@@ -193,6 +398,13 @@ export class OwnerBookingsComponent {
   }
   timeValue(value: string): string { return value.slice(0, 5); }
   shortId(value?: string): string { return value ? value.slice(0, 8).toUpperCase() : 'WALK-IN'; }
+  slotTotal(slot: OwnerTimeSlot | null): number {
+    if (!slot) return 0;
+    const [startHour, startMinute] = slot.startTime.split(':').map(Number);
+    const [endHour, endMinute] = slot.endTime.split(':').map(Number);
+    const minutes = (endHour * 60 + endMinute) - (startHour * 60 + startMinute);
+    return Math.round(slot.pricePerHour * minutes / 60);
+  }
 
   timeline(booking: OwnerBooking): TimelineEntry[] {
     const entries: TimelineEntry[] = [{
@@ -224,5 +436,12 @@ export class OwnerBookingsComponent {
   private errorMessage(error: any, fallback: string): string {
     const message = error?.error?.message;
     return Array.isArray(message) ? message.join(' ') : message || fallback;
+  }
+
+  today(): string {
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${now.getFullYear()}-${month}-${day}`;
   }
 }

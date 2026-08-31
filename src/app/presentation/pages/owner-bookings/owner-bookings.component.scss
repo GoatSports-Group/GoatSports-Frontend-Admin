@@ -14,6 +14,7 @@
 .hero-metric { min-width: 210px; padding: 18px 22px; border: 1px solid #a7e4d1; border-radius: 20px; background: rgba(255,255,255,.82); }
 .hero-metric span, .hero-metric small { display: block; color: #64748b; font-size: 12px; }
 .hero-metric strong { display: block; margin: 3px 0; color: #065f46; font-size: 30px; }
+.create-booking-button { align-self: center; min-width: 150px; white-space: nowrap; }
 
 .filter-panel {
   display: grid; grid-template-columns: 1.2fr 1fr 1fr 1.4fr; gap: 16px;
@@ -67,6 +68,8 @@ button:disabled { opacity: .55; cursor: not-allowed; }
 .booking-card > footer > span { color: #94a3b8; font-size: 10px; }
 .booking-card > footer button { display: flex; align-items: center; gap: 5px; padding: 0; border: 0; background: transparent; color: #047857; font-size: 12px; font-weight: 800; }
 .booking-card > footer lucide-icon { width: 15px; height: 15px; }
+.booking-card > footer { flex-wrap: wrap; }
+.booking-card > footer .collect-button { min-height: 34px; padding: 0 11px; border: 1px solid #a7f3d0; border-radius: 10px; background: #ecfdf5; }
 
 .state-card, .error-state { margin-top: 20px; padding: 28px; border: 1px solid #e2e8f0; border-radius: 20px; background: #fff; }
 .state-card { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 140px; }
@@ -99,10 +102,63 @@ button:disabled { opacity: .55; cursor: not-allowed; }
 .detail-panel__footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px 20px; border-top: 1px solid #e2e8f0; background: #fff; }.detail-panel__footer > span { color: #64748b; font-size: 10px; }
 .detail-state { display: grid; justify-items: center; align-content: center; gap: 10px; flex: 1; padding: 30px; text-align: center; }.detail-state p { margin: 0; color: #9f1239; }
 
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 1100; display: grid; place-items: center; padding: 20px;
+  overflow-y: auto; background: rgba(15,23,42,.52); backdrop-filter: blur(5px);
+}
+.booking-modal, .payment-modal {
+  width: min(760px, 100%); max-height: calc(100vh - 40px); overflow-y: auto;
+  border: 1px solid #dbe7e2; border-radius: 24px; background: #fff;
+  box-shadow: 0 28px 80px rgba(15,23,42,.24);
+}
+.payment-modal { width: min(600px, 100%); }
+.modal-header {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;
+  padding: 24px 26px; border-bottom: 1px solid #e2e8f0;
+}
+.modal-header h2 { margin: 6px 0 4px; font-size: 24px; line-height: 1.2; letter-spacing: -.025em; }
+.modal-header p { margin: 0; color: #64748b; font-size: 14px; line-height: 1.55; }
+.icon-button { flex: 0 0 44px; width: 44px; padding: 0; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.icon-button lucide-icon { width: 19px; height: 19px; }
+.create-form { padding: 24px 26px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 17px; }
+.form-grid label { display: grid; gap: 7px; min-width: 0; }
+.form-grid label > span { color: #334155; font-size: 13px; font-weight: 750; }
+.form-grid select, .form-grid input {
+  width: 100%; min-height: 46px; padding: 0 13px; border: 1px solid #cbd5e1; border-radius: 12px;
+  background: #fff; color: #0f172a; font: inherit; font-size: 14px; outline: none;
+}
+.form-grid select:focus, .form-grid input:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,.12); }
+.form-grid small { color: #b45309; font-size: 12px; }
+.order-summary { margin-top: 20px; padding: 16px 18px; border: 1px solid #d1fae5; border-radius: 16px; background: #f0fdf8; }
+.order-summary div { display: flex; justify-content: space-between; gap: 20px; padding: 5px 0; font-size: 14px; }
+.order-summary div strong { color: #047857; }.order-summary p { margin: 8px 0 0; color: #64748b; font-size: 12px; line-height: 1.55; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; padding-top: 20px; border-top: 1px solid #e2e8f0; }
+.modal-footer button { min-width: 120px; }
+.payment-total { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin: 22px 24px 0; padding: 18px; border-radius: 16px; background: #f8fafc; }
+.payment-total span { color: #64748b; font-size: 14px; }.payment-total strong { color: #047857; font-size: 25px; }
+.payment-methods { display: grid; gap: 12px; padding: 22px 24px 26px; }
+.payment-methods > button {
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px;
+  min-height: 76px; padding: 14px; border: 1px solid #e2e8f0; border-radius: 16px; background: #fff; text-align: left;
+}
+.payment-methods > button:hover { border-color: #6ee7b7; background: #f8fffc; box-shadow: 0 8px 24px rgba(5,150,105,.09); }
+.payment-methods > button > span:nth-child(2) { display: grid; gap: 4px; }
+.payment-methods strong { font-size: 15px; }.payment-methods small { color: #64748b; font-size: 13px; }
+.method-icon { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 13px; }
+.method-icon lucide-icon { width: 22px; height: 22px; }.method-icon--cash { background: #dcfce7; color: #047857; }.method-icon--momo { background: #fce7f3; color: #a21caf; }
+.momo-checkout { display: grid; grid-template-columns: 250px 1fr; gap: 24px; align-items: center; padding: 24px; }
+.qr-frame { display: grid; place-items: center; width: 250px; height: 250px; border: 1px solid #e2e8f0; border-radius: 18px; background: #fff; box-shadow: 0 12px 30px rgba(15,23,42,.08); }
+.qr-frame img { width: 240px; height: 240px; border-radius: 12px; }
+.momo-label { color: #a21caf; font-size: 12px; font-weight: 900; letter-spacing: .08em; }.momo-checkout h3 { margin: 6px 0; font-size: 20px; }.momo-checkout p { margin: 0 0 18px; color: #64748b; font-size: 13px; line-height: 1.6; }
+.momo-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 0; border-radius: 12px; background: #a50064; color: #fff; font-weight: 800; }
+.payment-success { display: grid; justify-items: center; gap: 8px; padding: 36px 24px 30px; text-align: center; }.payment-success > lucide-icon { width: 52px; height: 52px; color: #059669; }.payment-success h3 { margin: 4px 0 0; font-size: 22px; }.payment-success p { margin: 0 0 12px; color: #64748b; font-size: 14px; }
+
 @keyframes spin { to { transform: rotate(360deg); } } @keyframes shimmer { to { background-position: -200% 0; } }
 @media (max-width: 1180px) { .filter-panel { grid-template-columns: repeat(3, minmax(0,1fr)); }.filter-actions { grid-column: auto; }.booking-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 @media (max-width: 760px) {
-  .owner-bookings-page { padding: 18px 14px 42px; }.page-hero { flex-direction: column; padding: 22px 20px; }.hero-metric { min-width: 0; }
+  .owner-bookings-page { padding: 18px 14px 42px; }.page-hero { flex-direction: column; padding: 22px 20px; }.hero-metric { min-width: 0; }.create-booking-button { width: 100%; }
   .filter-panel { grid-template-columns: 1fr; padding: 16px; }.filter-actions { display: grid; grid-template-columns: 1fr 1fr; }
   .booking-grid { grid-template-columns: 1fr; }.booking-facts { gap: 5px; }.detail-panel__footer { align-items: stretch; flex-direction: column; }.detail-panel__footer .primary-button { width: 100%; }
+  .modal-backdrop { padding: 10px; place-items: start center; }.booking-modal, .payment-modal { max-height: calc(100vh - 20px); border-radius: 18px; }.modal-header, .create-form { padding: 19px 17px; }.form-grid { grid-template-columns: 1fr; }.modal-footer { display: grid; grid-template-columns: 1fr 1fr; }.momo-checkout { grid-template-columns: 1fr; justify-items: center; text-align: center; }.payment-total strong { font-size: 21px; }
 }

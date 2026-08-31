@@ -4,7 +4,10 @@ import {
   OwnerBooking,
   OwnerBookingFilter,
   OwnerBookingPage,
-  OwnerBookingStatus
+  OwnerBookingStatus,
+  CreateOwnerWalkInBooking,
+  OwnerBookingPaymentMethod,
+  OwnerBookingPaymentResult
 } from '@application/dto/owner-booking/owner-booking.dto';
 import {
   OWNER_BOOKING_REPOSITORY_TOKEN,
@@ -27,5 +30,15 @@ export class ManageOwnerBookingsUseCase {
 
   updateStatus(bookingId: string, status: OwnerBookingStatus): Observable<OwnerBooking> {
     return this.repository.updateStatus(bookingId, status);
+  }
+
+  createWalkIn(request: CreateOwnerWalkInBooking): Observable<OwnerBooking> {
+    return this.repository.createWalkIn(request);
+  }
+
+  createPayment(
+    bookingId: string, method: OwnerBookingPaymentMethod
+  ): Observable<OwnerBookingPaymentResult> {
+    return this.repository.createPayment(bookingId, method);
   }
 }
