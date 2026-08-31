@@ -9,6 +9,7 @@ import {
 import { OwnerBooking } from '@application/dto/owner-booking/owner-booking.dto';
 import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { ManageOwnerBookingsUseCase } from '@application/usecase/owner-booking/manage-owner-bookings.usecase';
+import { ManageOwnerScheduleUseCase } from '@application/usecase/owner-schedule/manage-owner-schedule.usecase';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
 import { ManageOwnerVenueCourtsUseCase } from '@application/usecase/venue-owner-dashboard/manage-owner-venue-courts.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
@@ -33,6 +34,7 @@ describe('OwnerBookingsComponent', () => {
   const getVenues = { execute: vi.fn() };
   const manageCourts = { list: vi.fn() };
   const manageBookings = { list: vi.fn(), detail: vi.fn(), updateStatus: vi.fn() };
+  const manageSchedule = { listSlots: vi.fn() };
   const notify = { success: vi.fn(), error: vi.fn() };
 
   beforeEach(async () => {
@@ -48,6 +50,7 @@ describe('OwnerBookingsComponent', () => {
     manageBookings.updateStatus.mockReset().mockReturnValue(of({
       ...booking, status: 'COMPLETED', allowedTransitions: []
     }));
+    manageSchedule.listSlots.mockReset().mockReturnValue(of([]));
     notify.success.mockReset(); notify.error.mockReset();
 
     await TestBed.configureTestingModule({
@@ -61,6 +64,7 @@ describe('OwnerBookingsComponent', () => {
         { provide: GetMyOwnerVenuesUseCase, useValue: getVenues },
         { provide: ManageOwnerVenueCourtsUseCase, useValue: manageCourts },
         { provide: ManageOwnerBookingsUseCase, useValue: manageBookings },
+        { provide: ManageOwnerScheduleUseCase, useValue: manageSchedule },
         { provide: NotifyService, useValue: notify }
       ]
     }).compileComponents();
@@ -116,5 +120,34 @@ describe('OwnerBookingsComponent', () => {
     expect(manageBookings.updateStatus).toHaveBeenCalledOnce();
     expect(component.completingId()).toBe('booking-1');
     confirm.mockRestore();
+  });
+
+  it('filters ended walk-in slots and updates the selected slot total', () => {
+    const fixture = TestBed.createComponent(OwnerBookingsComponent);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const futureDate = [
+      tomorrow.getFullYear(),
+      String(tomorrow.getMonth() + 1).padStart(2, '0'),
+      String(tomorrow.getDate()).padStart(2, '0')
+    ].join('-');
+
+    component.createSlots.set([
+      {
+        timeSlotId: 'ended-slot', venueCourtId: 'court-1', date: '2020-01-01',
+        startTime: '16:00:00', endTime: '17:00:00', pricePerHour: 100000, status: 'AVAILABLE'
+      },
+      {
+        timeSlotId: 'future-slot', venueCourtId: 'court-1', date: futureDate,
+        startTime: '16:00:00', endTime: '17:00:00', pricePerHour: 100000, status: 'AVAILABLE'
+      }
+    ]);
+    component.createForm.controls.timeSlotId.setValue('future-slot');
+
+    expect(component.availableCreateSlots().map(slot => slot.timeSlotId)).toEqual(['future-slot']);
+    expect(component.selectedCreateSlot()?.timeSlotId).toBe('future-slot');
+    expect(component.slotTotal(component.selectedCreateSlot())).toBe(100000);
   });
 });

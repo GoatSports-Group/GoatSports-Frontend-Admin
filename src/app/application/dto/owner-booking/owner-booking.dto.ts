@@ -18,6 +18,8 @@ export interface OwnerBookingPaymentResult {
   method: OwnerBookingPaymentMethod;
   status: string;
   checkoutUrl?: string;
+  deeplink?: string;
+  qrCodeContent?: string;
   expiresAt?: string;
 }
 

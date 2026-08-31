@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Subscription, finalize, of, switchMap, take, timer } from 'rxjs';
+import { Subscription, finalize, map, of, switchMap, take, timer } from 'rxjs';
 import * as QRCode from 'qrcode';
 import {
   OwnerBooking,
@@ -76,7 +76,9 @@ export class OwnerBookingsComponent {
   readonly paymentBooking = signal<OwnerBooking | null>(null);
   readonly paymentLoading = signal<OwnerBookingPaymentMethod | null>(null);
   readonly checkoutUrl = signal<string | null>(null);
+  readonly checkoutDeeplink = signal<string | null>(null);
   readonly checkoutQr = signal<string | null>(null);
+  readonly legacyCheckout = signal(false);
   readonly paymentCompleted = signal(false);
 
   readonly filterForm = this.formBuilder.nonNullable.group({
@@ -91,15 +93,25 @@ export class OwnerBookingsComponent {
     customerName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(120)]],
     customerPhone: ['', [Validators.required, Validators.pattern(/^\+?[0-9 .-]{8,20}$/)]]
   });
+  readonly selectedCreateSlotId = toSignal(
+    this.createForm.controls.timeSlotId.valueChanges,
+    { initialValue: this.createForm.controls.timeSlotId.value }
+  );
+  readonly currentTimestamp = toSignal(
+    timer(0, 30_000).pipe(map(() => Date.now())),
+    { initialValue: Date.now() }
+  );
   readonly selectedVenue = computed(() =>
     this.venues().find(venue => venue.venueId === this.filterForm.controls.venueId.value) ?? null
   );
   readonly availableCreateSlots = computed(() =>
-    this.createSlots().filter(slot => slot.status === 'AVAILABLE')
+    this.createSlots().filter(slot =>
+      slot.status === 'AVAILABLE' && this.slotEndTimestamp(slot) > this.currentTimestamp()
+    )
   );
   readonly selectedCreateSlot = computed(() => {
-    const slotId = this.createForm.controls.timeSlotId.value;
-    return this.createSlots().find(slot => slot.timeSlotId === slotId) ?? null;
+    const slotId = this.selectedCreateSlotId();
+    return this.availableCreateSlots().find(slot => slot.timeSlotId === slotId) ?? null;
   });
 
   constructor() { this.loadContext(); }
@@ -191,8 +203,13 @@ export class OwnerBookingsComponent {
   }
 
   createWalkInBooking(): void {
-    if (this.createLoading() || this.createForm.invalid) {
+    if (this.createLoading() || this.createForm.invalid || !this.selectedCreateSlot()) {
       this.createForm.markAllAsTouched();
+      if (this.createForm.controls.timeSlotId.value && !this.selectedCreateSlot()) {
+        this.createForm.controls.timeSlotId.setValue('');
+        this.notify.error('Khung giờ đã kết thúc hoặc không còn khả dụng. Vui lòng chọn khung giờ khác.');
+        this.loadCreateSlots();
+      }
       return;
     }
     const value = this.createForm.getRawValue();
@@ -222,11 +239,20 @@ export class OwnerBookingsComponent {
       && !this.isPaid(booking);
   }
 
+  hasPendingOnlinePayment(booking: OwnerBooking): boolean {
+    return booking.payments.some(payment =>
+      payment.purpose === 'BOOKING_REMAINING'
+      && (payment.status === 'CREATED' || payment.status === 'PENDING')
+    );
+  }
+
   openPayment(booking: OwnerBooking): void {
     this.stopPaymentPolling();
     this.paymentBooking.set(booking);
     this.checkoutUrl.set(null);
+    this.checkoutDeeplink.set(null);
     this.checkoutQr.set(null);
+    this.legacyCheckout.set(false);
     this.paymentCompleted.set(this.isPaid(booking));
   }
 
@@ -235,7 +261,9 @@ export class OwnerBookingsComponent {
     this.stopPaymentPolling();
     this.paymentBooking.set(null);
     this.checkoutUrl.set(null);
+    this.checkoutDeeplink.set(null);
     this.checkoutQr.set(null);
+    this.legacyCheckout.set(false);
     this.paymentCompleted.set(false);
   }
 
@@ -249,15 +277,24 @@ export class OwnerBookingsComponent {
       next: result => {
         if (result.status === 'SUCCEEDED') {
           this.finishPayment(booking.bookingId);
-          this.notify.success('Đã ghi nhận thanh toán tiền mặt.');
+          this.notify.success(method === 'CASH'
+            ? 'Đã ghi nhận thanh toán tiền mặt.'
+            : 'MoMo đã xác nhận thanh toán thành công.');
           return;
         }
-        if (!result.checkoutUrl) {
+        if (!result.qrCodeContent && !result.checkoutUrl) {
           this.notify.error('Payment-service không trả liên kết thanh toán MoMo.');
           return;
         }
-        this.checkoutUrl.set(result.checkoutUrl);
-        void QRCode.toDataURL(result.checkoutUrl, {
+        this.checkoutUrl.set(result.checkoutUrl ?? null);
+        this.checkoutDeeplink.set(result.deeplink ?? null);
+        if (!result.qrCodeContent) {
+          this.legacyCheckout.set(true);
+          this.notify.info('MoMo chưa cung cấp Direct QR. Hãy mở trang thanh toán MoMo để khách quét mã.');
+          this.startPaymentPolling(booking.bookingId);
+          return;
+        }
+        void QRCode.toDataURL(result.qrCodeContent, {
           width: 240, margin: 1, errorCorrectionLevel: 'M',
           color: { dark: '#111827', light: '#ffffff' }
         }).then(dataUrl => this.checkoutQr.set(dataUrl));
@@ -268,8 +305,64 @@ export class OwnerBookingsComponent {
   }
 
   openMomoCheckout(): void {
-    const url = this.checkoutUrl();
+    if (this.legacyCheckout()) {
+      this.refreshHostedCheckoutAndOpen();
+      return;
+    }
+    const url = this.checkoutDeeplink() || this.checkoutUrl();
     if (url) window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
+  private refreshHostedCheckoutAndOpen(): void {
+    const booking = this.paymentBooking();
+    if (!booking || this.paymentLoading()) return;
+
+    const popup = window.open('about:blank', '_blank');
+    if (!popup) {
+      this.notify.error('Trình duyệt đang chặn cửa sổ thanh toán. Hãy cho phép pop-up rồi thử lại.');
+      return;
+    }
+    popup.opener = null;
+    popup.document.title = 'Đang kiểm tra giao dịch MoMo…';
+    popup.document.body.textContent = 'Đang kiểm tra và làm mới giao dịch MoMo…';
+
+    this.paymentLoading.set('MOMO');
+    this.manageBookings.createPayment(booking.bookingId, 'MOMO').pipe(
+      take(1),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.paymentLoading.set(null))
+    ).subscribe({
+      next: result => {
+        if (result.status === 'SUCCEEDED') {
+          popup.close();
+          this.finishPayment(booking.bookingId);
+          this.notify.success('MoMo đã xác nhận thanh toán thành công.');
+          return;
+        }
+        const url = result.checkoutUrl || result.deeplink;
+        if (!url) {
+          popup.close();
+          this.notify.error('Payment-service không trả liên kết thanh toán MoMo.');
+          return;
+        }
+
+        this.checkoutUrl.set(result.checkoutUrl ?? null);
+        this.checkoutDeeplink.set(result.deeplink ?? null);
+        this.legacyCheckout.set(!result.qrCodeContent);
+        if (result.qrCodeContent) {
+          void QRCode.toDataURL(result.qrCodeContent, {
+            width: 240, margin: 1, errorCorrectionLevel: 'M',
+            color: { dark: '#111827', light: '#ffffff' }
+          }).then(dataUrl => this.checkoutQr.set(dataUrl));
+        }
+        popup.location.replace(url);
+        this.startPaymentPolling(booking.bookingId);
+      },
+      error: error => {
+        popup.close();
+        this.notify.error(this.errorMessage(error, 'Không thể làm mới giao dịch MoMo.'));
+      }
+    });
   }
 
   private startPaymentPolling(bookingId: string): void {
@@ -285,6 +378,23 @@ export class OwnerBookingsComponent {
           this.paymentCompleted.set(true);
           this.loadBookings(this.page());
           this.notify.success('MoMo đã xác nhận thanh toán thành công.');
+          return;
+        }
+        const remainingPayments = booking.payments.filter(
+          payment => payment.purpose === 'BOOKING_REMAINING'
+        );
+        const checkoutFinished = remainingPayments.length > 0
+          && remainingPayments.every(payment =>
+            payment.status !== 'CREATED' && payment.status !== 'PENDING'
+          );
+        if (this.checkoutUrl() && checkoutFinished) {
+          this.stopPaymentPolling();
+          this.checkoutUrl.set(null);
+          this.checkoutDeeplink.set(null);
+          this.checkoutQr.set(null);
+          this.legacyCheckout.set(false);
+          this.loadBookings(this.page());
+          this.notify.info('Giao dịch MoMo đã kết thúc. Hãy chọn MoMo lần nữa để tạo mã thanh toán mới.');
         }
       }
     });
@@ -404,6 +514,15 @@ export class OwnerBookingsComponent {
     const [endHour, endMinute] = slot.endTime.split(':').map(Number);
     const minutes = (endHour * 60 + endMinute) - (startHour * 60 + startMinute);
     return Math.round(slot.pricePerHour * minutes / 60);
+  }
+
+  private slotEndTimestamp(slot: OwnerTimeSlot): number {
+    const [year, month, day] = slot.date.split('-').map(Number);
+    const [hour, minute, second = 0] = slot.endTime.split(':').map(Number);
+    if ([year, month, day, hour, minute, second].some(value => !Number.isFinite(value))) {
+      return Number.NaN;
+    }
+    return new Date(year, month - 1, day, hour, minute, second).getTime();
   }
 
   timeline(booking: OwnerBooking): TimelineEntry[] {

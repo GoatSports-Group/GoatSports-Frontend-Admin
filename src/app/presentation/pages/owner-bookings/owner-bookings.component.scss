@@ -144,12 +144,17 @@ button:disabled { opacity: .55; cursor: not-allowed; }
 }
 .payment-methods > button:hover { border-color: #6ee7b7; background: #f8fffc; box-shadow: 0 8px 24px rgba(5,150,105,.09); }
 .payment-methods > button > span:nth-child(2) { display: grid; gap: 4px; }
+.pending-payment-note { display: flex; align-items: center; gap: 12px; padding: 14px; border: 1px solid #fde68a; border-radius: 14px; background: #fffbeb; color: #92400e; }
+.pending-payment-note > lucide-icon { flex: 0 0 22px; width: 22px; height: 22px; }.pending-payment-note > span { display: grid; gap: 3px; }.pending-payment-note strong { font-size: 14px; }.pending-payment-note small { color: #a16207; font-size: 12px; }
 .payment-methods strong { font-size: 15px; }.payment-methods small { color: #64748b; font-size: 13px; }
 .method-icon { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 13px; }
 .method-icon lucide-icon { width: 22px; height: 22px; }.method-icon--cash { background: #dcfce7; color: #047857; }.method-icon--momo { background: #fce7f3; color: #a21caf; }
 .momo-checkout { display: grid; grid-template-columns: 250px 1fr; gap: 24px; align-items: center; padding: 24px; }
 .qr-frame { display: grid; place-items: center; width: 250px; height: 250px; border: 1px solid #e2e8f0; border-radius: 18px; background: #fff; box-shadow: 0 12px 30px rgba(15,23,42,.08); }
 .qr-frame img { width: 240px; height: 240px; border-radius: 12px; }
+.momo-checkout--legacy { grid-template-columns: 150px 1fr; }
+.legacy-qr-icon { display: grid; place-items: center; width: 150px; height: 150px; border-radius: 28px; background: #fdf2f8; color: #a50064; }
+.legacy-qr-icon lucide-icon { width: 58px; height: 58px; }
 .momo-label { color: #a21caf; font-size: 12px; font-weight: 900; letter-spacing: .08em; }.momo-checkout h3 { margin: 6px 0; font-size: 20px; }.momo-checkout p { margin: 0 0 18px; color: #64748b; font-size: 13px; line-height: 1.6; }
 .momo-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 0; border-radius: 12px; background: #a50064; color: #fff; font-weight: 800; }
 .payment-success { display: grid; justify-items: center; gap: 8px; padding: 36px 24px 30px; text-align: center; }.payment-success > lucide-icon { width: 52px; height: 52px; color: #059669; }.payment-success h3 { margin: 4px 0 0; font-size: 22px; }.payment-success p { margin: 0 0 12px; color: #64748b; font-size: 14px; }

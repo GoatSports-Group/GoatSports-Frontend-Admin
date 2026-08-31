@@ -176,7 +176,7 @@
                 </option>
               }
             </select>
-            @if (!slotsLoading() && !availableCreateSlots().length) { <small>Ngày này chưa có slot AVAILABLE.</small> }
+            @if (!slotsLoading() && !availableCreateSlots().length) { <small>Ngày này không còn khung giờ khả dụng chưa kết thúc.</small> }
           </label>
           <label>
             <span>Tên khách</span>
@@ -196,7 +196,7 @@
 
         <footer class="modal-footer">
           <button type="button" class="secondary-button" (click)="closeCreateBooking()" [disabled]="createLoading()">Hủy</button>
-          <button type="submit" class="primary-button" [disabled]="createLoading() || slotsLoading()">
+          <button type="submit" class="primary-button" [disabled]="createLoading() || slotsLoading() || createForm.invalid || !selectedCreateSlot()">
             @if (createLoading()) { <span class="spinner-small"></span> Đang tạo… } @else { <lucide-icon name="file-plus-2" /> Tạo đơn & thanh toán }
           </button>
         </footer>
@@ -227,28 +227,54 @@
           <button type="button" class="primary-button" (click)="closePayment()">Hoàn tất</button>
         </div>
       } @else if (checkoutUrl()) {
-        <div class="momo-checkout">
-          <div class="qr-frame">
-            @if (checkoutQr()) { <img [src]="checkoutQr()" alt="Mã QR thanh toán MoMo" /> }
-            @else { <span class="spinner"></span> }
-          </div>
+        <div class="momo-checkout" [class.momo-checkout--legacy]="legacyCheckout()">
+          @if (legacyCheckout()) {
+            <div class="legacy-qr-icon"><lucide-icon name="history" /></div>
+          } @else {
+            <div class="qr-frame">
+              @if (checkoutQr()) { <img [src]="checkoutQr()" alt="Mã QR thanh toán MoMo" /> }
+              @else { <span class="spinner"></span> }
+            </div>
+          }
           <div>
-            <span class="momo-label">MOMO QR</span>
-            <h3>Quét mã bằng ứng dụng MoMo</h3>
-            <p>Trang này tự kiểm tra trạng thái mỗi 2,5 giây. Không đóng cửa sổ cho đến khi có xác nhận.</p>
-            <button type="button" class="momo-button" (click)="openMomoCheckout()"><lucide-icon name="external-link" /> Mở trang MoMo</button>
+            <span class="momo-label">{{ legacyCheckout() ? 'MOMO HOSTED CHECKOUT' : 'MOMO DIRECT QR' }}</span>
+            <h3>{{ legacyCheckout() ? 'Mở trang thanh toán MoMo' : 'Quét mã bằng ứng dụng MoMo' }}</h3>
+            <p>
+              @if (legacyCheckout()) {
+                Tài khoản MoMo hiện chưa trả Direct QR. Mở trang thanh toán trên máy tính, sau đó dùng ứng dụng MoMo trên điện thoại quét mã do MoMo hiển thị.
+              } @else {
+                Trang này tự kiểm tra trạng thái mỗi 2,5 giây. Không đóng cửa sổ cho đến khi có xác nhận.
+              }
+            </p>
+            <button type="button" class="momo-button" (click)="openMomoCheckout()" [disabled]="!!paymentLoading()">
+              @if (paymentLoading() === 'MOMO') {
+                <span class="spinner-small"></span> Đang kiểm tra…
+              } @else {
+                <lucide-icon name="external-link" /> {{ legacyCheckout() ? 'Kiểm tra & mở MoMo' : 'Mở ứng dụng MoMo' }}
+              }
+            </button>
           </div>
         </div>
       } @else {
         <div class="payment-methods">
-          <button type="button" (click)="collectPayment('CASH')" [disabled]="!!paymentLoading()">
-            <span class="method-icon method-icon--cash"><lucide-icon name="banknote" /></span>
-            <span><strong>Thu tiền mặt</strong><small>Ghi nhận đã nhận đủ tiền tại quầy</small></span>
-            @if (paymentLoading() === 'CASH') { <span class="spinner"></span> } @else { <lucide-icon name="chevron-right" /> }
-          </button>
+          @if (!hasPendingOnlinePayment(booking)) {
+            <button type="button" (click)="collectPayment('CASH')" [disabled]="!!paymentLoading()">
+              <span class="method-icon method-icon--cash"><lucide-icon name="banknote" /></span>
+              <span><strong>Thu tiền mặt</strong><small>Ghi nhận đã nhận đủ tiền tại quầy</small></span>
+              @if (paymentLoading() === 'CASH') { <span class="spinner"></span> } @else { <lucide-icon name="chevron-right" /> }
+            </button>
+          } @else {
+            <div class="pending-payment-note">
+              <lucide-icon name="shield-alert" />
+              <span><strong>Đang có giao dịch MoMo chờ thanh toán</strong><small>Tiếp tục giao dịch hiện tại để tránh thu tiền hai lần.</small></span>
+            </div>
+          }
           <button type="button" (click)="collectPayment('MOMO')" [disabled]="!!paymentLoading()">
             <span class="method-icon method-icon--momo"><lucide-icon name="qr-code" /></span>
-            <span><strong>Quét mã MoMo</strong><small>Hiện QR để khách quét và thanh toán</small></span>
+            <span>
+              <strong>{{ hasPendingOnlinePayment(booking) ? 'Tiếp tục thanh toán MoMo' : 'Quét mã MoMo' }}</strong>
+              <small>{{ hasPendingOnlinePayment(booking) ? 'Mở lại checkout đã tạo trước đó' : 'Hiện QR để khách quét và thanh toán' }}</small>
+            </span>
             @if (paymentLoading() === 'MOMO') { <span class="spinner"></span> } @else { <lucide-icon name="chevron-right" /> }
           </button>
         </div>

@@ -132,7 +132,11 @@ import {
   LucideMessageSquare,
   LucideStore,
   LucideReceipt,
-  LucideSparkles
+  LucideSparkles,
+  LucideWalletCards,
+  LucideBanknote,
+  LucideQrCode,
+  LucideHistory
 } from '@lucide/angular';
 
 @NgModule({
@@ -265,7 +269,11 @@ import {
       LucideMessageSquare,
       LucideStore,
       LucideReceipt,
-      LucideSparkles
+      LucideSparkles,
+      LucideWalletCards,
+      LucideBanknote,
+      LucideQrCode,
+      LucideHistory
     )
   ],
   bootstrap: [AppComponent]
