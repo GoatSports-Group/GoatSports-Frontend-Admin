@@ -2,19 +2,32 @@ import { ChangeDetectionStrategy, Component, DestroyRef, HostListener, ViewConta
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Overlay, OverlayModule, OverlayRef } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
-import { defer, finalize } from 'rxjs';
+import {
+  Subject,
+  catchError,
+  debounceTime,
+  defer,
+  distinctUntilChanged,
+  finalize,
+  map,
+  of,
+  switchMap
+} from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BusinessType } from '@application/dto/owner-application/owner-application.dto';
 import { SubmitOwnerApplicationUseCase } from '@application/usecase/owner-application/submit-owner-application.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { VenueOwnerSubmissionLoaderComponent } from './venue-owner-submission-loader.component';
+import { SearchAddressSuggestionsUseCase } from '@application/usecase/owner-application/search-address-suggestions.usecase';
+import { AddressSuggestion } from '@application/dto/owner-application/address-suggestion.dto';
 
 type FileKey = 'idCardFront' | 'idCardBack' | 'businessLicense' | 'venueImage';
 type ApplicationForm = {
   fullName: string; phone: string; email: string; identityNumber: string;
   businessName: string; businessType: BusinessType; taxCode: string;
-  address: string; ward: string; district: string; province: string; city: string;
+  address: string; ward: string; district: string; city: string;
+  latitude: number | null; longitude: number | null;
 };
 
 @Component({
@@ -31,11 +44,20 @@ export class VenueOwnerApplicationFormComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly overlay = inject(Overlay);
   private readonly viewContainerRef = inject(ViewContainerRef);
+  private readonly searchAddressSuggestions = inject(SearchAddressSuggestionsUseCase);
+  private readonly addressInput = new Subject<string>();
   private submissionOverlayRef: OverlayRef | null = null;
+  private selectedAddressValue = '';
 
   readonly submitted = output<void>();
   readonly currentStep = signal(1);
   readonly submitting = signal(false);
+  readonly addressSuggestions = signal<AddressSuggestion[]>([]);
+  readonly addressSearchLoading = signal(false);
+  readonly addressDetailLoading = signal(false);
+  readonly addressSuggestionsOpen = signal(false);
+  readonly addressSearchError = signal('');
+  readonly activeSuggestionIndex = signal(-1);
   readonly steps = ['Người đại diện', 'Cơ sở', 'Địa chỉ', 'Hồ sơ'];
   readonly stepDescriptions = ['Thông tin cá nhân', 'Thông tin kinh doanh', 'Địa chỉ cơ sở', 'Giấy tờ pháp lý'];
   readonly fileLabels: Record<FileKey, string> = {
@@ -46,6 +68,37 @@ export class VenueOwnerApplicationFormComponent {
 
   form: ApplicationForm = this.emptyForm();
   files: Record<FileKey, File | null> = this.emptyFiles();
+
+  constructor() {
+    this.addressInput.pipe(
+      map(value => value.trim()),
+      debounceTime(450),
+      distinctUntilChanged(),
+      switchMap(query => {
+        this.addressSearchError.set('');
+        if (query.length < 3) {
+          return of([]);
+        }
+        return defer(() => {
+          this.addressSearchLoading.set(true);
+          return this.searchAddressSuggestions.execute(query).pipe(
+            catchError(() => {
+              this.addressSearchError.set('Không thể tải gợi ý. Bạn vẫn có thể nhập địa chỉ thủ công.');
+              return of([]);
+            }),
+            finalize(() => this.addressSearchLoading.set(false))
+          );
+        });
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(suggestions => {
+      this.addressSuggestions.set(suggestions);
+      this.activeSuggestionIndex.set(suggestions.length ? 0 : -1);
+      this.addressSuggestionsOpen.set(Boolean(
+        suggestions.length || this.addressSearchError()
+      ));
+    });
+  }
 
   goToStep(step: number): void {
     if (!this.submitting() && step >= 1 && step <= this.currentStep()) this.currentStep.set(step);
@@ -59,6 +112,83 @@ export class VenueOwnerApplicationFormComponent {
 
   previousStep(): void {
     this.currentStep.update(step => Math.max(1, step - 1));
+  }
+
+  onAddressInput(value: string): void {
+    if (value !== this.selectedAddressValue) {
+      this.form.latitude = null;
+      this.form.longitude = null;
+      this.selectedAddressValue = '';
+    }
+    this.activeSuggestionIndex.set(-1);
+    this.addressInput.next(value);
+  }
+
+  openAddressSuggestions(): void {
+    if (this.addressSuggestions().length || this.addressSearchError()) {
+      this.addressSuggestionsOpen.set(true);
+    }
+  }
+
+  closeAddressSuggestions(): void {
+    this.addressSuggestionsOpen.set(false);
+    this.activeSuggestionIndex.set(-1);
+  }
+
+  handleAddressKeydown(event: KeyboardEvent): void {
+    const suggestions = this.addressSuggestions();
+    if (event.key === 'Escape') {
+      this.closeAddressSuggestions();
+      return;
+    }
+    if (!this.addressSuggestionsOpen() || suggestions.length === 0) return;
+
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      const direction = event.key === 'ArrowDown' ? 1 : -1;
+      const current = this.activeSuggestionIndex();
+      this.activeSuggestionIndex.set((current + direction + suggestions.length) % suggestions.length);
+      return;
+    }
+
+    if (event.key === 'Enter') {
+      const selected = suggestions[this.activeSuggestionIndex()];
+      if (!selected) return;
+      event.preventDefault();
+      event.stopPropagation();
+      this.selectAddressSuggestion(selected);
+    }
+  }
+
+  selectAddressSuggestion(suggestion: AddressSuggestion): void {
+    if (this.addressDetailLoading()) return;
+    this.closeAddressSuggestions();
+    this.addressDetailLoading.set(true);
+    this.searchAddressSuggestions.resolve(suggestion).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.addressDetailLoading.set(false))
+    ).subscribe({
+      next: resolved => {
+        if (resolved.latitude === null || resolved.longitude === null) {
+          this.addressSearchError.set('VietMap không trả về tọa độ cho địa chỉ này. Vui lòng chọn địa chỉ khác.');
+          this.addressSuggestionsOpen.set(true);
+          return;
+        }
+        this.form.address = resolved.address || resolved.formattedAddress;
+        this.form.ward = resolved.ward;
+        this.form.district = resolved.district;
+        this.form.city = resolved.city;
+        this.form.latitude = resolved.latitude;
+        this.form.longitude = resolved.longitude;
+        this.selectedAddressValue = this.form.address;
+        this.addressSuggestions.set([]);
+        this.addressSearchError.set('');
+      },
+      error: () => {
+        this.addressSearchError.set('Không thể lấy chi tiết địa chỉ từ VietMap. Vui lòng thử lại.');
+        this.addressSuggestionsOpen.set(true);
+      }
+    });
   }
 
   selectFile(key: FileKey, event: Event): void {
@@ -86,11 +216,16 @@ export class VenueOwnerApplicationFormComponent {
     if (this.submitting() || !this.validateAll()) return;
     this.submitting.set(true);
     this.showSubmissionLoader();
-    const form = Object.fromEntries(Object.entries(this.form).map(([key, value]) => [
+    const normalizedForm = Object.fromEntries(Object.entries(this.form).map(([key, value]) => [
       key, typeof value === 'string' ? value.trim() : value
     ]));
+    const workflowForm = {
+      ...normalizedForm,
+      // Compatibility with the current workflow contract. Venue Service stores only `city`.
+      province: normalizedForm['city']
+    };
 
-    defer(() => this.submitApplication.execute(form, {
+    defer(() => this.submitApplication.execute(workflowForm, {
       idCardFront: this.files.idCardFront!,
       idCardBack: this.files.idCardBack!,
       businessLicense: this.files.businessLicense!,
@@ -104,6 +239,8 @@ export class VenueOwnerApplicationFormComponent {
     ).subscribe({
       next: () => {
         this.form = this.emptyForm();
+        this.selectedAddressValue = '';
+        this.addressSuggestions.set([]);
         this.files = this.emptyFiles();
         this.currentStep.set(1);
         this.notify.success('Đã nộp đơn đăng ký chủ sân thành công.');
@@ -146,8 +283,8 @@ export class VenueOwnerApplicationFormComponent {
       else if (!/^(\d{10}|\d{13})$/.test(this.form.taxCode.trim())) message = 'Mã số thuế phải gồm 10 hoặc 13 chữ số.';
     } else if (step === 3) {
       if (this.form.address.trim().length < 3) message = 'Vui lòng nhập địa chỉ chi tiết.';
-      else if (![this.form.ward, this.form.district, this.form.province, this.form.city].every(value => value.trim())) {
-        message = 'Vui lòng nhập đầy đủ phường/xã, quận/huyện, tỉnh và thành phố.';
+      else if (![this.form.ward, this.form.city].every(value => value.trim())) {
+        message = 'Vui lòng nhập đầy đủ phường/xã và tỉnh/thành phố.';
       }
     } else {
       const missing = this.fileKeys.find(key => !this.files[key]);
@@ -161,7 +298,7 @@ export class VenueOwnerApplicationFormComponent {
     return {
       fullName: '', phone: '', email: '', identityNumber: '', businessName: '',
       businessType: BusinessType.INDIVIDUAL, taxCode: '', address: '', ward: '',
-      district: '', province: '', city: ''
+      district: '', city: '', latitude: null, longitude: null
     };
   }
 

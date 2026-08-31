@@ -35,11 +35,60 @@
           </div>
         } @else if (currentStep() === 3) {
           <div class="form-grid">
-            <label class="span-2">ĐỊA CHỈ CHI TIẾT <em>*</em><input name="address" [(ngModel)]="form.address" placeholder="Số nhà, tên đường"></label>
+            <div class="span-2 address-field">
+              <label for="owner-venue-address">ĐỊA CHỈ CHI TIẾT <em>*</em></label>
+              <div class="address-autocomplete">
+                <input
+                  id="owner-venue-address"
+                  name="address"
+                  [(ngModel)]="form.address"
+                  (ngModelChange)="onAddressInput($event)"
+                  (focus)="openAddressSuggestions()"
+                  (blur)="closeAddressSuggestions()"
+                  (keydown)="handleAddressKeydown($event)"
+                  placeholder="Nhập ít nhất 3 ký tự để tìm địa chỉ"
+                  maxlength="160"
+                  [disabled]="addressDetailLoading()"
+                  autocomplete="off"
+                  role="combobox"
+                  aria-autocomplete="list"
+                  [attr.aria-expanded]="addressSuggestionsOpen()"
+                  aria-controls="owner-address-suggestions">
+
+                @if (addressSearchLoading() || addressDetailLoading()) {
+                  <span class="address-autocomplete__loading" aria-live="polite">
+                    {{ addressDetailLoading() ? 'Đang lấy chi tiết...' : 'Đang tìm...' }}
+                  </span>
+                }
+
+                @if (addressSuggestionsOpen()) {
+                  <div id="owner-address-suggestions" class="address-suggestions" role="listbox">
+                    @for (suggestion of addressSuggestions(); track suggestion.id; let index = $index) {
+                      <button
+                        type="button"
+                        role="option"
+                        [attr.aria-selected]="activeSuggestionIndex() === index"
+                        [class.is-active]="activeSuggestionIndex() === index"
+                        [disabled]="addressDetailLoading()"
+                        (mousedown)="$event.preventDefault()"
+                        (click)="selectAddressSuggestion(suggestion)">
+                        <strong>{{ suggestion.title }}</strong>
+                        <span>{{ suggestion.formattedAddress }}</span>
+                      </button>
+                    }
+                    @if (addressSearchError()) {
+                      <p class="address-suggestions__message">{{ addressSearchError() }}</p>
+                    }
+                  </div>
+                }
+              </div>
+              @if (form.latitude !== null && form.longitude !== null) {
+                <small class="address-coordinate-status">✓ Đã xác định và sẽ lưu tọa độ sân</small>
+              }
+            </div>
             <label>PHƯỜNG / XÃ <em>*</em><input name="ward" [(ngModel)]="form.ward"></label>
-            <label>QUẬN / HUYỆN <em>*</em><input name="district" [(ngModel)]="form.district"></label>
-            <label>TỈNH / THÀNH PHỐ <em>*</em><input name="province" [(ngModel)]="form.province"></label>
-            <label>THÀNH PHỐ <em>*</em><input name="city" [(ngModel)]="form.city"></label>
+            <label>QUẬN / HUYỆN <input name="district" [(ngModel)]="form.district" placeholder="Không bắt buộc với địa chỉ hành chính mới"></label>
+            <label class="span-2">TỈNH / THÀNH PHỐ <em>*</em><input name="city" [(ngModel)]="form.city" placeholder="Nhập tỉnh / thành phố"></label>
           </div>
         } @else {
           <div class="document-grid">

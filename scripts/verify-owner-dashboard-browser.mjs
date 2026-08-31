@@ -26,7 +26,7 @@ const application = status => ({
   fullName: 'Nguyễn Minh Owner', phone: '0909000000', email: 'owner@goatsports.test',
   businessName: 'GOAT Arena', businessType: 'INDIVIDUAL', taxCode: 'TAX-01',
   identityNumber: '012345678901', status, createdAt: '2026-08-28T08:00:00Z',
-  address: { addressId: 'address-1', address: '1 Võ Văn Ngân', ward: 'Linh Chiểu', district: 'Thủ Đức', city: 'Hồ Chí Minh', province: 'Hồ Chí Minh' },
+  address: { addressId: 'address-1', address: '1 Võ Văn Ngân', ward: 'Linh Chiểu', district: 'Thủ Đức', city: 'Hồ Chí Minh' },
   documents: []
 });
 const primaryVenue = {

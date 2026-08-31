@@ -297,8 +297,7 @@ function createApplication(
       address: '1 Goat Street',
       ward: 'Bến Nghé',
       district: 'Quận 1',
-      city: 'Hồ Chí Minh',
-      province: 'Hồ Chí Minh'
+      city: 'Hồ Chí Minh'
     },
     documents: []
   };

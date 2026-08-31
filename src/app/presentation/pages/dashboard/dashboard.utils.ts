@@ -56,8 +56,7 @@ export function createVenueMapMarker(app: OwnerApplication, index: number): Venu
     app.address?.address,
     app.address?.ward,
     district,
-    app.address?.city,
-    app.address?.province
+    app.address?.city
   ].map(part => part?.trim()).filter((part): part is string => Boolean(part));
   const fallbackCoordinates = getHcmFallbackCoordinates(index);
 

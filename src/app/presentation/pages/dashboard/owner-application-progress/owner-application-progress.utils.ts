@@ -97,7 +97,7 @@ export function getBusinessTypeLabel(type: BusinessType): string {
 
 export function formatOwnerApplicationAddress(application: OwnerApplication): string {
   const address = application.address;
-  return [address.address, address.ward, address.district, address.city, address.province]
+  return [address.address, address.ward, address.district, address.city]
     .map(part => part?.trim())
     .filter((part): part is string => Boolean(part))
     .filter((part, index, parts) => parts.indexOf(part) === index)

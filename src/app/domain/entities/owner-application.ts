@@ -8,7 +8,6 @@ export interface OwnerApplicationAddress {
   ward: string;
   district: string;
   city: string;
-  province: string;
   latitude?: number | null;
   longitude?: number | null;
 }

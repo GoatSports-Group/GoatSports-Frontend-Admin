@@ -17,6 +17,7 @@ import { STORAGE_REPOSITORY_TOKEN } from '@application/ports/persistence/storage
 import { ROLE_REPOSITORY_TOKEN } from '@application/ports/persistence/role.repository';
 import { PERMISSION_REPOSITORY_TOKEN } from '@application/ports/persistence/permission.repository';
 import { OWNER_APPLICATION_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-application.repository';
+import { ADDRESS_SUGGESTION_REPOSITORY_TOKEN } from '@application/ports/persistence/address-suggestion.repository';
 import { NOTIFICATION_REPOSITORY_TOKEN } from '@application/ports/persistence/notification.repository';
 import { LOG_REPOSITORY_TOKEN } from '@application/ports/persistence/log.repository';
 import { ADMIN_BOOKING_REPOSITORY_TOKEN } from '@application/ports/persistence/admin-booking.repository';
@@ -34,6 +35,7 @@ import { StorageRepositoryImpl } from '@infrastructure/repositories/storage.repo
 import { RoleRepositoryImpl } from '@infrastructure/repositories/role.repository.impl';
 import { PermissionRepositoryImpl } from '@infrastructure/repositories/permission.repository.impl';
 import { OwnerApplicationRepositoryImpl } from '@infrastructure/repositories/owner-application.repository.impl';
+import { AddressSuggestionRepositoryImpl } from '@infrastructure/repositories/address-suggestion.repository.impl';
 import { NotificationRepositoryImpl } from '@infrastructure/repositories/notification.repository.impl';
 import { LogRepositoryImpl } from '@infrastructure/repositories/log.repository.impl';
 import { AdminBookingRepositoryImpl } from '@infrastructure/repositories/admin-booking.repository.impl';
@@ -167,6 +169,7 @@ import {
     { provide: ROLE_REPOSITORY_TOKEN, useClass: RoleRepositoryImpl },
     { provide: PERMISSION_REPOSITORY_TOKEN, useClass: PermissionRepositoryImpl },
     { provide: OWNER_APPLICATION_REPOSITORY_TOKEN, useClass: OwnerApplicationRepositoryImpl },
+    { provide: ADDRESS_SUGGESTION_REPOSITORY_TOKEN, useClass: AddressSuggestionRepositoryImpl },
     { provide: NOTIFICATION_REPOSITORY_TOKEN, useClass: NotificationRepositoryImpl },
     { provide: LOG_REPOSITORY_TOKEN, useClass: LogRepositoryImpl },
     { provide: ADMIN_BOOKING_REPOSITORY_TOKEN, useClass: AdminBookingRepositoryImpl },
