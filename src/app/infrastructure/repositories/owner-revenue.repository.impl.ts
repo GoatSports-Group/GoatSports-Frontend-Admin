@@ -1,6 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import {
+  OwnerCustomerMetricsFilter,
+  OwnerCustomerMetricsReport,
   OwnerRevenueFilter,
   OwnerRevenueReport
 } from '@application/dto/owner-revenue/owner-revenue.dto';
@@ -13,5 +15,9 @@ export class OwnerRevenueRepositoryImpl implements OwnerRevenueRepository {
 
   getRevenue(filter: OwnerRevenueFilter): Observable<OwnerRevenueReport> {
     return this.api.getRevenue(filter).pipe(map(response => response.data));
+  }
+
+  getCustomerMetrics(filter: OwnerCustomerMetricsFilter): Observable<OwnerCustomerMetricsReport> {
+    return this.api.getCustomerMetrics(filter).pipe(map(response => response.data));
   }
 }

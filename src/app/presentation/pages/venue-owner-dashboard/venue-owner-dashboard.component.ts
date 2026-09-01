@@ -4,7 +4,7 @@ import { RouterModule } from '@angular/router';
 import { catchError, EMPTY, expand, finalize, forkJoin, Observable, of, reduce, take } from 'rxjs';
 import { OwnerApplication, OwnerApplicationStatus } from '@application/dto/owner-application/owner-application.dto';
 import { OwnerBooking, OwnerBookingSource } from '@application/dto/owner-booking/owner-booking.dto';
-import { OwnerRevenueReport } from '@application/dto/owner-revenue/owner-revenue.dto';
+import { OwnerCustomerMetricsReport, OwnerRevenueReport } from '@application/dto/owner-revenue/owner-revenue.dto';
 import {
   CourtAvailabilityStatus,
   OwnerVenueCourt,
@@ -12,6 +12,7 @@ import {
 } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { GetMyOwnerApplicationsUseCase } from '@application/usecase/owner-application/get-my-owner-applications.usecase';
 import { ManageOwnerBookingsUseCase } from '@application/usecase/owner-booking/manage-owner-bookings.usecase';
+import { GetOwnerCustomerMetricsUseCase } from '@application/usecase/owner-revenue/get-owner-customer-metrics.usecase';
 import { GetOwnerRevenueUseCase } from '@application/usecase/owner-revenue/get-owner-revenue.usecase';
 import { GetStorageFileUrlUseCase } from '@application/usecase/storage/get-storage-file-url.usecase';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
@@ -47,6 +48,7 @@ export class VenueOwnerDashboardComponent {
   private readonly getMyApplications = inject(GetMyOwnerApplicationsUseCase);
   private readonly getMyVenues = inject(GetMyOwnerVenuesUseCase);
   private readonly manageBookings = inject(ManageOwnerBookingsUseCase);
+  private readonly getCustomerMetrics = inject(GetOwnerCustomerMetricsUseCase);
   private readonly getRevenue = inject(GetOwnerRevenueUseCase);
   private readonly getFileUrl = inject(GetStorageFileUrlUseCase);
   private readonly destroyRef = inject(DestroyRef);
@@ -78,9 +80,7 @@ export class VenueOwnerDashboardComponent {
   readonly appliedRevenueDate = signal(this.localDate(new Date()));
   readonly maximumRevenueDate = this.localDate(new Date());
   readonly upcomingBookings = signal<OwnerBooking[]>([]);
-  readonly currentMonthBookings = signal<OwnerBooking[]>([]);
-  readonly previousMonthBookings = signal<OwnerBooking[]>([]);
-  readonly baselineMonthBookings = signal<OwnerBooking[]>([]);
+  readonly customerMetricsReport = signal<OwnerCustomerMetricsReport | null>(null);
   readonly bookingDetailId = signal<string | null>(null);
   readonly bookingDetail = signal<OwnerBooking | null>(null);
   readonly bookingDetailLoading = signal(false);
@@ -207,21 +207,17 @@ export class VenueOwnerDashboardComponent {
   readonly dailyRevenueLastPoint = computed(() => this.dailyRevenueChartPoints().at(-1));
   readonly monthlyRevenue = computed(() => this.monthlyRevenueReport()?.currentPeriod.totalRevenue ?? 0);
   readonly revenueChange = computed(() => this.monthlyRevenueReport()?.revenueChangePercentage ?? 0);
-  readonly newCustomerCount = computed(() => this.newCustomers(
-    this.currentMonthBookings(), this.previousMonthBookings()
-  ));
-  readonly previousNewCustomerCount = computed(() => this.newCustomers(
-    this.previousMonthBookings(), this.baselineMonthBookings()
-  ));
+  readonly newCustomerCount = computed(() => this.customerMetricsReport()?.currentPeriod.newCustomers ?? 0);
+  readonly previousNewCustomerCount = computed(() => this.customerMetricsReport()?.previousPeriod.newCustomers ?? 0);
   readonly newCustomerChange = computed(() => this.changePercentage(
     this.newCustomerCount(), this.previousNewCustomerCount()
   ));
-  readonly returningCustomerRate = computed(() => this.returnRate(
-    this.currentMonthBookings(), this.previousMonthBookings()
-  ));
-  readonly previousReturningCustomerRate = computed(() => this.returnRate(
-    this.previousMonthBookings(), this.baselineMonthBookings()
-  ));
+  readonly returningCustomerRate = computed(() =>
+    Math.round(this.customerMetricsReport()?.currentPeriod.returningRate ?? 0)
+  );
+  readonly previousReturningCustomerRate = computed(() =>
+    Math.round(this.customerMetricsReport()?.previousPeriod.returningRate ?? 0)
+  );
   readonly returningCustomerChange = computed(() =>
     this.returningCustomerRate() - this.previousReturningCustomerRate()
   );
@@ -247,7 +243,7 @@ export class VenueOwnerDashboardComponent {
       },
       {
         label: 'Tỷ lệ khách quay lại', value: `${this.returningCustomerRate()}%`, icon: 'rotate-ccw',
-        detail: `${this.returningCustomerChange() > 0 ? '+' : ''}${this.returningCustomerChange()} điểm so với tháng trước`,
+        detail: `${this.returningCustomerChange() > 0 ? '+' : ''}${this.returningCustomerChange()}% so với tháng trước`,
         negative: this.returningCustomerChange() < 0
       }
     ];
@@ -305,9 +301,7 @@ export class VenueOwnerDashboardComponent {
     this.dailyRevenueBookings.set([]);
     this.monthlyRevenueReport.set(null);
     this.upcomingBookings.set([]);
-    this.currentMonthBookings.set([]);
-    this.previousMonthBookings.set([]);
-    this.baselineMonthBookings.set([]);
+    this.customerMetricsReport.set(null);
     this.loadBusinessSnapshot();
     this.loadDailyRevenue();
   }
@@ -496,8 +490,6 @@ export class VenueOwnerDashboardComponent {
     this.businessLoading.set(true);
     this.businessError.set(null);
     const currentMonth = this.monthRange(0);
-    const previousMonth = this.monthRange(-1);
-    const baselineMonth = this.monthRange(-2);
 
     forkJoin({
       monthlyRevenue: this.getRevenue.execute({
@@ -508,27 +500,22 @@ export class VenueOwnerDashboardComponent {
       upcoming: this.manageBookings.list({
         venueId, fromDate: this.today(), toDate: this.daysFromNow(7), page: 0, size: 12
       }).pipe(catchError(() => of(null))),
-      currentCustomers: this.loadBookingsForRange(venueId, currentMonth.fromDate, currentMonth.toDate)
-        .pipe(catchError(() => of(null))),
-      previousCustomers: this.loadBookingsForRange(venueId, previousMonth.fromDate, previousMonth.toDate)
-        .pipe(catchError(() => of(null))),
-      baselineCustomers: this.loadBookingsForRange(venueId, baselineMonth.fromDate, baselineMonth.toDate)
-        .pipe(catchError(() => of(null)))
+      customerMetrics: this.getCustomerMetrics.execute({
+        venueId, month: currentMonth.fromDate.slice(0, 7)
+      }).pipe(catchError(() => of(null)))
     }).pipe(
       take(1),
       takeUntilDestroyed(this.destroyRef),
       finalize(() => this.businessLoading.set(false))
-    ).subscribe(({ monthlyRevenue, upcoming, currentCustomers, previousCustomers, baselineCustomers }) => {
+    ).subscribe(({ monthlyRevenue, upcoming, customerMetrics }) => {
       this.monthlyRevenueReport.set(monthlyRevenue);
       this.upcomingBookings.set((upcoming?.items ?? [])
         .filter(booking => booking.venueId === venueId)
         .filter(booking => ['PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN'].includes(booking.status))
         .sort((left, right) => `${left.playDate}${left.startTime}`.localeCompare(`${right.playDate}${right.startTime}`))
         .slice(0, 12));
-      this.currentMonthBookings.set(currentCustomers ?? []);
-      this.previousMonthBookings.set(previousCustomers ?? []);
-      this.baselineMonthBookings.set(baselineCustomers ?? []);
-      if (!monthlyRevenue && !upcoming && !currentCustomers && !previousCustomers && !baselineCustomers) {
+      this.customerMetricsReport.set(customerMetrics);
+      if (!monthlyRevenue && !upcoming && !customerMetrics) {
         this.businessError.set('Chưa thể tải dữ liệu vận hành lúc này.');
       }
     });
@@ -635,32 +622,6 @@ export class VenueOwnerDashboardComponent {
     const month = String(value.getMonth() + 1).padStart(2, '0');
     const day = String(value.getDate()).padStart(2, '0');
     return `${value.getFullYear()}-${month}-${day}`;
-  }
-
-  private newCustomers(current: readonly OwnerBooking[], comparison: readonly OwnerBooking[]): number {
-    const currentKeys = this.customerKeys(current);
-    const comparisonKeys = this.customerKeys(comparison);
-    return [...currentKeys].filter(key => !comparisonKeys.has(key)).length;
-  }
-
-  private returnRate(current: readonly OwnerBooking[], previous: readonly OwnerBooking[]): number {
-    const currentKeys = this.customerKeys(current);
-    if (!currentKeys.size) return 0;
-    const previousKeys = this.customerKeys(previous);
-    const returning = [...currentKeys].filter(key => previousKeys.has(key)).length;
-    return Math.round((returning / currentKeys.size) * 100);
-  }
-
-  private customerKeys(bookings: readonly OwnerBooking[]): Set<string> {
-    const keys = bookings
-      .filter(booking => ['CONFIRMED', 'CHECKED_IN', 'COMPLETED'].includes(booking.status))
-      .map(booking => {
-        if (booking.playerId) return `player:${booking.playerId}`;
-        const phone = booking.walkInCustomerPhone?.replace(/\s+/g, '');
-        return phone ? `phone:${phone}` : null;
-      })
-      .filter((key): key is string => Boolean(key));
-    return new Set(keys);
   }
 
   private changePercentage(current: number, previous: number): number {

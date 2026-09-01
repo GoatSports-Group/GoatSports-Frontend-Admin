@@ -46,6 +46,7 @@ import { OwnerBooking } from '@application/dto/owner-booking/owner-booking.dto';
 import { CourtAvailabilityStatus, OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { ManageOwnerBookingsUseCase } from '@application/usecase/owner-booking/manage-owner-bookings.usecase';
 import { GetMyOwnerApplicationsUseCase } from '@application/usecase/owner-application/get-my-owner-applications.usecase';
+import { GetOwnerCustomerMetricsUseCase } from '@application/usecase/owner-revenue/get-owner-customer-metrics.usecase';
 import { GetOwnerRevenueUseCase } from '@application/usecase/owner-revenue/get-owner-revenue.usecase';
 import { GetStorageFileUrlUseCase } from '@application/usecase/storage/get-storage-file-url.usecase';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
@@ -55,6 +56,7 @@ describe('VenueOwnerDashboardComponent', () => {
   const getApplications = { execute: vi.fn() };
   const getVenues = { execute: vi.fn() };
   const manageBookings = { list: vi.fn(), detail: vi.fn() };
+  const getCustomerMetrics = { execute: vi.fn() };
   const getRevenue = { execute: vi.fn() };
   const getFileUrl = { execute: vi.fn() };
   const primaryVenue = createVenue({
@@ -82,6 +84,7 @@ describe('VenueOwnerDashboardComponent', () => {
     manageBookings.detail.mockReset().mockReturnValue(of(createBooking()));
     getFileUrl.execute.mockReset().mockReturnValue(of('https://cdn.goat.test/venue-cover.png'));
     getRevenue.execute.mockReset().mockReturnValue(of(revenueReport()));
+    getCustomerMetrics.execute.mockReset().mockReturnValue(of(customerMetricsReport()));
 
     await TestBed.configureTestingModule({
       imports: [VenueOwnerDashboardComponent],
@@ -128,6 +131,7 @@ describe('VenueOwnerDashboardComponent', () => {
         { provide: GetMyOwnerApplicationsUseCase, useValue: getApplications },
         { provide: GetMyOwnerVenuesUseCase, useValue: getVenues },
         { provide: ManageOwnerBookingsUseCase, useValue: manageBookings },
+        { provide: GetOwnerCustomerMetricsUseCase, useValue: getCustomerMetrics },
         { provide: GetOwnerRevenueUseCase, useValue: getRevenue },
         { provide: GetStorageFileUrlUseCase, useValue: getFileUrl }
       ]
@@ -169,6 +173,7 @@ describe('VenueOwnerDashboardComponent', () => {
     const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
     fixture.detectChanges();
     getRevenue.execute.mockClear();
+    getCustomerMetrics.execute.mockClear();
     manageBookings.list.mockClear();
 
     const venueSelect = fixture.nativeElement.querySelector('.venue-selector select') as HTMLSelectElement;
@@ -178,6 +183,7 @@ describe('VenueOwnerDashboardComponent', () => {
 
     expect(fixture.componentInstance.selectedVenueId()).toBe('venue-secondary');
     expect(getRevenue.execute).toHaveBeenCalledWith(expect.objectContaining({ venueId: 'venue-secondary' }));
+    expect(getCustomerMetrics.execute).toHaveBeenCalledWith(expect.objectContaining({ venueId: 'venue-secondary' }));
     expect(manageBookings.list).toHaveBeenCalledWith(expect.objectContaining({ venueId: 'venue-secondary' }));
     expect(fixture.nativeElement.querySelectorAll('.live-courts-list article')).toHaveLength(1);
     expect(fixture.nativeElement.querySelector('.live-courts-list article')?.dataset['status']).toBe('INACTIVE');
@@ -432,23 +438,22 @@ describe('VenueOwnerDashboardComponent', () => {
     }
   });
 
-  it('tính khách hàng mới và tỷ lệ quay lại so với tháng trước', () => {
+  it('tính khách mới theo booking hợp lệ đầu tiên và khách quay lại theo toàn bộ lịch sử', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2026, 8, 2, 12));
     getApplications.execute.mockReturnValue(of(pageOf([
       createApplication('application-approved', 'GOAT Arena', 'venue-primary', '2026-08-28T08:00:00Z')
     ])));
-    manageBookings.list.mockImplementation(filter => {
-      if (filter.size === 12) return of(bookingPage([]));
-      const playersByMonth: Record<string, string[]> = {
-        '2026-09-01': ['player-a', 'player-b'],
-        '2026-08-01': ['player-a', 'player-c'],
-        '2026-07-01': ['player-c']
-      };
-      return of(bookingPage((playersByMonth[filter.fromDate ?? ''] ?? []).map((playerId, index) =>
-        createBooking({ bookingId: `${filter.fromDate}-${index}`, playerId })
-      )));
-    });
+    getCustomerMetrics.execute.mockReturnValue(of(customerMetricsReport({
+      currentPeriod: {
+        fromDate: '2026-09-01', toDate: '2026-09-30', totalCustomers: 2,
+        newCustomers: 1, returningCustomers: 1, returningRate: 50
+      },
+      previousPeriod: {
+        fromDate: '2026-08-01', toDate: '2026-08-31', totalCustomers: 1,
+        newCustomers: 1, returningCustomers: 0, returningRate: 0
+      }
+    })));
 
     try {
       const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
@@ -458,7 +463,11 @@ describe('VenueOwnerDashboardComponent', () => {
       expect(metrics.get('Khách hàng mới')?.value).toBe('1');
       expect(metrics.get('Khách hàng mới')?.detail).toContain('0%');
       expect(metrics.get('Tỷ lệ khách quay lại')?.value).toBe('50%');
-      expect(metrics.get('Tỷ lệ khách quay lại')?.detail).toContain('0 điểm');
+      expect(metrics.get('Tỷ lệ khách quay lại')?.detail).toContain('+50%');
+      expect(getCustomerMetrics.execute).toHaveBeenCalledWith({
+        venueId: 'venue-primary', month: '2026-09'
+      });
+      expect(manageBookings.list).not.toHaveBeenCalledWith({ venueId: 'venue-primary', page: 0, size: 20 });
     } finally {
       vi.useRealTimers();
     }
@@ -608,6 +617,22 @@ function revenueReport(overrides: Record<string, unknown> = {}) {
     hourlyRevenue: Array.from({ length: 24 }, (_, hour) => ({
       hour, revenue: 0, succeededPaymentCount: 0
     })),
+    ...overrides
+  };
+}
+
+function customerMetricsReport(overrides: Record<string, unknown> = {}) {
+  return {
+    scopeVenueId: 'venue-primary',
+    periodBasis: 'BOOKING_PLAY_DATE' as const,
+    currentPeriod: {
+      fromDate: '2026-09-01', toDate: '2026-09-30', totalCustomers: 0,
+      newCustomers: 0, returningCustomers: 0, returningRate: 0
+    },
+    previousPeriod: {
+      fromDate: '2026-08-01', toDate: '2026-08-31', totalCustomers: 0,
+      newCustomers: 0, returningCustomers: 0, returningRate: 0
+    },
     ...overrides
   };
 }

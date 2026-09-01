@@ -4,6 +4,27 @@ export interface OwnerRevenueFilter {
   toDate: string;
 }
 
+export interface OwnerCustomerMetricsFilter {
+  venueId: string;
+  month: string;
+}
+
+export interface OwnerCustomerMetricsPeriod {
+  fromDate: string;
+  toDate: string;
+  totalCustomers: number;
+  newCustomers: number;
+  returningCustomers: number;
+  returningRate: number;
+}
+
+export interface OwnerCustomerMetricsReport {
+  scopeVenueId: string;
+  periodBasis: 'BOOKING_PLAY_DATE';
+  currentPeriod: OwnerCustomerMetricsPeriod;
+  previousPeriod: OwnerCustomerMetricsPeriod;
+}
+
 export interface OwnerRevenuePeriod {
   fromDate: string;
   toDate: string;
