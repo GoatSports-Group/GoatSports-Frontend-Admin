@@ -6,7 +6,16 @@ export interface OwnerVenueCourt {
   capacity: number;
   surfaceType: string;
   active: boolean;
+  availabilityStatus?: CourtAvailabilityStatus;
+  unavailableUntil?: string | null;
 }
+
+export type CourtAvailabilityStatus =
+  | 'AVAILABLE'
+  | 'HELD'
+  | 'OCCUPIED'
+  | 'MAINTENANCE'
+  | 'INACTIVE';
 
 export type SportType =
   | 'FOOTBALL'

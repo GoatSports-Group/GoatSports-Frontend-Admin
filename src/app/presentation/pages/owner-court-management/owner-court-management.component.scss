@@ -24,12 +24,17 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .sport-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: #ecfdf5; color: #047857; font-size: 15px; font-weight: 900; }
 .court-status { display: inline-flex; align-items: center; gap: 6px; padding: 6px 9px; border-radius: 999px; background: #f1f5f9; color: #64748b; font-size: 10px; font-weight: 800; }
 .court-status i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-.court-status.is-active { background: #ecfdf5; color: #047857; }
+.court-status[data-availability='AVAILABLE'] { background: #ecfdf5; color: #047857; }
+.court-status[data-availability='HELD'] { background: #fffbeb; color: #b45309; }
+.court-status[data-availability='OCCUPIED'] { background: #eff6ff; color: #1d4ed8; }
+.court-status[data-availability='MAINTENANCE'] { background: #fff7ed; color: #c2410c; }
+.court-status[data-availability='INACTIVE'] { background: #f1f5f9; color: #64748b; }
 .court-body { padding: 17px 18px 15px; }
 .sport-name { color: #059669; font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
 .court-body h2 { margin: 5px 0 7px; overflow: hidden; color: #1e293b; font-size: 18px; text-overflow: ellipsis; white-space: nowrap; }
 .court-body p { margin: 0; color: #64748b; font-size: 12px; }
 .court-card dl { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 18px; padding: 13px 0; border-top: 1px solid #edf2f7; }
+.court-card dl div:last-child { grid-column: 1 / -1; }
 .court-card dt { color: #94a3b8; font-size: 10px; }
 .court-card dd { margin: 3px 0 0; overflow: hidden; color: #334155; font-size: 12px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .court-card > footer { display: flex; gap: 8px; padding: 13px 18px; background: #f8fafc; }

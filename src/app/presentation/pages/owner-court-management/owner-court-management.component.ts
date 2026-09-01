@@ -2,9 +2,10 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signa
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { finalize, of, switchMap, take } from 'rxjs';
+import { EMPTY, finalize, interval, of, switchMap, take } from 'rxjs';
 import {
   OwnerVenueCourt,
+  CourtAvailabilityStatus,
   OwnerVenueCourtUpsert,
   OwnerVenueOverview,
   SportType
@@ -45,6 +46,16 @@ export class OwnerCourtManagementComponent {
   readonly editorOpen = signal(false);
   readonly editingCourt = signal<OwnerVenueCourt | null>(null);
   readonly activeCount = computed(() => this.courts().filter(court => court.active).length);
+  readonly availableNowCount = computed(() => this.courts().filter(
+    court => court.active && (court.availabilityStatus ?? 'AVAILABLE') === 'AVAILABLE'
+  ).length);
+  readonly availabilityLabels: Readonly<Record<CourtAvailabilityStatus, string>> = {
+    AVAILABLE: 'Đang trống',
+    HELD: 'Đang giữ chỗ',
+    OCCUPIED: 'Đang sử dụng',
+    MAINTENANCE: 'Đang bảo trì',
+    INACTIVE: 'Tạm ngừng'
+  };
 
   readonly form = this.formBuilder.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(255)]],
@@ -54,7 +65,18 @@ export class OwnerCourtManagementComponent {
     active: [true]
   });
 
-  constructor() { this.load(); }
+  constructor() {
+    this.load();
+    interval(30_000).pipe(
+      switchMap(() => {
+        const venue = this.venue();
+        return venue ? this.manageCourts.list(venue.venueId) : EMPTY;
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: courts => this.courts.set(this.sortCourts(courts))
+    });
+  }
 
   load(): void {
     if (this.loading() && this.venue()) return;
@@ -69,7 +91,7 @@ export class OwnerCourtManagementComponent {
       takeUntilDestroyed(this.destroyRef),
       finalize(() => this.loading.set(false))
     ).subscribe({
-      next: courts => this.courts.set([...courts].sort((a, b) => a.name.localeCompare(b.name, 'vi'))),
+      next: courts => this.courts.set(this.sortCourts(courts)),
       error: error => {
         this.courts.set([]);
         this.loadError.set(this.errorMessage(error, 'Không thể tải danh sách sân thi đấu.'));
@@ -167,6 +189,10 @@ export class OwnerCourtManagementComponent {
         : [...courts, saved];
       return next.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
     });
+  }
+
+  private sortCourts(courts: OwnerVenueCourt[]): OwnerVenueCourt[] {
+    return [...courts].sort((a, b) => a.name.localeCompare(b.name, 'vi'));
   }
 
   private errorMessage(error: any, fallback: string): string {

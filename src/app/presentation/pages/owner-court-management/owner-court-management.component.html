@@ -18,7 +18,7 @@
     <section class="venue-summary">
       <div class="summary-icon"><lucide-icon name="store" /></div>
       <div><span>Cơ sở đang quản lý</span><strong>{{ venue()?.name }}</strong><small>{{ venue()?.address }}, {{ venue()?.district }}, {{ venue()?.city }}</small></div>
-      <dl><div><dt>Tổng số sân</dt><dd>{{ courts().length }}</dd></div><div><dt>Đang hoạt động</dt><dd>{{ activeCount() }}</dd></div></dl>
+      <dl><div><dt>Tổng số sân</dt><dd>{{ courts().length }}</dd></div><div><dt>Đang hoạt động</dt><dd>{{ activeCount() }}</dd></div><div><dt>Đang trống</dt><dd>{{ availableNowCount() }}</dd></div></dl>
     </section>
 
     @if (courts().length === 0) {
@@ -26,10 +26,10 @@
     } @else {
       <section class="court-grid" aria-label="Danh sách sân thi đấu">
         @for (court of courts(); track court.venueCourtId) {
-          <article class="court-card" [class.is-inactive]="!court.active">
-            <header><span class="sport-icon">{{ sportLabel(court.sportType).slice(0, 1) }}</span><span class="court-status" [class.is-active]="court.active"><i></i>{{ court.active ? 'Hoạt động' : 'Tạm ngừng' }}</span></header>
+          <article class="court-card" [class.is-inactive]="!court.active" [attr.data-availability]="court.availabilityStatus || (court.active ? 'AVAILABLE' : 'INACTIVE')">
+            <header><span class="sport-icon">{{ sportLabel(court.sportType).slice(0, 1) }}</span><span class="court-status" [attr.data-availability]="court.availabilityStatus || (court.active ? 'AVAILABLE' : 'INACTIVE')"><i></i>{{ availabilityLabels[court.availabilityStatus || (court.active ? 'AVAILABLE' : 'INACTIVE')] }}</span></header>
             <div class="court-body"><span class="sport-name">{{ sportLabel(court.sportType) }}</span><h2>{{ court.name }}</h2><p>{{ court.surfaceType || 'Chưa cập nhật loại mặt sân' }}</p></div>
-            <dl><div><dt>Sức chứa</dt><dd>{{ court.capacity }} người</dd></div><div><dt>Môn thể thao</dt><dd>{{ sportLabel(court.sportType) }}</dd></div></dl>
+            <dl><div><dt>Sức chứa</dt><dd>{{ court.capacity }} người</dd></div><div><dt>Môn thể thao</dt><dd>{{ sportLabel(court.sportType) }}</dd></div><div><dt>Khả dụng hiện tại</dt><dd>{{ availabilityLabels[court.availabilityStatus || (court.active ? 'AVAILABLE' : 'INACTIVE')] }}@if (court.unavailableUntil) { · đến {{ court.unavailableUntil.slice(0, 5) }} }</dd></div></dl>
             <footer>
               <button type="button" class="edit-button" (click)="openEdit(court)" [disabled]="saving() || togglingId() === court.venueCourtId"><lucide-icon name="pencil" /> Xem / sửa</button>
               <button type="button" class="toggle-button" [class.turn-on]="!court.active" (click)="toggle(court)" [disabled]="togglingId() !== null || saving()">

@@ -56,6 +56,7 @@ export interface OwnerBooking {
   walkInCustomerName?: string;
   walkInCustomerPhone?: string;
   matchmakingSessionId?: string;
+  holdExpiresAt?: string;
   createdAt: string;
   updatedAt?: string;
   payments: OwnerPayment[];
