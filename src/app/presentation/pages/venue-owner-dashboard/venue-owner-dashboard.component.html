@@ -150,7 +150,10 @@
     </article>
 
     <article class="utilization-panel">
-      <header><span>Tỷ lệ sử dụng sân <lucide-icon name="info" /></span><small>Hôm nay</small></header>
+      <header>
+        <div><span>Tỷ lệ sử dụng sân <lucide-icon name="info" /></span><small>Hôm nay</small></div>
+        <a routerLink="/admin/courts"><lucide-icon name="activity" /> Xem chi tiết</a>
+      </header>
       <div class="utilization-content">
         <div class="utilization-ring" [style.background]="utilizationGradient()">
           <div><strong>{{ utilizationRate() }}%</strong><span>Đang sử dụng</span></div>
@@ -170,7 +173,6 @@
           </div>
         </dl>
       </div>
-      <a routerLink="/admin/courts"><lucide-icon name="activity" /> Xem chi tiết</a>
     </article>
   </section>
 

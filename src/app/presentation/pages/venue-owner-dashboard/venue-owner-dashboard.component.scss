@@ -107,7 +107,7 @@
 .revenue-panel,
 .utilization-panel { min-width: 0; padding: 18px; }
 .revenue-panel { display: grid; min-height: 430px; grid-template-rows: auto 1fr; }
-.utilization-panel { display: grid; min-height: 430px; grid-template-rows: auto 1fr auto; border-left: 1px solid #d6e4d8; }
+.utilization-panel { display: grid; min-height: 430px; grid-template-rows: auto 1fr; border-left: 1px solid #d6e4d8; }
 
 .revenue-panel > header,
 .utilization-panel > header,
@@ -166,7 +166,7 @@
 .daily-revenue-error lucide-icon { width: 18px; height: 18px; }
 .daily-revenue-error button { padding: 0 12px; border: 1px solid #fda4af; border-radius: 8px; background: #fff; color: #be123c; cursor: pointer; font-size: 12px; font-weight: 700; }
 
-.utilization-panel header { display: grid; justify-content: start; }
+.utilization-panel header > div { display: grid; justify-content: start; }
 .utilization-panel header small { margin-top: 2px; color: #8a9690; font-size: 12px; }
 .utilization-content { display: grid; grid-template-columns: 150px minmax(0, 1fr); align-items: center; align-self: center; gap: 18px; margin-top: 8px; }
 .utilization-ring { display: grid; width: 158px; height: 158px; place-items: center; border-radius: 50%; transform: rotate(-20deg); }
@@ -182,8 +182,8 @@
 .utilization-content i.is-occupied { background: var(--dashboard-primary-hover); }
 .utilization-content i.is-available { background: var(--dashboard-success); }
 .utilization-content i.is-maintenance { background: var(--dashboard-warning); }
-.utilization-panel > a { display: inline-flex; min-height: 38px; align-items: center; justify-content: center; gap: 7px; justify-self: end; padding: 0 13px; border: 1px solid #b8cebe; border-radius: 7px; color: #315844; font-size: 12px; font-weight: 750; text-decoration: none; }
-.utilization-panel > a lucide-icon { width: 14px; height: 14px; }
+.utilization-panel header > a { display: inline-flex; min-height: 38px; align-items: center; justify-content: center; gap: 7px; padding: 0 13px; border: 1px solid #b8cebe; border-radius: 7px; color: #315844; font-size: 12px; font-weight: 750; text-decoration: none; white-space: nowrap; }
+.utilization-panel header > a lucide-icon { width: 14px; height: 14px; color: currentColor; }
 
 .kpi-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow: hidden; border-radius: 14px; }
 .kpi-strip article { position: relative; display: grid; min-width: 0; min-height: 92px; grid-template-columns: 42px minmax(0, 1fr); align-items: center; gap: 11px; padding: 14px 16px; }
@@ -403,7 +403,6 @@
 @media (max-width: 900px) {
   .performance-card { grid-template-columns: 1fr; }
   .utilization-panel { border-top: 1px solid #d6e4d8; border-left: 0; }
-  .utilization-panel > a { justify-self: start; }
   .kpi-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .kpi-strip article:nth-child(3),
   .kpi-strip article:nth-child(4) { border-top: 1px solid #e1e9e4; }

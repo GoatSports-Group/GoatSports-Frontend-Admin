@@ -147,6 +147,8 @@ describe('VenueOwnerDashboardComponent', () => {
     const root = fixture.nativeElement as HTMLElement;
     expect(root.textContent).toContain('Minh Tuấn');
     expect(root.querySelector('.performance-card')).toBeTruthy();
+    expect(root.querySelector('.utilization-panel > header > a')).toBeTruthy();
+    expect(root.querySelector('.utilization-panel > a')).toBeNull();
     expect(root.querySelectorAll('.kpi-strip article')).toHaveLength(4);
     expect(root.querySelector('.schedule-panel')).toBeTruthy();
     expect(root.querySelector('.live-courts-panel')).toBeTruthy();
