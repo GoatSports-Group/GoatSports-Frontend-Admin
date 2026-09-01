@@ -18,6 +18,7 @@ import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashbo
 import { ManageOwnerVenueCourtsUseCase } from '@application/usecase/venue-owner-dashboard/manage-owner-venue-courts.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
+import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-loading.component';
 
 interface DayOption { value: ScheduleDayOfWeek; label: string; }
 interface SlotGroup { date: string; slots: OwnerTimeSlot[]; }
@@ -25,7 +26,7 @@ interface SlotGroup { date: string; slots: OwnerTimeSlot[]; }
 @Component({
   selector: 'app-owner-schedule',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, LucideIconComponent],
+  imports: [ReactiveFormsModule, RouterLink, LucideIconComponent, PageLoadingComponent],
   templateUrl: './owner-schedule.component.html',
   styleUrl: './owner-schedule.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

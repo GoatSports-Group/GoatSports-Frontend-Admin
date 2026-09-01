@@ -11,12 +11,13 @@ import { GetStorageFileUrlUseCase } from '@application/usecase/storage/get-stora
 import { UploadVenueImageUseCase } from '@application/usecase/storage/upload-venue-image.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
+import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-loading.component';
 import { VenueImageItem } from './venue-image.model';
 
 @Component({
   selector: 'app-owner-venue-management',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, LucideIconComponent],
+  imports: [ReactiveFormsModule, RouterLink, LucideIconComponent, PageLoadingComponent],
   templateUrl: './owner-venue-management.component.html',
   styleUrls: [
     './owner-venue-management.component.scss',

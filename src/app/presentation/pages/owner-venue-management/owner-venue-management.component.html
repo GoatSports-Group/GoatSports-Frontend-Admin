@@ -14,11 +14,8 @@
   </header>
 
   @if (loading() && !venues().length) {
-    <section class="state-card" aria-live="polite">
-      <span class="spinner" aria-hidden="true"></span>
-      <h2>Đang tải danh sách cơ sở</h2>
-      <p>GoatSports đang đồng bộ các Venue thuộc tài khoản của bạn.</p>
-    </section>
+    <app-page-loading title="Đang tải danh sách cơ sở"
+      description="GoatSports đang đồng bộ các cơ sở thuộc tài khoản của bạn." />
   } @else if (loadError()) {
     <section class="state-card state-card--error" role="alert">
       <lucide-icon name="alert-circle" />

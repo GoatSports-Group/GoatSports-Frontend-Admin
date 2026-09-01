@@ -29,14 +29,17 @@
       </div>
       <a [routerLink]="applicationUrl">Xem lịch sử <lucide-icon name="arrow-right" /></a>
     </header>
-    <app-owner-application-progress [application]="latestApplication()" [loading]="applicationLoading()"
+    @if (applicationLoading()) {
+    <app-page-loading title="Đang tải hồ sơ"
+      description="GoatSports đang kiểm tra trạng thái đăng ký mới nhất của bạn." />
+    } @else {
+    <app-owner-application-progress [application]="latestApplication()" [loading]="false"
       [error]="applicationError()" [applicationUrl]="applicationUrl" (retry)="loadApplications()" />
+    }
   </section>
   } @else if (venueLoading() && !venues().length) {
-  <div class="dashboard-skeleton" role="status" aria-live="polite">
-    <span></span><span></span><span></span>
-    <span class="sr-only">Đang tải dữ liệu tổng quan</span>
-  </div>
+  <app-page-loading title="Đang tải tổng quan"
+    description="Đang tổng hợp cơ sở, sân thi đấu và dữ liệu vận hành mới nhất." />
   } @else if (venueError()) {
   <section class="dashboard-state dashboard-state--error" role="alert">
     <lucide-icon name="alert-triangle" />

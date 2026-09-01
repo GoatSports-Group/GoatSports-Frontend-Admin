@@ -28,6 +28,7 @@ import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashbo
 import { ManageOwnerVenueCourtsUseCase } from '@application/usecase/venue-owner-dashboard/manage-owner-venue-courts.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
+import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-loading.component';
 
 type WorkspaceTab = 'check-in' | 'walk-in' | 'history';
 type LookupMode = 'bookingCode' | 'qrCode';
@@ -39,7 +40,7 @@ interface BarcodeDetectorConstructor { new(options: { formats: string[] }): Barc
 @Component({
   selector: 'app-owner-check-in',
   standalone: true,
-  imports: [ReactiveFormsModule, LucideIconComponent],
+  imports: [ReactiveFormsModule, LucideIconComponent, PageLoadingComponent],
   templateUrl: './owner-check-in.component.html',
   styleUrl: './owner-check-in.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

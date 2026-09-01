@@ -16,11 +16,12 @@ import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue
 import { GetOwnerRevenueUseCase } from '@application/usecase/owner-revenue/get-owner-revenue.usecase';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
+import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-loading.component';
 
 @Component({
   selector: 'app-owner-revenue',
   standalone: true,
-  imports: [LucideIconComponent],
+  imports: [LucideIconComponent, PageLoadingComponent],
   templateUrl: './owner-revenue.component.html',
   styleUrl: './owner-revenue.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

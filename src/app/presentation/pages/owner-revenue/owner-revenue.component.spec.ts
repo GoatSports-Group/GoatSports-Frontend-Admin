@@ -103,7 +103,8 @@ describe('OwnerRevenueComponent', () => {
 
     expect(getRevenue.execute).toHaveBeenCalledTimes(2);
     expect(component.loading()).toBe(true);
-    expect(fixture.nativeElement.querySelector('.loading-grid')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('app-page-loading')).toBeTruthy();
+    expect(fixture.nativeElement.textContent).toContain('Đang tải doanh thu');
   });
 
   it('clears stale data on failure and retries the backend request', () => {

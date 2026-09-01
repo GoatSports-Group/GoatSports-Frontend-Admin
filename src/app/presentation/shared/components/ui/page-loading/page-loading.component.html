@@ -1,0 +1,8 @@
+<section class="page-loading" [attr.data-size]="size()" role="status" aria-live="polite"
+  [attr.aria-label]="title()">
+  <div class="page-loading__content">
+    <span class="page-loading__spinner" aria-hidden="true"></span>
+    <strong>{{ title() }}</strong>
+    <p>{{ description() }}</p>
+  </div>
+</section>

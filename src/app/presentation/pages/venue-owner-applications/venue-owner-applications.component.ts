@@ -4,13 +4,20 @@ import { OwnerApplication, OwnerApplicationStatus } from '@application/dto/owner
 import { GetMyOwnerApplicationsUseCase } from '@application/usecase/owner-application/get-my-owner-applications.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
+import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-loading.component';
 import { OwnerApplicationProgressComponent } from '@presentation/pages/dashboard/owner-application-progress/owner-application-progress.component';
 import { VenueOwnerApplicationFormComponent } from './venue-owner-application-form.component';
 
 @Component({
   selector: 'app-venue-owner-applications',
   standalone: true,
-  imports: [CommonModule, LucideIconComponent, OwnerApplicationProgressComponent, VenueOwnerApplicationFormComponent],
+  imports: [
+    CommonModule,
+    LucideIconComponent,
+    PageLoadingComponent,
+    OwnerApplicationProgressComponent,
+    VenueOwnerApplicationFormComponent
+  ],
   templateUrl: './venue-owner-applications.component.html',
   styleUrl: './venue-owner-applications.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

@@ -35,9 +35,8 @@
   </nav>
 
   @if (loadingContext()) {
-    <section class="state-card loading-state" aria-live="polite">
-      <span class="skeleton wide"></span><span class="skeleton"></span><span class="skeleton"></span>
-    </section>
+    <app-page-loading title="Đang tải dữ liệu check-in"
+      description="Đang đồng bộ cơ sở, sân và lịch vận hành trong hôm nay." />
   } @else if (loadError()) {
     <section class="state-card error-state" role="alert">
       <app-lucide-icon name="alert-circle" [size]="24" />

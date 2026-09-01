@@ -92,7 +92,8 @@ describe('OwnerReviewsComponent', () => {
 
     expect(getReviews.execute).toHaveBeenCalledTimes(2);
     expect(component.loading()).toBe(true);
-    expect(fixture.nativeElement.querySelectorAll('.skeleton')).toHaveLength(3);
+    expect(fixture.nativeElement.querySelector('app-page-loading')).toBeTruthy();
+    expect(fixture.nativeElement.textContent).toContain('Đang tải đánh giá');
   });
 
   it('clears stale reviews on error and retries', () => {

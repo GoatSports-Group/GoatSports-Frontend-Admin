@@ -42,6 +42,7 @@ import { GetStorageFileUrlUseCase } from '@application/usecase/storage/get-stora
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
 import { GetOwnerVenueOverviewUseCase } from '@application/usecase/venue-owner-dashboard/get-owner-venue-overview.usecase';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
+import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-loading.component';
 import { WeatherInfo } from '@shared/components/ui/weather-widget/weather-widget.models';
 import { OwnerApplicationProgressComponent } from '../dashboard/owner-application-progress/owner-application-progress.component';
 
@@ -66,7 +67,7 @@ const COURT_AVAILABILITY_POLL_INTERVAL_MS = 30_000;
 @Component({
   selector: 'app-venue-owner-dashboard',
   standalone: true,
-  imports: [RouterModule, LucideIconComponent, OwnerApplicationProgressComponent],
+  imports: [RouterModule, LucideIconComponent, PageLoadingComponent, OwnerApplicationProgressComponent],
   templateUrl: './venue-owner-dashboard.component.html',
   styleUrl: './venue-owner-dashboard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

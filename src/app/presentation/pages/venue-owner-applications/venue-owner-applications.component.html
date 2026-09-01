@@ -20,9 +20,12 @@
 
     @if (activeView() === 'form') {
       <app-venue-owner-application-form (submitted)="handleSubmitted()" />
-    } @else if (loading() || error()) {
+    } @else if (loading()) {
+      <app-page-loading title="Đang tải hồ sơ đăng ký"
+        description="GoatSports đang đồng bộ lịch sử và trạng thái xét duyệt của bạn." />
+    } @else if (error()) {
       <app-owner-application-progress
-        [application]="null" [loading]="loading()" [error]="error()"
+        [application]="null" [loading]="false" [error]="error()"
         applicationUrl="/admin/applications" (retry)="loadApplications()" />
     } @else if (applications().length === 0) {
       <div class="empty-state">

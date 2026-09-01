@@ -20,6 +20,7 @@ import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashbo
 import { ManageOwnerVenueCourtsUseCase } from '@application/usecase/venue-owner-dashboard/manage-owner-venue-courts.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
+import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-loading.component';
 
 interface StatusOption { value: '' | OwnerBookingStatus; label: string; }
 interface TimelineEntry { label: string; detail: string; time?: string; state: string; }
@@ -27,7 +28,7 @@ interface TimelineEntry { label: string; detail: string; time?: string; state: s
 @Component({
   selector: 'app-owner-bookings',
   standalone: true,
-  imports: [ReactiveFormsModule, LucideIconComponent],
+  imports: [ReactiveFormsModule, LucideIconComponent, PageLoadingComponent],
   templateUrl: './owner-bookings.component.html',
   styleUrl: './owner-bookings.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

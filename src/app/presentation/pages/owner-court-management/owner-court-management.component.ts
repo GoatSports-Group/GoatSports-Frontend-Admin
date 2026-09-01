@@ -14,13 +14,14 @@ import { GetMyOwnerVenueUseCase } from '@application/usecase/venue-owner-dashboa
 import { ManageOwnerVenueCourtsUseCase } from '@application/usecase/venue-owner-dashboard/manage-owner-venue-courts.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
+import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-loading.component';
 
 interface SportOption { value: SportType; label: string; }
 
 @Component({
   selector: 'app-owner-court-management',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, LucideIconComponent],
+  imports: [ReactiveFormsModule, RouterLink, LucideIconComponent, PageLoadingComponent],
   templateUrl: './owner-court-management.component.html',
   styleUrl: './owner-court-management.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

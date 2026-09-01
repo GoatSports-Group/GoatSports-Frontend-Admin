@@ -89,7 +89,8 @@ describe('OwnerBookingsComponent', () => {
     fixture.detectChanges();
 
     expect(fixture.componentInstance.loading()).toBe(true);
-    expect(fixture.nativeElement.querySelector('.loading-grid')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('app-page-loading')).toBeTruthy();
+    expect(fixture.nativeElement.textContent).toContain('Đang tải danh sách booking');
   });
 
   it('shows real list error and supports retry', () => {

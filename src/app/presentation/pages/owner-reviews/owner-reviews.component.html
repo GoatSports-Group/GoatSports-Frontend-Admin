@@ -40,9 +40,8 @@
   </section>
 
   @if (loading()) {
-    <section class="review-grid" aria-label="Đang tải đánh giá">
-      @for (item of [1, 2, 3]; track item) { <span class="skeleton"></span> }
-    </section>
+    <app-page-loading title="Đang tải đánh giá"
+      description="Đang đồng bộ phản hồi mới nhất từ các booking đã hoàn tất." />
   } @else if (error()) {
     <section class="state-card error-state">
       <lucide-icon name="alert-circle" />

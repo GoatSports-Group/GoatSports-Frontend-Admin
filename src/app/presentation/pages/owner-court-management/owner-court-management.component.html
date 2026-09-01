@@ -9,7 +9,8 @@
   </header>
 
   @if (loading()) {
-    <section class="state-card" aria-live="polite"><span class="spinner"></span><h2>Đang tải danh sách sân</h2><p>Thông tin đang được đồng bộ từ Venue Service.</p></section>
+    <app-page-loading title="Đang tải danh sách sân"
+      description="Thông tin trạng thái sân đang được đồng bộ từ Venue Service." />
   } @else if (loadError()) {
     <section class="state-card state-card--error" role="alert"><lucide-icon name="alert-circle" /><h2>Chưa thể tải dữ liệu</h2><p>{{ loadError() }}</p><button type="button" (click)="load()">Thử lại</button></section>
   } @else if (!venue()) {

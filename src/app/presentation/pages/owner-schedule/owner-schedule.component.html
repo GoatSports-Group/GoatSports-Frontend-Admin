@@ -13,9 +13,8 @@
   </header>
 
   @if (loadingContext()) {
-    <section class="state-card" aria-live="polite">
-      <span class="spinner" aria-hidden="true"></span><strong>Đang tải cơ sở và sân thi đấu…</strong>
-    </section>
+    <app-page-loading title="Đang tải lịch và bảng giá"
+      description="Đang đồng bộ cơ sở, sân thi đấu và phạm vi vận hành." />
   } @else if (!venues().length) {
     <section class="state-card state-card--empty">
       <lucide-icon name="land-plot" />
@@ -74,9 +73,8 @@
           <button type="button" (click)="loadSchedule()">Thử lại</button>
         </section>
       } @else if (loadingData()) {
-        <section class="loading-grid" aria-live="polite">
-          @for (item of [1, 2, 3]; track item) { <span></span> }
-        </section>
+        <app-page-loading size="compact" title="Đang tải dữ liệu sân"
+          description="Đang đồng bộ quy tắc giá và các khung giờ khả dụng." />
       } @else if (activeTab() === 'pricing') {
         <section class="workspace-grid">
           <div class="workspace-panel">

@@ -39,10 +39,8 @@
   </section>
 
   @if (loading()) {
-    <section class="loading-grid" aria-label="Đang tải doanh thu">
-      @for (item of [1, 2, 3, 4]; track item) { <span class="skeleton metric-skeleton"></span> }
-      <span class="skeleton chart-skeleton"></span>
-    </section>
+    <app-page-loading title="Đang tải doanh thu"
+      description="Đang đối soát booking và payment thành công trong phạm vi đã chọn." />
   } @else if (error()) {
     <section class="state-card error-state">
       <lucide-icon name="alert-circle" />
