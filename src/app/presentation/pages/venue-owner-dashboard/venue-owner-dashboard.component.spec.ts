@@ -610,6 +610,11 @@ describe('VenueOwnerDashboardComponent', () => {
     expect(dialog).toBeTruthy();
     expect(dialog.textContent).toContain('GS-DETAIL-1');
     expect(dialog.textContent).toContain('Lịch sử thanh toán');
+    expect(dialog.querySelectorAll('.booking-detail-facts > div')).toHaveLength(4);
+    expect(dialog.querySelectorAll('.booking-finance > div')).toHaveLength(3);
+    expect(dialog.querySelectorAll('.booking-payments article')).toHaveLength(1);
+    expect((dialog.querySelector('footer a') as HTMLAnchorElement).getAttribute('href'))
+      .toContain('/admin/owner-bookings?bookingId=booking-detail-1');
   });
 });
 

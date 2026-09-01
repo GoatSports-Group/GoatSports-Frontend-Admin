@@ -33,8 +33,8 @@
     <app-page-loading title="Đang tải hồ sơ"
       description="GoatSports đang kiểm tra trạng thái đăng ký mới nhất của bạn." />
     } @else {
-    <app-owner-application-progress [application]="latestApplication()" [loading]="false"
-      [error]="applicationError()" [applicationUrl]="applicationUrl" (retry)="loadApplications()" />
+    <app-owner-application-progress [application]="latestApplication()" [loading]="false" [error]="applicationError()"
+      [applicationUrl]="applicationUrl" (retry)="loadApplications()" />
     }
   </section>
   } @else if (venueLoading() && !venues().length) {
@@ -237,8 +237,7 @@
         <div class="live-courts-carousel">
           @if (hasCourtCarousel()) {
           <button class="court-carousel-button court-carousel-button--previous" type="button"
-            aria-label="Xem các sân phía trước" [disabled]="!canScrollCourtsBackward()"
-            (click)="scrollLiveCourts(-1)">
+            aria-label="Xem các sân phía trước" [disabled]="!canScrollCourtsBackward()" (click)="scrollLiveCourts(-1)">
             <lucide-icon name="chevron-left" />
           </button>
           }
@@ -260,8 +259,7 @@
 
           @if (hasCourtCarousel()) {
           <button class="court-carousel-button court-carousel-button--next" type="button"
-            aria-label="Xem các sân tiếp theo" [disabled]="!canScrollCourtsForward()"
-            (click)="scrollLiveCourts(1)">
+            aria-label="Xem các sân tiếp theo" [disabled]="!canScrollCourtsForward()" (click)="scrollLiveCourts(1)">
             <lucide-icon name="chevron-right" />
           </button>
           }
@@ -310,7 +308,7 @@
     <section class="booking-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="booking-detail-title"
       tabindex="-1" (click)="$event.stopPropagation()" (keydown.escape)="closeBookingDetail()">
       <header>
-        <div><span>Chi tiết booking</span>
+        <div><span>Chi tiết đặt sân</span>
           <h2 id="booking-detail-title">{{ bookingDetail()?.bookingCode || 'Đang tải...' }}</h2>
         </div>
         <button type="button" (click)="closeBookingDetail()" aria-label="Đóng chi tiết booking"><lucide-icon
@@ -375,8 +373,6 @@
           }
         </section>
       </div>
-      <footer><a routerLink="/admin/owner-bookings" [queryParams]="{ bookingId: booking.bookingId }">Mở trang quản lý
-          booking <lucide-icon name="arrow-right" /></a></footer>
       }
     </section>
   </div>
