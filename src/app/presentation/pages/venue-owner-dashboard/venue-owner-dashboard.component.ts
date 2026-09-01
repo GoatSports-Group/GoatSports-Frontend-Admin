@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, input, output, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterModule } from '@angular/router';
-import { catchError, finalize, forkJoin, of, take } from 'rxjs';
+import { catchError, EMPTY, expand, finalize, forkJoin, Observable, of, reduce, take } from 'rxjs';
 import { OwnerApplication, OwnerApplicationStatus } from '@application/dto/owner-application/owner-application.dto';
 import { OwnerBooking, OwnerBookingSource } from '@application/dto/owner-booking/owner-booking.dto';
 import { OwnerRevenueReport } from '@application/dto/owner-revenue/owner-revenue.dto';
@@ -25,20 +25,6 @@ interface DashboardMetric {
   detail: string;
   icon: string;
   negative?: boolean;
-}
-
-interface RevenueChartPoint {
-  date: string;
-  revenue: number;
-  x: number;
-  y: number;
-}
-
-interface OperationAlert {
-  level: 'danger' | 'warning' | 'info' | 'success';
-  icon: string;
-  title: string;
-  detail: string;
 }
 
 @Component({
@@ -71,11 +57,36 @@ export class VenueOwnerDashboardComponent {
   readonly venues = signal<OwnerVenueOverview[]>([]);
   readonly venueLoading = signal(false);
   readonly venueError = signal<string | null>(null);
+  readonly selectedVenueId = signal<string | null>(null);
   readonly businessLoading = signal(false);
   readonly businessError = signal<string | null>(null);
-  readonly revenueReport = signal<OwnerRevenueReport | null>(null);
+  readonly dailyRevenueLoading = signal(false);
+  readonly dailyRevenueError = signal<string | null>(null);
+  readonly dailyRevenueReport = signal<OwnerRevenueReport | null>(null);
+  readonly monthlyRevenueReport = signal<OwnerRevenueReport | null>(null);
+  readonly revenueDateDraft = signal(this.localDate(new Date()));
+  readonly appliedRevenueDate = signal(this.localDate(new Date()));
+  readonly maximumRevenueDate = this.localDate(new Date());
   readonly upcomingBookings = signal<OwnerBooking[]>([]);
+  readonly currentMonthBookings = signal<OwnerBooking[]>([]);
+  readonly previousMonthBookings = signal<OwnerBooking[]>([]);
+  readonly baselineMonthBookings = signal<OwnerBooking[]>([]);
+  readonly bookingDetailId = signal<string | null>(null);
+  readonly bookingDetail = signal<OwnerBooking | null>(null);
+  readonly bookingDetailLoading = signal(false);
+  readonly bookingDetailError = signal<string | null>(null);
   readonly venueCoverUrls = signal<Readonly<Record<string, string>>>({});
+  readonly reviewStars = [1, 2, 3, 4, 5];
+  readonly previewReviews = [
+    {
+      id: 'preview-review-1', initials: 'HL', rating: 5,
+      content: 'Sân sạch, nhân viên hỗ trợ nhanh và nhiệt tình.', time: '12 phút trước'
+    },
+    {
+      id: 'preview-review-2', initials: 'TK', rating: 4,
+      content: 'Mặt sân tốt, khu vực chờ khá thoải mái.', time: '1 giờ trước'
+    }
+  ] as const;
 
   readonly latestApplication = computed(() => this.applications()[0] ?? null);
   readonly approvedApplication = computed(() =>
@@ -83,9 +94,12 @@ export class VenueOwnerDashboardComponent {
   );
   readonly applicationApproved = computed(() => Boolean(this.approvedApplication()));
   readonly displayName = computed(() => this.ownerName().trim() || 'Chủ sân');
-  readonly primaryVenue = computed(() => this.venues()[0] ?? null);
-  readonly primaryVenueCoverUrl = computed(() => {
-    const venueId = this.primaryVenue()?.venueId;
+  readonly selectedVenue = computed(() => {
+    const venueId = this.selectedVenueId();
+    return this.venues().find(venue => venue.venueId === venueId) ?? this.venues()[0] ?? null;
+  });
+  readonly selectedVenueCoverUrl = computed(() => {
+    const venueId = this.selectedVenue()?.venueId;
     return venueId ? this.venueCoverUrls()[venueId] ?? null : null;
   });
   readonly greeting = computed(() => {
@@ -101,15 +115,15 @@ export class VenueOwnerDashboardComponent {
     return formatted.charAt(0).toUpperCase() + formatted.slice(1);
   });
 
-  readonly allCourts = computed(() => this.venues().flatMap(venue => venue.courts ?? []));
-  readonly activeCourtCount = computed(() => this.allCourts().filter(court => court.active).length);
+  readonly selectedVenueCourts = computed(() => this.selectedVenue()?.courts ?? []);
+  readonly activeCourtCount = computed(() => this.selectedVenueCourts().filter(court => court.active).length);
   readonly availableCourtCount = computed(() =>
-    this.allCourts().filter(court => this.normalizedCourtStatus(court) === 'AVAILABLE').length
+    this.selectedVenueCourts().filter(court => this.normalizedCourtStatus(court) === 'AVAILABLE').length
   );
-  readonly inUseCourtCount = computed(() => this.allCourts().filter(court =>
+  readonly inUseCourtCount = computed(() => this.selectedVenueCourts().filter(court =>
     ['HELD', 'OCCUPIED'].includes(this.normalizedCourtStatus(court))
   ).length);
-  readonly maintenanceCourtCount = computed(() => this.allCourts().filter(court =>
+  readonly maintenanceCourtCount = computed(() => this.selectedVenueCourts().filter(court =>
     this.normalizedCourtStatus(court) === 'MAINTENANCE'
   ).length);
   readonly utilizationRate = computed(() => this.activeCourtCount()
@@ -117,81 +131,59 @@ export class VenueOwnerDashboardComponent {
     : 0
   );
 
-  readonly monthlyRevenue = computed(() => this.revenueReport()?.currentPeriod.totalRevenue ?? 0);
-  readonly revenueChange = computed(() => this.revenueReport()?.revenueChangePercentage ?? 0);
-  readonly revenueChartPoints = computed<readonly RevenueChartPoint[]>(() => {
-    const values = this.revenueReport()?.dailyRevenue ?? [];
-    if (!values.length) return [];
-    const maximum = Math.max(1, ...values.map(point => point.revenue));
-    return values.map((point, index) => ({
-      ...point,
-      x: values.length === 1 ? 12 : 12 + (index / (values.length - 1)) * 616,
-      y: 176 - (point.revenue / maximum) * 150
-    }));
-  });
-  readonly revenueLinePoints = computed(() =>
-    this.revenueChartPoints().map(point => `${point.x},${point.y}`).join(' ')
+  readonly dailyRevenue = computed(() => this.dailyRevenueReport()?.currentPeriod.totalRevenue ?? 0);
+  readonly dailyBookingCount = computed(() => this.dailyRevenueReport()?.currentPeriod.bookingCount ?? 0);
+  readonly dailyPaidBookingCount = computed(() => this.dailyRevenueReport()?.currentPeriod.paidBookingCount ?? 0);
+  readonly dailyPaymentRate = computed(() => this.dailyBookingCount()
+    ? Math.round((this.dailyPaidBookingCount() / this.dailyBookingCount()) * 100)
+    : 0
   );
-  readonly revenueAreaPath = computed(() => {
-    const points = this.revenueChartPoints();
-    if (!points.length) return '';
-    return `M ${points[0].x} 176 L ${points.map(point => `${point.x} ${point.y}`).join(' L ')} L ${points.at(-1)!.x} 176 Z`;
-  });
-  readonly revenueAxisPoints = computed(() => this.revenueChartPoints().filter(
-    (_, index, points) => this.showRevenueAxisLabel(index, points.length)
+  readonly monthlyRevenue = computed(() => this.monthlyRevenueReport()?.currentPeriod.totalRevenue ?? 0);
+  readonly revenueChange = computed(() => this.monthlyRevenueReport()?.revenueChangePercentage ?? 0);
+  readonly newCustomerCount = computed(() => this.newCustomers(
+    this.currentMonthBookings(), this.previousMonthBookings()
   ));
-  readonly liveCourts = computed(() => this.allCourts().slice(0, 5));
+  readonly previousNewCustomerCount = computed(() => this.newCustomers(
+    this.previousMonthBookings(), this.baselineMonthBookings()
+  ));
+  readonly newCustomerChange = computed(() => this.changePercentage(
+    this.newCustomerCount(), this.previousNewCustomerCount()
+  ));
+  readonly returningCustomerRate = computed(() => this.returnRate(
+    this.currentMonthBookings(), this.previousMonthBookings()
+  ));
+  readonly previousReturningCustomerRate = computed(() => this.returnRate(
+    this.previousMonthBookings(), this.baselineMonthBookings()
+  ));
+  readonly returningCustomerChange = computed(() =>
+    this.returningCustomerRate() - this.previousReturningCustomerRate()
+  );
+  readonly liveCourts = computed(() => this.selectedVenueCourts().slice(0, 5));
 
   readonly dashboardMetrics = computed<readonly DashboardMetric[]>(() => {
-    const report = this.revenueReport();
+    const report = this.monthlyRevenueReport();
     const bookingChange = report?.bookingCountChangePercentage ?? 0;
     const bookingCount = report?.currentPeriod.bookingCount ?? 0;
-    const paidBookingCount = report?.currentPeriod.paidBookingCount ?? 0;
     return [
       {
-        label: 'Doanh thu tháng', value: this.money(this.monthlyRevenue()), icon: 'trending-up',
-        detail: `${this.signedPercentage(this.revenueChange())} so với kỳ trước`, negative: this.revenueChange() < 0
+        label: 'Doanh thu tháng hiện tại', value: this.money(this.monthlyRevenue()), icon: 'trending-up',
+        detail: `${this.signedPercentage(this.revenueChange())} so với tháng trước`, negative: this.revenueChange() < 0
       },
       {
         label: 'Tổng lượt đặt', value: String(bookingCount), icon: 'calendar-check',
-        detail: `${this.signedPercentage(bookingChange)} so với kỳ trước`, negative: bookingChange < 0
+        detail: `${this.signedPercentage(bookingChange)} so với tháng trước`, negative: bookingChange < 0
       },
       {
-        label: 'Booking đã thanh toán', value: String(paidBookingCount), icon: 'circle-check',
-        detail: bookingCount ? `${Math.round((paidBookingCount / bookingCount) * 100)}% tổng booking` : 'Chưa có booking'
+        label: 'Khách hàng mới', value: String(this.newCustomerCount()), icon: 'user-round',
+        detail: `${this.signedPercentage(this.newCustomerChange())} so với tháng trước`,
+        negative: this.newCustomerChange() < 0
       },
       {
-        label: 'Tỷ lệ sử dụng sân', value: `${this.utilizationRate()}%`, icon: 'gauge',
-        detail: `${this.availableCourtCount()}/${this.activeCourtCount()} sân đang trống`
+        label: 'Tỷ lệ khách quay lại', value: `${this.returningCustomerRate()}%`, icon: 'rotate-ccw',
+        detail: `${this.returningCustomerChange() > 0 ? '+' : ''}${this.returningCustomerChange()} điểm so với tháng trước`,
+        negative: this.returningCustomerChange() < 0
       }
     ];
-  });
-
-  readonly operationAlerts = computed<readonly OperationAlert[]>(() => {
-    const alerts: OperationAlert[] = [];
-    const pendingPayment = this.upcomingBookings().filter(booking => booking.status === 'PENDING_PAYMENT').length;
-    if (this.maintenanceCourtCount()) alerts.push({
-      level: 'warning', icon: 'alert-triangle', title: `${this.maintenanceCourtCount()} sân đang bảo trì`,
-      detail: 'Kiểm tra lịch và chủ động điều phối booking.'
-    });
-    if (pendingPayment) alerts.push({
-      level: 'danger', icon: 'alert-circle', title: `${pendingPayment} booking chờ thanh toán`,
-      detail: 'Thời gian giữ chỗ đang được đếm ngược.'
-    });
-    if (this.inUseCourtCount()) alerts.push({
-      level: 'info', icon: 'activity', title: `${this.inUseCourtCount()} sân đang được sử dụng`,
-      detail: 'Trạng thái được cập nhật theo slot hiện tại.'
-    });
-    const nextBooking = this.upcomingBookings()[0];
-    if (nextBooking && alerts.length < 3) alerts.push({
-      level: 'info', icon: 'clock', title: `Lịch gần nhất lúc ${this.timeValue(nextBooking.startTime)}`,
-      detail: `${nextBooking.courtName} · ${this.shortDate(nextBooking.playDate)}`
-    });
-    if (!alerts.length) alerts.push({
-      level: 'success', icon: 'circle-check', title: 'Vận hành đang ổn định',
-      detail: `${this.availableCourtCount()} sân sẵn sàng nhận booking.`
-    });
-    return alerts.slice(0, 3);
   });
 
   constructor() {
@@ -216,12 +208,14 @@ export class VenueOwnerDashboardComponent {
           this.loadVenues();
         } else {
           this.venues.set([]);
+          this.selectedVenueId.set(null);
           this.venueError.set(null);
         }
       },
       error: () => {
         this.applications.set([]);
         this.venues.set([]);
+        this.selectedVenueId.set(null);
         this.applicationError.set('Không thể tải tiến trình lúc này. Vui lòng thử lại.');
       }
     });
@@ -233,11 +227,60 @@ export class VenueOwnerDashboardComponent {
 
   retryBusinessSnapshot(): void {
     this.loadBusinessSnapshot();
+    this.loadDailyRevenue();
+  }
+
+  selectVenue(event: Event): void {
+    const venueId = (event.target as HTMLSelectElement).value;
+    if (!venueId || venueId === this.selectedVenueId() || this.businessLoading() || this.dailyRevenueLoading()) return;
+    this.selectedVenueId.set(venueId);
+    this.dailyRevenueReport.set(null);
+    this.monthlyRevenueReport.set(null);
+    this.upcomingBookings.set([]);
+    this.currentMonthBookings.set([]);
+    this.previousMonthBookings.set([]);
+    this.baselineMonthBookings.set([]);
+    this.loadBusinessSnapshot();
+    this.loadDailyRevenue();
+  }
+
+  selectRevenueDate(event: Event): void {
+    this.revenueDateDraft.set((event.target as HTMLInputElement).value);
+  }
+
+  applyRevenueDate(): void {
+    const date = this.revenueDateDraft();
+    if (!date || date > this.maximumRevenueDate || this.dailyRevenueLoading()) return;
+    this.appliedRevenueDate.set(date);
+    this.dailyRevenueReport.set(null);
+    this.loadDailyRevenue();
+  }
+
+  openBookingDetail(bookingId: string): void {
+    if (!bookingId) return;
+    this.bookingDetailId.set(bookingId);
+    this.bookingDetail.set(null);
+    this.bookingDetailError.set(null);
+    this.loadBookingDetail(bookingId);
+  }
+
+  closeBookingDetail(): void {
+    this.bookingDetailId.set(null);
+    this.bookingDetail.set(null);
+    this.bookingDetailError.set(null);
+    this.bookingDetailLoading.set(false);
+  }
+
+  retryBookingDetail(): void {
+    const bookingId = this.bookingDetailId();
+    if (bookingId) this.loadBookingDetail(bookingId);
   }
 
   money(value: number): string {
     return new Intl.NumberFormat('vi-VN', {
-      style: 'currency', currency: this.revenueReport()?.currency ?? 'VND', maximumFractionDigits: 0
+      style: 'currency',
+      currency: this.dailyRevenueReport()?.currency ?? this.monthlyRevenueReport()?.currency ?? 'VND',
+      maximumFractionDigits: 0
     }).format(value);
   }
 
@@ -255,6 +298,19 @@ export class VenueOwnerDashboardComponent {
     return value?.slice(0, 5) ?? '--:--';
   }
 
+  longDate(value: string): string {
+    return new Intl.DateTimeFormat('vi-VN', {
+      weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
+    }).format(new Date(`${value}T00:00:00`));
+  }
+
+  dateTime(value?: string): string {
+    if (!value) return '—';
+    return new Intl.DateTimeFormat('vi-VN', {
+      dateStyle: 'medium', timeStyle: 'short'
+    }).format(new Date(value));
+  }
+
   bookingStatusLabel(status: string): string {
     const labels: Record<string, string> = {
       PENDING_PAYMENT: 'Chờ thanh toán', CONFIRMED: 'Đã xác nhận', CHECKED_IN: 'Đã check-in',
@@ -266,6 +322,18 @@ export class VenueOwnerDashboardComponent {
 
   bookingSourceLabel(source: OwnerBookingSource): string {
     return { DIRECT: 'Đặt trực tuyến', AI_MATCHMAKING: 'Ghép trận AI', WALK_IN: 'Khách vãng lai' }[source];
+  }
+
+  paymentPurposeLabel(purpose: string): string {
+    return purpose === 'BOOKING_DEPOSIT' ? 'Tiền cọc' : 'Thanh toán còn lại';
+  }
+
+  paymentStatusLabel(status: string): string {
+    const labels: Record<string, string> = {
+      SUCCEEDED: 'Thành công', PENDING: 'Đang xử lý', FAILED: 'Thất bại',
+      EXPIRED: 'Hết hạn', CANCELLED: 'Đã hủy', REFUNDED: 'Đã hoàn tiền'
+    };
+    return labels[status] ?? status;
   }
 
   customerInitial(booking: OwnerBooking): string {
@@ -300,12 +368,6 @@ export class VenueOwnerDashboardComponent {
     return `conic-gradient(var(--dashboard-primary-hover) 0 ${used}%, var(--dashboard-warning) ${used}% ${maintenanceEnd}%, var(--dashboard-success) ${maintenanceEnd}% 100%)`;
   }
 
-  showRevenueAxisLabel(index: number, total: number): boolean {
-    if (total <= 6) return true;
-    const interval = Math.ceil((total - 1) / 5);
-    return index === 0 || index === total - 1 || index % interval === 0;
-  }
-
   private loadVenues(): void {
     if (this.venueLoading()) return;
     this.venueLoading.set(true);
@@ -318,45 +380,119 @@ export class VenueOwnerDashboardComponent {
       next: venues => {
         const loadedVenues = venues ?? [];
         this.venues.set(loadedVenues);
+        const currentVenueId = this.selectedVenueId();
+        const nextVenueId = loadedVenues.some(venue => venue.venueId === currentVenueId)
+          ? currentVenueId
+          : loadedVenues[0]?.venueId ?? null;
+        this.selectedVenueId.set(nextVenueId);
         this.resolveVenueCoverUrls(loadedVenues);
       },
       error: () => {
         this.venues.set([]);
+        this.selectedVenueId.set(null);
         this.venueCoverUrls.set({});
         this.venueError.set('Venue Service chưa trả về được danh mục cơ sở.');
       },
       complete: () => {
-        if (this.venues().length) this.loadBusinessSnapshot();
+        if (this.venues().length) {
+          this.loadBusinessSnapshot();
+          this.loadDailyRevenue();
+        }
       }
     });
   }
 
   private loadBusinessSnapshot(): void {
-    if (this.businessLoading() || !this.venues().length) return;
+    const venueId = this.selectedVenueId();
+    if (this.businessLoading() || !venueId) return;
     this.businessLoading.set(true);
     this.businessError.set(null);
+    const currentMonth = this.monthRange(0);
+    const previousMonth = this.monthRange(-1);
+    const baselineMonth = this.monthRange(-2);
 
     forkJoin({
-      revenue: this.getRevenue.execute({ fromDate: this.monthStart(), toDate: this.monthEnd() }).pipe(
+      monthlyRevenue: this.getRevenue.execute({
+        venueId, fromDate: currentMonth.fromDate, toDate: currentMonth.toDate
+      }).pipe(
         catchError(() => of(null))
       ),
-      bookings: this.manageBookings.list({
-        fromDate: this.today(), toDate: this.daysFromNow(7), page: 0, size: 12
-      }).pipe(catchError(() => of(null)))
+      upcoming: this.manageBookings.list({
+        venueId, fromDate: this.today(), toDate: this.daysFromNow(7), page: 0, size: 12
+      }).pipe(catchError(() => of(null))),
+      currentCustomers: this.loadBookingsForRange(venueId, currentMonth.fromDate, currentMonth.toDate)
+        .pipe(catchError(() => of(null))),
+      previousCustomers: this.loadBookingsForRange(venueId, previousMonth.fromDate, previousMonth.toDate)
+        .pipe(catchError(() => of(null))),
+      baselineCustomers: this.loadBookingsForRange(venueId, baselineMonth.fromDate, baselineMonth.toDate)
+        .pipe(catchError(() => of(null)))
     }).pipe(
       take(1),
       takeUntilDestroyed(this.destroyRef),
       finalize(() => this.businessLoading.set(false))
-    ).subscribe(({ revenue, bookings }) => {
-      this.revenueReport.set(revenue);
-      this.upcomingBookings.set((bookings?.items ?? [])
+    ).subscribe(({ monthlyRevenue, upcoming, currentCustomers, previousCustomers, baselineCustomers }) => {
+      this.monthlyRevenueReport.set(monthlyRevenue);
+      this.upcomingBookings.set((upcoming?.items ?? [])
+        .filter(booking => booking.venueId === venueId)
         .filter(booking => ['PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN'].includes(booking.status))
         .sort((left, right) => `${left.playDate}${left.startTime}`.localeCompare(`${right.playDate}${right.startTime}`))
         .slice(0, 12));
-      if (!revenue && !bookings) {
-        this.businessError.set('Chưa thể tải dữ liệu doanh thu và booking lúc này.');
+      this.currentMonthBookings.set(currentCustomers ?? []);
+      this.previousMonthBookings.set(previousCustomers ?? []);
+      this.baselineMonthBookings.set(baselineCustomers ?? []);
+      if (!monthlyRevenue && !upcoming && !currentCustomers && !previousCustomers && !baselineCustomers) {
+        this.businessError.set('Chưa thể tải dữ liệu vận hành lúc này.');
       }
     });
+  }
+
+  private loadDailyRevenue(): void {
+    const venueId = this.selectedVenueId();
+    const date = this.appliedRevenueDate();
+    if (!venueId || !date || this.dailyRevenueLoading()) return;
+    this.dailyRevenueLoading.set(true);
+    this.dailyRevenueError.set(null);
+    this.getRevenue.execute({ venueId, fromDate: date, toDate: date }).pipe(
+      take(1),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.dailyRevenueLoading.set(false))
+    ).subscribe({
+      next: report => this.dailyRevenueReport.set(report),
+      error: () => {
+        this.dailyRevenueReport.set(null);
+        this.dailyRevenueError.set('Chưa thể tải doanh thu của ngày đã chọn.');
+      }
+    });
+  }
+
+  private loadBookingDetail(bookingId: string): void {
+    if (this.bookingDetailLoading()) return;
+    this.bookingDetailLoading.set(true);
+    this.bookingDetailError.set(null);
+    this.manageBookings.detail(bookingId).pipe(
+      take(1),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.bookingDetailLoading.set(false))
+    ).subscribe({
+      next: booking => {
+        if (this.bookingDetailId() === bookingId) this.bookingDetail.set(booking);
+      },
+      error: () => {
+        if (this.bookingDetailId() === bookingId) {
+          this.bookingDetailError.set('Không thể tải chi tiết booking. Vui lòng thử lại.');
+        }
+      }
+    });
+  }
+
+  private loadBookingsForRange(venueId: string, fromDate: string, toDate: string): Observable<OwnerBooking[]> {
+    const requestPage = (page: number) => this.manageBookings.list({
+      venueId, fromDate, toDate, page, size: 20
+    });
+    return requestPage(0).pipe(
+      expand(result => result.page + 1 < result.pages ? requestPage(result.page + 1) : EMPTY),
+      reduce((bookings, result) => [...bookings, ...result.items], [] as OwnerBooking[])
+    );
   }
 
   private resolveVenueCoverUrls(venues: readonly OwnerVenueOverview[]): void {
@@ -387,14 +523,11 @@ export class VenueOwnerDashboardComponent {
     return this.localDate(new Date());
   }
 
-  private monthStart(): string {
+  private monthRange(offset: number): { fromDate: string; toDate: string } {
     const now = new Date();
-    return this.localDate(new Date(now.getFullYear(), now.getMonth(), 1));
-  }
-
-  private monthEnd(): string {
-    const now = new Date();
-    return this.localDate(new Date(now.getFullYear(), now.getMonth() + 1, 0));
+    const start = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    const end = new Date(now.getFullYear(), now.getMonth() + offset + 1, 0);
+    return { fromDate: this.localDate(start), toDate: this.localDate(end) };
   }
 
   private daysFromNow(days: number): string {
@@ -407,6 +540,37 @@ export class VenueOwnerDashboardComponent {
     const month = String(value.getMonth() + 1).padStart(2, '0');
     const day = String(value.getDate()).padStart(2, '0');
     return `${value.getFullYear()}-${month}-${day}`;
+  }
+
+  private newCustomers(current: readonly OwnerBooking[], comparison: readonly OwnerBooking[]): number {
+    const currentKeys = this.customerKeys(current);
+    const comparisonKeys = this.customerKeys(comparison);
+    return [...currentKeys].filter(key => !comparisonKeys.has(key)).length;
+  }
+
+  private returnRate(current: readonly OwnerBooking[], previous: readonly OwnerBooking[]): number {
+    const currentKeys = this.customerKeys(current);
+    if (!currentKeys.size) return 0;
+    const previousKeys = this.customerKeys(previous);
+    const returning = [...currentKeys].filter(key => previousKeys.has(key)).length;
+    return Math.round((returning / currentKeys.size) * 100);
+  }
+
+  private customerKeys(bookings: readonly OwnerBooking[]): Set<string> {
+    const keys = bookings
+      .filter(booking => ['CONFIRMED', 'CHECKED_IN', 'COMPLETED'].includes(booking.status))
+      .map(booking => {
+        if (booking.playerId) return `player:${booking.playerId}`;
+        const phone = booking.walkInCustomerPhone?.replace(/\s+/g, '');
+        return phone ? `phone:${phone}` : null;
+      })
+      .filter((key): key is string => Boolean(key));
+    return new Set(keys);
+  }
+
+  private changePercentage(current: number, previous: number): number {
+    if (!previous) return current ? 100 : 0;
+    return Math.round(((current - previous) / previous) * 1000) / 10;
   }
 
   private timestamp(value?: string): number {

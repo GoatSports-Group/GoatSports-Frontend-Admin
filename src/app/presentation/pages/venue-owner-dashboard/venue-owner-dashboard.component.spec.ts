@@ -12,6 +12,7 @@ import {
   LucideCalendar,
   LucideCalendarCheck,
   LucideCheck,
+  LucideChevronDown,
   LucideChevronRight,
   LucideCircleCheck,
   LucideClipboardCheck,
@@ -41,6 +42,7 @@ import {
   provideLucideIcons
 } from '@lucide/angular';
 import { BusinessType, OwnerApplication, OwnerApplicationStatus } from '@application/dto/owner-application/owner-application.dto';
+import { OwnerBooking } from '@application/dto/owner-booking/owner-booking.dto';
 import { CourtAvailabilityStatus, OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { ManageOwnerBookingsUseCase } from '@application/usecase/owner-booking/manage-owner-bookings.usecase';
 import { GetMyOwnerApplicationsUseCase } from '@application/usecase/owner-application/get-my-owner-applications.usecase';
@@ -52,7 +54,7 @@ import { VenueOwnerDashboardComponent } from './venue-owner-dashboard.component'
 describe('VenueOwnerDashboardComponent', () => {
   const getApplications = { execute: vi.fn() };
   const getVenues = { execute: vi.fn() };
-  const manageBookings = { list: vi.fn() };
+  const manageBookings = { list: vi.fn(), detail: vi.fn() };
   const getRevenue = { execute: vi.fn() };
   const getFileUrl = { execute: vi.fn() };
   const primaryVenue = createVenue({
@@ -77,6 +79,7 @@ describe('VenueOwnerDashboardComponent', () => {
     manageBookings.list.mockReset().mockReturnValue(of({
       items: [], page: 0, pageSize: 12, pages: 0, total: 0
     }));
+    manageBookings.detail.mockReset().mockReturnValue(of(createBooking()));
     getFileUrl.execute.mockReset().mockReturnValue(of('https://cdn.goat.test/venue-cover.png'));
     getRevenue.execute.mockReset().mockReturnValue(of(revenueReport()));
 
@@ -94,6 +97,7 @@ describe('VenueOwnerDashboardComponent', () => {
           LucideCalendar,
           LucideCalendarCheck,
           LucideCheck,
+          LucideChevronDown,
           LucideChevronRight,
           LucideCircleCheck,
           LucideClipboardCheck,
@@ -146,13 +150,38 @@ describe('VenueOwnerDashboardComponent', () => {
     expect(root.querySelectorAll('.kpi-strip article')).toHaveLength(4);
     expect(root.querySelector('.schedule-panel')).toBeTruthy();
     expect(root.querySelector('.live-courts-panel')).toBeTruthy();
-    expect(root.querySelector('.alerts-panel')).toBeTruthy();
-    expect(root.querySelectorAll('.live-courts-list article')).toHaveLength(3);
-    expect(root.querySelector('.venue-chip')?.textContent).toContain('GOAT Arena');
+    expect(root.querySelector('.reviews-preview')).toBeTruthy();
+    expect(root.querySelector('.dev-badge')?.textContent).toContain('DEV');
+    expect(root.querySelectorAll('.reviews-preview__list article')).toHaveLength(2);
+    expect(root.querySelectorAll('.live-courts-list article')).toHaveLength(2);
+    expect((root.querySelector('.venue-selector select') as HTMLSelectElement).value).toBe('venue-primary');
     expect(getVenues.execute).toHaveBeenCalledTimes(1);
   });
 
-  it('tính KPI và biểu đồ từ dữ liệu doanh thu tháng cùng trạng thái sân thật', () => {
+  it('tải lại toàn bộ thống kê theo venue được chọn', () => {
+    getApplications.execute.mockReturnValue(of(pageOf([
+      createApplication('application-approved', 'GOAT Arena', 'venue-primary', '2026-08-28T08:00:00Z')
+    ])));
+    getVenues.execute.mockReturnValue(of([primaryVenue, secondaryVenue]));
+
+    const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
+    fixture.detectChanges();
+    getRevenue.execute.mockClear();
+    manageBookings.list.mockClear();
+
+    const venueSelect = fixture.nativeElement.querySelector('.venue-selector select') as HTMLSelectElement;
+    venueSelect.value = 'venue-secondary';
+    venueSelect.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.selectedVenueId()).toBe('venue-secondary');
+    expect(getRevenue.execute).toHaveBeenCalledWith(expect.objectContaining({ venueId: 'venue-secondary' }));
+    expect(manageBookings.list).toHaveBeenCalledWith(expect.objectContaining({ venueId: 'venue-secondary' }));
+    expect(fixture.nativeElement.querySelectorAll('.live-courts-list article')).toHaveLength(1);
+    expect(fixture.nativeElement.querySelector('.live-courts-list article')?.dataset['status']).toBe('INACTIVE');
+  });
+
+  it('hiển thị doanh thu ngày, KPI tháng và trạng thái sân thật', () => {
     getApplications.execute.mockReturnValue(of(pageOf([
       createApplication('application-approved', 'GOAT Arena', 'venue-primary', '2026-08-28T08:00:00Z')
     ])));
@@ -174,11 +203,12 @@ describe('VenueOwnerDashboardComponent', () => {
     fixture.detectChanges();
 
     const metrics = kpiMap(fixture.nativeElement);
-    expect(metrics.get('Doanh thu tháng')?.value).toContain('1.870.000');
+    expect(metrics.get('Doanh thu tháng hiện tại')?.value).toContain('1.870.000');
     expect(metrics.get('Tổng lượt đặt')?.value).toBe('8');
-    expect(metrics.get('Booking đã thanh toán')?.value).toBe('6');
-    expect(metrics.get('Tỷ lệ sử dụng sân')?.value).toBe('50%');
-    expect(fixture.nativeElement.querySelectorAll('.revenue-chart circle')).toHaveLength(3);
+    expect(metrics.get('Khách hàng mới')?.value).toBe('0');
+    expect(metrics.get('Tỷ lệ khách quay lại')?.value).toBe('0%');
+    expect(fixture.nativeElement.querySelector('#revenue-today-title')?.textContent).toContain('1.870.000');
+    expect(fixture.nativeElement.querySelectorAll('.daily-revenue-metrics article')).toHaveLength(3);
     expect(fixture.nativeElement.querySelector('.utilization-ring strong')?.textContent).toContain('50%');
   });
 
@@ -307,6 +337,7 @@ describe('VenueOwnerDashboardComponent', () => {
     try {
       TestBed.createComponent(VenueOwnerDashboardComponent);
       expect(getRevenue.execute).toHaveBeenCalledWith({
+        venueId: 'venue-primary',
         fromDate: '2026-09-01',
         toDate: '2026-09-30'
       });
@@ -315,16 +346,81 @@ describe('VenueOwnerDashboardComponent', () => {
     }
   });
 
-  it('giữ nhãn trục biểu đồ tháng dễ đọc', () => {
-    getApplications.execute.mockReturnValue(of(pageOf([])));
-    const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
-    const component = fixture.componentInstance;
+  it('thống kê doanh thu đúng ngày người dùng lựa chọn', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 8, 2, 12));
+    getApplications.execute.mockReturnValue(of(pageOf([
+      createApplication('application-approved', 'GOAT Arena', 'venue-primary', '2026-08-28T08:00:00Z')
+    ])));
 
-    expect(Array.from({ length: 30 }, (_, index) => component.showRevenueAxisLabel(index, 30))
-      .filter(Boolean)).toHaveLength(6);
-    expect(component.showRevenueAxisLabel(0, 30)).toBe(true);
-    expect(component.showRevenueAxisLabel(29, 30)).toBe(true);
-    expect(component.showRevenueAxisLabel(1, 30)).toBe(false);
+    try {
+      const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
+      fixture.detectChanges();
+      getRevenue.execute.mockClear();
+
+      const input = fixture.nativeElement.querySelector('.revenue-actions input') as HTMLInputElement;
+      input.value = '2026-09-01';
+      input.dispatchEvent(new Event('change'));
+      (fixture.nativeElement.querySelector('.revenue-actions button') as HTMLButtonElement).click();
+
+      expect(getRevenue.execute).toHaveBeenCalledWith({
+        venueId: 'venue-primary', fromDate: '2026-09-01', toDate: '2026-09-01'
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('tính khách hàng mới và tỷ lệ quay lại so với tháng trước', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 8, 2, 12));
+    getApplications.execute.mockReturnValue(of(pageOf([
+      createApplication('application-approved', 'GOAT Arena', 'venue-primary', '2026-08-28T08:00:00Z')
+    ])));
+    manageBookings.list.mockImplementation(filter => {
+      if (filter.size === 12) return of(bookingPage([]));
+      const playersByMonth: Record<string, string[]> = {
+        '2026-09-01': ['player-a', 'player-b'],
+        '2026-08-01': ['player-a', 'player-c'],
+        '2026-07-01': ['player-c']
+      };
+      return of(bookingPage((playersByMonth[filter.fromDate ?? ''] ?? []).map((playerId, index) =>
+        createBooking({ bookingId: `${filter.fromDate}-${index}`, playerId })
+      )));
+    });
+
+    try {
+      const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
+      fixture.detectChanges();
+      const metrics = kpiMap(fixture.nativeElement);
+
+      expect(metrics.get('Khách hàng mới')?.value).toBe('1');
+      expect(metrics.get('Khách hàng mới')?.detail).toContain('0%');
+      expect(metrics.get('Tỷ lệ khách quay lại')?.value).toBe('50%');
+      expect(metrics.get('Tỷ lệ khách quay lại')?.detail).toContain('0 điểm');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('mở popup và tải chi tiết khi click một booking sắp tới', () => {
+    const booking = createBooking({ bookingId: 'booking-detail-1', bookingCode: 'GS-DETAIL-1' });
+    getApplications.execute.mockReturnValue(of(pageOf([
+      createApplication('application-approved', 'GOAT Arena', 'venue-primary', '2026-08-28T08:00:00Z')
+    ])));
+    manageBookings.list.mockImplementation(filter => of(bookingPage(filter.size === 12 ? [booking] : [])));
+    manageBookings.detail.mockReturnValue(of(booking));
+
+    const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('.booking-row') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(manageBookings.detail).toHaveBeenCalledWith('booking-detail-1');
+    const dialog = fixture.nativeElement.querySelector('.booking-detail-dialog') as HTMLElement;
+    expect(dialog).toBeTruthy();
+    expect(dialog.textContent).toContain('GS-DETAIL-1');
+    expect(dialog.textContent).toContain('Lịch sử thanh toán');
   });
 });
 
@@ -365,6 +461,39 @@ function createCourt(
     active,
     availabilityStatus
   };
+}
+
+function createBooking(overrides: Partial<OwnerBooking> = {}): OwnerBooking {
+  return {
+    bookingId: 'booking-1',
+    playerId: 'player-1',
+    venueId: 'venue-primary',
+    venueCourtId: 'court-1',
+    venueName: 'GOAT Arena',
+    courtName: 'Sân bóng đá A',
+    playDate: '2026-09-03',
+    startTime: '17:00:00',
+    endTime: '18:00:00',
+    status: 'CONFIRMED',
+    source: 'DIRECT',
+    totalPrice: 180_000,
+    depositAmount: 80_000,
+    remainingAmount: 100_000,
+    bookingCode: 'GS-BOOKING-1',
+    createdAt: '2026-09-01T08:00:00Z',
+    updatedAt: '2026-09-01T08:05:00Z',
+    payments: [{
+      paymentId: 'payment-1', purpose: 'BOOKING_DEPOSIT', amount: 80_000,
+      currency: 'VND', status: 'SUCCEEDED', paidAt: '2026-09-01T08:04:00Z',
+      createdAt: '2026-09-01T08:01:00Z'
+    }],
+    allowedTransitions: ['CHECKED_IN', 'CANCELLED'],
+    ...overrides
+  };
+}
+
+function bookingPage(items: OwnerBooking[]) {
+  return { items, page: 0, pageSize: 20, pages: items.length ? 1 : 0, total: items.length };
 }
 
 function createApplication(
