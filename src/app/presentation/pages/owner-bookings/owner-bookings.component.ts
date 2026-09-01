@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { finalize, map, of, switchMap, take, timer } from 'rxjs';
+import { Subject, catchError, filter, finalize, map, of, switchMap, take, takeUntil, timer } from 'rxjs';
 import {
   OwnerBooking,
   OwnerBookingFilter,
@@ -74,8 +74,9 @@ export class OwnerBookingsComponent {
   readonly paymentBooking = signal<OwnerBooking | null>(null);
   readonly paymentLoading = signal<OwnerBookingPaymentMethod | null>(null);
   readonly checkoutQr = signal<string | null>(null);
-  readonly confirmingTransfer = signal(false);
+  readonly checkoutUrl = signal<string | null>(null);
   readonly paymentCompleted = signal(false);
+  private readonly stopPaymentPolling = new Subject<void>();
 
   readonly filterForm = this.formBuilder.nonNullable.group({
     venueId: [''], venueCourtId: [''], status: ['' as '' | OwnerBookingStatus],
@@ -243,15 +244,19 @@ export class OwnerBookingsComponent {
   }
 
   openPayment(booking: OwnerBooking): void {
+    this.stopPaymentPolling.next();
     this.paymentBooking.set(booking);
     this.checkoutQr.set(null);
+    this.checkoutUrl.set(null);
     this.paymentCompleted.set(this.isPaid(booking));
   }
 
   closePayment(): void {
-    if (this.paymentLoading() || this.confirmingTransfer()) return;
+    if (this.paymentLoading()) return;
+    this.stopPaymentPolling.next();
     this.paymentBooking.set(null);
     this.checkoutQr.set(null);
+    this.checkoutUrl.set(null);
     this.paymentCompleted.set(false);
   }
 
@@ -269,40 +274,30 @@ export class OwnerBookingsComponent {
           return;
         }
         if (!result.qrCodeContent) {
-          this.notify.error('Payment-service không trả ảnh thanh toán VietQR.');
+          this.notify.error('Payment-service không trả ảnh thanh toán payOS.');
           return;
         }
         this.checkoutQr.set(result.qrCodeContent);
+        this.checkoutUrl.set(result.checkoutUrl ?? null);
+        this.startPaymentPolling(booking.bookingId);
       },
       error: error => this.notify.error(this.errorMessage(error, 'Không thể khởi tạo thanh toán.'))
     });
   }
 
-  confirmVietQrPayment(): void {
-    const booking = this.paymentBooking();
-    if (!booking || this.paymentLoading() || this.confirmingTransfer()) return;
-    if (!window.confirm(
-      'Chỉ xác nhận sau khi bạn đã kiểm tra tài khoản ngân hàng và thấy đúng số tiền. Tiếp tục?'
-    )) {
-      return;
-    }
-    this.confirmingTransfer.set(true);
-    this.manageBookings.confirmVietQrPayment(booking.bookingId).pipe(
-      take(1),
-      takeUntilDestroyed(this.destroyRef),
-      finalize(() => this.confirmingTransfer.set(false))
-    ).subscribe({
-      next: result => {
-        if (result.status !== 'SUCCEEDED') {
-          this.notify.error('Payment-service chưa xác nhận giao dịch VietQR.');
-          return;
-        }
-        this.finishPayment(booking.bookingId);
-        this.notify.success('Đã xác nhận nhận tiền qua VietQR.');
-      },
-      error: error => this.notify.error(
-        this.errorMessage(error, 'Không thể xác nhận thanh toán VietQR.')
-      )
+  private startPaymentPolling(bookingId: string): void {
+    this.stopPaymentPolling.next();
+    timer(1_500, 2_000).pipe(
+      switchMap(() => this.manageBookings.detail(bookingId).pipe(catchError(() => of(null)))),
+      filter((booking): booking is OwnerBooking => booking !== null),
+      takeUntil(this.stopPaymentPolling),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(booking => {
+      this.paymentBooking.set(booking);
+      if (!this.isPaid(booking)) return;
+      this.stopPaymentPolling.next();
+      this.finishPayment(bookingId);
+      this.notify.success('payOS đã xác nhận chuyển khoản thành công.');
     });
   }
 

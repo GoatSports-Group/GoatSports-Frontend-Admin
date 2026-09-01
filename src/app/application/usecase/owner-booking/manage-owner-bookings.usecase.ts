@@ -42,7 +42,4 @@ export class ManageOwnerBookingsUseCase {
     return this.repository.createPayment(bookingId, method);
   }
 
-  confirmVietQrPayment(bookingId: string): Observable<OwnerBookingPaymentResult> {
-    return this.repository.confirmVietQrPayment(bookingId);
-  }
 }

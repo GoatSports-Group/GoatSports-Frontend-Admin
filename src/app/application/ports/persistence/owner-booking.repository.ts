@@ -18,7 +18,6 @@ export interface OwnerBookingRepository {
   createPayment(
     bookingId: string, method: OwnerBookingPaymentMethod
   ): Observable<OwnerBookingPaymentResult>;
-  confirmVietQrPayment(bookingId: string): Observable<OwnerBookingPaymentResult>;
 }
 
 export const OWNER_BOOKING_REPOSITORY_TOKEN = new InjectionToken<OwnerBookingRepository>(

@@ -214,7 +214,7 @@
           <h2 id="payment-title">Thu tiền đơn walk-in</h2>
           <p>{{ booking.courtName }} · {{ formatDate(booking.playDate) }} · {{ timeValue(booking.startTime) }}–{{ timeValue(booking.endTime) }}</p>
         </div>
-        <button type="button" class="icon-button" (click)="closePayment()" [disabled]="!!paymentLoading() || confirmingTransfer()" aria-label="Đóng"><lucide-icon name="x" /></button>
+        <button type="button" class="icon-button" (click)="closePayment()" [disabled]="!!paymentLoading()" aria-label="Đóng"><lucide-icon name="x" /></button>
       </header>
 
       <div class="payment-total"><span>Khách cần thanh toán</span><strong>{{ formatMoney(booking.remainingAmount) }}</strong></div>
@@ -227,21 +227,20 @@
           <button type="button" class="primary-button" (click)="closePayment()">Hoàn tất</button>
         </div>
       } @else if (checkoutQr()) {
-        <div class="vietqr-checkout">
+        <div class="payos-checkout">
           <div class="qr-frame">
-            <img [src]="checkoutQr()" alt="Mã VietQR chuyển khoản ngân hàng" />
+            <img [src]="checkoutQr()" alt="Mã QR thanh toán payOS" />
           </div>
           <div>
-            <span class="vietqr-label">CHUYỂN KHOẢN VIETQR</span>
+            <span class="payos-label">THANH TOÁN PAYOS</span>
             <h3>Quét bằng ứng dụng ngân hàng</h3>
-            <p>QR đã điền sẵn tài khoản nhận, số tiền và nội dung chuyển khoản. VietQR không tự báo giao dịch thành công; hãy kiểm tra tài khoản ngân hàng trước khi xác nhận.</p>
-            <button type="button" class="vietqr-button" (click)="confirmVietQrPayment()" [disabled]="confirmingTransfer()">
-              @if (confirmingTransfer()) {
-                <span class="spinner-small"></span> Đang xác nhận…
-              } @else {
-                <lucide-icon name="circle-check-big" /> Tôi đã kiểm tra và nhận tiền
-              }
-            </button>
+            <p>QR đã điền sẵn số tiền và nội dung. Hệ thống đang chờ webhook payOS và sẽ tự xác nhận ngay khi ngân hàng ghi nhận chuyển khoản.</p>
+            <div class="payos-waiting"><span class="spinner-small"></span> Đang chờ thanh toán…</div>
+            @if (checkoutUrl()) {
+              <a class="payos-button" [href]="checkoutUrl()" target="_blank" rel="noopener noreferrer">
+                <lucide-icon name="external-link" /> Mở trang thanh toán payOS
+              </a>
+            }
           </div>
         </div>
       } @else {
@@ -255,16 +254,16 @@
           } @else {
             <div class="pending-payment-note">
               <lucide-icon name="shield-alert" />
-              <span><strong>Đang có giao dịch VietQR chờ xác nhận</strong><small>Tiếp tục giao dịch hiện tại để tránh thu tiền hai lần.</small></span>
+              <span><strong>Đang có giao dịch payOS chờ thanh toán</strong><small>Tiếp tục giao dịch hiện tại để tránh tạo khoản thu trùng.</small></span>
             </div>
           }
-          <button type="button" (click)="collectPayment('VIETQR')" [disabled]="!!paymentLoading()">
-            <span class="method-icon method-icon--vietqr"><lucide-icon name="qr-code" /></span>
+          <button type="button" (click)="collectPayment('PAYOS')" [disabled]="!!paymentLoading()">
+            <span class="method-icon method-icon--payos"><lucide-icon name="qr-code" /></span>
             <span>
-              <strong>{{ hasPendingOnlinePayment(booking) ? 'Hiện lại mã VietQR' : 'Chuyển khoản VietQR' }}</strong>
-              <small>{{ hasPendingOnlinePayment(booking) ? 'Mở lại mã chuyển khoản đã tạo trước đó' : 'Hiện QR đã điền sẵn số tiền và nội dung' }}</small>
+              <strong>{{ hasPendingOnlinePayment(booking) ? 'Hiện lại mã payOS' : 'Chuyển khoản payOS' }}</strong>
+              <small>{{ hasPendingOnlinePayment(booking) ? 'Mở lại mã thanh toán đã tạo trước đó' : 'Tự xác nhận sau khi chuyển khoản thành công' }}</small>
             </span>
-            @if (paymentLoading() === 'VIETQR') { <span class="spinner"></span> } @else { <lucide-icon name="chevron-right" /> }
+            @if (paymentLoading() === 'PAYOS') { <span class="spinner"></span> } @else { <lucide-icon name="chevron-right" /> }
           </button>
         </div>
       }

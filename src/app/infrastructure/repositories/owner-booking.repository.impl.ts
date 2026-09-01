@@ -44,7 +44,4 @@ export class OwnerBookingRepositoryImpl implements OwnerBookingRepository {
     return this.api.createPayment(bookingId, method).pipe(map(response => response.data));
   }
 
-  confirmVietQrPayment(bookingId: string): Observable<OwnerBookingPaymentResult> {
-    return this.api.confirmVietQrPayment(bookingId).pipe(map(response => response.data));
-  }
 }

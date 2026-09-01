@@ -53,9 +53,4 @@ export class OwnerBookingApi {
     );
   }
 
-  confirmVietQrPayment(bookingId: string): Observable<BaseResponse<OwnerBookingPaymentResult>> {
-    return this.http.post<BaseResponse<OwnerBookingPaymentResult>>(
-      `${this.baseUrl}/${bookingId}/payments/vietqr/confirm`, {}
-    );
-  }
 }
