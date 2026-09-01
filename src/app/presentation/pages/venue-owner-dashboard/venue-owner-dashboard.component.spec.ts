@@ -12,6 +12,7 @@ import {
   LucideCalendar,
   LucideCalendarCheck,
   LucideCheck,
+  LucideChevronLeft,
   LucideChevronDown,
   LucideChevronRight,
   LucideCircleCheck,
@@ -50,11 +51,13 @@ import { GetOwnerCustomerMetricsUseCase } from '@application/usecase/owner-reven
 import { GetOwnerRevenueUseCase } from '@application/usecase/owner-revenue/get-owner-revenue.usecase';
 import { GetStorageFileUrlUseCase } from '@application/usecase/storage/get-storage-file-url.usecase';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
+import { GetOwnerVenueOverviewUseCase } from '@application/usecase/venue-owner-dashboard/get-owner-venue-overview.usecase';
 import { VenueOwnerDashboardComponent } from './venue-owner-dashboard.component';
 
 describe('VenueOwnerDashboardComponent', () => {
   const getApplications = { execute: vi.fn() };
   const getVenues = { execute: vi.fn() };
+  const getVenueOverview = { execute: vi.fn() };
   const manageBookings = { list: vi.fn(), detail: vi.fn() };
   const getCustomerMetrics = { execute: vi.fn() };
   const getRevenue = { execute: vi.fn() };
@@ -78,6 +81,7 @@ describe('VenueOwnerDashboardComponent', () => {
   beforeEach(async () => {
     getApplications.execute.mockReset();
     getVenues.execute.mockReset().mockReturnValue(of([primaryVenue]));
+    getVenueOverview.execute.mockReset().mockReturnValue(of(primaryVenue));
     manageBookings.list.mockReset().mockReturnValue(of({
       items: [], page: 0, pageSize: 12, pages: 0, total: 0
     }));
@@ -100,6 +104,7 @@ describe('VenueOwnerDashboardComponent', () => {
           LucideCalendar,
           LucideCalendarCheck,
           LucideCheck,
+          LucideChevronLeft,
           LucideChevronDown,
           LucideChevronRight,
           LucideCircleCheck,
@@ -130,6 +135,7 @@ describe('VenueOwnerDashboardComponent', () => {
         ),
         { provide: GetMyOwnerApplicationsUseCase, useValue: getApplications },
         { provide: GetMyOwnerVenuesUseCase, useValue: getVenues },
+        { provide: GetOwnerVenueOverviewUseCase, useValue: getVenueOverview },
         { provide: ManageOwnerBookingsUseCase, useValue: manageBookings },
         { provide: GetOwnerCustomerMetricsUseCase, useValue: getCustomerMetrics },
         { provide: GetOwnerRevenueUseCase, useValue: getRevenue },
@@ -206,6 +212,73 @@ describe('VenueOwnerDashboardComponent', () => {
     expect(root.querySelectorAll('.live-courts-list article')).toHaveLength(2);
     expect((root.querySelector('.venue-selector select') as HTMLSelectElement).value).toBe('venue-primary');
     expect(getVenues.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('poll trạng thái sân của venue đang chọn mỗi 30 giây và dừng khi component bị hủy', async () => {
+    vi.useFakeTimers();
+    getApplications.execute.mockReturnValue(of(pageOf([
+      createApplication('application-approved', 'GOAT Arena', 'venue-primary', '2026-08-28T08:00:00Z')
+    ])));
+    getVenueOverview.execute.mockReturnValue(of(createVenue({
+      ...primaryVenue,
+      courts: [
+        createCourt('court-1', 'venue-primary', true, 'AVAILABLE'),
+        createCourt('court-2', 'venue-primary', true, 'OCCUPIED')
+      ]
+    })));
+
+    try {
+      const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
+      fixture.detectChanges();
+      expect(getVenueOverview.execute).not.toHaveBeenCalled();
+      expect((fixture.nativeElement.querySelector('.live-courts-list article') as HTMLElement).dataset['status'])
+        .toBe('OCCUPIED');
+
+      await vi.advanceTimersByTimeAsync(30_000);
+      fixture.detectChanges();
+
+      expect(getVenueOverview.execute).toHaveBeenCalledTimes(1);
+      expect(getVenueOverview.execute).toHaveBeenCalledWith('venue-primary');
+      expect((fixture.nativeElement.querySelector('.live-courts-list article') as HTMLElement).dataset['status'])
+        .toBe('AVAILABLE');
+
+      fixture.destroy();
+      await vi.advanceTimersByTimeAsync(30_000);
+      expect(getVenueOverview.execute).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('hiển thị tất cả sân và cuộn mượt bằng nút điều hướng khi có hơn 5 sân', () => {
+    getApplications.execute.mockReturnValue(of(pageOf([
+      createApplication('application-approved', 'GOAT Arena', 'venue-primary', '2026-08-28T08:00:00Z')
+    ])));
+    getVenues.execute.mockReturnValue(of([createVenue({
+      ...primaryVenue,
+      courts: Array.from({ length: 7 }, (_, index) =>
+        createCourt(`court-${index + 1}`, 'venue-primary', true, 'AVAILABLE'))
+    })]));
+
+    const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    const viewport = root.querySelector('.live-courts-list') as HTMLElement;
+    Object.defineProperties(viewport, {
+      clientWidth: { configurable: true, value: 500 },
+      scrollWidth: { configurable: true, value: 900 },
+      scrollLeft: { configurable: true, value: 0, writable: true }
+    });
+    viewport.scrollBy = vi.fn();
+    fixture.componentInstance.updateCourtNavigation();
+    fixture.detectChanges();
+
+    expect(root.querySelectorAll('.live-courts-list article')).toHaveLength(7);
+    expect(root.querySelectorAll('.court-carousel-button')).toHaveLength(2);
+    expect((root.querySelector('.court-carousel-button--previous') as HTMLButtonElement).disabled).toBe(true);
+
+    (root.querySelector('.court-carousel-button--next') as HTMLButtonElement).click();
+    expect(viewport.scrollBy).toHaveBeenCalledWith({ left: 410, behavior: 'smooth' });
   });
 
   it('tải lại toàn bộ thống kê theo venue được chọn', () => {

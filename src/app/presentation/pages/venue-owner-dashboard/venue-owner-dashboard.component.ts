@@ -1,7 +1,31 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, input, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  computed,
+  inject,
+  input,
+  output,
+  signal,
+  viewChild
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterModule } from '@angular/router';
-import { catchError, EMPTY, expand, finalize, forkJoin, Observable, of, reduce, take } from 'rxjs';
+import {
+  catchError,
+  EMPTY,
+  exhaustMap,
+  expand,
+  filter,
+  finalize,
+  forkJoin,
+  Observable,
+  of,
+  reduce,
+  take,
+  timer
+} from 'rxjs';
 import { OwnerApplication, OwnerApplicationStatus } from '@application/dto/owner-application/owner-application.dto';
 import { OwnerBooking, OwnerBookingSource } from '@application/dto/owner-booking/owner-booking.dto';
 import { OwnerCustomerMetricsReport, OwnerRevenueReport } from '@application/dto/owner-revenue/owner-revenue.dto';
@@ -16,6 +40,7 @@ import { GetOwnerCustomerMetricsUseCase } from '@application/usecase/owner-reven
 import { GetOwnerRevenueUseCase } from '@application/usecase/owner-revenue/get-owner-revenue.usecase';
 import { GetStorageFileUrlUseCase } from '@application/usecase/storage/get-storage-file-url.usecase';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
+import { GetOwnerVenueOverviewUseCase } from '@application/usecase/venue-owner-dashboard/get-owner-venue-overview.usecase';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { WeatherInfo } from '@shared/components/ui/weather-widget/weather-widget.models';
 import { OwnerApplicationProgressComponent } from '../dashboard/owner-application-progress/owner-application-progress.component';
@@ -36,6 +61,8 @@ interface DailyRevenueChartPoint {
   y: number;
 }
 
+const COURT_AVAILABILITY_POLL_INTERVAL_MS = 30_000;
+
 @Component({
   selector: 'app-venue-owner-dashboard',
   standalone: true,
@@ -47,6 +74,7 @@ interface DailyRevenueChartPoint {
 export class VenueOwnerDashboardComponent {
   private readonly getMyApplications = inject(GetMyOwnerApplicationsUseCase);
   private readonly getMyVenues = inject(GetMyOwnerVenuesUseCase);
+  private readonly getVenueOverview = inject(GetOwnerVenueOverviewUseCase);
   private readonly manageBookings = inject(ManageOwnerBookingsUseCase);
   private readonly getCustomerMetrics = inject(GetOwnerCustomerMetricsUseCase);
   private readonly getRevenue = inject(GetOwnerRevenueUseCase);
@@ -86,6 +114,9 @@ export class VenueOwnerDashboardComponent {
   readonly bookingDetailLoading = signal(false);
   readonly bookingDetailError = signal<string | null>(null);
   readonly venueCoverUrls = signal<Readonly<Record<string, string>>>({});
+  readonly liveCourtsViewport = viewChild<ElementRef<HTMLElement>>('liveCourtsViewport');
+  readonly canScrollCourtsBackward = signal(false);
+  readonly canScrollCourtsForward = signal(false);
   readonly reviewStars = [1, 2, 3, 4, 5];
   readonly previewReviews = [
     {
@@ -221,7 +252,8 @@ export class VenueOwnerDashboardComponent {
   readonly returningCustomerChange = computed(() =>
     this.returningCustomerRate() - this.previousReturningCustomerRate()
   );
-  readonly liveCourts = computed(() => this.selectedVenueCourts().slice(0, 5));
+  readonly liveCourts = computed(() => this.selectedVenueCourts());
+  readonly hasCourtCarousel = computed(() => this.liveCourts().length > 5);
 
   readonly dashboardMetrics = computed<readonly DashboardMetric[]>(() => {
     const report = this.monthlyRevenueReport();
@@ -251,6 +283,7 @@ export class VenueOwnerDashboardComponent {
 
   constructor() {
     this.loadApplications();
+    this.startCourtAvailabilityPolling();
   }
 
   loadApplications(): void {
@@ -297,6 +330,7 @@ export class VenueOwnerDashboardComponent {
     const venueId = (event.target as HTMLSelectElement).value;
     if (!venueId || venueId === this.selectedVenueId() || this.businessLoading() || this.dailyRevenueLoading()) return;
     this.selectedVenueId.set(venueId);
+    this.resetCourtCarousel();
     this.dailyRevenueReport.set(null);
     this.dailyRevenueBookings.set([]);
     this.monthlyRevenueReport.set(null);
@@ -450,6 +484,29 @@ export class VenueOwnerDashboardComponent {
     return `conic-gradient(var(--dashboard-primary-hover) 0 ${used}%, var(--dashboard-warning) ${used}% ${maintenanceEnd}%, var(--dashboard-success) ${maintenanceEnd}% 100%)`;
   }
 
+  scrollLiveCourts(direction: -1 | 1): void {
+    const viewport = this.liveCourtsViewport()?.nativeElement;
+    if (!viewport) return;
+    viewport.scrollBy({
+      left: direction * Math.max(viewport.clientWidth * 0.82, 160),
+      behavior: 'smooth'
+    });
+  }
+
+  updateCourtNavigation(): void {
+    const viewport = this.liveCourtsViewport()?.nativeElement;
+    if (!viewport || !this.hasCourtCarousel()) {
+      this.canScrollCourtsBackward.set(false);
+      this.canScrollCourtsForward.set(false);
+      return;
+    }
+    const boundaryTolerance = 2;
+    this.canScrollCourtsBackward.set(viewport.scrollLeft > boundaryTolerance);
+    this.canScrollCourtsForward.set(
+      viewport.scrollLeft + viewport.clientWidth < viewport.scrollWidth - boundaryTolerance
+    );
+  }
+
   private loadVenues(): void {
     if (this.venueLoading()) return;
     this.venueLoading.set(true);
@@ -467,6 +524,7 @@ export class VenueOwnerDashboardComponent {
           ? currentVenueId
           : loadedVenues[0]?.venueId ?? null;
         this.selectedVenueId.set(nextVenueId);
+        this.resetCourtCarousel();
         this.resolveVenueCoverUrls(loadedVenues);
       },
       error: () => {
@@ -482,6 +540,35 @@ export class VenueOwnerDashboardComponent {
         }
       }
     });
+  }
+
+  private startCourtAvailabilityPolling(): void {
+    timer(COURT_AVAILABILITY_POLL_INTERVAL_MS, COURT_AVAILABILITY_POLL_INTERVAL_MS).pipe(
+      filter(() => Boolean(this.selectedVenueId())),
+      exhaustMap(() => {
+        const venueId = this.selectedVenueId();
+        if (!venueId) return EMPTY;
+        return this.getVenueOverview.execute(venueId).pipe(
+          take(1),
+          catchError(() => EMPTY)
+        );
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(refreshedVenue => {
+      if (refreshedVenue.venueId !== this.selectedVenueId()) return;
+      this.venues.update(venues => venues.map(venue => venue.venueId === refreshedVenue.venueId
+        ? { ...venue, active: refreshedVenue.active, courts: refreshedVenue.courts }
+        : venue
+      ));
+      queueMicrotask(() => this.updateCourtNavigation());
+    });
+  }
+
+  private resetCourtCarousel(): void {
+    this.canScrollCourtsBackward.set(false);
+    this.canScrollCourtsForward.set(this.hasCourtCarousel());
+    const viewport = this.liveCourtsViewport()?.nativeElement;
+    if (viewport) viewport.scrollLeft = 0;
   }
 
   private loadBusinessSnapshot(): void {

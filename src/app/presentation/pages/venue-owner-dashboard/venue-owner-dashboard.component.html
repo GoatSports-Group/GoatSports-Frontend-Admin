@@ -231,18 +231,36 @@
           </div>
           <a routerLink="/admin/courts"><lucide-icon name="activity" /> Xem sơ đồ sân</a>
         </header>
-        <div class="live-courts-list">
-          @for (court of liveCourts(); track court.venueCourtId) {
-          <article [attr.data-status]="normalizedCourtStatus(court)">
-            <span>{{ court.name }}</span>
-            <small>{{ sportLabel(court.sportType) }}</small>
-            <div aria-hidden="true">
-              @for (cell of courtCells; track $index) { <i></i> }
-            </div>
-            <em><i></i>{{ courtAvailabilityLabel(court) }}</em>
-          </article>
-          } @empty {
-          <div class="live-courts-empty">Chưa có sân thi đấu.</div>
+        <div class="live-courts-carousel">
+          @if (hasCourtCarousel()) {
+          <button class="court-carousel-button court-carousel-button--previous" type="button"
+            aria-label="Xem các sân phía trước" [disabled]="!canScrollCourtsBackward()"
+            (click)="scrollLiveCourts(-1)">
+            <lucide-icon name="chevron-left" />
+          </button>
+          }
+
+          <div #liveCourtsViewport class="live-courts-list" (scroll)="updateCourtNavigation()">
+            @for (court of liveCourts(); track court.venueCourtId) {
+            <article [attr.data-status]="normalizedCourtStatus(court)">
+              <span>{{ court.name }}</span>
+              <small>{{ sportLabel(court.sportType) }}</small>
+              <div aria-hidden="true">
+                @for (cell of courtCells; track $index) { <i></i> }
+              </div>
+              <em><i></i>{{ courtAvailabilityLabel(court) }}</em>
+            </article>
+            } @empty {
+            <div class="live-courts-empty">Chưa có sân thi đấu.</div>
+            }
+          </div>
+
+          @if (hasCourtCarousel()) {
+          <button class="court-carousel-button court-carousel-button--next" type="button"
+            aria-label="Xem các sân tiếp theo" [disabled]="!canScrollCourtsForward()"
+            (click)="scrollLiveCourts(1)">
+            <lucide-icon name="chevron-right" />
+          </button>
           }
         </div>
       </section>
