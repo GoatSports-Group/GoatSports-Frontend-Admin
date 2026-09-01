@@ -6,6 +6,11 @@ export interface AdminNavigationItem {
   readonly developing?: boolean;
 }
 
+export interface AdminNavigationGroup {
+  readonly label: string;
+  readonly items: readonly AdminNavigationItem[];
+}
+
 export const PLATFORM_ADMIN_NAVIGATION: readonly AdminNavigationItem[] = [
   { title: 'Tổng quan', description: 'Số liệu và tình trạng toàn hệ thống', icon: 'layout-dashboard', route: '/dashboard' },
   { title: 'Đơn đặt sân', description: 'Quản lý lịch đặt sân và trạng thái thanh toán', icon: 'receipt', route: '/bookings' },
@@ -25,4 +30,25 @@ export const VENUE_OWNER_NAVIGATION: readonly AdminNavigationItem[] = [
   { title: 'Check-in khách', description: 'QR, Booking Code và khách walk-in', icon: 'shield-check', route: '/check-in' },
   { title: 'Doanh thu', description: 'Doanh thu và dữ liệu đối soát thực tế', icon: 'credit-card', route: '/finance' },
   { title: 'Đánh giá', description: 'Phản hồi thật từ booking đã hoàn tất', icon: 'star', route: '/reviews' }
+];
+
+export const PLATFORM_ADMIN_NAVIGATION_GROUPS: readonly AdminNavigationGroup[] = [
+  { label: 'Quản trị nền tảng', items: PLATFORM_ADMIN_NAVIGATION }
+];
+
+export const VENUE_OWNER_NAVIGATION_GROUPS: readonly AdminNavigationGroup[] = [
+  {
+    label: 'Không gian làm việc',
+    items: VENUE_OWNER_NAVIGATION.filter(item => ['/dashboard', '/applications'].includes(item.route))
+  },
+  {
+    label: 'Vận hành',
+    items: VENUE_OWNER_NAVIGATION.filter(item =>
+      ['/venues', '/courts', '/schedule', '/owner-bookings', '/check-in'].includes(item.route)
+    )
+  },
+  {
+    label: 'Tài chính & chất lượng',
+    items: VENUE_OWNER_NAVIGATION.filter(item => ['/finance', '/reviews'].includes(item.route))
+  }
 ];

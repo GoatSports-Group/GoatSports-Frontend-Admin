@@ -1,10 +1,8 @@
 <div class="owner-dashboard">
   <section class="owner-hero" aria-labelledby="owner-dashboard-title">
-    <div class="owner-hero__glow" aria-hidden="true"></div>
-    <div class="owner-hero__court-lines" aria-hidden="true"></div>
     <div class="owner-hero__content">
-      <span class="owner-hero__badge"><lucide-icon name="store" /> Không gian chủ sân</span>
-      <h1 id="owner-dashboard-title">Xin chào, {{ displayName() }}!</h1>
+      <span class="owner-hero__badge">Vận hành hôm nay</span>
+      <h1 id="owner-dashboard-title">Chào {{ displayName() }}</h1>
       <p>{{ heroDescription() }}</p>
 
       <div class="owner-hero__actions">
@@ -16,6 +14,17 @@
       </div>
     </div>
 
+    @if (applicationApproved() && venues()[0]; as primaryVenue) {
+      <div class="owner-hero__venue">
+        @if (primaryVenueCoverUrl(); as coverUrl) {
+          <img [src]="coverUrl" [alt]="'Ảnh đại diện ' + primaryVenue.name" loading="lazy">
+        } @else {
+          <span class="owner-hero__venue-placeholder" aria-hidden="true"><lucide-icon name="land-plot" /></span>
+        }
+        <div><strong>{{ primaryVenue.name }}</strong><span><lucide-icon name="map-pin" />{{ primaryVenue.district || primaryVenue.city || 'Địa chỉ đang cập nhật' }}</span></div>
+      </div>
+    }
+
     <app-weather-widget
       class="owner-hero__weather"
       [weather]="weather()"
@@ -26,12 +35,70 @@
 
   @if (applicationApproved()) {
     <app-metric-rail [items]="metricItems()" />
+
+    <section class="owner-business" aria-labelledby="business-snapshot-title">
+      <header class="owner-business__heading">
+        <div><span>Dữ liệu vận hành thật</span><h2 id="business-snapshot-title">Tình hình kinh doanh</h2><p>Doanh thu theo ngày chơi sân và các booking cần chuẩn bị trong 7 ngày tới.</p></div>
+        <div class="owner-business__live"><i aria-hidden="true"></i>{{ availableCourtCount() }}/{{ activeCourtCount() }} sân đang trống · Công suất {{ utilizationRate() }}%</div>
+      </header>
+
+      @if (businessLoading()) {
+        <div class="business-loading" role="status" aria-live="polite">
+          <span class="skeleton"></span><span class="skeleton"></span><span class="skeleton"></span>
+          <span class="sr-only">Đang tải dữ liệu kinh doanh</span>
+        </div>
+      } @else if (businessError()) {
+        <div class="business-state" role="alert">
+          <lucide-icon name="alert-circle" /><div><strong>Chưa thể tải tình hình kinh doanh</strong><p>{{ businessError() }}</p></div>
+          <button type="button" (click)="retryBusinessSnapshot()">Thử lại</button>
+        </div>
+      } @else {
+        <div class="business-grid">
+          <article class="revenue-snapshot">
+            <header>
+              <div><span>Doanh thu xác nhận trong tháng</span><strong>{{ money(revenueReport()?.currentPeriod?.totalRevenue || 0) }}</strong></div>
+              <a routerLink="/admin/finance">Xem báo cáo <lucide-icon name="arrow-right" /></a>
+            </header>
+            @if (revenueReport()?.dailyRevenue?.length) {
+              <div class="mini-revenue-chart" role="img" aria-label="Biểu đồ doanh thu theo ngày trong tháng">
+                @for (point of revenueReport()!.dailyRevenue; track point.date) {
+                  <div [title]="shortDate(point.date) + ': ' + money(point.revenue)">
+                    <span [style.height.%]="revenueBarHeight(point.revenue)"></span>
+                    <small>{{ shortDate(point.date) }}</small>
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="snapshot-empty"><lucide-icon name="bar-chart-3" /><span>Chưa có doanh thu trong kỳ hiện tại.</span></div>
+            }
+          </article>
+
+          <article class="upcoming-snapshot">
+            <header><div><span>7 ngày tới</span><h3>Booking sắp diễn ra</h3></div><a routerLink="/admin/owner-bookings">Xem tất cả</a></header>
+            @if (upcomingBookings().length) {
+              <div class="upcoming-list">
+                @for (booking of upcomingBookings(); track booking.bookingId) {
+                  <a routerLink="/admin/owner-bookings" [queryParams]="{ bookingId: booking.bookingId }">
+                    <time><strong>{{ timeValue(booking.startTime) }}</strong><span>{{ shortDate(booking.playDate) }}</span></time>
+                    <span><strong>{{ booking.courtName }}</strong><small>{{ booking.walkInCustomerName || booking.bookingCode }}</small></span>
+                    <em [attr.data-status]="booking.status">{{ bookingStatusLabel(booking.status) }}</em>
+                  </a>
+                }
+              </div>
+            } @else {
+              <div class="snapshot-empty"><lucide-icon name="calendar-check" /><span>Không có booking sắp diễn ra trong phạm vi này.</span></div>
+            }
+          </article>
+        </div>
+      }
+    </section>
   }
 
   <section class="owner-workbench" [class.owner-workbench--application-only]="!applicationApproved()">
     @if (applicationApproved()) {
       <app-owner-venue-overview
         [venues]="venues()"
+        [coverUrls]="venueCoverUrls()"
         [loading]="venueLoading()"
         [error]="venueError()"
         (retry)="retryVenues()" />

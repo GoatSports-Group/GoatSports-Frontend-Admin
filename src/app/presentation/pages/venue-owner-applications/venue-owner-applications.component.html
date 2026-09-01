@@ -11,9 +11,10 @@
       <button type="button" (click)="activeView() === 'history' ? openForm() : openHistory()"
         [disabled]="activeView() === 'history' && hasPendingApplication()"
         [title]="hasPendingApplication() ? 'Bạn đang có một đơn chờ duyệt' : ''">
+        <app-lucide-icon [name]="activeView() === 'history' ? 'file-plus-2' : 'history'" [size]="18" />
         {{ activeView() === 'history'
           ? (hasPendingApplication() ? 'Đang có đơn chờ duyệt' : 'Đăng ký chủ sân')
-          : '◷  Xem lịch sử đăng ký' }}
+          : 'Xem lịch sử đăng ký' }}
       </button>
     </header>
 
@@ -25,7 +26,7 @@
         applicationUrl="/admin/applications" (retry)="loadApplications()" />
     } @else if (applications().length === 0) {
       <div class="empty-state">
-        <span aria-hidden="true">＋</span>
+        <span aria-hidden="true"><app-lucide-icon name="file-plus-2" [size]="24" /></span>
         <h2>Chưa có hồ sơ đăng ký</h2>
         <p>Tạo hồ sơ đầu tiên để bắt đầu quá trình xét duyệt đối tác chủ sân.</p>
         <button type="button" (click)="openForm()">Tạo hồ sơ đầu tiên</button>

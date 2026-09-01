@@ -48,3 +48,20 @@ dd { margin: 0; font-weight: 750; font-size: .8rem; overflow-wrap: anywhere; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (max-width: 1100px) { .filter-panel { grid-template-columns: repeat(3, 1fr); } .review-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 680px) { .hero, .result-strip { align-items: stretch; flex-direction: column; } .hero { padding: 22px 18px; } .privacy-note { max-width: none; } .filter-panel { grid-template-columns: 1fr; padding: 14px; } .review-grid { grid-template-columns: 1fr; } .state-card { align-items: flex-start; flex-direction: column; } .pagination { justify-content: space-between; gap: 8px; } .pagination button { padding: 0 11px; } }
+
+/* Review feed */
+.reviews-page { max-width: 1440px; margin: 0 auto; padding: 32px; }
+.hero { padding: 4px 0 24px; border-bottom: 1px solid #dce4ea; border-radius: 0; background: transparent; color: #172033; }
+.hero p, .privacy-note span { color: #64748b; }
+.privacy-note { border: 1px solid #dce4ea; border-radius: 12px; background: #fff; }
+.filter-panel { border-radius: 14px; box-shadow: none; }
+.result-strip { border-color: #dce4ea; border-radius: 12px; background: #fff; }
+.review-grid { grid-template-columns: 1fr; gap: 0; overflow: hidden; border: 1px solid #dce4ea; border-radius: 14px; background: #fff; }
+.review-card { grid-template-columns: minmax(150px, .35fr) minmax(280px, 1fr) minmax(260px, .75fr); align-items: start; gap: 20px; padding: 20px; border: 0; border-bottom: 1px solid #edf2f7; border-radius: 0; box-shadow: none; }
+.review-card:last-child { border-bottom: 0; }
+.review-card header { align-items: flex-start; flex-direction: column; }
+.review-card blockquote { min-height: 0; font-size: 15px; }
+.review-card footer { grid-column: 3; }
+.skeleton { height: 150px; border-radius: 0; }
+@media (max-width: 900px) { .review-card { grid-template-columns: 1fr 1.5fr; } .review-card dl, .review-card footer { grid-column: 1 / -1; } }
+@media (max-width: 680px) { .reviews-page { padding: 20px 14px 48px; } .review-card { grid-template-columns: 1fr; } .review-card dl, .review-card footer { grid-column: auto; } }

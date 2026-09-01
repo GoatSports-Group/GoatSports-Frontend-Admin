@@ -3,8 +3,9 @@ import { provideRouter } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  LucideAlertCircle, LucideChevronRight, LucideClipboardCheck, LucideImage, LucideInbox, LucideMapPin,
-  LucideReceipt, LucideSave, LucideStore, LucideX, provideLucideIcons
+  LucideAlertCircle, LucideChevronRight, LucideCircleCheck, LucideClipboardCheck, LucideImage,
+  LucideInbox, LucideMapPin, LucideReceipt, LucideSave, LucideStar, LucideStore, LucideX,
+  provideLucideIcons
 } from '@lucide/angular';
 import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
@@ -42,8 +43,8 @@ describe('OwnerVenueManagementComponent', () => {
       providers: [
         provideRouter([]),
         provideLucideIcons(
-          LucideAlertCircle, LucideChevronRight, LucideClipboardCheck, LucideImage, LucideInbox,
-          LucideMapPin, LucideReceipt, LucideSave, LucideStore, LucideX
+          LucideAlertCircle, LucideChevronRight, LucideCircleCheck, LucideClipboardCheck, LucideImage,
+          LucideInbox, LucideMapPin, LucideReceipt, LucideSave, LucideStar, LucideStore, LucideX
         ),
         { provide: GetMyOwnerVenuesUseCase, useValue: getMyVenues },
         { provide: GetOwnerVenueOverviewUseCase, useValue: getVenueOverview },
@@ -89,6 +90,69 @@ describe('OwnerVenueManagementComponent', () => {
     expect(getFileUrl.execute).toHaveBeenCalledWith('venues/owner/old.png');
     expect(fixture.nativeElement.querySelector('.image-card img')?.src)
       .toBe('https://cdn.goat.test/venue.png');
+  });
+
+  it('không hiển thị filename và đặt nút xóa trực tiếp trên ảnh', () => {
+    const venueWithImage = {
+      ...venue,
+      imageUrls: ['venues/owner/f1958d44-e701-4e53-8f66-0d831d91dc6d-San-cau-long.png']
+    };
+    getMyVenues.execute.mockReturnValue(of([venueWithImage]));
+    getVenueOverview.execute.mockReturnValue(of(venueWithImage));
+    const fixture = TestBed.createComponent(OwnerVenueManagementComponent);
+    fixture.detectChanges();
+
+    const imageCard = fixture.nativeElement.querySelector('.image-card') as HTMLElement;
+    expect(imageCard.textContent).not.toContain('San-cau-long.png');
+    expect(imageCard.querySelector('.image-card__footer')).toBeNull();
+    expect(imageCard.querySelector('button.image-card__remove')).toBeTruthy();
+  });
+
+  it('mặc định dùng ảnh đầu tiên làm ảnh đại diện', () => {
+    const venueWithImages = {
+      ...venue,
+      imageUrls: ['venues/owner/first.png', 'venues/owner/second.png']
+    };
+    getMyVenues.execute.mockReturnValue(of([venueWithImages]));
+    getVenueOverview.execute.mockReturnValue(of(venueWithImages));
+    const fixture = TestBed.createComponent(OwnerVenueManagementComponent);
+    fixture.detectChanges();
+
+    const [firstImage, secondImage] = fixture.componentInstance.images();
+    expect(fixture.componentInstance.isPrimaryImage(firstImage)).toBe(true);
+    expect(fixture.componentInstance.isPrimaryImage(secondImage)).toBe(false);
+    expect(fixture.nativeElement.querySelectorAll('.image-card.is-primary')).toHaveLength(1);
+    expect(fixture.nativeElement.querySelector('.image-card.is-primary .image-card__primary')?.textContent)
+      .toContain('Ảnh đại diện');
+  });
+
+  it('lưu ngay ảnh được chọn lên đầu payload để làm ảnh đại diện', () => {
+    const venueWithImages = {
+      ...venue,
+      imageUrls: ['venues/owner/first.png', 'venues/owner/second.png']
+    };
+    getMyVenues.execute.mockReturnValue(of([venueWithImages]));
+    getVenueOverview.execute.mockReturnValue(of(venueWithImages));
+    updateVenue.execute.mockReturnValue(of({
+      ...venueWithImages,
+      imageUrls: ['venues/owner/second.png', 'venues/owner/first.png']
+    }));
+    const fixture = TestBed.createComponent(OwnerVenueManagementComponent);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+
+    const selectButton = fixture.nativeElement.querySelectorAll('.image-card')[1]
+      .querySelector('button.image-card__primary') as HTMLButtonElement;
+    selectButton.click();
+    fixture.detectChanges();
+
+    expect(updateVenue.execute).toHaveBeenCalledOnce();
+    expect(updateVenue.execute).toHaveBeenCalledWith('venue-1', expect.objectContaining({
+      imageUrls: ['venues/owner/second.png', 'venues/owner/first.png']
+    }));
+    expect(component.images()[0].key).toBe('venues/owner/second.png');
+    expect(component.isPrimaryImage(component.images()[0])).toBe(true);
+    expect(component.form.pristine).toBe(true);
   });
 
   it('hủy ảnh vừa chọn và báo lỗi khi upload presigned URL thất bại', () => {

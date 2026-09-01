@@ -3,11 +3,11 @@
 }
 
 .admin-shell {
-  --shell-accent: #047857;
-  --shell-accent-strong: #065f46;
-  --shell-accent-soft: #ecfdf5;
-  --shell-canvas: #f6f8f7;
-  --shell-border: #dce5e1;
+  --shell-accent: #0f766e;
+  --shell-accent-strong: #115e59;
+  --shell-accent-soft: #e7f5f1;
+  --shell-canvas: #f4f7f5;
+  --shell-border: #dbe5e0;
   --shell-text: #17201d;
   --shell-muted: #56645f;
   position: relative;
@@ -22,9 +22,7 @@
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background:
-    radial-gradient(circle at 58% 8%, rgb(167 243 208 / 23%), transparent 30rem),
-    linear-gradient(180deg, #f8faf9 0%, #f4f7f6 100%);
+  background: #f6f8f7;
 }
 
 .skip-link {
@@ -48,22 +46,22 @@
   position: fixed;
   top: 16px;
   right: 16px;
-  left: 16px;
+  left: 292px;
   z-index: 30;
   display: grid;
   height: 64px;
-  grid-template-columns: minmax(250px, 1fr) minmax(280px, 440px) minmax(250px, 1fr);
+  grid-template-columns: minmax(190px, 1fr) minmax(280px, 440px) minmax(230px, 1fr);
   align-items: center;
   gap: 24px;
   padding: 0 14px;
   border: 1px solid rgb(220 229 225 / 92%);
-  border-radius: 18px;
+  border-radius: 14px;
   background: rgb(255 255 255 / 94%);
-  box-shadow: 0 12px 36px rgb(15 81 63 / 7%);
+  box-shadow: 0 10px 30px rgb(37 77 62 / 7%);
   backdrop-filter: blur(18px);
 }
 
-.admin-topbar__brand-cluster,
+.admin-topbar__page-context,
 .admin-topbar__actions,
 .admin-brand,
 .admin-profile {
@@ -71,7 +69,10 @@
   align-items: center;
 }
 
-.admin-topbar__brand-cluster { min-width: 0; gap: 10px; }
+.admin-topbar__page-context { min-width: 0; gap: 12px; }
+.admin-topbar__page-context > div { display: grid; min-width: 0; gap: 1px; }
+.admin-topbar__page-context > div span { color: var(--shell-muted); font-size: 11px; font-weight: 650; }
+.admin-topbar__page-context > div strong { overflow: hidden; color: var(--shell-text); font-size: 17px; font-weight: 750; letter-spacing: -.02em; text-overflow: ellipsis; white-space: nowrap; }
 .admin-topbar__actions { justify-content: flex-end; gap: 10px; }
 
 .shell-icon-button {
@@ -135,14 +136,20 @@
 .admin-profile {
   min-height: 44px;
   gap: 9px;
-  padding: 4px 10px 4px 4px;
+  padding: 4px 9px 4px 4px;
   border: 1px solid var(--shell-border);
   border-radius: 13px;
   background: #fff;
+  color: var(--shell-text);
+  cursor: pointer;
+  font: inherit;
 }
 
 .admin-profile img { width: 34px; height: 34px; border-radius: 10px; object-fit: cover; }
-.admin-profile span { max-width: 110px; overflow: hidden; font-size: 14px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.admin-profile > span { display: grid; max-width: 120px; overflow: hidden; text-align: left; }
+.admin-profile > span strong { overflow: hidden; font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.admin-profile > span small { color: var(--shell-muted); font-size: 11px; font-weight: 500; }
+.admin-profile > lucide-icon { width: 15px; height: 15px; color: var(--shell-muted); }
 
 .notification-panel {
   position: absolute;
@@ -182,7 +189,7 @@
 
 .admin-sidebar {
   position: fixed;
-  top: 96px;
+  top: 16px;
   bottom: 16px;
   left: 16px;
   z-index: 20;
@@ -191,18 +198,28 @@
   flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--shell-border);
-  border-radius: 18px;
+  border-radius: 14px;
   background: rgb(255 255 255 / 96%);
-  box-shadow: 0 16px 44px rgb(15 81 63 / 7%);
+  box-shadow: 0 14px 38px rgb(37 77 62 / 8%);
   transition: width 240ms cubic-bezier(.16, 1, .3, 1), transform 240ms cubic-bezier(.16, 1, .3, 1);
 }
 
 .admin-sidebar.is-collapsed { width: 80px; }
-.admin-sidebar nav { display: grid; align-content: start; gap: 5px; flex: 1; overflow-y: auto; padding: 12px; }
+.admin-sidebar__brand { display: flex; min-height: 64px; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px 8px 14px; border-bottom: 1px solid #e8eeeb; }
+.admin-sidebar__brand > a { display: flex; min-width: 0; align-items: center; gap: 9px; color: var(--shell-accent-strong); text-decoration: none; }
+.admin-sidebar__brand img { width: 38px; height: 42px; object-fit: contain; }
+.admin-sidebar__brand span { overflow: hidden; font-size: 15px; font-weight: 650; letter-spacing: .02em; white-space: nowrap; }
+.admin-sidebar__brand span strong { color: var(--shell-text); font-weight: 850; }
+.admin-sidebar__brand > button { display: grid; width: 40px; height: 40px; flex: 0 0 40px; place-items: center; border: 0; border-radius: 10px; background: #f3f7f5; color: var(--shell-muted); cursor: pointer; }
+.admin-sidebar__brand > button:hover { background: var(--shell-accent-soft); color: var(--shell-accent); }
+.admin-sidebar__brand lucide-icon { width: 18px; height: 18px; }
+.admin-sidebar nav { display: grid; align-content: start; gap: 18px; flex: 1; overflow-y: auto; padding: 16px 12px; }
+.sidebar-group { display: grid; gap: 4px; }
+.sidebar-group h2 { margin: 0 0 3px; padding: 0 12px; color: #7b8984; font-size: 10px; font-weight: 750; letter-spacing: .065em; text-transform: uppercase; }
 .admin-sidebar a,
 .admin-sidebar footer button { display: grid; min-height: 48px; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 0 13px; border: 0; border-radius: 12px; background: transparent; color: #27342f; cursor: pointer; font: 500 15px/1.35 inherit; text-align: left; text-decoration: none; transition: background-color 180ms ease, color 180ms ease, transform 180ms ease; }
 .admin-sidebar a:hover { background: #f2f8f5; color: var(--shell-accent); }
-.admin-sidebar a.is-active { background: #e9f8f1; color: var(--shell-accent); font-weight: 700; box-shadow: inset 3px 0 0 #10b981; }
+.admin-sidebar a.is-active { background: var(--shell-accent-soft); color: var(--shell-accent-strong); font-weight: 700; box-shadow: inset 3px 0 0 var(--shell-accent); }
 .admin-sidebar a:active,
 .admin-sidebar footer button:active { transform: translateY(1px); }
 .admin-sidebar lucide-icon { width: 21px; height: 21px; }
@@ -213,6 +230,8 @@
 .admin-sidebar.is-collapsed a,
 .admin-sidebar.is-collapsed footer button { grid-template-columns: 1fr; justify-items: center; padding: 0; }
 .admin-sidebar.is-collapsed .sidebar-text { display: none; }
+.admin-sidebar.is-collapsed .admin-sidebar__brand { justify-content: center; padding-inline: 8px; }
+.admin-sidebar.is-collapsed .admin-sidebar__brand > a { display: none; }
 
 .sidebar-backdrop { display: none; }
 
@@ -226,6 +245,7 @@
   transition: padding-left 240ms cubic-bezier(.16, 1, .3, 1);
 }
 
+.admin-shell:has(.admin-sidebar.is-collapsed) .admin-topbar { left: 112px; }
 .admin-content.is-sidebar-collapsed { padding-left: 112px; }
 .admin-content main { min-width: 0; }
 
@@ -258,11 +278,12 @@
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 
 @media (max-width: 1023px) {
-  .admin-topbar { top: 12px; right: 12px; left: 12px; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; }
+  .admin-topbar,
+  .admin-shell:has(.admin-sidebar.is-collapsed) .admin-topbar { top: 12px; right: 12px; left: 12px; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; }
   .shell-menu-button { display: inline-grid; }
   .shell-collapse-button { display: none; }
   .admin-search-trigger { display: none; }
-  .admin-sidebar { top: 88px; bottom: 12px; left: 12px; width: min(286px, calc(100vw - 24px)); transform: translateX(calc(-100% - 24px)); }
+  .admin-sidebar { top: 12px; bottom: 12px; left: 12px; z-index: 40; width: min(300px, calc(100vw - 24px)); transform: translateX(calc(-100% - 24px)); }
   .admin-sidebar.is-collapsed { width: min(286px, calc(100vw - 24px)); }
   .admin-sidebar.is-open { transform: translateX(0); }
   .sidebar-backdrop { position: fixed; inset: 0; z-index: 10; display: block; border: 0; background: rgb(15 23 42 / 34%); backdrop-filter: blur(2px); }
@@ -272,13 +293,13 @@
 
 @media (max-width: 640px) {
   .admin-topbar { padding: 0 10px; border-radius: 16px; }
-  .admin-topbar__brand-cluster { gap: 6px; }
-  .admin-brand { gap: 7px; }
-  .admin-brand img { height: 36px; }
-  .admin-brand span { max-width: 156px; font-size: 13px; letter-spacing: .035em; }
+  .admin-topbar__page-context { gap: 8px; }
+  .admin-topbar__page-context > div span { display: none; }
+  .admin-topbar__page-context > div strong { max-width: 42vw; font-size: 15px; }
   .admin-topbar__actions { gap: 6px; }
   .admin-profile { padding-right: 4px; }
-  .admin-profile span { display: none; }
+  .admin-profile > span,
+  .admin-profile > lucide-icon { display: none; }
   .notification-panel { position: fixed; top: 88px; right: 12px; left: 12px; width: auto; }
   .notification-panel__header button { font-size: 12px; }
   .command-backdrop { padding-top: 76px; }

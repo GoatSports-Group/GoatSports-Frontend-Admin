@@ -80,12 +80,19 @@
         <button type="button" (click)="clearFilters()">Xóa bộ lọc</button>
       </section>
     } @else {
-      <section class="booking-grid" aria-label="Danh sách booking">
+      <section class="booking-grid" role="table" aria-label="Danh sách booking">
+        <div class="booking-table__header" role="row">
+          <span role="columnheader">Booking</span>
+          <span role="columnheader">Sân</span>
+          <span role="columnheader">Lịch chơi</span>
+          <span role="columnheader">Thanh toán</span>
+          <span role="columnheader">Trạng thái</span>
+          <span role="columnheader">Thao tác</span>
+        </div>
         @for (booking of bookings(); track booking.bookingId) {
-          <article class="booking-card">
+          <article class="booking-card" role="row">
             <header>
               <div><span class="booking-code">{{ booking.bookingCode }}</span><small>{{ booking.source }}</small></div>
-              <span class="status-badge" [attr.data-status]="booking.status">{{ statusLabel(booking.status) }}</span>
             </header>
             <div class="booking-card__court">
               <lucide-icon name="land-plot" />
@@ -108,6 +115,7 @@
                 <span><small>Còn lại</small><strong data-payment="NONE">Chưa có payment</strong></span>
               }
             </div>
+            <span class="status-badge booking-card__status" [attr.data-status]="booking.status">{{ statusLabel(booking.status) }}</span>
             <footer>
               <span>Khách #{{ shortId(booking.playerId) }}</span>
               @if (canCollectPayment(booking)) {

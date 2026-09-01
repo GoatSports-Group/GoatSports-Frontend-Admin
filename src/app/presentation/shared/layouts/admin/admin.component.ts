@@ -1,8 +1,9 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed, HostListener } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal, computed, HostListener } from '@angular/core';
+import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { Subscription, interval, of } from 'rxjs';
-import { startWith, switchMap, catchError, map } from 'rxjs/operators';
+import { interval, of } from 'rxjs';
+import { startWith, switchMap, catchError, map, filter } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { AuthService } from '@presentation/services/auth.service';
 import { NotificationService } from '@presentation/services/notification.service';
@@ -20,7 +21,10 @@ import { formatRelativeTime } from '@shared/utils/date-trend.utils';
 import { getFallbackAvatar } from '@shared/utils/user-display.utils';
 import {
   AdminNavigationItem,
+  AdminNavigationGroup,
   PLATFORM_ADMIN_NAVIGATION,
+  PLATFORM_ADMIN_NAVIGATION_GROUPS,
+  VENUE_OWNER_NAVIGATION_GROUPS,
   VENUE_OWNER_NAVIGATION
 } from './admin-navigation.config';
 
@@ -37,14 +41,16 @@ import {
     LucideIconComponent,
   ],
   templateUrl: './admin.component.html',
-  styleUrl: './admin.component.scss'
+  styleUrl: './admin.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class AdminComponent implements OnInit, OnDestroy {
+export class AdminComponent implements OnInit {
   readonly getRelativeTime = formatRelativeTime;
   public authService = inject(AuthService);
   public notificationService = inject(NotificationService);
   private router = inject(Router);
   private getCurrentUser = inject(GetCurrentUserUseCase);
+  private destroyRef = inject(DestroyRef);
 
   // Signals state management
   sidebarCollapsed = signal(false);
@@ -53,11 +59,23 @@ export class AdminComponent implements OnInit, OnDestroy {
   isSearchOpen = signal(false);
   selectedSearchIndex = signal(0);
   userRole = signal('');
+  currentUrl = signal(this.router.url.split('?')[0]);
   isPlatformAdmin = computed(() => this.userRole() === 'ADMIN');
 
   readonly visibleNavigationItems = computed(() =>
     this.isPlatformAdmin() ? PLATFORM_ADMIN_NAVIGATION : VENUE_OWNER_NAVIGATION
   );
+
+  readonly visibleNavigationGroups = computed<readonly AdminNavigationGroup[]>(() =>
+    this.isPlatformAdmin() ? PLATFORM_ADMIN_NAVIGATION_GROUPS : VENUE_OWNER_NAVIGATION_GROUPS
+  );
+
+  readonly currentNavigationItem = computed(() => {
+    const current = this.currentUrl();
+    return this.visibleNavigationItems().find(item =>
+      current === '/admin' + item.route || current.startsWith('/admin' + item.route + '/')
+    ) ?? this.visibleNavigationItems()[0];
+  });
 
   filteredItems = computed(() => {
     const q = this.searchQuery().toLowerCase().trim();
@@ -136,8 +154,6 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   userProfile: User | null = null;
   clientUrl = environment.clientApiUrl;
-  private statusSub?: Subscription;
-
   notificationPage = 1;
   isNotificationLoading = false;
 
@@ -148,7 +164,15 @@ export class AdminComponent implements OnInit, OnDestroy {
       this.sidebarCollapsed.set(true);
     }
 
-    this.statusSub = interval(10000)
+    this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(event => {
+      this.currentUrl.set(event.urlAfterRedirects.split('?')[0]);
+      if (window.innerWidth < 1024) this.sidebarCollapsed.set(true);
+    });
+
+    interval(10000)
       .pipe(
         startWith(0),
         switchMap(() =>
@@ -159,18 +183,14 @@ export class AdminComponent implements OnInit, OnDestroy {
               return of(isReachable);
             })
           )
-        )
+        ),
+        takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
         next: (connected) => this.isOnline.set(connected),
         error: () => this.isOnline.set(false)
       });
   }
-
-  ngOnDestroy() {
-    this.statusSub?.unsubscribe();
-  }
-
 
   toggleSidebar() {
     this.sidebarCollapsed.update(v => !v);

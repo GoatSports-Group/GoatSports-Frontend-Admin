@@ -177,7 +177,10 @@
                   @if (images().length) {
                     <div class="image-grid" aria-live="polite">
                       @for (image of images(); track image.id) {
-                        <article class="image-card" [class.is-uploading]="image.uploading">
+                        <article
+                          class="image-card"
+                          [class.is-uploading]="image.uploading"
+                          [class.is-primary]="isPrimaryImage(image)">
                           @if (image.displayUrl) {
                             <img [src]="image.displayUrl" [alt]="image.fileName" />
                           } @else if (image.resolving) {
@@ -185,16 +188,34 @@
                           } @else {
                             <div class="image-placeholder image-placeholder--error"><lucide-icon name="image" /><span>Không tải được ảnh</span></div>
                           }
-                          <div class="image-card__footer">
-                            <span [title]="image.fileName">{{ image.fileName }}</span>
-                            @if (image.uploading) {
-                              <small><span class="mini-spinner"></span> Đang tải lên</small>
-                            } @else {
-                              <button type="button" (click)="removeImage(image)" [disabled]="saving()" aria-label="Xóa ảnh">
-                                <lucide-icon name="x" />
-                              </button>
-                            }
-                          </div>
+                          @if (isPrimaryImage(image)) {
+                            <span class="image-card__primary image-card__primary--selected">
+                              <lucide-icon name="circle-check" /> Ảnh đại diện
+                            </span>
+                          } @else {
+                            <button
+                              type="button"
+                              class="image-card__primary"
+                              (click)="setPrimaryImage(image)"
+                              [disabled]="saving() || uploadingImages()"
+                              [attr.aria-label]="'Đặt ' + image.fileName + ' làm ảnh đại diện'">
+                              <lucide-icon name="star" /> Chọn làm ảnh đại diện
+                            </button>
+                          }
+                          @if (image.uploading) {
+                            <span class="image-card__uploading" aria-label="Đang tải ảnh lên">
+                              <span class="mini-spinner"></span>
+                            </span>
+                          } @else {
+                            <button
+                              type="button"
+                              class="image-card__remove"
+                              (click)="removeImage(image)"
+                              [disabled]="saving()"
+                              [attr.aria-label]="'Xóa ' + image.fileName">
+                              <lucide-icon name="x" />
+                            </button>
+                          }
                         </article>
                       }
                     </div>

@@ -4,10 +4,13 @@ import { of, Subject, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   LucideActivity,
+  LucideAlertCircle,
   LucideAlertTriangle,
   LucideArrowRight,
   LucideBan,
+  LucideBarChart3,
   LucideCalendar,
+  LucideCalendarCheck,
   LucideCheck,
   LucideCircleCheck,
   LucideClipboardCheck,
@@ -35,13 +38,19 @@ import {
 } from '@lucide/angular';
 import { BusinessType, OwnerApplication, OwnerApplicationStatus } from '@application/dto/owner-application/owner-application.dto';
 import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
+import { ManageOwnerBookingsUseCase } from '@application/usecase/owner-booking/manage-owner-bookings.usecase';
 import { GetMyOwnerApplicationsUseCase } from '@application/usecase/owner-application/get-my-owner-applications.usecase';
+import { GetOwnerRevenueUseCase } from '@application/usecase/owner-revenue/get-owner-revenue.usecase';
+import { GetStorageFileUrlUseCase } from '@application/usecase/storage/get-storage-file-url.usecase';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
 import { VenueOwnerDashboardComponent } from './venue-owner-dashboard.component';
 
 describe('VenueOwnerDashboardComponent', () => {
   const getApplications = { execute: vi.fn() };
   const getVenues = { execute: vi.fn() };
+  const manageBookings = { list: vi.fn() };
+  const getRevenue = { execute: vi.fn() };
+  const getFileUrl = { execute: vi.fn() };
   const primaryVenue = createVenue({
     venueId: 'venue-primary',
     name: 'GOAT Arena',
@@ -65,6 +74,27 @@ describe('VenueOwnerDashboardComponent', () => {
   beforeEach(async () => {
     getApplications.execute.mockReset();
     getVenues.execute.mockReset().mockReturnValue(of([primaryVenue]));
+    manageBookings.list.mockReset().mockReturnValue(of({
+      items: [], page: 0, pageSize: 12, pages: 0, total: 0
+    }));
+    getFileUrl.execute.mockReset().mockReturnValue(of('https://cdn.goat.test/venue-cover.png'));
+    getRevenue.execute.mockReset().mockReturnValue(of({
+      scopeVenueId: null,
+      currency: 'VND',
+      periodBasis: 'BOOKING_PLAY_DATE',
+      currentPeriod: {
+        fromDate: '2026-09-01', toDate: '2026-09-01', bookingCount: 0,
+        paidBookingCount: 0, totalRevenue: 0
+      },
+      previousPeriod: {
+        fromDate: '2026-08-01', toDate: '2026-08-31', bookingCount: 0,
+        paidBookingCount: 0, totalRevenue: 0
+      },
+      revenueChangePercentage: null,
+      bookingCountChangePercentage: null,
+      paymentStatusBreakdown: [],
+      dailyRevenue: []
+    }));
 
     await TestBed.configureTestingModule({
       imports: [VenueOwnerDashboardComponent],
@@ -72,10 +102,13 @@ describe('VenueOwnerDashboardComponent', () => {
         provideRouter([]),
         provideLucideIcons(
           LucideActivity,
+          LucideAlertCircle,
           LucideAlertTriangle,
           LucideArrowRight,
           LucideBan,
+          LucideBarChart3,
           LucideCalendar,
+          LucideCalendarCheck,
           LucideCheck,
           LucideCircleCheck,
           LucideClipboardCheck,
@@ -101,7 +134,10 @@ describe('VenueOwnerDashboardComponent', () => {
           LucideX
         ),
         { provide: GetMyOwnerApplicationsUseCase, useValue: getApplications },
-        { provide: GetMyOwnerVenuesUseCase, useValue: getVenues }
+        { provide: GetMyOwnerVenuesUseCase, useValue: getVenues },
+        { provide: ManageOwnerBookingsUseCase, useValue: manageBookings },
+        { provide: GetOwnerRevenueUseCase, useValue: getRevenue },
+        { provide: GetStorageFileUrlUseCase, useValue: getFileUrl }
       ]
     }).compileComponents();
   });
@@ -117,7 +153,7 @@ describe('VenueOwnerDashboardComponent', () => {
     fixture.detectChanges();
 
     const metrics = metricMap(fixture.nativeElement);
-    expect(fixture.nativeElement.textContent).toContain('Xin chào, Minh Đạt!');
+    expect(fixture.nativeElement.textContent).toContain('Chào Minh Đạt');
     expect(fixture.nativeElement.querySelectorAll('.application-card')).toHaveLength(1);
     expect(metrics.get('Cơ sở quản lý')).toEqual({ value: '2', description: '1 đang hoạt động' });
     expect(metrics.get('Tổng sân thi đấu')).toEqual({ value: '3', description: '2 cơ sở · 1 chưa kích hoạt' });
@@ -133,6 +169,30 @@ describe('VenueOwnerDashboardComponent', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('.venue-identity h3').textContent).toContain('GOAT Riverside');
     expect(fixture.nativeElement.textContent).not.toContain('Đang phát triển');
+  });
+
+  it('lấy URL ảnh đại diện từ storage-service thay vì bind trực tiếp object key', () => {
+    const venueWithCover = createVenue({
+      venueId: 'venue-with-cover',
+      name: 'GOAT Cover Arena',
+      imageUrls: ['venues/owner/cover.png']
+    });
+    getApplications.execute.mockReturnValue(of(pageOf([
+      createApplication('application-approved', 'GOAT Cover Arena', 'venue-with-cover', '2026-08-28T08:00:00Z')
+    ])));
+    getVenues.execute.mockReturnValue(of([venueWithCover]));
+
+    const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
+    fixture.detectChanges();
+
+    expect(getFileUrl.execute).toHaveBeenCalledOnce();
+    expect(getFileUrl.execute).toHaveBeenCalledWith('venues/owner/cover.png');
+    const images = [...fixture.nativeElement.querySelectorAll(
+      '.owner-hero__venue img, .venue-identity img'
+    )] as HTMLImageElement[];
+    expect(images).toHaveLength(2);
+    expect(images.every(image => image.getAttribute('src') === 'https://cdn.goat.test/venue-cover.png')).toBe(true);
+    expect(images.every(image => image.getAttribute('src') !== 'venues/owner/cover.png')).toBe(true);
   });
 
   it('khóa công cụ khi hồ sơ chưa được duyệt và không gọi Venue Service', () => {

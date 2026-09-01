@@ -24,12 +24,20 @@
     @if (courts().length === 0) {
       <section class="state-card state-card--compact"><lucide-icon name="activity" /><h2>Chưa có sân thi đấu</h2><p>Tạo sân đầu tiên với đúng môn thể thao, sức chứa và loại mặt sân.</p><button type="button" (click)="openCreate()"><lucide-icon name="plus" /> Tạo sân đầu tiên</button></section>
     } @else {
-      <section class="court-grid" aria-label="Danh sách sân thi đấu">
+      <section class="court-grid" role="table" aria-label="Danh sách sân thi đấu">
+        <div class="court-table__header" role="row">
+          <span role="columnheader">Sân thi đấu</span>
+          <span role="columnheader">Mặt sân</span>
+          <span role="columnheader">Sức chứa</span>
+          <span role="columnheader">Trạng thái trực tiếp</span>
+          <span role="columnheader">Thao tác</span>
+        </div>
         @for (court of courts(); track court.venueCourtId) {
-          <article class="court-card" [class.is-inactive]="!court.active" [attr.data-availability]="court.availabilityStatus || (court.active ? 'AVAILABLE' : 'INACTIVE')">
-            <header><span class="sport-icon">{{ sportLabel(court.sportType).slice(0, 1) }}</span><span class="court-status" [attr.data-availability]="court.availabilityStatus || (court.active ? 'AVAILABLE' : 'INACTIVE')"><i></i>{{ availabilityLabels[court.availabilityStatus || (court.active ? 'AVAILABLE' : 'INACTIVE')] }}</span></header>
-            <div class="court-body"><span class="sport-name">{{ sportLabel(court.sportType) }}</span><h2>{{ court.name }}</h2><p>{{ court.surfaceType || 'Chưa cập nhật loại mặt sân' }}</p></div>
-            <dl><div><dt>Sức chứa</dt><dd>{{ court.capacity }} người</dd></div><div><dt>Môn thể thao</dt><dd>{{ sportLabel(court.sportType) }}</dd></div><div><dt>Khả dụng hiện tại</dt><dd>{{ availabilityLabels[court.availabilityStatus || (court.active ? 'AVAILABLE' : 'INACTIVE')] }}@if (court.unavailableUntil) { · đến {{ court.unavailableUntil.slice(0, 5) }} }</dd></div></dl>
+          <article class="court-card" role="row" [class.is-inactive]="!court.active" [attr.data-availability]="court.availabilityStatus || (court.active ? 'AVAILABLE' : 'INACTIVE')">
+            <div class="court-identity" role="cell"><span class="sport-icon">{{ sportLabel(court.sportType).slice(0, 1) }}</span><div><h2>{{ court.name }}</h2><span class="sport-name">{{ sportLabel(court.sportType) }}</span></div></div>
+            <div class="court-surface" role="cell"><span class="mobile-label">Mặt sân</span><strong>{{ court.surfaceType || 'Chưa cập nhật' }}</strong></div>
+            <div class="court-capacity" role="cell"><span class="mobile-label">Sức chứa</span><strong>{{ court.capacity }} người</strong></div>
+            <div class="court-live" role="cell"><span class="court-status" [attr.data-availability]="court.availabilityStatus || (court.active ? 'AVAILABLE' : 'INACTIVE')"><i></i>{{ availabilityLabels[court.availabilityStatus || (court.active ? 'AVAILABLE' : 'INACTIVE')] }}</span>@if (court.unavailableUntil) { <small>Đến {{ court.unavailableUntil.slice(0, 5) }}</small> }</div>
             <footer>
               <button type="button" class="edit-button" (click)="openEdit(court)" [disabled]="saving() || togglingId() === court.venueCourtId"><lucide-icon name="pencil" /> Xem / sửa</button>
               <button type="button" class="toggle-button" [class.turn-on]="!court.active" (click)="toggle(court)" [disabled]="togglingId() !== null || saving()">

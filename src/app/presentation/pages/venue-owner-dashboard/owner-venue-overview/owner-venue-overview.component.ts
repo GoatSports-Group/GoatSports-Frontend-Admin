@@ -13,6 +13,7 @@ import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-ic
 })
 export class OwnerVenueOverviewComponent {
   readonly venues = input<readonly OwnerVenueOverview[]>([]);
+  readonly coverUrls = input<Readonly<Record<string, string>>>({});
   readonly loading = input(false);
   readonly error = input<string | null>(null);
   readonly retry = output<void>();
@@ -21,6 +22,10 @@ export class OwnerVenueOverviewComponent {
   readonly venue = computed(() => {
     const venues = this.venues();
     return venues.find(venue => venue.venueId === this.selectedVenueId()) ?? venues[0] ?? null;
+  });
+  readonly venueCoverUrl = computed(() => {
+    const venueId = this.venue()?.venueId;
+    return venueId ? this.coverUrls()[venueId] ?? null : null;
   });
   readonly previewCourts = computed(() => this.venue()?.courts?.slice(0, 2) ?? []);
   readonly remainingCourtCount = computed(() => Math.max((this.venue()?.courts?.length ?? 0) - 2, 0));

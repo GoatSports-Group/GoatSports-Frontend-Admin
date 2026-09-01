@@ -144,3 +144,21 @@ button:disabled { opacity: .55; cursor: not-allowed; }
   .history-list article > div { grid-column: 2; }
   .pagination { justify-content: space-between; flex-wrap: wrap; }
 }
+
+/* Counter operations workspace */
+.checkin-page { padding: 32px; }
+.hero { padding: 4px 0 24px; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; box-shadow: none; }
+h1 { color: var(--ink); font-size: clamp(32px, 4vw, 46px); }
+.tabs { padding: 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; }
+.tabs button { border-bottom: 2px solid transparent; border-radius: 0; }
+.tabs button.active { border-bottom-color: var(--green); background: transparent; color: var(--green-dark); box-shadow: none; }
+.panel { border-radius: 14px; box-shadow: none; }
+.lookup-panel { position: sticky; top: 90px; }
+.mode-toggle { border-radius: 10px; }
+.mode-toggle button.active { box-shadow: none; }
+.primary { box-shadow: none; }
+.history-list { gap: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; }
+.history-list article { border: 0; border-bottom: 1px solid #edf1f4; border-radius: 0; }
+.history-list article:last-child { border-bottom: 0; }
+@media (max-width: 900px) { .lookup-panel { position: static; } }
+@media (max-width: 600px) { .checkin-page { padding: 20px 14px 48px; } .tabs button:last-child { grid-column: auto; } }

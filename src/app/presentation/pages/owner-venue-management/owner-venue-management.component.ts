@@ -44,6 +44,7 @@ export class OwnerVenueManagementComponent {
   readonly selectedVenueId = signal<string | null>(null);
   readonly venue = signal<OwnerVenueOverview | null>(null);
   readonly images = signal<VenueImageItem[]>([]);
+  readonly primaryImageId = signal<string | null>(null);
   readonly uploadingImages = computed(() => this.images().some(image => image.uploading));
   readonly activeVenueCount = computed(() => this.venues().filter(venue => venue.active).length);
   readonly selectionLocked = computed(() => this.saving() || this.uploadingImages() || this.detailLoading());
@@ -126,11 +127,17 @@ export class OwnerVenueManagementComponent {
       .join(', ') || 'Địa chỉ đang cập nhật';
   }
 
-  submit(): void {
-    if (this.saving() || this.uploadingImages()) return;
+  submit(primaryImageIdOnError?: string | null): void {
+    if (this.saving() || this.uploadingImages()) {
+      this.restorePrimaryImage(primaryImageIdOnError);
+      return;
+    }
     this.form.markAllAsTouched();
     const venue = this.venue();
-    if (!venue || this.form.invalid || !this.validateBusinessRules()) return;
+    if (!venue || this.form.invalid || !this.validateBusinessRules()) {
+      this.restorePrimaryImage(primaryImageIdOnError);
+      return;
+    }
 
     this.saving.set(true);
     this.form.disable({ emitEvent: false });
@@ -149,7 +156,10 @@ export class OwnerVenueManagementComponent {
         this.form.markAsPristine();
         this.notify.success('Thông tin cơ sở đã được cập nhật.');
       },
-      error: error => this.notify.error(this.errorMessage(error, 'Cập nhật cơ sở thất bại.'))
+      error: error => {
+        this.restorePrimaryImage(primaryImageIdOnError);
+        this.notify.error(this.errorMessage(error, 'Cập nhật cơ sở thất bại.'));
+      }
     });
   }
 
@@ -187,8 +197,25 @@ export class OwnerVenueManagementComponent {
   removeImage(image: VenueImageItem): void {
     if (image.uploading || this.saving()) return;
     if (image.localPreview && image.displayUrl) URL.revokeObjectURL(image.displayUrl);
-    this.images.update(items => items.filter(item => item.id !== image.id));
+    const remainingImages = this.images().filter(item => item.id !== image.id);
+    this.images.set(remainingImages);
+    if (!remainingImages.some(item => item.id === this.primaryImageId())) {
+      this.primaryImageId.set(remainingImages[0]?.id ?? null);
+    }
     this.form.markAsDirty();
+  }
+
+  isPrimaryImage(image: VenueImageItem): boolean {
+    return this.primaryImageId() === image.id;
+  }
+
+  setPrimaryImage(image: VenueImageItem): void {
+    if (this.saving() || this.uploadingImages() || image.uploading || this.isPrimaryImage(image)) return;
+    if (!this.images().some(item => item.id === image.id)) return;
+    const previousPrimaryImageId = this.primaryImageId();
+    this.primaryImageId.set(image.id);
+    this.form.markAsDirty();
+    this.submit(previousPrimaryImageId);
   }
 
   private loadVenueDetail(venueId: string): void {
@@ -260,7 +287,7 @@ export class OwnerVenueManagementComponent {
       district: value.district.trim() || undefined,
       latitude: value.latitude ?? undefined,
       longitude: value.longitude ?? undefined,
-      imageUrls: this.images().map(image => image.key).filter((key): key is string => Boolean(key)),
+      imageUrls: this.imageKeysInSaveOrder(),
       amenities: this.toList(value.amenities)
     };
   }
@@ -285,10 +312,12 @@ export class OwnerVenueManagementComponent {
 
     const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const previewUrl = URL.createObjectURL(file);
+    const becomesPrimaryImage = this.images().length === 0;
     this.images.update(items => [...items, {
       id, key: null, displayUrl: previewUrl, fileName: file.name,
       uploading: true, resolving: false, localPreview: true
     }]);
+    if (becomesPrimaryImage) this.primaryImageId.set(id);
     this.form.markAsDirty();
 
     this.uploadVenueImage.execute(file).pipe(
@@ -298,7 +327,11 @@ export class OwnerVenueManagementComponent {
       next: objectKey => this.updateImage(id, image => ({ ...image, key: objectKey, uploading: false })),
       error: error => {
         URL.revokeObjectURL(previewUrl);
-        this.images.update(items => items.filter(image => image.id !== id));
+        const remainingImages = this.images().filter(image => image.id !== id);
+        this.images.set(remainingImages);
+        if (this.primaryImageId() === id) {
+          this.primaryImageId.set(remainingImages[0]?.id ?? null);
+        }
         this.notify.error(this.errorMessage(error, `Không thể tải ảnh ${file.name}. Ảnh đã được hủy khỏi lựa chọn.`));
       }
     });
@@ -316,7 +349,23 @@ export class OwnerVenueManagementComponent {
       localPreview: false
     }));
     this.images.set(items);
+    this.primaryImageId.set(items[0]?.id ?? null);
     items.filter(item => item.resolving).forEach(item => this.resolveImage(item));
+  }
+
+  private imageKeysInSaveOrder(): string[] {
+    const images = this.images();
+    const primaryImage = images.find(image => image.id === this.primaryImageId());
+    const orderedImages = primaryImage
+      ? [primaryImage, ...images.filter(image => image.id !== primaryImage.id)]
+      : images;
+    return orderedImages
+      .map(image => image.key)
+      .filter((key): key is string => Boolean(key));
+  }
+
+  private restorePrimaryImage(primaryImageId?: string | null): void {
+    if (primaryImageId !== undefined) this.primaryImageId.set(primaryImageId);
   }
 
   private resolveImage(image: VenueImageItem): void {
@@ -340,7 +389,11 @@ export class OwnerVenueManagementComponent {
   }
 
   private fileName(key: string): string {
-    return decodeURIComponent(key.split('/').pop() || 'Hình ảnh cơ sở');
+    const storedName = decodeURIComponent(key.split('/').pop() || 'Hình ảnh cơ sở');
+    return storedName.replace(
+      /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}-(?=.+)/i,
+      ''
+    );
   }
 
   private isHttpUrl(value: string): boolean {

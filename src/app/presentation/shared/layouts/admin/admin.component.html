@@ -3,22 +3,15 @@
   <div class="admin-shell__ambient" aria-hidden="true"></div>
 
   <header class="admin-topbar">
-    <div class="admin-topbar__brand-cluster">
+    <div class="admin-topbar__page-context">
       <button type="button" class="shell-icon-button shell-menu-button" (click)="toggleSidebar()"
         aria-label="Mở menu điều hướng">
         <lucide-icon name="menu" />
       </button>
-
-      <button type="button" class="shell-icon-button shell-collapse-button" (click)="toggleSidebar()"
-        [attr.aria-label]="sidebarCollapsed() ? 'Mở rộng menu' : 'Thu gọn menu'"
-        [title]="sidebarCollapsed() ? 'Mở rộng' : 'Thu gọn'">
-        <lucide-icon [name]="sidebarCollapsed() ? 'chevron-right' : 'chevron-left'" />
-      </button>
-
-      <a routerLink="/admin/dashboard" class="admin-brand" aria-label="Về trang tổng quan">
-        <img src="assets/images/goat.png" alt="GoatSports">
-        <span>{{ isPlatformAdmin() ? 'Trang quản trị' : 'Không gian chủ sân' }}</span>
-      </a>
+      <div>
+        <span>{{ isPlatformAdmin() ? 'Quản trị nền tảng' : 'Không gian chủ sân' }}</span>
+        <strong>{{ currentNavigationItem().title }}</strong>
+      </div>
     </div>
 
     <button type="button" class="admin-search-trigger" (click)="openSearch()" aria-label="Mở tìm kiếm trang">
@@ -79,10 +72,23 @@
         }
       </div>
 
-      <div class="admin-profile" aria-label="Tài khoản hiện tại">
+      <button type="button" class="admin-profile" [matMenuTriggerFor]="profileMenu"
+        aria-label="Mở menu tài khoản">
         <img [src]="userProfile?.avatarUrl || fallbackAvatar" [alt]="userProfile?.fullName || 'Tài khoản'">
-        <span>{{ userProfile?.fullName?.split(' ')?.slice(-1)?.[0] || 'Owner' }}</span>
-      </div>
+        <span><strong>{{ userProfile?.fullName?.split(' ')?.slice(-1)?.[0] || 'Owner' }}</strong><small>{{ isPlatformAdmin() ? 'Quản trị viên' : 'Chủ sân' }}</small></span>
+        <lucide-icon name="chevron-down" aria-hidden="true" />
+      </button>
+      <mat-menu #profileMenu="matMenu" class="owner-profile-menu">
+        <div class="profile-menu-heading" (click)="$event.stopPropagation()">
+          <strong>{{ userProfile?.fullName || 'Tài khoản GoatSports' }}</strong>
+          <span>{{ userProfile?.email || '' }}</span>
+        </div>
+        <mat-divider />
+        <button mat-menu-item type="button" (click)="logout()">
+          <lucide-icon name="log-out" />
+          <span>Đăng xuất</span>
+        </button>
+      </mat-menu>
     </div>
   </header>
 
@@ -92,16 +98,33 @@
 
   <aside class="admin-sidebar" [class.is-collapsed]="sidebarCollapsed()"
     [class.is-open]="!sidebarCollapsed()" aria-label="Điều hướng chính">
+    <header class="admin-sidebar__brand">
+      <a routerLink="/admin/dashboard" aria-label="Về trang tổng quan GoatSports">
+        <img src="assets/images/goat.png" alt="GoatSports">
+        <span class="sidebar-text"><strong>GOAT</strong>SPORTS</span>
+      </a>
+      <button type="button" (click)="toggleSidebar()"
+        [attr.aria-label]="sidebarCollapsed() ? 'Mở rộng menu' : 'Thu gọn menu'"
+        [title]="sidebarCollapsed() ? 'Mở rộng' : 'Thu gọn'">
+        <lucide-icon [name]="sidebarCollapsed() ? 'chevron-right' : 'chevron-left'" />
+      </button>
+    </header>
+
     <nav>
-      @for (item of visibleNavigationItems(); track item.route) {
-        <a [routerLink]="'/admin' + item.route" routerLinkActive="is-active"
-          [title]="item.title" [attr.aria-label]="item.title">
-          <lucide-icon [name]="item.icon" />
-          <span class="sidebar-text">{{ item.title }}</span>
-          @if (item.developing && !sidebarCollapsed()) {
-            <small class="sidebar-text">Sắp có</small>
+      @for (group of visibleNavigationGroups(); track group.label) {
+        <section class="sidebar-group">
+          <h2 class="sidebar-text">{{ group.label }}</h2>
+          @for (item of group.items; track item.route) {
+            <a [routerLink]="'/admin' + item.route" routerLinkActive="is-active"
+              [title]="item.title" [attr.aria-label]="item.title">
+              <lucide-icon [name]="item.icon" />
+              <span class="sidebar-text">{{ item.title }}</span>
+              @if (item.developing && !sidebarCollapsed()) {
+                <small class="sidebar-text">Sắp có</small>
+              }
+            </a>
           }
-        </a>
+        </section>
       }
     </nav>
 

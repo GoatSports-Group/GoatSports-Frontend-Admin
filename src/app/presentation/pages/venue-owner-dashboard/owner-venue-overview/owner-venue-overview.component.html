@@ -55,8 +55,8 @@
     <div class="venue-layout">
       <div class="venue-main">
         <div class="venue-identity">
-          @if (venueData.imageUrls[0]) {
-            <img [src]="venueData.imageUrls[0]" [alt]="'Ảnh đại diện của ' + venueData.name" loading="lazy">
+          @if (venueCoverUrl(); as coverUrl) {
+            <img [src]="coverUrl" [alt]="'Ảnh đại diện của ' + venueData.name" loading="lazy">
           } @else {
             <span class="venue-placeholder" aria-hidden="true"><lucide-icon name="image" /></span>
           }

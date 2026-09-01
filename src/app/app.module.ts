@@ -138,7 +138,9 @@ import {
   LucideWalletCards,
   LucideBanknote,
   LucideQrCode,
-  LucideHistory
+  LucideHistory,
+  LucideCalendarCheck,
+  LucideBarChart3
 } from '@lucide/angular';
 
 @NgModule({
@@ -276,7 +278,9 @@ import {
       LucideWalletCards,
       LucideBanknote,
       LucideQrCode,
-      LucideHistory
+      LucideHistory,
+      LucideCalendarCheck,
+      LucideBarChart3
     )
   ],
   bootstrap: [AppComponent]

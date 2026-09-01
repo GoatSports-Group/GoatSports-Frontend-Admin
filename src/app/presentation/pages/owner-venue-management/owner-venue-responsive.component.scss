@@ -231,11 +231,6 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .image-card > img,
-  .image-placeholder {
-    height: 112px;
-  }
-
   .form-actions {
     position: fixed;
     right: 12px;
@@ -271,10 +266,6 @@
     grid-template-columns: 1fr;
   }
 
-  .image-card > img,
-  .image-placeholder {
-    height: 170px;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -284,4 +275,25 @@
     animation-duration: .01ms !important;
     transition-duration: .01ms !important;
   }
+}
+
+/* Unified venue editor surface */
+.owner-venue-page { width: min(1440px, 100%); padding: 32px; }
+.venue-selector { border-radius: 14px; box-shadow: none; }
+.venue-option { border-radius: 10px; }
+.venue-option:hover:not(:disabled) { transform: none; }
+.venue-option.is-selected { border-color: #86cbb4; background: #f0fdf7; box-shadow: inset 3px 0 #047857; }
+.venue-editor { overflow: hidden; border: 1px solid #dce4ea; border-radius: 14px; background: #fff; }
+.venue-form { gap: 0; }
+.form-card { padding: 26px; border: 0; border-bottom: 1px solid #edf2f7; border-radius: 0; background: #fff; box-shadow: none; }
+.form-card:last-of-type { border-bottom: 0; }
+.card-icon { border-radius: 10px; }
+.form-actions { bottom: 0; margin: 0; border-width: 1px 0 0; border-radius: 0; box-shadow: 0 -10px 26px rgba(15, 23, 42, .07); backdrop-filter: blur(16px); }
+.button--primary, .state-card button, .state-card a, .detail-state button { background: #047857; }
+
+@media (max-width: 720px) {
+  .owner-venue-page { padding: 20px 14px 88px; }
+  .venue-editor { overflow: visible; border: 0; background: transparent; }
+  .form-card { margin-bottom: 12px; border: 1px solid #dce4ea; border-radius: 14px; }
+  .form-actions { margin: 0 -14px -88px; padding: 12px 14px; }
 }

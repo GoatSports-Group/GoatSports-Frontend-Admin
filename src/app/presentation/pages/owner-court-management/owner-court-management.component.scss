@@ -79,3 +79,42 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 @media (max-width: 980px) { .court-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 @media (max-width: 660px) { .courts-page { padding: 18px 14px 80px; } .page-heading { display: grid; } .page-heading .primary-button { width: 100%; } .venue-summary { grid-template-columns: auto minmax(0,1fr); } .venue-summary dl { grid-column: 1 / -1; justify-content: space-around; padding-top: 12px; border-top: 1px solid #edf2f7; } .venue-summary dl div { text-align: center; } .court-grid { grid-template-columns: 1fr; } .editor-backdrop { align-items: end; padding: 0; } .editor { max-height: 92dvh; border-radius: 20px 20px 0 0; } .field-row { grid-template-columns: 1fr; } .editor form > footer button { flex: 1; } }
 @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+/* Scan-first court inventory */
+.courts-page { width: min(1360px, 100%); padding: 32px; }
+.page-heading { padding-bottom: 22px; border-bottom: 1px solid #e2e8f0; }
+.primary-button, .state-card button, .state-card a { background: #047857; box-shadow: none; }
+.venue-summary { border-radius: 14px; box-shadow: none; }
+.court-grid { display: block; overflow: hidden; border: 1px solid #dce4ea; border-radius: 14px; background: #fff; }
+.court-table__header, .court-card { display: grid; grid-template-columns: minmax(220px, 1.25fr) minmax(150px, .8fr) 120px minmax(180px, .85fr) minmax(240px, auto); gap: 18px; align-items: center; }
+.court-table__header { min-height: 44px; padding: 0 18px; border-bottom: 1px solid #dce4ea; background: #f8fafc; color: #64748b; font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.court-card { min-height: 88px; padding: 14px 18px; overflow: visible; border: 0; border-bottom: 1px solid #edf2f7; border-radius: 0; box-shadow: none; transition: background-color .18s; }
+.court-card:last-child { border-bottom: 0; }
+.court-card:hover { transform: none; background: #fbfdfc; box-shadow: none; }
+.court-card.is-inactive { background: #fafafa; }
+.court-identity { display: flex; min-width: 0; align-items: center; gap: 12px; }
+.court-identity h2 { margin: 0 0 4px; overflow: hidden; font-size: 15px; text-overflow: ellipsis; white-space: nowrap; }
+.court-surface, .court-capacity { display: grid; gap: 3px; color: #334155; font-size: 13px; }
+.court-live { display: grid; justify-items: start; gap: 5px; }
+.court-live small { color: #64748b; font-size: 11px; }
+.mobile-label { display: none; color: #94a3b8; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+.court-card > footer { justify-content: flex-end; padding: 0; background: transparent; }
+.court-card footer button { min-height: 38px; }
+.edit-button { flex: 0 1 auto; padding: 0 12px; }
+.editor-backdrop { place-items: stretch end; padding: 0; background: rgba(15, 23, 42, .42); backdrop-filter: none; }
+.editor { width: min(520px, 100%); max-height: 100dvh; min-height: 100dvh; border-radius: 0; box-shadow: -20px 0 48px rgba(15, 23, 42, .16); }
+
+@media (max-width: 980px) {
+  .court-table__header { display: none; }
+  .court-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; overflow: visible; border: 0; background: transparent; }
+  .court-card { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 18px; border: 1px solid #dce4ea; border-radius: 14px; background: #fff; }
+  .court-identity, .court-card > footer { grid-column: 1 / -1; }
+  .mobile-label { display: block; }
+  .court-card > footer { justify-content: stretch; padding-top: 14px; border-top: 1px solid #edf2f7; }
+  .court-card footer button { flex: 1; }
+}
+@media (max-width: 660px) {
+  .courts-page { padding: 20px 14px 88px; }
+  .court-grid { grid-template-columns: 1fr; }
+  .editor { min-height: auto; border-radius: 18px 18px 0 0; }
+}

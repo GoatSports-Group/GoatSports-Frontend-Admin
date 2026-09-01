@@ -2,6 +2,7 @@
 @use '@angular/material/prebuilt-themes/cyan-orange.css';
 @use 'material-icons/iconfont/material-icons.scss';
 @use './styles/fonts';
+@use './styles/owner-design-system';
 @use "tailwindcss";
 
 :root {
@@ -17,7 +18,7 @@
   --owner-radius-control: 0.75rem;
   --owner-radius-surface: 1rem;
   --owner-radius-panel: 1.5rem;
-  --owner-focus-ring: 0 0 0 3px rgb(16 185 129 / 34%);
+  --owner-focus-ring: 0 0 0 3px rgb(15 118 110 / 28%);
 }
 
 @theme {
@@ -483,4 +484,44 @@ body div.cdk-overlay-pane.custom-assign-role-dialog .mat-mdc-dialog-content {
 .owner-submission-backdrop.cdk-overlay-backdrop {
   background: rgb(15 23 42 / 58%);
   backdrop-filter: blur(4px);
+}
+
+.owner-profile-menu.mat-mdc-menu-panel {
+  min-width: 240px !important;
+  margin-top: 8px;
+  border: 1px solid #dbe5e0;
+  border-radius: 14px !important;
+  background: #fff;
+  box-shadow: 0 20px 48px rgb(23 32 29 / 16%);
+}
+
+.owner-profile-menu .profile-menu-heading {
+  display: grid;
+  gap: 3px;
+  padding: 14px 16px;
+}
+
+.owner-profile-menu .profile-menu-heading strong {
+  color: #17201d;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.owner-profile-menu .profile-menu-heading span {
+  overflow: hidden;
+  color: #65736e;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.owner-profile-menu .mat-mdc-menu-item {
+  min-height: 48px;
+  color: #3f4d48;
+}
+
+.owner-profile-menu .mat-mdc-menu-item lucide-icon {
+  width: 18px;
+  height: 18px;
+  margin-right: 10px;
 }

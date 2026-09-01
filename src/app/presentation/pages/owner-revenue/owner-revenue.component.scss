@@ -125,3 +125,18 @@ button:disabled { opacity: .55; cursor: not-allowed; }
   .status-row > strong { grid-column: 1 / -1; text-align: left; color: var(--green-dark); }
   .state-card { flex-direction: column; text-align: center; }
 }
+
+/* Financial command center */
+.revenue-page { padding: 32px; }
+.hero { padding: 4px 0 24px; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; box-shadow: none; }
+h1 { color: var(--ink); font-size: clamp(32px, 4vw, 46px); }
+.scope-note { border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+.filter-panel, .period-strip, .panel, .metric-card { border-radius: 14px; box-shadow: none; }
+.primary { box-shadow: none; }
+.metric-grid { gap: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+.metric-card { border: 0; border-right: 1px solid var(--line); border-radius: 0; }
+.metric-card:last-child { border-right: 0; }
+.metric-card.primary-metric { background: #f4fbf8; }
+.bar-track i { background: var(--green); }
+@media (max-width: 1050px) { .metric-card:nth-child(2) { border-right: 0; } .metric-card:nth-child(-n+2) { border-bottom: 1px solid var(--line); } }
+@media (max-width: 520px) { .revenue-page { padding: 20px 14px 48px; } .metric-card { border-right: 0; border-bottom: 1px solid var(--line); } .metric-card:last-child { border-bottom: 0; } }

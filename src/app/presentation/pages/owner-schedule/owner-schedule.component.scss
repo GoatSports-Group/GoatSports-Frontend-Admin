@@ -138,3 +138,33 @@ select:hover, input:hover { border-color: #94a3b8; }
   .loading-grid { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; } }
+
+/* Compact scheduling workspace */
+.schedule-page { padding: 32px; }
+.page-hero { padding: 4px 0 24px; border: 0; border-bottom: 1px solid #dce4ea; border-radius: 0; background: transparent; box-shadow: none; }
+.opening-card, .context-bar, .workspace-panel, .editor-panel, .calendar-workspace { border-radius: 14px; box-shadow: none; }
+.opening-card { background: #fff; }
+.primary-button { box-shadow: none; }
+.schedule-tabs { width: fit-content; min-width: 360px; border: 0; border-bottom: 1px solid #dce4ea; border-radius: 0; background: transparent; }
+.schedule-tabs button { border-bottom: 2px solid transparent; border-radius: 0; }
+.schedule-tabs button.active { border-bottom-color: #047857; background: transparent; box-shadow: none; }
+.workspace-panel { padding: 0; border: 0; background: transparent; }
+.rule-list { overflow: hidden; gap: 0; border: 1px solid #dce4ea; border-radius: 14px; background: #fff; }
+.rule-card { border: 0; border-bottom: 1px solid #edf2f7; border-radius: 0; }
+.rule-card:last-child { border-bottom: 0; }
+.rule-card:hover { transform: none; background: #fbfdfc; }
+.calendar-workspace { padding: 0; border: 0; background: transparent; }
+.generation-bar { border-color: #dce4ea; border-radius: 14px; background: #fff; }
+.calendar-list { grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); align-items: start; }
+.day-card { border-radius: 14px; background: #fff; }
+.day-card > header { background: #fff; }
+.slot-grid { grid-template-columns: 1fr; }
+.slot-card { border-left: 3px solid #10b981; border-radius: 10px; background: #fff; }
+.slot-card--maintenance { border-left-color: #f97316; }
+.slot-card--locked { border-left-color: #64748b; }
+
+@media (max-width: 720px) {
+  .schedule-page { padding: 20px 14px 48px; }
+  .schedule-tabs { width: 100%; min-width: 0; }
+  .calendar-list { grid-template-columns: 1fr; }
+}

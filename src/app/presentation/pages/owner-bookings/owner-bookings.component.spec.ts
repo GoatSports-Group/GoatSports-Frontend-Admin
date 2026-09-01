@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   LucideAlertCircle, LucideArrowRight, LucideChevronLeft, LucideChevronRight,
   LucideCircleCheck, LucideClock, LucideCreditCard, LucideFileText, LucideFilter,
-  LucideInbox, LucideLandPlot, LucideSearch, LucideUser, LucideX, provideLucideIcons
+  LucideInbox, LucideLandPlot, LucidePlus, LucideSearch, LucideUser, LucideX, provideLucideIcons
 } from '@lucide/angular';
 import { OwnerBooking } from '@application/dto/owner-booking/owner-booking.dto';
 import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
@@ -59,7 +59,7 @@ describe('OwnerBookingsComponent', () => {
         provideLucideIcons(
           LucideAlertCircle, LucideArrowRight, LucideChevronLeft, LucideChevronRight,
           LucideCircleCheck, LucideClock, LucideCreditCard, LucideFileText, LucideFilter,
-          LucideInbox, LucideLandPlot, LucideSearch, LucideUser, LucideX
+          LucideInbox, LucideLandPlot, LucidePlus, LucideSearch, LucideUser, LucideX
         ),
         { provide: GetMyOwnerVenuesUseCase, useValue: getVenues },
         { provide: ManageOwnerVenueCourtsUseCase, useValue: manageCourts },
