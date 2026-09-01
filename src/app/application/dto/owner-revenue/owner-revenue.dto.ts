@@ -24,6 +24,12 @@ export interface OwnerDailyRevenue {
   succeededPaymentCount: number;
 }
 
+export interface OwnerHourlyRevenue {
+  hour: number;
+  revenue: number;
+  succeededPaymentCount: number;
+}
+
 export interface OwnerRevenueReport {
   scopeVenueId: string | null;
   currency: string;
@@ -34,4 +40,5 @@ export interface OwnerRevenueReport {
   bookingCountChangePercentage: number | null;
   paymentStatusBreakdown: OwnerRevenueStatusBreakdown[];
   dailyRevenue: OwnerDailyRevenue[];
+  hourlyRevenue?: OwnerHourlyRevenue[];
 }

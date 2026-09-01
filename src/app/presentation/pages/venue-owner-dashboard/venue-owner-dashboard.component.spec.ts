@@ -190,12 +190,21 @@ describe('VenueOwnerDashboardComponent', () => {
         fromDate: '2026-09-01', toDate: '2026-09-30', bookingCount: 8,
         paidBookingCount: 6, totalRevenue: 1_870_000
       },
+      previousPeriod: {
+        fromDate: '2026-08-01', toDate: '2026-08-31', bookingCount: 7,
+        paidBookingCount: 5, totalRevenue: 1_454_000
+      },
       revenueChangePercentage: 28.6,
       bookingCountChangePercentage: 12.7,
       dailyRevenue: [
         { date: '2026-09-01', revenue: 200_000, succeededPaymentCount: 1 },
         { date: '2026-09-02', revenue: 620_000, succeededPaymentCount: 2 },
         { date: '2026-09-03', revenue: 1_050_000, succeededPaymentCount: 3 }
+      ],
+      hourlyRevenue: [
+        { hour: 8, revenue: 200_000, succeededPaymentCount: 1 },
+        { hour: 12, revenue: 620_000, succeededPaymentCount: 2 },
+        { hour: 18, revenue: 1_050_000, succeededPaymentCount: 3 }
       ]
     })));
 
@@ -209,7 +218,57 @@ describe('VenueOwnerDashboardComponent', () => {
     expect(metrics.get('Tỷ lệ khách quay lại')?.value).toBe('0%');
     expect(fixture.nativeElement.querySelector('#revenue-today-title')?.textContent).toContain('1.870.000');
     expect(fixture.nativeElement.querySelectorAll('.daily-revenue-metrics article')).toHaveLength(3);
+    expect(fixture.nativeElement.querySelector('.daily-revenue-line')).toBeTruthy();
+    expect(fixture.nativeElement.querySelectorAll('.daily-revenue-axis')).toHaveLength(7);
+    expect(fixture.nativeElement.querySelectorAll('.daily-revenue-money-axis')).toHaveLength(6);
+    expect(fixture.nativeElement.querySelector('.daily-revenue-comparison')?.textContent).toContain('+28,6%');
+    expect(fixture.nativeElement.querySelector('.daily-revenue-comparison')?.textContent).toContain('so với ngày trước');
     expect(fixture.nativeElement.querySelector('.utilization-ring strong')?.textContent).toContain('50%');
+  });
+
+  it('dựng line từ payment booking khi backend đang chạy chưa trả hourlyRevenue', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 8, 2, 12));
+    getApplications.execute.mockReturnValue(of(pageOf([
+      createApplication('application-approved', 'GOAT Arena', 'venue-primary', '2026-08-28T08:00:00Z')
+    ])));
+    getRevenue.execute.mockReturnValue(of(revenueReport({
+      currentPeriod: {
+        fromDate: '2026-09-02', toDate: '2026-09-02', bookingCount: 1,
+        paidBookingCount: 1, totalRevenue: 180_000
+      },
+      previousPeriod: {
+        fromDate: '2026-09-01', toDate: '2026-09-01', bookingCount: 1,
+        paidBookingCount: 1, totalRevenue: 150_000
+      },
+      revenueChangePercentage: 20,
+      hourlyRevenue: undefined
+    })));
+    const booking = createBooking({
+      bookingId: 'booking-hourly-fallback', playDate: '2026-09-02', startTime: '10:00:00',
+      payments: [{
+        paymentId: 'payment-hourly-fallback', purpose: 'BOOKING_DEPOSIT', amount: 180_000,
+        currency: 'VND', status: 'SUCCEEDED', paidAt: '2026-09-01T08:04:00Z',
+        createdAt: '2026-09-01T08:01:00Z'
+      }]
+    });
+    manageBookings.list.mockImplementation(filter => of(bookingPage(
+      filter.fromDate === filter.toDate ? [booking] : []
+    )));
+
+    try {
+      const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
+      fixture.detectChanges();
+      const points = fixture.componentInstance.dailyRevenueChartPoints();
+
+      expect(points[0].cumulativeRevenue).toBe(0);
+      expect(points[10].cumulativeRevenue).toBe(180_000);
+      expect(points[10].y).toBeLessThan(points[0].y);
+      expect(fixture.nativeElement.querySelector('.daily-revenue-callout')?.textContent).toContain('180.000đ');
+      expect(fixture.nativeElement.querySelector('.daily-revenue-line')?.getAttribute('d')).toContain(' C ');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('lấy URL ảnh đại diện từ storage-service thay vì bind trực tiếp object key', () => {
@@ -544,6 +603,9 @@ function revenueReport(overrides: Record<string, unknown> = {}) {
     bookingCountChangePercentage: null,
     paymentStatusBreakdown: [],
     dailyRevenue: [],
+    hourlyRevenue: Array.from({ length: 24 }, (_, hour) => ({
+      hour, revenue: 0, succeededPaymentCount: 0
+    })),
     ...overrides
   };
 }

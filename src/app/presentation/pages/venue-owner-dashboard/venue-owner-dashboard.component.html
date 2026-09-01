@@ -5,260 +5,362 @@
       <p>Hôm nay là {{ todayLabel() }}</p>
     </div>
     @if (selectedVenue(); as venue) {
-      <label class="venue-selector" [class.is-single]="venues().length < 2">
-        <span class="sr-only">Chọn cơ sở để xem thống kê</span>
-        <lucide-icon name="land-plot" />
-        <select [value]="venue.venueId" [disabled]="venues().length < 2 || businessLoading() || dailyRevenueLoading()"
-          (change)="selectVenue($event)" aria-label="Cơ sở đang thống kê">
-          @for (venueOption of venues(); track venueOption.venueId) {
-            <option [value]="venueOption.venueId">{{ venueOption.name }}</option>
-          }
-        </select>
-        <lucide-icon name="chevron-down" aria-hidden="true" />
-      </label>
+    <label class="venue-selector" [class.is-single]="venues().length < 2">
+      <span class="sr-only">Chọn cơ sở để xem thống kê</span>
+      <lucide-icon name="land-plot" />
+      <select [value]="venue.venueId" [disabled]="venues().length < 2 || businessLoading() || dailyRevenueLoading()"
+        (change)="selectVenue($event)" aria-label="Cơ sở đang thống kê">
+        @for (venueOption of venues(); track venueOption.venueId) {
+        <option [value]="venueOption.venueId">{{ venueOption.name }}</option>
+        }
+      </select>
+      <lucide-icon name="chevron-down" aria-hidden="true" />
+    </label>
     }
   </header>
 
   @if (!applicationApproved()) {
-    <section id="owner-application-progress" class="application-summary" aria-labelledby="application-summary-title">
-      <header>
-        <span aria-hidden="true"><lucide-icon name="clipboard-check" /></span>
-        <div>
-          <h2 id="application-summary-title">Tiến độ đơn đăng ký</h2>
-          <p>Hoàn tất hồ sơ để mở khóa không gian vận hành dành cho chủ sân.</p>
-        </div>
-        <a [routerLink]="applicationUrl">Xem lịch sử <lucide-icon name="arrow-right" /></a>
-      </header>
-      <app-owner-application-progress
-        [application]="latestApplication()"
-        [loading]="applicationLoading()"
-        [error]="applicationError()"
-        [applicationUrl]="applicationUrl"
-        (retry)="loadApplications()" />
-    </section>
+  <section id="owner-application-progress" class="application-summary" aria-labelledby="application-summary-title">
+    <header>
+      <span aria-hidden="true"><lucide-icon name="clipboard-check" /></span>
+      <div>
+        <h2 id="application-summary-title">Tiến độ đơn đăng ký</h2>
+        <p>Hoàn tất hồ sơ để mở khóa không gian vận hành dành cho chủ sân.</p>
+      </div>
+      <a [routerLink]="applicationUrl">Xem lịch sử <lucide-icon name="arrow-right" /></a>
+    </header>
+    <app-owner-application-progress [application]="latestApplication()" [loading]="applicationLoading()"
+      [error]="applicationError()" [applicationUrl]="applicationUrl" (retry)="loadApplications()" />
+  </section>
   } @else if (venueLoading() && !venues().length) {
-    <div class="dashboard-skeleton" role="status" aria-live="polite">
-      <span></span><span></span><span></span>
-      <span class="sr-only">Đang tải dữ liệu tổng quan</span>
-    </div>
+  <div class="dashboard-skeleton" role="status" aria-live="polite">
+    <span></span><span></span><span></span>
+    <span class="sr-only">Đang tải dữ liệu tổng quan</span>
+  </div>
   } @else if (venueError()) {
-    <section class="dashboard-state dashboard-state--error" role="alert">
-      <lucide-icon name="alert-triangle" />
-      <div><strong>Chưa thể tải dữ liệu cơ sở</strong><p>{{ venueError() }}</p></div>
-      <button type="button" (click)="retryVenues()">Thử lại</button>
-    </section>
+  <section class="dashboard-state dashboard-state--error" role="alert">
+    <lucide-icon name="alert-triangle" />
+    <div><strong>Chưa thể tải dữ liệu cơ sở</strong>
+      <p>{{ venueError() }}</p>
+    </div>
+    <button type="button" (click)="retryVenues()">Thử lại</button>
+  </section>
   } @else if (!venues().length) {
-    <section class="dashboard-state">
-      <lucide-icon name="land-plot" />
-      <div><strong>Chưa có cơ sở được liên kết</strong><p>Kiểm tra hồ sơ đã duyệt hoặc liên hệ hỗ trợ để đồng bộ cơ sở.</p></div>
-      <a routerLink="/admin/applications">Kiểm tra hồ sơ</a>
-    </section>
+  <section class="dashboard-state">
+    <lucide-icon name="land-plot" />
+    <div><strong>Chưa có cơ sở được liên kết</strong>
+      <p>Kiểm tra hồ sơ đã duyệt hoặc liên hệ hỗ trợ để đồng bộ cơ sở.</p>
+    </div>
+    <a routerLink="/admin/applications">Kiểm tra hồ sơ</a>
+  </section>
   } @else {
-    @if (businessError()) {
-      <section class="business-alert" role="alert">
-        <lucide-icon name="alert-circle" />
-        <span>{{ businessError() }}</span>
-        <button type="button" [disabled]="businessLoading()" (click)="retryBusinessSnapshot()">Thử lại</button>
-      </section>
-    }
+  @if (businessError()) {
+  <section class="business-alert" role="alert">
+    <lucide-icon name="alert-circle" />
+    <span>{{ businessError() }}</span>
+    <button type="button" [disabled]="businessLoading()" (click)="retryBusinessSnapshot()">Thử lại</button>
+  </section>
+  }
 
-    <section class="performance-card" aria-labelledby="revenue-today-title">
-      <article class="revenue-panel">
-        <header>
-          <div class="revenue-heading">
-            <span>Doanh thu theo ngày <lucide-icon name="info" /></span>
-            <strong id="revenue-today-title">{{ money(dailyRevenue()) }}</strong>
-            <small><lucide-icon name="calendar" /> {{ longDate(appliedRevenueDate()) }}</small>
-          </div>
-          <div class="revenue-actions">
-            <label>
-              <span class="sr-only">Chọn ngày thống kê doanh thu</span>
-              <input type="date" [value]="revenueDateDraft()" [max]="maximumRevenueDate"
-                [disabled]="dailyRevenueLoading()" (change)="selectRevenueDate($event)">
-            </label>
-            <button type="button" [disabled]="dailyRevenueLoading() || !revenueDateDraft()"
-              (click)="applyRevenueDate()">
-              <lucide-icon name="bar-chart-3" /> Thống kê
-            </button>
-            <a routerLink="/admin/finance">Xem báo cáo <lucide-icon name="arrow-right" /></a>
-          </div>
-        </header>
-
-        @if (dailyRevenueLoading() && !dailyRevenueReport()) {
-          <div class="daily-revenue-loading"><span class="skeleton"></span><span class="skeleton"></span><span class="skeleton"></span></div>
-        } @else if (dailyRevenueError()) {
-          <div class="daily-revenue-error" role="alert">
-            <lucide-icon name="alert-circle" /><span>{{ dailyRevenueError() }}</span>
-            <button type="button" (click)="applyRevenueDate()">Thử lại</button>
-          </div>
-        } @else {
-          <div class="daily-revenue-body">
-            <div class="daily-revenue-metrics">
-              <article><span><lucide-icon name="calendar-check" /></span><small>Booking trong ngày</small><strong>{{ dailyBookingCount() }}</strong></article>
-              <article><span><lucide-icon name="circle-check" /></span><small>Booking thanh toán thành công</small><strong>{{ dailyPaidBookingCount() }}</strong></article>
-              <article><span><lucide-icon name="credit-card" /></span><small>Tỷ lệ thanh toán</small><strong>{{ dailyPaymentRate() }}%</strong></article>
-            </div>
-            <p><lucide-icon name="shield-check" /> Chỉ cộng doanh thu từ payment thành công của booking có ngày chơi đúng ngày được chọn.</p>
-          </div>
-        }
-      </article>
-
-      <article class="utilization-panel">
-        <header><span>Tỷ lệ sử dụng sân <lucide-icon name="info" /></span><small>Hôm nay</small></header>
-        <div class="utilization-content">
-          <div class="utilization-ring" [style.background]="utilizationGradient()">
-            <div><strong>{{ utilizationRate() }}%</strong><span>Đang sử dụng</span></div>
-          </div>
-          <dl>
-            <div><dt><i class="is-occupied"></i>Đang sử dụng</dt><dd>{{ inUseCourtCount() }} sân</dd></div>
-            <div><dt><i class="is-available"></i>Đang trống</dt><dd>{{ availableCourtCount() }} sân</dd></div>
-            <div><dt><i class="is-maintenance"></i>Bảo trì</dt><dd>{{ maintenanceCourtCount() }} sân</dd></div>
-          </dl>
+  <section class="performance-card" aria-labelledby="revenue-today-title">
+    <article class="revenue-panel">
+      <header>
+        <div class="revenue-heading">
+          <span>Doanh thu theo ngày <lucide-icon name="info" /></span>
+          <strong id="revenue-today-title">{{ money(dailyRevenue()) }}</strong>
+          <small class="daily-revenue-comparison" [class.is-negative]="dailyRevenueChange() < 0">
+            <lucide-icon [name]="dailyRevenueChange() < 0 ? 'trending-down' : 'trending-up'" />
+            <b>{{ signedPercentage(dailyRevenueChange()) }}</b>
+            <span>so với ngày trước ({{ money(dailyPreviousRevenue()) }})</span>
+          </small>
         </div>
-        <a routerLink="/admin/courts"><lucide-icon name="activity" /> Xem chi tiết</a>
-      </article>
-    </section>
+        <div class="revenue-actions">
+          <label>
+            <span class="sr-only">Chọn ngày thống kê doanh thu</span>
+            <input type="date" [value]="revenueDateDraft()" [max]="maximumRevenueDate"
+              [disabled]="dailyRevenueLoading()" (change)="selectRevenueDate($event)">
+          </label>
+          <button type="button" [disabled]="dailyRevenueLoading() || !revenueDateDraft()" (click)="applyRevenueDate()">
+            <lucide-icon name="bar-chart-3" /> Thống kê
+          </button>
+          <a routerLink="/admin/finance">Xem báo cáo <lucide-icon name="arrow-right" /></a>
+        </div>
+      </header>
 
-    <section class="kpi-strip" aria-label="Chỉ số vận hành trong tháng">
-      @for (metric of dashboardMetrics(); track metric.label) {
-        <article>
-          <span aria-hidden="true"><lucide-icon [name]="metric.icon" /></span>
-          <div><small>{{ metric.label }}</small><strong>{{ metric.value }}</strong><em [class.is-negative]="metric.negative">{{ metric.detail }}</em></div>
-        </article>
-      }
-    </section>
-
-    <section class="operations-grid">
-      <article class="schedule-panel" aria-labelledby="upcoming-bookings-title">
-        <header class="panel-heading">
-          <div><h2 id="upcoming-bookings-title">Lịch đặt sân sắp tới</h2><p>Booking cần chuẩn bị trong 7 ngày tới</p></div>
-          <a routerLink="/admin/owner-bookings"><lucide-icon name="calendar" /> Xem lịch đầy đủ</a>
-        </header>
-
-        @if (businessLoading() && !upcomingBookings().length) {
-          <div class="schedule-loading"><span class="skeleton"></span><span class="skeleton"></span><span class="skeleton"></span></div>
-        } @else if (upcomingBookings().length) {
-          <div class="booking-table">
-            <div class="booking-table__head"><span>Thời gian</span><span>Khách hàng</span><span>Sân</span><span>Dịch vụ</span><span>Tổng tiền</span><span>Trạng thái</span></div>
-            @for (booking of upcomingBookings().slice(0, 5); track booking.bookingId) {
-              <button type="button" class="booking-row" (click)="openBookingDetail(booking.bookingId)">
-                <time><strong>{{ timeValue(booking.startTime) }} - {{ timeValue(booking.endTime) }}</strong><span>{{ shortDate(booking.playDate) }}</span></time>
-                <span class="customer-cell"><i>{{ customerInitial(booking) }}</i><span><strong>{{ booking.walkInCustomerName || booking.bookingCode }}</strong><small>{{ booking.walkInCustomerPhone || booking.source }}</small></span></span>
-                <span><strong>{{ booking.courtName }}</strong><small>{{ booking.venueName }}</small></span>
-                <span><strong>{{ bookingSourceLabel(booking.source) }}</strong><small>{{ booking.bookingCode }}</small></span>
-                <strong class="money-cell">{{ money(booking.totalPrice) }}</strong>
-                <em [attr.data-status]="booking.status">{{ bookingStatusLabel(booking.status) }}</em>
-              </button>
+      @if (dailyRevenueLoading() && !dailyRevenueReport()) {
+      <div class="daily-revenue-loading"><span class="skeleton"></span><span class="skeleton"></span><span
+          class="skeleton"></span></div>
+      } @else if (dailyRevenueError()) {
+      <div class="daily-revenue-error" role="alert">
+        <lucide-icon name="alert-circle" /><span>{{ dailyRevenueError() }}</span>
+        <button type="button" (click)="applyRevenueDate()">Thử lại</button>
+      </div>
+      } @else {
+      <div class="daily-revenue-body">
+        <div class="daily-revenue-chart" aria-label="Biểu đồ đường doanh thu lũy kế đủ 24 giờ">
+          <svg viewBox="0 0 1040 194" role="img" aria-labelledby="daily-revenue-chart-title">
+            <title id="daily-revenue-chart-title">Doanh thu lũy kế từ 00:00 đến 24:00 ngày {{
+              longDate(appliedRevenueDate()) }}</title>
+            <defs>
+              <linearGradient id="dailyRevenueArea" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="var(--dashboard-primary)" stop-opacity=".2" />
+                <stop offset="1" stop-color="var(--dashboard-primary)" stop-opacity="0" />
+              </linearGradient>
+            </defs>
+            @for (tick of dailyRevenueYAxisTicks(); track tick.y) {
+            <line class="daily-revenue-grid" x1="62" [attr.y1]="tick.y" x2="1018" [attr.y2]="tick.y" />
+            <text class="daily-revenue-money-axis" x="52" [attr.y]="tick.y + 4" text-anchor="end">{{
+              compactRevenue(tick.value) }}</text>
             }
-          </div>
-          @if (upcomingBookings().length > 5) {
-            <a class="schedule-more" routerLink="/admin/owner-bookings">Xem thêm {{ upcomingBookings().length - 5 }} lịch đặt khác <lucide-icon name="chevron-right" /></a>
-          }
-        } @else {
-          <div class="panel-empty"><lucide-icon name="calendar-check" /><span>Không có booking sắp diễn ra trong 7 ngày tới.</span></div>
-        }
-      </article>
+            <path class="daily-revenue-area" [attr.d]="dailyRevenueAreaPath()" />
+            <path class="daily-revenue-line" [attr.d]="dailyRevenueLinePath()" />
+            @for (point of dailyRevenueChartPoints(); track point.hour) {
+            @if (point.revenue > 0 || point.hour === 24) {
+            <circle class="daily-revenue-point" [attr.cx]="point.x" [attr.cy]="point.y" r="3.5">
+              <title>Đến {{ revenueHourLabel(point.hour) }}: {{ money(point.cumulativeRevenue) }}</title>
+            </circle>
+            }
+            }
+            @for (hour of revenueAxisHours; track hour) {
+            <text class="daily-revenue-axis" [attr.x]="revenueHourX(hour)" y="187"
+              [attr.text-anchor]="hour === 0 ? 'start' : hour === 24 ? 'end' : 'middle'">{{ revenueHourLabel(hour)
+              }}</text>
+            }
+            @if (dailyRevenueLastPoint(); as lastPoint) {
+            @if (dailyRevenue() > 0) {
+            <g class="daily-revenue-callout"
+              [attr.transform]="'translate(' + (lastPoint.x - 120) + ' ' + (lastPoint.y > 45 ? lastPoint.y - 34 : 4) + ')'">
+              <rect width="120" height="27" rx="6" />
+              <text x="60" y="18" text-anchor="middle">{{ chartMoney(dailyRevenue()) }}</text>
+            </g>
+            }
+            }
+          </svg>
+        </div>
+        <div class="daily-revenue-metrics">
+          <article><span><lucide-icon name="calendar-check" /></span><small>Đặt sân trong ngày</small><strong>{{
+              dailyBookingCount() }}</strong></article>
+          <article><span><lucide-icon name="circle-check" /></span><small>Thanh toán thành
+              công</small><strong>{{ dailyPaidBookingCount() }}</strong></article>
+          <article><span><lucide-icon name="credit-card" /></span><small>Tỷ lệ thanh toán</small><strong>{{
+              dailyPaymentRate() }}%</strong></article>
+        </div>
+      </div>
+      }
+    </article>
 
-      <aside class="operations-aside">
-        <section class="live-courts-panel" aria-labelledby="live-courts-title">
+    <article class="utilization-panel">
+      <header><span>Tỷ lệ sử dụng sân <lucide-icon name="info" /></span><small>Hôm nay</small></header>
+      <div class="utilization-content">
+        <div class="utilization-ring" [style.background]="utilizationGradient()">
+          <div><strong>{{ utilizationRate() }}%</strong><span>Đang sử dụng</span></div>
+        </div>
+        <dl>
+          <div>
+            <dt><i class="is-occupied"></i>Đang sử dụng</dt>
+            <dd>{{ inUseCourtCount() }} sân</dd>
+          </div>
+          <div>
+            <dt><i class="is-available"></i>Đang trống</dt>
+            <dd>{{ availableCourtCount() }} sân</dd>
+          </div>
+          <div>
+            <dt><i class="is-maintenance"></i>Bảo trì</dt>
+            <dd>{{ maintenanceCourtCount() }} sân</dd>
+          </div>
+        </dl>
+      </div>
+      <a routerLink="/admin/courts"><lucide-icon name="activity" /> Xem chi tiết</a>
+    </article>
+  </section>
+
+  <section class="kpi-strip" aria-label="Chỉ số vận hành trong tháng">
+    @for (metric of dashboardMetrics(); track metric.label) {
+    <article>
+      <span aria-hidden="true"><lucide-icon [name]="metric.icon" /></span>
+      <div><small>{{ metric.label }}</small><strong>{{ metric.value }}</strong><em
+          [class.is-negative]="metric.negative">{{ metric.detail }}</em></div>
+    </article>
+    }
+  </section>
+
+  <section class="operations-grid">
+    <article class="schedule-panel" aria-labelledby="upcoming-bookings-title">
+      <header class="panel-heading">
+        <div>
+          <h2 id="upcoming-bookings-title">Lịch đặt sân sắp tới</h2>
+          <p>Booking cần chuẩn bị trong 7 ngày tới</p>
+        </div>
+        <a routerLink="/admin/owner-bookings"><lucide-icon name="calendar" /> Xem lịch đầy đủ</a>
+      </header>
+
+      @if (businessLoading() && !upcomingBookings().length) {
+      <div class="schedule-loading"><span class="skeleton"></span><span class="skeleton"></span><span
+          class="skeleton"></span></div>
+      } @else if (upcomingBookings().length) {
+      <div class="booking-table">
+        <div class="booking-table__head"><span>Thời gian</span><span>Khách hàng</span><span>Sân</span><span>Dịch
+            vụ</span><span>Tổng tiền</span><span>Trạng thái</span></div>
+        @for (booking of upcomingBookings().slice(0, 5); track booking.bookingId) {
+        <button type="button" class="booking-row" (click)="openBookingDetail(booking.bookingId)">
+          <time><strong>{{ timeValue(booking.startTime) }} - {{ timeValue(booking.endTime) }}</strong><span>{{
+              shortDate(booking.playDate) }}</span></time>
+          <span class="customer-cell"><i>{{ customerInitial(booking) }}</i><span><strong>{{ booking.walkInCustomerName
+                || booking.bookingCode }}</strong><small>{{ booking.walkInCustomerPhone || booking.source
+                }}</small></span></span>
+          <span><strong>{{ booking.courtName }}</strong><small>{{ booking.venueName }}</small></span>
+          <span><strong>{{ bookingSourceLabel(booking.source) }}</strong><small>{{ booking.bookingCode }}</small></span>
+          <strong class="money-cell">{{ money(booking.totalPrice) }}</strong>
+          <em [attr.data-status]="booking.status">{{ bookingStatusLabel(booking.status) }}</em>
+        </button>
+        }
+      </div>
+      @if (upcomingBookings().length > 5) {
+      <a class="schedule-more" routerLink="/admin/owner-bookings">Xem thêm {{ upcomingBookings().length - 5 }} lịch đặt
+        khác <lucide-icon name="chevron-right" /></a>
+      }
+      } @else {
+      <div class="panel-empty"><lucide-icon name="calendar-check" /><span>Không có booking sắp diễn ra trong 7 ngày
+          tới.</span></div>
+      }
+    </article>
+
+    <aside class="operations-aside">
+      <section class="live-courts-panel" aria-labelledby="live-courts-title">
+        <header class="panel-heading">
+          <div>
+            <h2 id="live-courts-title">Tình trạng sân trực tiếp</h2>
+            <p>Cập nhật theo thời gian thực</p>
+          </div>
+          <a routerLink="/admin/courts"><lucide-icon name="activity" /> Xem sơ đồ sân</a>
+        </header>
+        <div class="live-courts-list">
+          @for (court of liveCourts(); track court.venueCourtId) {
+          <article [attr.data-status]="normalizedCourtStatus(court)">
+            <span>{{ court.name }}</span>
+            <small>{{ sportLabel(court.sportType) }}</small>
+            <div aria-hidden="true">
+              @for (cell of courtCells; track $index) { <i></i> }
+            </div>
+            <em><i></i>{{ courtAvailabilityLabel(court) }}</em>
+          </article>
+          } @empty {
+          <div class="live-courts-empty">Chưa có sân thi đấu.</div>
+          }
+        </div>
+      </section>
+
+      <div class="aside-bottom">
+        <section class="reviews-preview" aria-labelledby="reviews-preview-title">
           <header class="panel-heading">
-            <div><h2 id="live-courts-title">Tình trạng sân trực tiếp</h2><p>Cập nhật theo thời gian thực</p></div>
-            <a routerLink="/admin/courts"><lucide-icon name="activity" /> Xem sơ đồ sân</a>
+            <div>
+              <h2 id="reviews-preview-title">Đánh giá mới</h2>
+              <p>Phản hồi gần đây từ khách hàng</p>
+            </div>
+            <span class="dev-badge">DEV</span>
           </header>
-          <div class="live-courts-list">
-            @for (court of liveCourts(); track court.venueCourtId) {
-              <article [attr.data-status]="normalizedCourtStatus(court)">
-                <span>{{ court.name }}</span>
-                <small>{{ sportLabel(court.sportType) }}</small>
-                <div aria-hidden="true">
-                  @for (cell of courtCells; track $index) { <i></i> }
-                </div>
-                <em><i></i>{{ courtAvailabilityLabel(court) }}</em>
-              </article>
-            } @empty {
-              <div class="live-courts-empty">Chưa có sân thi đấu.</div>
+          <div class="reviews-preview__list">
+            @for (review of previewReviews; track review.id) {
+            <article>
+              <span class="review-avatar">{{ review.initials }}</span>
+              <div>
+                <span class="review-stars" [attr.aria-label]="review.rating + ' trên 5 sao'">
+                  @for (star of reviewStars; track star) { <lucide-icon name="star"
+                    [class.is-empty]="star > review.rating" /> }
+                </span>
+                <p>{{ review.content }}</p><time>{{ review.time }}</time>
+              </div>
+            </article>
             }
           </div>
         </section>
 
-        <div class="aside-bottom">
-          <section class="reviews-preview" aria-labelledby="reviews-preview-title">
-            <header class="panel-heading">
-              <div><h2 id="reviews-preview-title">Đánh giá mới</h2><p>Phản hồi gần đây từ khách hàng</p></div>
-              <span class="dev-badge">DEV</span>
-            </header>
-            <div class="reviews-preview__list">
-              @for (review of previewReviews; track review.id) {
-                <article>
-                  <span class="review-avatar">{{ review.initials }}</span>
-                  <div>
-                    <span class="review-stars" [attr.aria-label]="review.rating + ' trên 5 sao'">
-                      @for (star of reviewStars; track star) { <lucide-icon name="star" [class.is-empty]="star > review.rating" /> }
-                    </span>
-                    <p>{{ review.content }}</p><time>{{ review.time }}</time>
-                  </div>
-                </article>
-              }
-            </div>
-          </section>
-
-          <a class="venue-photo" routerLink="/admin/venues" aria-label="Xem thông tin cơ sở">
-            @if (selectedVenueCoverUrl(); as coverUrl) {
-              <img [src]="coverUrl" [alt]="'Ảnh đại diện ' + selectedVenue()!.name" loading="lazy">
-            } @else {
-              <span><lucide-icon name="image" />Chưa có ảnh cơ sở</span>
-            }
-          </a>
-        </div>
-      </aside>
-    </section>
+        <a class="venue-photo" routerLink="/admin/venues" aria-label="Xem thông tin cơ sở">
+          @if (selectedVenueCoverUrl(); as coverUrl) {
+          <img [src]="coverUrl" [alt]="'Ảnh đại diện ' + selectedVenue()!.name" loading="lazy">
+          } @else {
+          <span><lucide-icon name="image" />Chưa có ảnh cơ sở</span>
+          }
+        </a>
+      </div>
+    </aside>
+  </section>
   }
 
   @if (bookingDetailId()) {
-    <div class="booking-detail-backdrop" (click)="closeBookingDetail()">
-      <section class="booking-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="booking-detail-title"
-        tabindex="-1" (click)="$event.stopPropagation()" (keydown.escape)="closeBookingDetail()">
-        <header>
-          <div><span>Chi tiết booking</span><h2 id="booking-detail-title">{{ bookingDetail()?.bookingCode || 'Đang tải...' }}</h2></div>
-          <button type="button" (click)="closeBookingDetail()" aria-label="Đóng chi tiết booking"><lucide-icon name="x" /></button>
-        </header>
+  <div class="booking-detail-backdrop" (click)="closeBookingDetail()">
+    <section class="booking-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="booking-detail-title"
+      tabindex="-1" (click)="$event.stopPropagation()" (keydown.escape)="closeBookingDetail()">
+      <header>
+        <div><span>Chi tiết booking</span>
+          <h2 id="booking-detail-title">{{ bookingDetail()?.bookingCode || 'Đang tải...' }}</h2>
+        </div>
+        <button type="button" (click)="closeBookingDetail()" aria-label="Đóng chi tiết booking"><lucide-icon
+            name="x" /></button>
+      </header>
 
-        @if (bookingDetailLoading() && !bookingDetail()) {
-          <div class="booking-detail-loading"><span class="skeleton"></span><span class="skeleton"></span><span class="skeleton"></span></div>
-        } @else if (bookingDetailError()) {
-          <div class="booking-detail-error" role="alert"><lucide-icon name="alert-circle" /><p>{{ bookingDetailError() }}</p><button type="button" (click)="retryBookingDetail()">Thử lại</button></div>
-        } @else if (bookingDetail(); as booking) {
-          <div class="booking-detail-content">
-            <section class="booking-detail-summary">
-              <div><small>Mã booking</small><strong>{{ booking.bookingCode }}</strong></div>
-              <em [attr.data-status]="booking.status">{{ bookingStatusLabel(booking.status) }}</em>
-            </section>
+      @if (bookingDetailLoading() && !bookingDetail()) {
+      <div class="booking-detail-loading"><span class="skeleton"></span><span class="skeleton"></span><span
+          class="skeleton"></span></div>
+      } @else if (bookingDetailError()) {
+      <div class="booking-detail-error" role="alert"><lucide-icon name="alert-circle" />
+        <p>{{ bookingDetailError() }}</p><button type="button" (click)="retryBookingDetail()">Thử lại</button>
+      </div>
+      } @else if (bookingDetail(); as booking) {
+      <div class="booking-detail-content">
+        <section class="booking-detail-summary">
+          <div><small>Mã booking</small><strong>{{ booking.bookingCode }}</strong></div>
+          <em [attr.data-status]="booking.status">{{ bookingStatusLabel(booking.status) }}</em>
+        </section>
 
-            <dl class="booking-detail-facts">
-              <div><dt><lucide-icon name="user-round" />Khách hàng</dt><dd><strong>{{ booking.walkInCustomerName || 'Khách đặt trực tuyến' }}</strong><span>{{ booking.walkInCustomerPhone || booking.playerId || 'Không có thông tin liên hệ' }}</span></dd></div>
-              <div><dt><lucide-icon name="land-plot" />Cơ sở và sân</dt><dd><strong>{{ booking.venueName }}</strong><span>{{ booking.courtName }}</span></dd></div>
-              <div><dt><lucide-icon name="calendar" />Thời gian chơi</dt><dd><strong>{{ shortDate(booking.playDate) }} · {{ timeValue(booking.startTime) }}–{{ timeValue(booking.endTime) }}</strong><span>{{ bookingSourceLabel(booking.source) }}</span></dd></div>
-              <div><dt><lucide-icon name="clock" />Khởi tạo</dt><dd><strong>{{ dateTime(booking.createdAt) }}</strong><span>Cập nhật: {{ dateTime(booking.updatedAt) }}</span></dd></div>
-            </dl>
-
-            <section class="booking-finance" aria-label="Thông tin thanh toán">
-              <div><small>Tổng tiền</small><strong>{{ money(booking.totalPrice) }}</strong></div>
-              <div><small>Tiền cọc</small><strong>{{ money(booking.depositAmount) }}</strong></div>
-              <div><small>Còn lại</small><strong>{{ money(booking.remainingAmount) }}</strong></div>
-            </section>
-
-            <section class="booking-payments">
-              <header><h3>Lịch sử thanh toán</h3><span>{{ booking.payments.length }} giao dịch</span></header>
-              @for (payment of booking.payments; track payment.paymentId) {
-                <article><div><strong>{{ paymentPurposeLabel(payment.purpose) }}</strong><small>{{ dateTime(payment.paidAt || payment.createdAt) }}</small></div><div><strong>{{ money(payment.amount) }}</strong><em [attr.data-status]="payment.status">{{ paymentStatusLabel(payment.status) }}</em></div></article>
-              } @empty {
-                <p>Booking chưa có giao dịch thanh toán.</p>
-              }
-            </section>
+        <dl class="booking-detail-facts">
+          <div>
+            <dt><lucide-icon name="user-round" />Khách hàng</dt>
+            <dd><strong>{{ booking.walkInCustomerName || 'Khách đặt trực tuyến' }}</strong><span>{{
+                booking.walkInCustomerPhone || booking.playerId || 'Không có thông tin liên hệ' }}</span></dd>
           </div>
-          <footer><a routerLink="/admin/owner-bookings" [queryParams]="{ bookingId: booking.bookingId }">Mở trang quản lý booking <lucide-icon name="arrow-right" /></a></footer>
-        }
-      </section>
-    </div>
+          <div>
+            <dt><lucide-icon name="land-plot" />Cơ sở và sân</dt>
+            <dd><strong>{{ booking.venueName }}</strong><span>{{ booking.courtName }}</span></dd>
+          </div>
+          <div>
+            <dt><lucide-icon name="calendar" />Thời gian chơi</dt>
+            <dd><strong>{{ shortDate(booking.playDate) }} · {{ timeValue(booking.startTime) }}–{{
+                timeValue(booking.endTime) }}</strong><span>{{ bookingSourceLabel(booking.source) }}</span></dd>
+          </div>
+          <div>
+            <dt><lucide-icon name="clock" />Khởi tạo</dt>
+            <dd><strong>{{ dateTime(booking.createdAt) }}</strong><span>Cập nhật: {{ dateTime(booking.updatedAt)
+                }}</span></dd>
+          </div>
+        </dl>
+
+        <section class="booking-finance" aria-label="Thông tin thanh toán">
+          <div><small>Tổng tiền</small><strong>{{ money(booking.totalPrice) }}</strong></div>
+          <div><small>Tiền cọc</small><strong>{{ money(booking.depositAmount) }}</strong></div>
+          <div><small>Còn lại</small><strong>{{ money(booking.remainingAmount) }}</strong></div>
+        </section>
+
+        <section class="booking-payments">
+          <header>
+            <h3>Lịch sử thanh toán</h3><span>{{ booking.payments.length }} giao dịch</span>
+          </header>
+          @for (payment of booking.payments; track payment.paymentId) {
+          <article>
+            <div><strong>{{ paymentPurposeLabel(payment.purpose) }}</strong><small>{{ dateTime(payment.paidAt ||
+                payment.createdAt) }}</small></div>
+            <div><strong>{{ money(payment.amount) }}</strong><em [attr.data-status]="payment.status">{{
+                paymentStatusLabel(payment.status) }}</em></div>
+          </article>
+          } @empty {
+          <p>Booking chưa có giao dịch thanh toán.</p>
+          }
+        </section>
+      </div>
+      <footer><a routerLink="/admin/owner-bookings" [queryParams]="{ bookingId: booking.bookingId }">Mở trang quản lý
+          booking <lucide-icon name="arrow-right" /></a></footer>
+      }
+    </section>
+  </div>
   }
 </div>

@@ -27,6 +27,14 @@ interface DashboardMetric {
   negative?: boolean;
 }
 
+interface DailyRevenueChartPoint {
+  hour: number;
+  revenue: number;
+  cumulativeRevenue: number;
+  x: number;
+  y: number;
+}
+
 @Component({
   selector: 'app-venue-owner-dashboard',
   standalone: true,
@@ -50,6 +58,7 @@ export class VenueOwnerDashboardComponent {
   readonly retryWeather = output<void>();
   readonly applicationUrl = '/admin/applications';
   readonly courtCells = Array.from({ length: 15 });
+  readonly revenueAxisHours = [0, 4, 8, 12, 16, 20, 24] as const;
 
   readonly applications = signal<OwnerApplication[]>([]);
   readonly applicationLoading = signal(false);
@@ -63,6 +72,7 @@ export class VenueOwnerDashboardComponent {
   readonly dailyRevenueLoading = signal(false);
   readonly dailyRevenueError = signal<string | null>(null);
   readonly dailyRevenueReport = signal<OwnerRevenueReport | null>(null);
+  readonly dailyRevenueBookings = signal<OwnerBooking[]>([]);
   readonly monthlyRevenueReport = signal<OwnerRevenueReport | null>(null);
   readonly revenueDateDraft = signal(this.localDate(new Date()));
   readonly appliedRevenueDate = signal(this.localDate(new Date()));
@@ -138,6 +148,63 @@ export class VenueOwnerDashboardComponent {
     ? Math.round((this.dailyPaidBookingCount() / this.dailyBookingCount()) * 100)
     : 0
   );
+  readonly dailyPreviousRevenue = computed(() => this.dailyRevenueReport()?.previousPeriod.totalRevenue ?? 0);
+  readonly dailyRevenueChange = computed(() => {
+    const report = this.dailyRevenueReport();
+    if (!report) return 0;
+    if (!report.previousPeriod.totalRevenue) return report.currentPeriod.totalRevenue ? 100 : 0;
+    return report.revenueChangePercentage ?? 0;
+  });
+  readonly dailyRevenueByHour = computed(() => {
+    const apiPoints = this.dailyRevenueReport()?.hourlyRevenue ?? [];
+    const apiTotal = apiPoints.reduce((total, point) => total + point.revenue, 0);
+    if (apiTotal > 0 || this.dailyRevenue() === 0) {
+      return new Map(apiPoints.map(point => [point.hour, point.revenue]));
+    }
+
+    const fallback = new Map<number, number>();
+    for (const booking of this.dailyRevenueBookings()) {
+      const succeededRevenue = booking.payments
+        .filter(payment => payment.status === 'SUCCEEDED')
+        .reduce((total, payment) => total + payment.amount, 0);
+      if (!succeededRevenue) continue;
+      const hour = Number.parseInt(booking.startTime.slice(0, 2), 10);
+      if (Number.isInteger(hour) && hour >= 0 && hour < 24) {
+        fallback.set(hour, (fallback.get(hour) ?? 0) + succeededRevenue);
+      }
+    }
+    return fallback;
+  });
+  readonly dailyRevenueChartMaximum = computed(() => this.niceRevenueMaximum(
+    Math.max(this.dailyRevenue(), [...this.dailyRevenueByHour().values()].reduce((total, value) => total + value, 0))
+  ));
+  readonly dailyRevenueYAxisTicks = computed(() => Array.from({ length: 6 }, (_, index) => ({
+    value: this.dailyRevenueChartMaximum() * (5 - index) / 5,
+    y: 24 + index * 27.2
+  })));
+  readonly dailyRevenueChartPoints = computed<readonly DailyRevenueChartPoint[]>(() => {
+    const revenueByHour = this.dailyRevenueByHour();
+    let cumulativeRevenue = 0;
+    const values = Array.from({ length: 24 }, (_, hour) => {
+      const revenue = revenueByHour.get(hour) ?? 0;
+      cumulativeRevenue += revenue;
+      return { hour, revenue, cumulativeRevenue };
+    });
+    values.push({ hour: 24, revenue: 0, cumulativeRevenue });
+    const maximum = this.dailyRevenueChartMaximum();
+    return values.map(point => ({
+      ...point,
+      x: this.revenueHourX(point.hour),
+      y: 160 - (point.cumulativeRevenue / maximum) * 136
+    }));
+  });
+  readonly dailyRevenueLinePath = computed(() => this.smoothRevenuePath(this.dailyRevenueChartPoints()));
+  readonly dailyRevenueAreaPath = computed(() => {
+    const points = this.dailyRevenueChartPoints();
+    if (!points.length) return '';
+    return `${this.dailyRevenueLinePath()} L ${points.at(-1)!.x} 160 L ${points[0].x} 160 Z`;
+  });
+  readonly dailyRevenueLastPoint = computed(() => this.dailyRevenueChartPoints().at(-1));
   readonly monthlyRevenue = computed(() => this.monthlyRevenueReport()?.currentPeriod.totalRevenue ?? 0);
   readonly revenueChange = computed(() => this.monthlyRevenueReport()?.revenueChangePercentage ?? 0);
   readonly newCustomerCount = computed(() => this.newCustomers(
@@ -235,6 +302,7 @@ export class VenueOwnerDashboardComponent {
     if (!venueId || venueId === this.selectedVenueId() || this.businessLoading() || this.dailyRevenueLoading()) return;
     this.selectedVenueId.set(venueId);
     this.dailyRevenueReport.set(null);
+    this.dailyRevenueBookings.set([]);
     this.monthlyRevenueReport.set(null);
     this.upcomingBookings.set([]);
     this.currentMonthBookings.set([]);
@@ -253,6 +321,7 @@ export class VenueOwnerDashboardComponent {
     if (!date || date > this.maximumRevenueDate || this.dailyRevenueLoading()) return;
     this.appliedRevenueDate.set(date);
     this.dailyRevenueReport.set(null);
+    this.dailyRevenueBookings.set([]);
     this.loadDailyRevenue();
   }
 
@@ -302,6 +371,25 @@ export class VenueOwnerDashboardComponent {
     return new Intl.DateTimeFormat('vi-VN', {
       weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
     }).format(new Date(`${value}T00:00:00`));
+  }
+
+  revenueHourX(hour: number): number {
+    return 62 + (hour / 24) * 956;
+  }
+
+  revenueHourLabel(hour: number): string {
+    return `${String(hour).padStart(2, '0')}:00`;
+  }
+
+  compactRevenue(value: number): string {
+    if (value >= 1_000_000_000) return `${this.compactNumber(value / 1_000_000_000)}Tỷ`;
+    if (value >= 1_000_000) return `${this.compactNumber(value / 1_000_000)}Tr`;
+    if (value >= 1_000) return `${this.compactNumber(value / 1_000)}K`;
+    return new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(value);
+  }
+
+  chartMoney(value: number): string {
+    return `${new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(value)}đ`;
   }
 
   dateTime(value?: string): string {
@@ -452,14 +540,21 @@ export class VenueOwnerDashboardComponent {
     if (!venueId || !date || this.dailyRevenueLoading()) return;
     this.dailyRevenueLoading.set(true);
     this.dailyRevenueError.set(null);
-    this.getRevenue.execute({ venueId, fromDate: date, toDate: date }).pipe(
+    forkJoin({
+      report: this.getRevenue.execute({ venueId, fromDate: date, toDate: date }),
+      bookings: this.loadBookingsForRange(venueId, date, date).pipe(catchError(() => of([])))
+    }).pipe(
       take(1),
       takeUntilDestroyed(this.destroyRef),
       finalize(() => this.dailyRevenueLoading.set(false))
     ).subscribe({
-      next: report => this.dailyRevenueReport.set(report),
+      next: ({ report, bookings }) => {
+        this.dailyRevenueReport.set(report);
+        this.dailyRevenueBookings.set(bookings);
+      },
       error: () => {
         this.dailyRevenueReport.set(null);
+        this.dailyRevenueBookings.set([]);
         this.dailyRevenueError.set('Chưa thể tải doanh thu của ngày đã chọn.');
       }
     });
@@ -571,6 +666,27 @@ export class VenueOwnerDashboardComponent {
   private changePercentage(current: number, previous: number): number {
     if (!previous) return current ? 100 : 0;
     return Math.round(((current - previous) / previous) * 1000) / 10;
+  }
+
+  private niceRevenueMaximum(value: number): number {
+    if (value <= 0) return 1;
+    const magnitude = 10 ** Math.floor(Math.log10(value));
+    const normalized = value / magnitude;
+    const ceiling = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
+    return ceiling * magnitude;
+  }
+
+  private smoothRevenuePath(points: readonly DailyRevenueChartPoint[]): string {
+    if (!points.length) return '';
+    return points.slice(1).reduce((path, point, index) => {
+      const previous = points[index];
+      const middleX = (previous.x + point.x) / 2;
+      return `${path} C ${middleX} ${previous.y}, ${middleX} ${point.y}, ${point.x} ${point.y}`;
+    }, `M ${points[0].x} ${points[0].y}`);
+  }
+
+  private compactNumber(value: number): string {
+    return new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 1 }).format(value);
   }
 
   private timestamp(value?: string): number {

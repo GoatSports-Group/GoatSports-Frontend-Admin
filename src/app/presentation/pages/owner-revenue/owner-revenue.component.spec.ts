@@ -37,7 +37,8 @@ describe('OwnerRevenueComponent', () => {
     dailyRevenue: [
       { date: '2026-08-01', revenue: 120000, succeededPaymentCount: 1 },
       { date: '2026-08-02', revenue: 200000, succeededPaymentCount: 1 }
-    ]
+    ],
+    hourlyRevenue: []
   };
   const getVenues = { execute: vi.fn() };
   const getRevenue = { execute: vi.fn() };

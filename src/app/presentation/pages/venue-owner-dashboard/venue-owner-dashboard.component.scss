@@ -106,8 +106,8 @@
 
 .revenue-panel,
 .utilization-panel { min-width: 0; padding: 18px; }
-.revenue-panel { display: grid; min-height: 288px; grid-template-rows: auto 1fr; }
-.utilization-panel { display: grid; min-height: 288px; grid-template-rows: auto 1fr auto; border-left: 1px solid #d6e4d8; }
+.revenue-panel { display: grid; min-height: 430px; grid-template-rows: auto 1fr; }
+.utilization-panel { display: grid; min-height: 430px; grid-template-rows: auto 1fr auto; border-left: 1px solid #d6e4d8; }
 
 .revenue-panel > header,
 .utilization-panel > header,
@@ -120,6 +120,11 @@
 .revenue-panel header strong { margin-top: 2px; color: var(--dashboard-primary-hover); font-size: clamp(2.25rem, 3vw, 3rem); font-weight: 850; font-variant-numeric: tabular-nums; letter-spacing: -.055em; line-height: 1.08; }
 .revenue-panel header small { display: inline-flex; align-items: center; gap: 5px; margin-top: 7px; color: var(--dashboard-muted); font-size: 12px; font-weight: 650; text-transform: capitalize; }
 .revenue-panel header small lucide-icon { width: 14px; height: 14px; }
+.revenue-panel header .daily-revenue-comparison { color: var(--dashboard-success); text-transform: none; }
+.daily-revenue-comparison b { font-weight: 800; }
+.daily-revenue-comparison span { color: var(--dashboard-muted); font-weight: 550; }
+.revenue-panel header .daily-revenue-comparison.is-negative,
+.revenue-panel header .daily-revenue-comparison.is-negative lucide-icon { color: var(--dashboard-danger); }
 .revenue-panel header a,
 .panel-heading a { display: inline-flex; align-items: center; gap: 6px; color: var(--dashboard-primary-hover); font-size: 12px; font-weight: 750; text-decoration: none; white-space: nowrap; }
 .revenue-panel header a lucide-icon,
@@ -132,7 +137,20 @@
 .revenue-actions button:disabled { cursor: wait; opacity: .58; }
 .revenue-actions button lucide-icon { width: 15px; height: 15px; }
 .revenue-actions a { min-height: 40px; padding: 0 4px; }
-.daily-revenue-body { display: grid; align-content: end; gap: 14px; margin-top: 18px; }
+.daily-revenue-body { display: grid; align-content: stretch; gap: 12px; margin-top: 12px; }
+.daily-revenue-chart { display: grid; min-width: 0; align-content: end; }
+.daily-revenue-chart__caption { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #5f7067; font-size: 12px; font-weight: 650; }
+.daily-revenue-chart__caption small { color: #839089; font-size: 11px; font-weight: 600; }
+.daily-revenue-chart svg { display: block; width: 100%; height: 194px; overflow: visible; }
+.daily-revenue-grid { stroke: #d9e7dd; stroke-dasharray: 4 7; stroke-width: 1; }
+.daily-revenue-area { fill: url('#dailyRevenueArea'); }
+.daily-revenue-line { fill: none; stroke: var(--dashboard-primary); stroke-linecap: round; stroke-linejoin: round; stroke-width: 2.75; vector-effect: non-scaling-stroke; }
+.daily-revenue-point { fill: var(--dashboard-primary); stroke: #fff; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.daily-revenue-axis,
+.daily-revenue-money-axis { fill: #718078; font-family: 'Be Vietnam Pro', sans-serif; font-size: 11px; font-weight: 550; }
+.daily-revenue-money-title { fill: #5e6d66; font-family: 'Be Vietnam Pro', sans-serif; font-size: 10px; font-weight: 700; }
+.daily-revenue-callout rect { fill: #064e3b; filter: drop-shadow(0 4px 7px rgb(6 78 59 / 18%)); }
+.daily-revenue-callout text { fill: #fff; font-family: 'Be Vietnam Pro', sans-serif; font-size: 11px; font-weight: 750; }
 .daily-revenue-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .daily-revenue-metrics article { display: grid; min-width: 0; grid-template-columns: 38px minmax(0, 1fr); align-items: center; gap: 2px 10px; padding: 14px; border: 1px solid #cfe7d8; border-radius: 12px; background: rgb(255 255 255 / 72%); }
 .daily-revenue-metrics article > span { display: grid; width: 38px; height: 38px; grid-row: 1 / 3; place-items: center; border-radius: 10px; background: var(--dashboard-primary-soft); color: var(--dashboard-primary); }
