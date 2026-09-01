@@ -296,7 +296,7 @@ export class VenueOwnerDashboardComponent {
     this.businessError.set(null);
 
     forkJoin({
-      revenue: this.getRevenue.execute({ fromDate: this.monthStart(), toDate: this.today() }).pipe(
+      revenue: this.getRevenue.execute({ fromDate: this.monthStart(), toDate: this.monthEnd() }).pipe(
         catchError(() => of(null))
       ),
       bookings: this.manageBookings.list({
@@ -350,6 +350,11 @@ export class VenueOwnerDashboardComponent {
   private monthStart(): string {
     const now = new Date();
     return this.localDate(new Date(now.getFullYear(), now.getMonth(), 1));
+  }
+
+  private monthEnd(): string {
+    const now = new Date();
+    return this.localDate(new Date(now.getFullYear(), now.getMonth() + 1, 0));
   }
 
   private daysFromNow(days: number): string {

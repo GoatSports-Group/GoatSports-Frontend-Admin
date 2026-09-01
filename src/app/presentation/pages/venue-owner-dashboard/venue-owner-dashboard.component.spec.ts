@@ -297,6 +297,25 @@ describe('VenueOwnerDashboardComponent', () => {
     retryButton.click();
     expect(retrySpy).toHaveBeenCalledTimes(1);
   });
+
+  it('loads the dashboard revenue snapshot for the full current calendar month', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 8, 1, 12));
+    getApplications.execute.mockReturnValue(of(pageOf([
+      createApplication('application-approved', 'GOAT Arena', 'venue-primary', '2026-08-28T08:00:00Z')
+    ])));
+
+    try {
+      TestBed.createComponent(VenueOwnerDashboardComponent);
+
+      expect(getRevenue.execute).toHaveBeenCalledWith({
+        fromDate: '2026-09-01',
+        toDate: '2026-09-30'
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
 
 function createVenue(overrides: Partial<OwnerVenueOverview>): OwnerVenueOverview {

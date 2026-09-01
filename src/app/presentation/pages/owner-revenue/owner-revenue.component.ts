@@ -33,7 +33,7 @@ export class OwnerRevenueComponent {
   readonly venues = signal<OwnerVenueOverview[]>([]);
   readonly selectedVenueId = signal('');
   readonly fromDate = signal(this.monthStart());
-  readonly toDate = signal(this.today());
+  readonly toDate = signal(this.monthEnd());
   readonly report = signal<OwnerRevenueReport | null>(null);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
@@ -166,13 +166,14 @@ export class OwnerRevenueComponent {
     };
   }
 
-  private today(): string {
-    return this.localDate(new Date());
-  }
-
   private monthStart(): string {
     const now = new Date();
     return this.localDate(new Date(now.getFullYear(), now.getMonth(), 1));
+  }
+
+  private monthEnd(): string {
+    const now = new Date();
+    return this.localDate(new Date(now.getFullYear(), now.getMonth() + 1, 0));
   }
 
   private localDate(value: Date): string {

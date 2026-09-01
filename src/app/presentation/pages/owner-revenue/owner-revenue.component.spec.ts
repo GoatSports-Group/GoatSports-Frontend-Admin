@@ -73,6 +73,23 @@ describe('OwnerRevenueComponent', () => {
     expect(fixture.nativeElement.querySelectorAll('.bar-item')).toHaveLength(2);
   });
 
+  it('uses the full current calendar month as the default revenue period', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 8, 1, 12));
+
+    try {
+      TestBed.createComponent(OwnerRevenueComponent);
+
+      expect(getRevenue.execute).toHaveBeenCalledWith({
+        venueId: undefined,
+        fromDate: '2026-09-01',
+        toDate: '2026-09-30'
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('keeps loading visible and blocks duplicate filter requests', () => {
     const fixture = TestBed.createComponent(OwnerRevenueComponent);
     const component = fixture.componentInstance;
