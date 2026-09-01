@@ -12,12 +12,14 @@ import {
   LucideCalendar,
   LucideCalendarCheck,
   LucideCheck,
+  LucideChevronRight,
   LucideCircleCheck,
   LucideClipboardCheck,
   LucideClock,
   LucideCreditCard,
   LucideFilePlus2,
   LucideFileText,
+  LucideGauge,
   LucideImage,
   LucideInfo,
   LucideLandPlot,
@@ -32,12 +34,14 @@ import {
   LucideSparkles,
   LucideStar,
   LucideStore,
+  LucideTrendingDown,
+  LucideTrendingUp,
   LucideUserRound,
   LucideX,
   provideLucideIcons
 } from '@lucide/angular';
 import { BusinessType, OwnerApplication, OwnerApplicationStatus } from '@application/dto/owner-application/owner-application.dto';
-import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
+import { CourtAvailabilityStatus, OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { ManageOwnerBookingsUseCase } from '@application/usecase/owner-booking/manage-owner-bookings.usecase';
 import { GetMyOwnerApplicationsUseCase } from '@application/usecase/owner-application/get-my-owner-applications.usecase';
 import { GetOwnerRevenueUseCase } from '@application/usecase/owner-revenue/get-owner-revenue.usecase';
@@ -55,20 +59,16 @@ describe('VenueOwnerDashboardComponent', () => {
     venueId: 'venue-primary',
     name: 'GOAT Arena',
     active: true,
-    averageRating: 4.8,
-    totalReviews: 12,
     courts: [
-      createCourt('court-1', 'venue-primary', true),
-      createCourt('court-2', 'venue-primary', false)
+      createCourt('court-1', 'venue-primary', true, 'OCCUPIED'),
+      createCourt('court-2', 'venue-primary', true, 'AVAILABLE')
     ]
   });
   const secondaryVenue = createVenue({
     venueId: 'venue-secondary',
     name: 'GOAT Riverside',
     active: false,
-    averageRating: 3.6,
-    totalReviews: 8,
-    courts: [createCourt('court-3', 'venue-secondary', false)]
+    courts: [createCourt('court-3', 'venue-secondary', false, 'INACTIVE')]
   });
 
   beforeEach(async () => {
@@ -78,23 +78,7 @@ describe('VenueOwnerDashboardComponent', () => {
       items: [], page: 0, pageSize: 12, pages: 0, total: 0
     }));
     getFileUrl.execute.mockReset().mockReturnValue(of('https://cdn.goat.test/venue-cover.png'));
-    getRevenue.execute.mockReset().mockReturnValue(of({
-      scopeVenueId: null,
-      currency: 'VND',
-      periodBasis: 'BOOKING_PLAY_DATE',
-      currentPeriod: {
-        fromDate: '2026-09-01', toDate: '2026-09-01', bookingCount: 0,
-        paidBookingCount: 0, totalRevenue: 0
-      },
-      previousPeriod: {
-        fromDate: '2026-08-01', toDate: '2026-08-31', bookingCount: 0,
-        paidBookingCount: 0, totalRevenue: 0
-      },
-      revenueChangePercentage: null,
-      bookingCountChangePercentage: null,
-      paymentStatusBreakdown: [],
-      dailyRevenue: []
-    }));
+    getRevenue.execute.mockReset().mockReturnValue(of(revenueReport()));
 
     await TestBed.configureTestingModule({
       imports: [VenueOwnerDashboardComponent],
@@ -110,12 +94,14 @@ describe('VenueOwnerDashboardComponent', () => {
           LucideCalendar,
           LucideCalendarCheck,
           LucideCheck,
+          LucideChevronRight,
           LucideCircleCheck,
           LucideClipboardCheck,
           LucideClock,
           LucideCreditCard,
           LucideFilePlus2,
           LucideFileText,
+          LucideGauge,
           LucideImage,
           LucideInfo,
           LucideLandPlot,
@@ -130,6 +116,8 @@ describe('VenueOwnerDashboardComponent', () => {
           LucideSparkles,
           LucideStar,
           LucideStore,
+          LucideTrendingDown,
+          LucideTrendingUp,
           LucideUserRound,
           LucideX
         ),
@@ -142,33 +130,56 @@ describe('VenueOwnerDashboardComponent', () => {
     }).compileComponents();
   });
 
-  it('tổng hợp danh mục nhiều cơ sở thật và chỉ hiển thị hồ sơ mới nhất', () => {
-    const older = createApplication('application-old', 'Cơ sở cũ', 'venue-primary', '2026-08-20T08:00:00Z');
-    const latest = createApplication('application-new', 'GOAT Arena', 'venue-primary', '2026-08-28T08:00:00Z');
-    getApplications.execute.mockReturnValue(of(pageOf([older, latest])));
+  it('hiển thị đầy đủ các khối vận hành theo layout dashboard mới', () => {
+    getApplications.execute.mockReturnValue(of(pageOf([
+      createApplication('application-approved', 'GOAT Arena', 'venue-primary', '2026-08-28T08:00:00Z')
+    ])));
     getVenues.execute.mockReturnValue(of([primaryVenue, secondaryVenue]));
 
     const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
-    fixture.componentRef.setInput('ownerName', 'Minh Đạt');
+    fixture.componentRef.setInput('ownerName', 'Minh Tuấn');
     fixture.detectChanges();
 
-    const metrics = metricMap(fixture.nativeElement);
-    expect(fixture.nativeElement.textContent).toContain('Chào Minh Đạt');
-    expect(fixture.nativeElement.querySelectorAll('.application-card')).toHaveLength(1);
-    expect(metrics.get('Cơ sở quản lý')).toEqual({ value: '2', description: '1 đang hoạt động' });
-    expect(metrics.get('Tổng sân thi đấu')).toEqual({ value: '3', description: '2 cơ sở · 1 chưa kích hoạt' });
-    expect(metrics.get('Sân đang hoạt động')).toEqual({ value: '1', description: '2 sân tạm ngưng' });
-    expect(metrics.get('Điểm đánh giá')).toEqual({ value: '4.3', description: '20 lượt đánh giá' });
-    expect(fixture.nativeElement.querySelectorAll('.venue-switcher button')).toHaveLength(2);
-    expect(fixture.nativeElement.querySelectorAll('a.feature-card')).toHaveLength(7);
-    expect(fixture.nativeElement.querySelector('.owner-hero__action').getAttribute('href')).toBe('/admin/check-in');
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.textContent).toContain('Minh Tuấn');
+    expect(root.querySelector('.performance-card')).toBeTruthy();
+    expect(root.querySelectorAll('.kpi-strip article')).toHaveLength(4);
+    expect(root.querySelector('.schedule-panel')).toBeTruthy();
+    expect(root.querySelector('.live-courts-panel')).toBeTruthy();
+    expect(root.querySelector('.alerts-panel')).toBeTruthy();
+    expect(root.querySelectorAll('.live-courts-list article')).toHaveLength(3);
+    expect(root.querySelector('.venue-chip')?.textContent).toContain('GOAT Arena');
     expect(getVenues.execute).toHaveBeenCalledTimes(1);
+  });
 
-    const secondVenueButton = fixture.nativeElement.querySelectorAll('.venue-switcher button')[1] as HTMLButtonElement;
-    secondVenueButton.click();
+  it('tính KPI và biểu đồ từ dữ liệu doanh thu tháng cùng trạng thái sân thật', () => {
+    getApplications.execute.mockReturnValue(of(pageOf([
+      createApplication('application-approved', 'GOAT Arena', 'venue-primary', '2026-08-28T08:00:00Z')
+    ])));
+    getRevenue.execute.mockReturnValue(of(revenueReport({
+      currentPeriod: {
+        fromDate: '2026-09-01', toDate: '2026-09-30', bookingCount: 8,
+        paidBookingCount: 6, totalRevenue: 1_870_000
+      },
+      revenueChangePercentage: 28.6,
+      bookingCountChangePercentage: 12.7,
+      dailyRevenue: [
+        { date: '2026-09-01', revenue: 200_000, succeededPaymentCount: 1 },
+        { date: '2026-09-02', revenue: 620_000, succeededPaymentCount: 2 },
+        { date: '2026-09-03', revenue: 1_050_000, succeededPaymentCount: 3 }
+      ]
+    })));
+
+    const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('.venue-identity h3').textContent).toContain('GOAT Riverside');
-    expect(fixture.nativeElement.textContent).not.toContain('Đang phát triển');
+
+    const metrics = kpiMap(fixture.nativeElement);
+    expect(metrics.get('Doanh thu tháng')?.value).toContain('1.870.000');
+    expect(metrics.get('Tổng lượt đặt')?.value).toBe('8');
+    expect(metrics.get('Booking đã thanh toán')?.value).toBe('6');
+    expect(metrics.get('Tỷ lệ sử dụng sân')?.value).toBe('50%');
+    expect(fixture.nativeElement.querySelectorAll('.revenue-chart circle')).toHaveLength(3);
+    expect(fixture.nativeElement.querySelector('.utilization-ring strong')?.textContent).toContain('50%');
   });
 
   it('lấy URL ảnh đại diện từ storage-service thay vì bind trực tiếp object key', () => {
@@ -187,29 +198,27 @@ describe('VenueOwnerDashboardComponent', () => {
 
     expect(getFileUrl.execute).toHaveBeenCalledOnce();
     expect(getFileUrl.execute).toHaveBeenCalledWith('venues/owner/cover.png');
-    const images = [...fixture.nativeElement.querySelectorAll(
-      '.owner-hero__venue img, .venue-identity img'
-    )] as HTMLImageElement[];
-    expect(images).toHaveLength(2);
-    expect(images.every(image => image.getAttribute('src') === 'https://cdn.goat.test/venue-cover.png')).toBe(true);
-    expect(images.every(image => image.getAttribute('src') !== 'venues/owner/cover.png')).toBe(true);
+    const image = fixture.nativeElement.querySelector('.venue-photo img') as HTMLImageElement;
+    expect(image.getAttribute('src')).toBe('https://cdn.goat.test/venue-cover.png');
+    expect(image.getAttribute('src')).not.toBe('venues/owner/cover.png');
   });
 
-  it('khóa công cụ khi hồ sơ chưa được duyệt và không gọi Venue Service', () => {
-    const pending = createApplication('application-pending', 'GOAT Pending', undefined, '2026-08-28T08:00:00Z', OwnerApplicationStatus.PENDING);
+  it('chỉ hiển thị tiến độ hồ sơ khi đơn chưa được duyệt và không gọi Venue Service', () => {
+    const pending = createApplication(
+      'application-pending', 'GOAT Pending', undefined, '2026-08-28T08:00:00Z', OwnerApplicationStatus.PENDING
+    );
     getApplications.execute.mockReturnValue(of(pageOf([pending])));
 
     const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.querySelectorAll('.feature-card--locked')).toHaveLength(7);
-    expect(fixture.nativeElement.querySelectorAll('a.feature-card')).toHaveLength(0);
-    expect(fixture.nativeElement.querySelector('.owner-workbench--application-only')).toBeTruthy();
-    expect(fixture.nativeElement.textContent).toContain('Chờ duyệt hồ sơ để mở khóa vận hành');
+    expect(fixture.nativeElement.querySelector('.application-summary')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.performance-card')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Tiến độ đơn đăng ký');
     expect(getVenues.execute).not.toHaveBeenCalled();
   });
 
-  it('phân biệt danh mục hợp lệ đang trống với lỗi provider và giữ công cụ bị khóa', () => {
+  it('phân biệt danh mục cơ sở hợp lệ đang trống với lỗi provider', () => {
     getApplications.execute.mockReturnValue(of(pageOf([
       createApplication('application-approved', 'GOAT Empty', undefined, '2026-08-28T08:00:00Z')
     ])));
@@ -218,16 +227,12 @@ describe('VenueOwnerDashboardComponent', () => {
     const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
     fixture.detectChanges();
 
-    const metrics = metricMap(fixture.nativeElement);
-    expect(metrics.get('Cơ sở quản lý')?.value).toBe('0');
-    expect(metrics.get('Tổng sân thi đấu')?.value).toBe('0');
-    expect(metrics.get('Điểm đánh giá')?.value).toBe('Chưa có');
     expect(fixture.nativeElement.textContent).toContain('Chưa có cơ sở được liên kết');
-    expect(fixture.nativeElement.textContent).toContain('Chưa có cơ sở được liên kết với tài khoản');
-    expect(fixture.nativeElement.querySelectorAll('.feature-card--locked')).toHaveLength(7);
+    expect(fixture.nativeElement.querySelector('.dashboard-state--error')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.performance-card')).toBeNull();
   });
 
-  it('hiển thị trạng thái inactive và đưa ra hành động kích hoạt phù hợp', () => {
+  it('hiển thị đúng trạng thái live của sân inactive', () => {
     getApplications.execute.mockReturnValue(of(pageOf([
       createApplication('application-approved', 'GOAT Riverside', 'venue-secondary', '2026-08-28T08:00:00Z')
     ])));
@@ -236,14 +241,13 @@ describe('VenueOwnerDashboardComponent', () => {
     const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
     fixture.detectChanges();
 
-    expect(metricMap(fixture.nativeElement).get('Cơ sở quản lý')).toEqual({ value: '1', description: '0 đang hoạt động' });
-    expect(fixture.nativeElement.textContent).toContain('Chưa kích hoạt');
-    expect(fixture.nativeElement.querySelector('.owner-hero__action').textContent).toContain('Kích hoạt cơ sở');
-    expect(fixture.nativeElement.querySelector('.owner-hero__action').getAttribute('href')).toBe('/admin/venues');
-    expect(fixture.nativeElement.querySelectorAll('a.feature-card')).toHaveLength(7);
+    const court = fixture.nativeElement.querySelector('.live-courts-list article') as HTMLElement;
+    expect(court.dataset['status']).toBe('INACTIVE');
+    expect(court.textContent).toContain('Tạm ngưng');
+    expect(fixture.nativeElement.querySelector('.utilization-ring strong')?.textContent).toContain('0%');
   });
 
-  it('không biến lỗi Venue Service thành số 0, hỗ trợ retry và chặn double submit', () => {
+  it('hiển thị lỗi Venue Service, hỗ trợ retry và chặn double submit', () => {
     getApplications.execute.mockReturnValue(of(pageOf([
       createApplication('application-approved', 'GOAT Arena', 'venue-primary', '2026-08-28T08:00:00Z')
     ])));
@@ -252,9 +256,8 @@ describe('VenueOwnerDashboardComponent', () => {
     const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
     fixture.detectChanges();
 
-    expect([...metricMap(fixture.nativeElement).values()].every(metric => metric.value === '—')).toBe(true);
+    expect(fixture.nativeElement.querySelector('.dashboard-state--error')).toBeTruthy();
     expect(fixture.nativeElement.textContent).toContain('Venue Service chưa trả về được danh mục cơ sở.');
-    expect(fixture.nativeElement.textContent).toContain('Chưa thể xác minh quyền quản lý cơ sở');
 
     const retryResponse = new Subject<OwnerVenueOverview[]>();
     getVenues.execute.mockReturnValue(retryResponse);
@@ -265,8 +268,7 @@ describe('VenueOwnerDashboardComponent', () => {
     retryResponse.next([primaryVenue]);
     retryResponse.complete();
     fixture.detectChanges();
-    expect(metricMap(fixture.nativeElement).get('Cơ sở quản lý')?.value).toBe('1');
-    expect(fixture.nativeElement.querySelectorAll('a.feature-card')).toHaveLength(7);
+    expect(fixture.nativeElement.querySelector('.performance-card')).toBeTruthy();
   });
 
   it('hiển thị lỗi hồ sơ và cho phép tải lại', () => {
@@ -285,20 +287,17 @@ describe('VenueOwnerDashboardComponent', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Không thể tải tiến trình lúc này. Vui lòng thử lại.');
   });
 
-  it('giữ weather widget dùng chung và chuyển tiếp sự kiện retry', () => {
+  it('giữ API weather tương thích với trang cha nhưng không lặp widget trong main', () => {
     getApplications.execute.mockReturnValue(of(pageOf([])));
     const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
-    const retrySpy = vi.fn();
-    fixture.componentInstance.retryWeather.subscribe(retrySpy);
     fixture.componentRef.setInput('weatherError', 'Weather provider unavailable');
     fixture.detectChanges();
 
-    const retryButton = fixture.nativeElement.querySelector('.weather-error button') as HTMLButtonElement;
-    retryButton.click();
-    expect(retrySpy).toHaveBeenCalledTimes(1);
+    expect(fixture.componentInstance.weatherError()).toBe('Weather provider unavailable');
+    expect(fixture.nativeElement.querySelector('app-weather-widget')).toBeNull();
   });
 
-  it('loads the dashboard revenue snapshot for the full current calendar month', () => {
+  it('tải snapshot doanh thu cho toàn bộ tháng hiện tại', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2026, 8, 1, 12));
     getApplications.execute.mockReturnValue(of(pageOf([
@@ -307,7 +306,6 @@ describe('VenueOwnerDashboardComponent', () => {
 
     try {
       TestBed.createComponent(VenueOwnerDashboardComponent);
-
       expect(getRevenue.execute).toHaveBeenCalledWith({
         fromDate: '2026-09-01',
         toDate: '2026-09-30'
@@ -315,6 +313,18 @@ describe('VenueOwnerDashboardComponent', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('giữ nhãn trục biểu đồ tháng dễ đọc', () => {
+    getApplications.execute.mockReturnValue(of(pageOf([])));
+    const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
+    const component = fixture.componentInstance;
+
+    expect(Array.from({ length: 30 }, (_, index) => component.showRevenueAxisLabel(index, 30))
+      .filter(Boolean)).toHaveLength(6);
+    expect(component.showRevenueAxisLabel(0, 30)).toBe(true);
+    expect(component.showRevenueAxisLabel(29, 30)).toBe(true);
+    expect(component.showRevenueAxisLabel(1, 30)).toBe(false);
   });
 });
 
@@ -339,7 +349,12 @@ function createVenue(overrides: Partial<OwnerVenueOverview>): OwnerVenueOverview
   };
 }
 
-function createCourt(id: string, venueId: string, active: boolean) {
+function createCourt(
+  id: string,
+  venueId: string,
+  active: boolean,
+  availabilityStatus?: CourtAvailabilityStatus
+) {
   return {
     venueCourtId: id,
     venueId,
@@ -347,7 +362,8 @@ function createCourt(id: string, venueId: string, active: boolean) {
     sportType: 'FOOTBALL',
     capacity: 14,
     surfaceType: 'Cỏ nhân tạo',
-    active
+    active,
+    availabilityStatus
   };
 }
 
@@ -362,7 +378,7 @@ function createApplication(
     ownerApplicationId: id,
     venueId,
     userId: 'owner-1',
-    fullName: 'Minh Đạt',
+    fullName: 'Minh Tuấn',
     phone: '0909000000',
     email: 'owner@goat.vn',
     businessName,
@@ -382,12 +398,33 @@ function createApplication(
   };
 }
 
-function metricMap(root: HTMLElement): Map<string, { value: string; description: string }> {
-  return new Map([...root.querySelectorAll('.metric-rail__item')].map(item => [
-    item.querySelector('.metric-rail__copy > span')?.textContent?.trim() ?? '',
+function revenueReport(overrides: Record<string, unknown> = {}) {
+  return {
+    scopeVenueId: null,
+    currency: 'VND',
+    periodBasis: 'BOOKING_PLAY_DATE' as const,
+    currentPeriod: {
+      fromDate: '2026-09-01', toDate: '2026-09-30', bookingCount: 0,
+      paidBookingCount: 0, totalRevenue: 0
+    },
+    previousPeriod: {
+      fromDate: '2026-08-01', toDate: '2026-08-31', bookingCount: 0,
+      paidBookingCount: 0, totalRevenue: 0
+    },
+    revenueChangePercentage: null,
+    bookingCountChangePercentage: null,
+    paymentStatusBreakdown: [],
+    dailyRevenue: [],
+    ...overrides
+  };
+}
+
+function kpiMap(root: HTMLElement): Map<string, { value: string; detail: string }> {
+  return new Map([...root.querySelectorAll('.kpi-strip article')].map(item => [
+    item.querySelector('small')?.textContent?.trim() ?? '',
     {
       value: item.querySelector('strong')?.textContent?.trim() ?? '',
-      description: item.querySelector('small')?.textContent?.trim() ?? ''
+      detail: item.querySelector('em')?.textContent?.trim() ?? ''
     }
   ]));
 }

@@ -2,43 +2,49 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, input
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterModule } from '@angular/router';
 import { catchError, finalize, forkJoin, of, take } from 'rxjs';
-import { OwnerBooking } from '@application/dto/owner-booking/owner-booking.dto';
-import { OwnerRevenueReport } from '@application/dto/owner-revenue/owner-revenue.dto';
 import { OwnerApplication, OwnerApplicationStatus } from '@application/dto/owner-application/owner-application.dto';
-import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
+import { OwnerBooking, OwnerBookingSource } from '@application/dto/owner-booking/owner-booking.dto';
+import { OwnerRevenueReport } from '@application/dto/owner-revenue/owner-revenue.dto';
+import {
+  CourtAvailabilityStatus,
+  OwnerVenueCourt,
+  OwnerVenueOverview
+} from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { GetMyOwnerApplicationsUseCase } from '@application/usecase/owner-application/get-my-owner-applications.usecase';
 import { ManageOwnerBookingsUseCase } from '@application/usecase/owner-booking/manage-owner-bookings.usecase';
 import { GetOwnerRevenueUseCase } from '@application/usecase/owner-revenue/get-owner-revenue.usecase';
 import { GetStorageFileUrlUseCase } from '@application/usecase/storage/get-storage-file-url.usecase';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
-import { MetricRailComponent } from '@shared/components/ui/metric-rail/metric-rail.component';
-import { MetricRailItem } from '@shared/components/ui/metric-rail/metric-rail.models';
-import { WeatherWidgetComponent } from '@shared/components/ui/weather-widget/weather-widget.component';
 import { WeatherInfo } from '@shared/components/ui/weather-widget/weather-widget.models';
 import { OwnerApplicationProgressComponent } from '../dashboard/owner-application-progress/owner-application-progress.component';
-import { OwnerFeatureGridComponent } from './owner-feature-grid/owner-feature-grid.component';
-import { OwnerVenueOverviewComponent } from './owner-venue-overview/owner-venue-overview.component';
-import { OWNER_WORKSPACE_FEATURES } from './venue-owner-dashboard.models';
 
-interface OwnerQuickAction {
+interface DashboardMetric {
   label: string;
-  route: string;
+  value: string;
+  detail: string;
   icon: string;
+  negative?: boolean;
+}
+
+interface RevenueChartPoint {
+  date: string;
+  revenue: number;
+  x: number;
+  y: number;
+}
+
+interface OperationAlert {
+  level: 'danger' | 'warning' | 'info' | 'success';
+  icon: string;
+  title: string;
+  detail: string;
 }
 
 @Component({
   selector: 'app-venue-owner-dashboard',
   standalone: true,
-  imports: [
-    RouterModule,
-    LucideIconComponent,
-    MetricRailComponent,
-    WeatherWidgetComponent,
-    OwnerApplicationProgressComponent,
-    OwnerFeatureGridComponent,
-    OwnerVenueOverviewComponent
-  ],
+  imports: [RouterModule, LucideIconComponent, OwnerApplicationProgressComponent],
   templateUrl: './venue-owner-dashboard.component.html',
   styleUrl: './venue-owner-dashboard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -57,7 +63,8 @@ export class VenueOwnerDashboardComponent {
   readonly weatherError = input<string | null>(null);
   readonly retryWeather = output<void>();
   readonly applicationUrl = '/admin/applications';
-  readonly features = OWNER_WORKSPACE_FEATURES;
+  readonly courtCells = Array.from({ length: 15 });
+
   readonly applications = signal<OwnerApplication[]>([]);
   readonly applicationLoading = signal(false);
   readonly applicationError = signal<string | null>(null);
@@ -76,123 +83,115 @@ export class VenueOwnerDashboardComponent {
   );
   readonly applicationApproved = computed(() => Boolean(this.approvedApplication()));
   readonly displayName = computed(() => this.ownerName().trim() || 'Chủ sân');
+  readonly primaryVenue = computed(() => this.venues()[0] ?? null);
   readonly primaryVenueCoverUrl = computed(() => {
-    const venueId = this.venues()[0]?.venueId;
+    const venueId = this.primaryVenue()?.venueId;
     return venueId ? this.venueCoverUrls()[venueId] ?? null : null;
   });
-  readonly venueDataUnavailable = computed(() => this.venueLoading() || Boolean(this.venueError()));
-  readonly operationsEnabled = computed(() =>
-    this.applicationApproved() && !this.venueDataUnavailable() && this.venues().length > 0
-  );
-  readonly activeVenueCount = computed(() => this.venues().filter(venue => venue.active).length);
-  readonly totalCourtCount = computed(() =>
-    this.venues().reduce((total, venue) => total + (venue.courts?.length ?? 0), 0)
-  );
-  readonly activeCourtCount = computed(() =>
-    this.venues().reduce(
-      (total, venue) => total + (venue.courts?.filter(court => court.active).length ?? 0),
-      0
-    )
-  );
-  readonly availableCourtCount = computed(() => this.venues().reduce(
-    (total, venue) => total + (venue.courts?.filter(court => court.availabilityStatus === 'AVAILABLE').length ?? 0),
-    0
-  ));
-  readonly occupiedCourtCount = computed(() => Math.max(this.activeCourtCount() - this.availableCourtCount(), 0));
-  readonly utilizationRate = computed(() => this.activeCourtCount()
-    ? Math.round((this.occupiedCourtCount() / this.activeCourtCount()) * 100)
-    : 0
-  );
-  readonly maxDailyRevenue = computed(() => Math.max(
-    0, ...(this.revenueReport()?.dailyRevenue.map(point => point.revenue) ?? [])
-  ));
-  readonly totalReviewCount = computed(() =>
-    this.venues().reduce((total, venue) => total + (venue.totalReviews ?? 0), 0)
-  );
-  readonly averageRating = computed<number | null>(() => {
-    const reviewCount = this.totalReviewCount();
-    if (!reviewCount) return null;
-    const weightedTotal = this.venues().reduce(
-      (total, venue) => total + (venue.averageRating ?? 0) * (venue.totalReviews ?? 0),
-      0
-    );
-    return Math.round((weightedTotal / reviewCount) * 10) / 10;
+  readonly greeting = computed(() => {
+    const hour = new Date().getHours();
+    if (hour < 11) return 'Chào buổi sáng';
+    if (hour < 18) return 'Chào buổi chiều';
+    return 'Chào buổi tối';
+  });
+  readonly todayLabel = computed(() => {
+    const formatted = new Intl.DateTimeFormat('vi-VN', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    }).format(new Date());
+    return formatted.charAt(0).toUpperCase() + formatted.slice(1);
   });
 
-  readonly metricItems = computed<readonly MetricRailItem[]>(() => {
-    const unavailableValue = this.venueDataUnavailable() ? '—' : null;
-    const inactiveVenueCount = this.venues().length - this.activeVenueCount();
-    const inactiveCourtCount = this.totalCourtCount() - this.activeCourtCount();
+  readonly allCourts = computed(() => this.venues().flatMap(venue => venue.courts ?? []));
+  readonly activeCourtCount = computed(() => this.allCourts().filter(court => court.active).length);
+  readonly availableCourtCount = computed(() =>
+    this.allCourts().filter(court => this.normalizedCourtStatus(court) === 'AVAILABLE').length
+  );
+  readonly inUseCourtCount = computed(() => this.allCourts().filter(court =>
+    ['HELD', 'OCCUPIED'].includes(this.normalizedCourtStatus(court))
+  ).length);
+  readonly maintenanceCourtCount = computed(() => this.allCourts().filter(court =>
+    this.normalizedCourtStatus(court) === 'MAINTENANCE'
+  ).length);
+  readonly utilizationRate = computed(() => this.activeCourtCount()
+    ? Math.round((this.inUseCourtCount() / this.activeCourtCount()) * 100)
+    : 0
+  );
+
+  readonly monthlyRevenue = computed(() => this.revenueReport()?.currentPeriod.totalRevenue ?? 0);
+  readonly revenueChange = computed(() => this.revenueReport()?.revenueChangePercentage ?? 0);
+  readonly revenueChartPoints = computed<readonly RevenueChartPoint[]>(() => {
+    const values = this.revenueReport()?.dailyRevenue ?? [];
+    if (!values.length) return [];
+    const maximum = Math.max(1, ...values.map(point => point.revenue));
+    return values.map((point, index) => ({
+      ...point,
+      x: values.length === 1 ? 12 : 12 + (index / (values.length - 1)) * 616,
+      y: 176 - (point.revenue / maximum) * 150
+    }));
+  });
+  readonly revenueLinePoints = computed(() =>
+    this.revenueChartPoints().map(point => `${point.x},${point.y}`).join(' ')
+  );
+  readonly revenueAreaPath = computed(() => {
+    const points = this.revenueChartPoints();
+    if (!points.length) return '';
+    return `M ${points[0].x} 176 L ${points.map(point => `${point.x} ${point.y}`).join(' L ')} L ${points.at(-1)!.x} 176 Z`;
+  });
+  readonly revenueAxisPoints = computed(() => this.revenueChartPoints().filter(
+    (_, index, points) => this.showRevenueAxisLabel(index, points.length)
+  ));
+  readonly liveCourts = computed(() => this.allCourts().slice(0, 5));
+
+  readonly dashboardMetrics = computed<readonly DashboardMetric[]>(() => {
+    const report = this.revenueReport();
+    const bookingChange = report?.bookingCountChangePercentage ?? 0;
+    const bookingCount = report?.currentPeriod.bookingCount ?? 0;
+    const paidBookingCount = report?.currentPeriod.paidBookingCount ?? 0;
     return [
       {
-        label: 'Cơ sở quản lý',
-        value: unavailableValue ?? this.venues().length,
-        icon: 'land-plot',
-        description: unavailableValue
-          ? 'Chưa thể xác minh danh mục'
-          : `${this.activeVenueCount()} đang hoạt động`
+        label: 'Doanh thu tháng', value: this.money(this.monthlyRevenue()), icon: 'trending-up',
+        detail: `${this.signedPercentage(this.revenueChange())} so với kỳ trước`, negative: this.revenueChange() < 0
       },
       {
-        label: 'Tổng sân thi đấu',
-        value: unavailableValue ?? this.totalCourtCount(),
-        icon: 'layout-grid',
-        description: unavailableValue
-          ? 'Chưa thể tổng hợp dữ liệu'
-          : `${this.venues().length} cơ sở${inactiveVenueCount > 0 ? ` · ${inactiveVenueCount} chưa kích hoạt` : ''}`
+        label: 'Tổng lượt đặt', value: String(bookingCount), icon: 'calendar-check',
+        detail: `${this.signedPercentage(bookingChange)} so với kỳ trước`, negative: bookingChange < 0
       },
       {
-        label: 'Sân đang hoạt động',
-        value: unavailableValue ?? this.activeCourtCount(),
-        icon: 'activity',
-        description: unavailableValue
-          ? 'Chưa thể tổng hợp dữ liệu'
-          : inactiveCourtCount > 0 ? `${inactiveCourtCount} sân tạm ngưng` : 'Sẵn sàng phục vụ'
+        label: 'Booking đã thanh toán', value: String(paidBookingCount), icon: 'circle-check',
+        detail: bookingCount ? `${Math.round((paidBookingCount / bookingCount) * 100)}% tổng booking` : 'Chưa có booking'
       },
       {
-        label: 'Điểm đánh giá',
-        value: unavailableValue ?? this.averageRating() ?? 'Chưa có',
-        icon: 'star',
-        description: unavailableValue
-          ? 'Chưa thể tổng hợp dữ liệu'
-          : this.totalReviewCount() > 0
-            ? `${this.totalReviewCount()} lượt đánh giá`
-            : 'Chưa có lượt đánh giá'
+        label: 'Tỷ lệ sử dụng sân', value: `${this.utilizationRate()}%`, icon: 'gauge',
+        detail: `${this.availableCourtCount()}/${this.activeCourtCount()} sân đang trống`
       }
     ];
   });
 
-  readonly heroDescription = computed(() => {
-    if (this.applicationApproved()) {
-      return 'Theo dõi toàn bộ cơ sở, sân thi đấu và các thông tin vận hành quan trọng trong một không gian thống nhất.';
-    }
-    if (this.latestApplication()) {
-      return 'Theo dõi tiến trình xét duyệt hồ sơ. Các công cụ quản lý cơ sở sẽ được mở khi hồ sơ được phê duyệt.';
-    }
-    return 'Bắt đầu bằng hồ sơ đối tác để GOAT Sports xác minh và khởi tạo cơ sở cho bạn.';
-  });
-
-  readonly quickAction = computed<OwnerQuickAction>(() => {
-    if (!this.applicationApproved() || this.venueDataUnavailable() || !this.venues().length) {
-      return {
-        label: this.latestApplication() ? 'Xem hồ sơ' : 'Đăng ký chủ sân',
-        route: this.applicationUrl,
-        icon: 'clipboard-check'
-      };
-    }
-    if (!this.activeVenueCount()) {
-      return { label: 'Kích hoạt cơ sở', route: '/admin/venues', icon: 'land-plot' };
-    }
-    if (!this.totalCourtCount()) {
-      return { label: 'Tạo sân đầu tiên', route: '/admin/courts', icon: 'activity' };
-    }
-    return { label: 'Mở check-in', route: '/admin/check-in', icon: 'shield-check' };
-  });
-
-  readonly toolLockReason = computed(() => {
-    if (!this.applicationApproved()) return 'Chờ duyệt hồ sơ để mở khóa vận hành';
-    if (this.venueLoading()) return 'Đang xác minh danh mục cơ sở';
-    if (this.venueError()) return 'Chưa thể xác minh quyền quản lý cơ sở';
-    return 'Chưa có cơ sở được liên kết với tài khoản';
+  readonly operationAlerts = computed<readonly OperationAlert[]>(() => {
+    const alerts: OperationAlert[] = [];
+    const pendingPayment = this.upcomingBookings().filter(booking => booking.status === 'PENDING_PAYMENT').length;
+    if (this.maintenanceCourtCount()) alerts.push({
+      level: 'warning', icon: 'alert-triangle', title: `${this.maintenanceCourtCount()} sân đang bảo trì`,
+      detail: 'Kiểm tra lịch và chủ động điều phối booking.'
+    });
+    if (pendingPayment) alerts.push({
+      level: 'danger', icon: 'alert-circle', title: `${pendingPayment} booking chờ thanh toán`,
+      detail: 'Thời gian giữ chỗ đang được đếm ngược.'
+    });
+    if (this.inUseCourtCount()) alerts.push({
+      level: 'info', icon: 'activity', title: `${this.inUseCourtCount()} sân đang được sử dụng`,
+      detail: 'Trạng thái được cập nhật theo slot hiện tại.'
+    });
+    const nextBooking = this.upcomingBookings()[0];
+    if (nextBooking && alerts.length < 3) alerts.push({
+      level: 'info', icon: 'clock', title: `Lịch gần nhất lúc ${this.timeValue(nextBooking.startTime)}`,
+      detail: `${nextBooking.courtName} · ${this.shortDate(nextBooking.playDate)}`
+    });
+    if (!alerts.length) alerts.push({
+      level: 'success', icon: 'circle-check', title: 'Vận hành đang ổn định',
+      detail: `${this.availableCourtCount()} sân sẵn sàng nhận booking.`
+    });
+    return alerts.slice(0, 3);
   });
 
   constructor() {
@@ -232,6 +231,81 @@ export class VenueOwnerDashboardComponent {
     this.loadVenues();
   }
 
+  retryBusinessSnapshot(): void {
+    this.loadBusinessSnapshot();
+  }
+
+  money(value: number): string {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency', currency: this.revenueReport()?.currency ?? 'VND', maximumFractionDigits: 0
+    }).format(value);
+  }
+
+  signedPercentage(value: number | null | undefined): string {
+    const normalized = value ?? 0;
+    return `${normalized > 0 ? '+' : ''}${new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 1 }).format(normalized)}%`;
+  }
+
+  shortDate(value: string): string {
+    const date = new Date(`${value}T00:00:00`);
+    return new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit' }).format(date);
+  }
+
+  timeValue(value: string): string {
+    return value?.slice(0, 5) ?? '--:--';
+  }
+
+  bookingStatusLabel(status: string): string {
+    const labels: Record<string, string> = {
+      PENDING_PAYMENT: 'Chờ thanh toán', CONFIRMED: 'Đã xác nhận', CHECKED_IN: 'Đã check-in',
+      COMPLETED: 'Hoàn tất', CANCELLED: 'Đã hủy', EXPIRED: 'Hết hạn',
+      REFUND_PENDING: 'Chờ hoàn tiền', REFUNDED: 'Đã hoàn tiền'
+    };
+    return labels[status] ?? status;
+  }
+
+  bookingSourceLabel(source: OwnerBookingSource): string {
+    return { DIRECT: 'Đặt trực tuyến', AI_MATCHMAKING: 'Ghép trận AI', WALK_IN: 'Khách vãng lai' }[source];
+  }
+
+  customerInitial(booking: OwnerBooking): string {
+    return (booking.walkInCustomerName || booking.bookingCode || 'G').trim().charAt(0).toUpperCase();
+  }
+
+  normalizedCourtStatus(court: OwnerVenueCourt): CourtAvailabilityStatus {
+    if (!court.active) return 'INACTIVE';
+    return court.availabilityStatus ?? 'AVAILABLE';
+  }
+
+  courtAvailabilityLabel(court: OwnerVenueCourt): string {
+    const labels: Record<CourtAvailabilityStatus, string> = {
+      AVAILABLE: 'Đang trống', HELD: 'Đang giữ chỗ', OCCUPIED: 'Đang chơi',
+      MAINTENANCE: 'Bảo trì', INACTIVE: 'Tạm ngưng'
+    };
+    return labels[this.normalizedCourtStatus(court)];
+  }
+
+  sportLabel(sportType: string): string {
+    const labels: Record<string, string> = {
+      FOOTBALL: 'Bóng đá', BADMINTON: 'Cầu lông', TENNIS: 'Tennis',
+      PICKLEBALL: 'Pickleball', BASKETBALL: 'Bóng rổ', VOLLEYBALL: 'Bóng chuyền'
+    };
+    return labels[sportType] ?? sportType;
+  }
+
+  utilizationGradient(): string {
+    const total = Math.max(this.activeCourtCount(), 1);
+    const used = (this.inUseCourtCount() / total) * 100;
+    const maintenanceEnd = used + (this.maintenanceCourtCount() / total) * 100;
+    return `conic-gradient(var(--dashboard-primary-hover) 0 ${used}%, var(--dashboard-warning) ${used}% ${maintenanceEnd}%, var(--dashboard-success) ${maintenanceEnd}% 100%)`;
+  }
+
+  showRevenueAxisLabel(index: number, total: number): boolean {
+    if (total <= 6) return true;
+    const interval = Math.ceil((total - 1) / 5);
+    return index === 0 || index === total - 1 || index % interval === 0;
+  }
+
   private loadVenues(): void {
     if (this.venueLoading()) return;
     this.venueLoading.set(true);
@@ -257,39 +331,6 @@ export class VenueOwnerDashboardComponent {
     });
   }
 
-  retryBusinessSnapshot(): void {
-    this.loadBusinessSnapshot();
-  }
-
-  money(value: number): string {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency', currency: this.revenueReport()?.currency ?? 'VND', maximumFractionDigits: 0
-    }).format(value);
-  }
-
-  shortDate(value: string): string {
-    const date = new Date(`${value}T00:00:00`);
-    return new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit' }).format(date);
-  }
-
-  timeValue(value: string): string {
-    return value?.slice(0, 5) ?? '--:--';
-  }
-
-  bookingStatusLabel(status: string): string {
-    const labels: Record<string, string> = {
-      PENDING_PAYMENT: 'Chờ thanh toán', CONFIRMED: 'Đã xác nhận', CHECKED_IN: 'Đã check-in',
-      COMPLETED: 'Hoàn tất', CANCELLED: 'Đã hủy', EXPIRED: 'Hết hạn',
-      REFUND_PENDING: 'Chờ hoàn tiền', REFUNDED: 'Đã hoàn tiền'
-    };
-    return labels[status] ?? status;
-  }
-
-  revenueBarHeight(value: number): number {
-    const maximum = this.maxDailyRevenue();
-    return maximum && value ? Math.max(8, Math.round((value / maximum) * 100)) : 0;
-  }
-
   private loadBusinessSnapshot(): void {
     if (this.businessLoading() || !this.venues().length) return;
     this.businessLoading.set(true);
@@ -311,7 +352,7 @@ export class VenueOwnerDashboardComponent {
       this.upcomingBookings.set((bookings?.items ?? [])
         .filter(booking => ['PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN'].includes(booking.status))
         .sort((left, right) => `${left.playDate}${left.startTime}`.localeCompare(`${right.playDate}${right.startTime}`))
-        .slice(0, 6));
+        .slice(0, 12));
       if (!revenue && !bookings) {
         this.businessError.set('Chưa thể tải dữ liệu doanh thu và booking lúc này.');
       }
@@ -333,7 +374,6 @@ export class VenueOwnerDashboardComponent {
           .find(currentVenue => currentVenue.venueId === venue.venueId)
           ?.imageUrls?.[0]?.trim();
         if (currentKey !== key) return;
-
         this.venueCoverUrls.update(urls => ({ ...urls, [venue.venueId]: url }));
       });
     });
