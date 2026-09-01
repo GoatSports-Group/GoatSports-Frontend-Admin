@@ -138,6 +138,50 @@ describe('VenueOwnerDashboardComponent', () => {
     }).compileComponents();
   });
 
+  it('hiển thị đầy đủ booking trong 7 ngày tính cả hôm nay qua nhiều trang', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 8, 2, 12));
+    getApplications.execute.mockReturnValue(of(pageOf([
+      createApplication('application-approved', 'GOAT Arena', 'venue-primary', '2026-08-28T08:00:00Z')
+    ])));
+    const bookings = Array.from({ length: 8 }, (_, index) => createBooking({
+      bookingId: `booking-upcoming-${index + 1}`,
+      bookingCode: `GS-UPCOMING-${index + 1}`,
+      playDate: `2026-09-${String(2 + index % 7).padStart(2, '0')}`,
+      startTime: `${String(8 + index).padStart(2, '0')}:00:00`,
+      endTime: `${String(9 + index).padStart(2, '0')}:00:00`
+    }));
+    manageBookings.list.mockImplementation(filter => {
+      if (filter.fromDate !== '2026-09-02' || filter.toDate !== '2026-09-08') {
+        return of(bookingPage([]));
+      }
+      const page = filter.page ?? 0;
+      return of({
+        items: page === 0 ? bookings.slice(0, 4) : bookings.slice(4),
+        page,
+        pageSize: 20,
+        pages: 2,
+        total: bookings.length
+      });
+    });
+
+    try {
+      const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelectorAll('.booking-row')).toHaveLength(8);
+      expect(fixture.nativeElement.querySelectorAll('.booking-table__head span')).toHaveLength(6);
+      expect(manageBookings.list).toHaveBeenCalledWith({
+        venueId: 'venue-primary', fromDate: '2026-09-02', toDate: '2026-09-08', page: 0, size: 20
+      });
+      expect(manageBookings.list).toHaveBeenCalledWith({
+        venueId: 'venue-primary', fromDate: '2026-09-02', toDate: '2026-09-08', page: 1, size: 20
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('hiển thị đầy đủ các khối vận hành theo layout dashboard mới', () => {
     getApplications.execute.mockReturnValue(of(pageOf([
       createApplication('application-approved', 'GOAT Arena', 'venue-primary', '2026-08-28T08:00:00Z')
@@ -478,7 +522,9 @@ describe('VenueOwnerDashboardComponent', () => {
     getApplications.execute.mockReturnValue(of(pageOf([
       createApplication('application-approved', 'GOAT Arena', 'venue-primary', '2026-08-28T08:00:00Z')
     ])));
-    manageBookings.list.mockImplementation(filter => of(bookingPage(filter.size === 12 ? [booking] : [])));
+    manageBookings.list.mockImplementation(filter => of(bookingPage(
+      filter.fromDate !== filter.toDate ? [booking] : []
+    )));
     manageBookings.detail.mockReturnValue(of(booking));
 
     const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);

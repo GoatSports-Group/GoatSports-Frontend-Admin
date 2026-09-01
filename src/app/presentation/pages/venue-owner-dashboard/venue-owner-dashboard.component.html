@@ -202,7 +202,7 @@
       <div class="booking-table">
         <div class="booking-table__head"><span>Thời gian</span><span>Khách hàng</span><span>Sân</span><span>Dịch
             vụ</span><span>Tổng tiền</span><span>Trạng thái</span></div>
-        @for (booking of upcomingBookings().slice(0, 5); track booking.bookingId) {
+        @for (booking of upcomingBookings(); track booking.bookingId) {
         <button type="button" class="booking-row" (click)="openBookingDetail(booking.bookingId)">
           <time><strong>{{ timeValue(booking.startTime) }} - {{ timeValue(booking.endTime) }}</strong><span>{{
               shortDate(booking.playDate) }}</span></time>
@@ -216,10 +216,6 @@
         </button>
         }
       </div>
-      @if (upcomingBookings().length > 5) {
-      <a class="schedule-more" routerLink="/admin/owner-bookings">Xem thêm {{ upcomingBookings().length - 5 }} lịch đặt
-        khác <lucide-icon name="chevron-right" /></a>
-      }
       } @else {
       <div class="panel-empty"><lucide-icon name="calendar-check" /><span>Không có booking sắp diễn ra trong 7 ngày
           tới.</span></div>

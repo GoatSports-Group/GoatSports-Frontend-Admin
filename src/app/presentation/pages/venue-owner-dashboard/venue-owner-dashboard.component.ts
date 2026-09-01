@@ -497,9 +497,9 @@ export class VenueOwnerDashboardComponent {
       }).pipe(
         catchError(() => of(null))
       ),
-      upcoming: this.manageBookings.list({
-        venueId, fromDate: this.today(), toDate: this.daysFromNow(7), page: 0, size: 12
-      }).pipe(catchError(() => of(null))),
+      upcoming: this.loadBookingsForRange(
+        venueId, this.today(), this.daysFromNow(6)
+      ).pipe(catchError(() => of(null))),
       customerMetrics: this.getCustomerMetrics.execute({
         venueId, month: currentMonth.fromDate.slice(0, 7)
       }).pipe(catchError(() => of(null)))
@@ -509,11 +509,10 @@ export class VenueOwnerDashboardComponent {
       finalize(() => this.businessLoading.set(false))
     ).subscribe(({ monthlyRevenue, upcoming, customerMetrics }) => {
       this.monthlyRevenueReport.set(monthlyRevenue);
-      this.upcomingBookings.set((upcoming?.items ?? [])
+      this.upcomingBookings.set((upcoming ?? [])
         .filter(booking => booking.venueId === venueId)
         .filter(booking => ['PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN'].includes(booking.status))
-        .sort((left, right) => `${left.playDate}${left.startTime}`.localeCompare(`${right.playDate}${right.startTime}`))
-        .slice(0, 12));
+        .sort((left, right) => `${left.playDate}${left.startTime}`.localeCompare(`${right.playDate}${right.startTime}`)));
       this.customerMetricsReport.set(customerMetrics);
       if (!monthlyRevenue && !upcoming && !customerMetrics) {
         this.businessError.set('Chưa thể tải dữ liệu vận hành lúc này.');
