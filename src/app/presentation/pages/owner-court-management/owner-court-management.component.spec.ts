@@ -11,6 +11,7 @@ import {
   LucideDroplets, LucideRotateCcw, LucideSave, LucideSearch, LucideStore, LucideSun, LucideTable,
   LucideTrash2, LucideUsers, LucideX, provideLucideIcons
 } from '@lucide/angular';
+import { OwnerBooking } from '@application/dto/owner-booking/owner-booking.dto';
 import { OwnerVenueCourt, OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
 import { ManageOwnerBookingsUseCase } from '@application/usecase/owner-booking/manage-owner-bookings.usecase';
@@ -38,7 +39,7 @@ describe('OwnerCourtManagementComponent', () => {
     manageCourts.create.mockReset().mockReturnValue(of(savedCourt));
     manageCourts.update.mockReset().mockReturnValue(of(savedCourt));
     manageCourts.toggle.mockReset().mockReturnValue(of(savedCourt));
-    manageBookings.list.mockReset().mockReturnValue(of({ items: [], page: 0, pageSize: 200, pages: 0, total: 0 }));
+    manageBookings.list.mockReset().mockReturnValue(of({ items: [], page: 0, pageSize: 20, pages: 0, total: 0 }));
     notify.success.mockReset(); notify.error.mockReset();
     await TestBed.configureTestingModule({
       imports: [OwnerCourtManagementComponent],
@@ -98,7 +99,7 @@ describe('OwnerCourtManagementComponent', () => {
     const fixture = TestBed.createComponent(OwnerCourtManagementComponent);
     fixture.detectChanges();
 
-    expect(manageBookings.list).toHaveBeenCalledWith(expect.objectContaining({ venueId: 'venue-1' }));
+    expect(manageBookings.list).toHaveBeenCalledWith(expect.objectContaining({ venueId: 'venue-1', page: 0, size: 20 }));
     expect(fixture.nativeElement.querySelectorAll('.workspace-tabs button')).toHaveLength(3);
     expect(fixture.nativeElement.querySelectorAll('.court-object')).toHaveLength(2);
     expect(fixture.nativeElement.querySelectorAll('.facility-object')).toHaveLength(9);
@@ -128,5 +129,86 @@ describe('OwnerCourtManagementComponent', () => {
     component.saveLayout();
     expect(component.layoutMode()).toBe(false);
     expect(notify.success).toHaveBeenCalledWith('Bố cục cơ sở đã được lưu trên thiết bị này.');
+  });
+
+  it('tải đủ booking theo ngày bằng các trang hợp lệ tối đa 20 phần tử', () => {
+    manageBookings.list.mockImplementation(filter => of(filter.venueCourtId
+      ? { items: [], page: 0, pageSize: 20, pages: 0, total: 0 }
+      : {
+          items: [{ bookingId: `booking-${filter.page}` }],
+          page: filter.page,
+          pageSize: 20,
+          pages: 2,
+          total: 2
+        }));
+    const fixture = TestBed.createComponent(OwnerCourtManagementComponent);
+    fixture.detectChanges();
+
+    const venueRequests = manageBookings.list.mock.calls
+      .map(([filter]) => filter)
+      .filter(filter => !filter.venueCourtId);
+    expect(venueRequests).toEqual([
+      expect.objectContaining({ venueId: 'venue-1', page: 0, size: 20 }),
+      expect.objectContaining({ venueId: 'venue-1', page: 1, size: 20 })
+    ]);
+    expect(fixture.componentInstance.bookings()).toHaveLength(2);
+  });
+
+  it('tải hết mọi trang booking của đúng sân được chọn trong ngày', () => {
+    const booking = (page: number): OwnerBooking => ({
+      bookingId: `court-booking-${page}`,
+      venueId: 'venue-1',
+      venueCourtId: 'court-1',
+      venueName: 'Goat Arena',
+      courtName: 'Sân 01',
+      playDate: '2030-05-10',
+      startTime: `${String(8 + page).padStart(2, '0')}:00:00`,
+      endTime: `${String(9 + page).padStart(2, '0')}:00:00`,
+      status: 'CONFIRMED',
+      source: 'DIRECT',
+      totalPrice: 100000,
+      depositAmount: 0,
+      remainingAmount: 100000,
+      bookingCode: `BK-${page}`,
+      createdAt: '2030-05-01T00:00:00Z',
+      payments: [],
+      allowedTransitions: []
+    });
+    manageCourts.list.mockReturnValue(of([savedCourt]));
+    manageBookings.list.mockImplementation(filter => {
+      if (!filter.venueCourtId) {
+        return of({ items: [], page: 0, pageSize: 20, pages: 1, total: 0 });
+      }
+      return of({ items: [booking(filter.page)], page: filter.page, pageSize: 20, pages: 2, total: 2 });
+    });
+
+    const fixture = TestBed.createComponent(OwnerCourtManagementComponent);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+
+    const courtRequests = manageBookings.list.mock.calls
+      .map(([filter]) => filter)
+      .filter(filter => filter.venueCourtId === 'court-1');
+    expect(courtRequests).toEqual([
+      expect.objectContaining({ venueId: 'venue-1', venueCourtId: 'court-1', page: 0, size: 20 }),
+      expect.objectContaining({ venueId: 'venue-1', venueCourtId: 'court-1', page: 1, size: 20 })
+    ]);
+    expect(component.detailBookingsForCourt('court-1')).toHaveLength(2);
+  });
+
+  it('đổi ngày sẽ tải lại booking của cơ sở và sân đang mở theo đúng ngày', () => {
+    manageCourts.list.mockReturnValue(of([savedCourt]));
+    const fixture = TestBed.createComponent(OwnerCourtManagementComponent);
+    fixture.detectChanges();
+    manageBookings.list.mockClear();
+
+    fixture.componentInstance.changeBookingDate({ target: { value: '2030-05-10' } } as unknown as Event);
+
+    expect(manageBookings.list).toHaveBeenCalledWith(expect.objectContaining({
+      venueId: 'venue-1', fromDate: '2030-05-10', toDate: '2030-05-10', page: 0, size: 20
+    }));
+    expect(manageBookings.list).toHaveBeenCalledWith(expect.objectContaining({
+      venueId: 'venue-1', venueCourtId: 'court-1', fromDate: '2030-05-10', toDate: '2030-05-10', page: 0, size: 20
+    }));
   });
 });

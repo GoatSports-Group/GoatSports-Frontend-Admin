@@ -12,8 +12,8 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { finalize, interval, take } from 'rxjs';
-import { OwnerBooking } from '@application/dto/owner-booking/owner-booking.dto';
+import { EMPTY, Observable, expand, finalize, interval, reduce, take } from 'rxjs';
+import { OwnerBooking, OwnerBookingFilter } from '@application/dto/owner-booking/owner-booking.dto';
 import {
   CourtAvailabilityStatus,
   OwnerVenueCourt,
@@ -135,11 +135,15 @@ export class OwnerCourtManagementComponent {
   readonly selectedVenueId = signal<string | null>(null);
   readonly courts = signal<OwnerVenueCourt[]>([]);
   readonly bookings = signal<OwnerBooking[]>([]);
+  readonly courtBookings = signal<OwnerBooking[]>([]);
+  readonly selectedBookingDate = signal(this.todayIso());
   readonly loading = signal(true);
   readonly courtLoading = signal(false);
   readonly bookingLoading = signal(false);
+  readonly courtBookingLoading = signal(false);
   readonly loadError = signal<string | null>(null);
   readonly bookingError = signal<string | null>(null);
+  readonly courtBookingError = signal<string | null>(null);
   readonly saving = signal(false);
   readonly togglingId = signal<string | null>(null);
   readonly activeView = signal<WorkspaceView>('MAP');
@@ -169,7 +173,10 @@ export class OwnerCourtManagementComponent {
   private pointerOperation: PointerOperation | null = null;
   private draggedLibraryType: FacilityObjectType | null = null;
   private courtsReadyForVenue: string | null = null;
-  private bookingsReadyForVenue: string | null = null;
+  private bookingsReadyContext: string | null = null;
+  private venueBookingRequestId = 0;
+  private courtBookingRequestId = 0;
+  private courtBookingContext: string | null = null;
 
   readonly venue = computed(() => this.venues().find(item => item.venueId === this.selectedVenueId()) ?? null);
   readonly editorOpen = computed(() => this.panelMode() === 'FORM');
@@ -256,7 +263,11 @@ export class OwnerCourtManagementComponent {
       const venueId = this.selectedVenueId();
       if (venueId && !this.layoutMode()) {
         this.refreshCourts(venueId, false);
-        this.loadTodayBookings(venueId, false);
+        this.loadBookingsForSelectedDate(venueId, false);
+        const selectedCourt = this.selectedCourt();
+        if (selectedCourt && this.panelMode() === 'DETAIL') {
+          this.loadCourtBookings(selectedCourt.venueCourtId, false);
+        }
       }
     });
   }
@@ -293,15 +304,16 @@ export class OwnerCourtManagementComponent {
     if ((!force && venueId === this.selectedVenueId()) || this.saving() || this.courtLoading()) return;
     if (this.layoutMode() && !this.cancelLayoutEdit()) return;
     this.selectedVenueId.set(venueId);
+    this.selectedBookingDate.set(this.todayIso());
     this.courtsReadyForVenue = null;
-    this.bookingsReadyForVenue = null;
+    this.bookingsReadyContext = null;
     this.closePanel();
     this.query.set('');
     this.sportFilter.set('ALL');
     this.statusFilter.set('ALL');
     this.page.set(1);
     this.refreshCourts(venueId, true);
-    this.loadTodayBookings(venueId, true);
+    this.loadBookingsForSelectedDate(venueId, true);
   }
 
   selectVenueFromMenu(venueId: string): void {
@@ -396,13 +408,36 @@ export class OwnerCourtManagementComponent {
       return;
     }
     this.panelMode.set('DETAIL');
+    this.loadCourtBookings(court.venueCourtId, true);
   }
 
   closePanel(): void {
     if (this.saving()) return;
+    this.courtBookingRequestId += 1;
+    this.courtBookingContext = null;
+    this.courtBookings.set([]);
+    this.courtBookingError.set(null);
+    this.courtBookingLoading.set(false);
     this.panelMode.set('NONE');
     this.editingCourt.set(null);
     if (!this.layoutMode()) this.selectedCourtId.set(null);
+  }
+
+  changeBookingDate(event: Event): void {
+    const date = (event.target as HTMLInputElement).value || this.todayIso();
+    if (date === this.selectedBookingDate()) return;
+
+    this.selectedBookingDate.set(date);
+    this.bookingsReadyContext = null;
+    this.bookings.set([]);
+    const venueId = this.selectedVenueId();
+    if (!venueId) return;
+
+    this.loadBookingsForSelectedDate(venueId, true);
+    const selectedCourt = this.selectedCourt();
+    if (selectedCourt && this.panelMode() === 'DETAIL') {
+      this.loadCourtBookings(selectedCourt.venueCourtId, true);
+    }
   }
 
   openCreate(): void {
@@ -796,6 +831,7 @@ export class OwnerCourtManagementComponent {
   }
 
   currentBooking(courtId: string): OwnerBooking | null {
+    if (this.selectedBookingDate() !== this.todayIso()) return null;
     const now = this.currentMinutes();
     return this.bookingsForCourt(courtId).find(booking =>
       ['CONFIRMED', 'CHECKED_IN'].includes(booking.status)
@@ -805,12 +841,15 @@ export class OwnerCourtManagementComponent {
   }
 
   nextBooking(courtId: string, withinMinutes?: number): OwnerBooking | null {
-    const now = this.currentMinutes();
+    const selectedDate = this.selectedBookingDate();
+    const today = this.todayIso();
+    if (selectedDate < today) return null;
+    const now = selectedDate === today ? this.currentMinutes() : -1;
     return this.bookingsForCourt(courtId).find(booking => {
       const startsIn = this.timeMinutes(booking.startTime) - now;
       return ['PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN'].includes(booking.status)
         && startsIn > 0
-        && (withinMinutes === undefined || startsIn <= withinMinutes);
+        && (withinMinutes === undefined || selectedDate > today || startsIn <= withinMinutes);
     }) ?? null;
   }
 
@@ -818,6 +857,43 @@ export class OwnerCourtManagementComponent {
     return this.bookings()
       .filter(booking => booking.venueCourtId === courtId && !['CANCELLED', 'EXPIRED', 'REFUNDED'].includes(booking.status))
       .sort((a, b) => a.startTime.localeCompare(b.startTime));
+  }
+
+  detailBookingsForCourt(courtId: string): OwnerBooking[] {
+    if (this.courtBookingContext !== this.bookingContext(courtId, this.selectedBookingDate())) return [];
+    return this.courtBookings()
+      .filter(booking => booking.venueCourtId === courtId && !['CANCELLED', 'EXPIRED', 'REFUNDED'].includes(booking.status))
+      .sort((a, b) => a.startTime.localeCompare(b.startTime));
+  }
+
+  detailCurrentBooking(courtId: string): OwnerBooking | null {
+    if (this.selectedBookingDate() !== this.todayIso()) return null;
+    const now = this.currentMinutes();
+    return this.detailBookingsForCourt(courtId).find(booking =>
+      ['CONFIRMED', 'CHECKED_IN'].includes(booking.status)
+      && this.timeMinutes(booking.startTime) <= now
+      && this.timeMinutes(booking.endTime) > now
+    ) ?? null;
+  }
+
+  detailNextBooking(courtId: string): OwnerBooking | null {
+    const selectedDate = this.selectedBookingDate();
+    const today = this.todayIso();
+    if (selectedDate < today) return null;
+    const now = selectedDate === today ? this.currentMinutes() : -1;
+    return this.detailBookingsForCourt(courtId).find(booking =>
+      ['PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN'].includes(booking.status)
+      && this.timeMinutes(booking.startTime) > now
+    ) ?? null;
+  }
+
+  bookingDateLabel(): string {
+    const [year, month, day] = this.selectedBookingDate().split('-');
+    return `${day}/${month}/${year}`;
+  }
+
+  retryCourtBookings(courtId: string): void {
+    this.loadCourtBookings(courtId, true);
   }
 
   bookingRange(booking: OwnerBooking | null): string {
@@ -939,27 +1015,78 @@ export class OwnerCourtManagementComponent {
     });
   }
 
-  private loadTodayBookings(venueId: string, showLoading: boolean): void {
+  private loadBookingsForSelectedDate(venueId: string, showLoading: boolean): void {
+    const date = this.selectedBookingDate();
+    const context = this.bookingContext(venueId, date);
+    const requestId = ++this.venueBookingRequestId;
     if (showLoading) this.bookingLoading.set(true);
     this.bookingError.set(null);
-    const today = this.todayIso();
-    this.manageBookings.list({ venueId, fromDate: today, toDate: today, page: 0, size: 200 }).pipe(
-      take(1),
+    this.loadAllBookings({ venueId, fromDate: date, toDate: date }).pipe(
       takeUntilDestroyed(this.destroyRef),
-      finalize(() => this.bookingLoading.set(false))
+      finalize(() => {
+        if (requestId === this.venueBookingRequestId) this.bookingLoading.set(false);
+      })
     ).subscribe({
-      next: page => {
-        this.bookings.set(page.items);
-        this.bookingsReadyForVenue = venueId;
+      next: bookings => {
+        if (requestId !== this.venueBookingRequestId || context !== this.bookingContext(venueId, this.selectedBookingDate())) return;
+        this.bookings.set(bookings);
+        this.bookingsReadyContext = context;
         this.openDefaultCourtDetail();
       },
       error: error => {
+        if (requestId !== this.venueBookingRequestId || context !== this.bookingContext(venueId, this.selectedBookingDate())) return;
         this.bookings.set([]);
-        this.bookingsReadyForVenue = venueId;
-        this.bookingError.set(this.errorMessage(error, 'Chưa thể đồng bộ lịch đặt sân hôm nay.'));
+        this.bookingsReadyContext = context;
+        this.bookingError.set(this.errorMessage(error, 'Chưa thể đồng bộ lịch đặt sân theo ngày đã chọn.'));
         this.openDefaultCourtDetail();
       }
     });
+  }
+
+  private loadCourtBookings(courtId: string, showLoading: boolean): void {
+    const venueId = this.selectedVenueId();
+    if (!venueId) return;
+
+    const date = this.selectedBookingDate();
+    const context = this.bookingContext(courtId, date);
+    const requestId = ++this.courtBookingRequestId;
+    this.courtBookingContext = null;
+    this.courtBookings.set([]);
+    this.courtBookingError.set(null);
+    if (showLoading) this.courtBookingLoading.set(true);
+
+    this.loadAllBookings({ venueId, venueCourtId: courtId, fromDate: date, toDate: date }).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => {
+        if (requestId === this.courtBookingRequestId) this.courtBookingLoading.set(false);
+      })
+    ).subscribe({
+      next: bookings => {
+        if (requestId !== this.courtBookingRequestId || context !== this.bookingContext(courtId, this.selectedBookingDate())) return;
+        this.courtBookingContext = context;
+        this.courtBookings.set(bookings);
+      },
+      error: error => {
+        if (requestId !== this.courtBookingRequestId || context !== this.bookingContext(courtId, this.selectedBookingDate())) return;
+        this.courtBookingContext = context;
+        this.courtBookings.set([]);
+        this.courtBookingError.set(this.errorMessage(error, 'Chưa thể tải lịch đặt của sân trong ngày đã chọn.'));
+      }
+    });
+  }
+
+  private loadAllBookings(filter: Omit<OwnerBookingFilter, 'page' | 'size'>): Observable<OwnerBooking[]> {
+    const pageSize = 20;
+    return this.manageBookings.list({ ...filter, page: 0, size: pageSize }).pipe(
+      expand(page => page.page + 1 < page.pages
+        ? this.manageBookings.list({ ...filter, page: page.page + 1, size: pageSize })
+        : EMPTY),
+      reduce((items, page) => [...items, ...page.items], [] as OwnerBooking[])
+    );
+  }
+
+  private bookingContext(id: string, date: string): string {
+    return `${id}:${date}`;
   }
 
   private syncLayoutWithCourts(): void {
@@ -970,7 +1097,8 @@ export class OwnerCourtManagementComponent {
 
   private openDefaultCourtDetail(): void {
     const venueId = this.selectedVenueId();
-    if (!venueId || this.courtsReadyForVenue !== venueId || this.bookingsReadyForVenue !== venueId) return;
+    const bookingContext = venueId ? this.bookingContext(venueId, this.selectedBookingDate()) : null;
+    if (!venueId || this.courtsReadyForVenue !== venueId || this.bookingsReadyContext !== bookingContext) return;
     if (this.activeView() !== 'MAP' || this.layoutMode() || this.panelMode() !== 'NONE' || !this.courts().length) return;
     if (typeof window !== 'undefined' && window.innerWidth < 768) return;
 

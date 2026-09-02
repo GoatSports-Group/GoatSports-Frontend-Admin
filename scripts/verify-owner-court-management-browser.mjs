@@ -59,7 +59,7 @@ function responseFor(request) {
   if (url.pathname === '/venue-service/api/v1/owner/venues/venue-1/courts') return ok(courts);
   if (url.pathname === '/venue-service/api/v1/owner/venues/venue-2/courts') return ok([]);
   if (url.pathname === '/venue-service/api/v1/owner/bookings') {
-    return ok({ meta: { page: 0, pageSize: 200, pages: 1, total: bookings.length }, result: bookings });
+    return ok({ meta: { page: 0, pageSize: 20, pages: 1, total: bookings.length }, result: bookings });
   }
   return ok([]);
 }

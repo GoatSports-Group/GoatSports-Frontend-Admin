@@ -480,6 +480,55 @@ select:disabled {
   display: none;
 }
 
+.map-meta-actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+.booking-date-filter {
+  display: flex;
+  height: 34px;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  padding: 0 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: #53635b;
+}
+
+.booking-date-filter:focus-within {
+  border-color: #5dad8d;
+  box-shadow: 0 0 0 3px rgba(8, 116, 74, .09);
+}
+
+.booking-date-filter lucide-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--green);
+}
+
+.booking-date-filter>span {
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.booking-date-filter input {
+  width: 118px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #26372e;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 650;
+}
+
 .map-legend>span,
 .sync-state {
   display: inline-flex;
@@ -1576,6 +1625,46 @@ select:disabled {
 .quick-actions {
   padding: 14px 15px;
   border-bottom: 1px solid var(--line-soft);
+}
+
+.detail-booking-state {
+  display: flex;
+  min-height: 118px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  border-bottom: 1px solid var(--line-soft);
+  color: #65756d;
+  font-size: 10px;
+  text-align: center;
+}
+
+.detail-booking-state .spinner {
+  width: 18px;
+  height: 18px;
+}
+
+.detail-booking-state--error {
+  flex-wrap: wrap;
+  color: #9d514b;
+}
+
+.detail-booking-state--error lucide-icon {
+  width: 17px;
+  height: 17px;
+}
+
+.detail-booking-state--error button {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid #e4bbb7;
+  border-radius: 6px;
+  background: #fff;
+  color: #a23f39;
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .booking-now header,

@@ -152,9 +152,16 @@
                   <span [attr.data-status]="item.value"><i></i>{{ item.label }}</span>
                 }
               </div>
-              @if (bookingError()) {
-                <span class="sync-state sync-state--warning"><lucide-icon name="alert-triangle" /> {{ bookingError() }}</span>
-              }
+              <div class="map-meta-actions">
+                @if (bookingError()) {
+                  <span class="sync-state sync-state--warning"><lucide-icon name="alert-triangle" /> {{ bookingError() }}</span>
+                }
+                <label class="booking-date-filter">
+                  <lucide-icon name="calendar" />
+                  <span>Ngày xem lịch</span>
+                  <input type="date" [value]="selectedBookingDate()" (change)="changeBookingDate($event)" aria-label="Chọn ngày xem booking" />
+                </label>
+              </div>
             </div>
           }
 
@@ -404,29 +411,39 @@
             <div><span>{{ sportLabel(court.sportType) }} · {{ court.surfaceType || 'Chưa cập nhật mặt sân' }}</span><strong>{{ formatCurrency(courtPrice(court)) }}<small>/giờ</small></strong></div>
             <button type="button" (click)="openEdit(court)"><lucide-icon name="pencil" /> Cập nhật</button>
           </section>
-          @if (currentBooking(court.venueCourtId); as current) {
-            <section class="booking-now">
-              <header><span>Hiện tại</span><strong>{{ bookingCustomer(current) }}</strong></header>
-              <div><strong>{{ bookingRange(current) }}</strong><span>{{ bookingRemaining(current) }}</span></div>
-              <p><i [style.width.%]="bookingProgress(current)"></i></p>
+          @if (courtBookingLoading()) {
+            <section class="detail-booking-state" aria-live="polite"><span class="spinner"></span> Đang tải toàn bộ booking của sân...</section>
+          } @else if (courtBookingError()) {
+            <section class="detail-booking-state detail-booking-state--error" role="alert">
+              <lucide-icon name="alert-circle" />
+              <span>{{ courtBookingError() }}</span>
+              <button type="button" (click)="retryCourtBookings(court.venueCourtId)">Thử lại</button>
             </section>
           } @else {
-            <section class="booking-now booking-now--empty"><lucide-icon name="check-circle" /><div><strong>Sân đang trống</strong><span>Không có lượt chơi đang diễn ra.</span></div></section>
+            @if (detailCurrentBooking(court.venueCourtId); as current) {
+              <section class="booking-now">
+                <header><span>Hiện tại</span><strong>{{ bookingCustomer(current) }}</strong></header>
+                <div><strong>{{ bookingRange(current) }}</strong><span>{{ bookingRemaining(current) }}</span></div>
+                <p><i [style.width.%]="bookingProgress(current)"></i></p>
+              </section>
+            } @else {
+              <section class="booking-now booking-now--empty"><lucide-icon name="check-circle" /><div><strong>Không có lượt đang diễn ra</strong><span>Theo ngày {{ bookingDateLabel() }}.</span></div></section>
+            }
+            <section class="next-booking">
+              <span>Lịch tiếp theo</span>
+              @if (detailNextBooking(court.venueCourtId); as next) {
+                <div><strong>{{ bookingRange(next) }}</strong><span>{{ bookingCustomer(next) }}</span></div>
+              } @else { <p>Không còn lịch tiếp theo trong ngày đã chọn.</p> }
+            </section>
+            <section class="today-schedule">
+              <header><span>Lịch ngày {{ bookingDateLabel() }}</span><strong>{{ detailBookingsForCourt(court.venueCourtId).length }} lượt</strong></header>
+              @for (booking of detailBookingsForCourt(court.venueCourtId); track booking.bookingId) {
+                <article [class.is-current]="detailCurrentBooking(court.venueCourtId)?.bookingId === booking.bookingId">
+                  <i></i><strong>{{ bookingRange(booking) }}</strong><span>{{ bookingCustomer(booking) }}</span>
+                </article>
+              } @empty { <p>Chưa có lịch đặt sân trong ngày.</p> }
+            </section>
           }
-          <section class="next-booking">
-            <span>Lịch tiếp theo</span>
-            @if (nextBooking(court.venueCourtId); as next) {
-              <div><strong>{{ bookingRange(next) }}</strong><span>{{ bookingCustomer(next) }}</span></div>
-            } @else { <p>Chưa có lịch tiếp theo hôm nay.</p> }
-          </section>
-          <section class="today-schedule">
-            <header><span>Lịch hôm nay</span><strong>{{ bookingsForCourt(court.venueCourtId).length }} lượt</strong></header>
-            @for (booking of bookingsForCourt(court.venueCourtId).slice(0, 5); track booking.bookingId) {
-              <article [class.is-current]="currentBooking(court.venueCourtId)?.bookingId === booking.bookingId">
-                <i></i><strong>{{ bookingRange(booking) }}</strong><span>{{ bookingCustomer(booking) }}</span>
-              </article>
-            } @empty { <p>Chưa có lịch đặt sân trong ngày.</p> }
-          </section>
           <section class="quick-actions">
             <h3>Thao tác nhanh</h3>
             <div>
