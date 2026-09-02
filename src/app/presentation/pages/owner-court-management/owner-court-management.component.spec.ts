@@ -169,9 +169,26 @@ describe('OwnerCourtManagementComponent', () => {
     fixture.detectChanges();
 
     expect(manageFacilityLayout.get).toHaveBeenCalledWith('venue-1');
-    expect(fixture.componentInstance.layout()!.items).toEqual(expect.arrayContaining([
-      expect.objectContaining({ id: 'custom:medical', label: 'Phòng y tế' }),
-      expect.objectContaining({ type: 'COURT', courtId: 'court-1' })
+    const component = fixture.componentInstance;
+    expect(component.layout()!.items).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'custom:medical', label: 'Phòng y tế' })
+    ]));
+    expect(component.layout()!.items.some(item => item.courtId === 'court-1')).toBe(false);
+
+    component.enterLayoutMode();
+    fixture.detectChanges();
+    expect(component.unplacedCourts()).toEqual([savedCourt]);
+    const unplacedCard = fixture.nativeElement.querySelector('.unplaced-courts') as HTMLElement;
+    const objectLibrary = fixture.nativeElement.querySelector('.object-library') as HTMLElement;
+    expect(unplacedCard.textContent).toContain('Cầu lông');
+    expect(unplacedCard.parentElement).toBe(objectLibrary.parentElement);
+    expect([...unplacedCard.parentElement!.children].indexOf(unplacedCard))
+      .toBeLessThan([...objectLibrary.parentElement!.children].indexOf(objectLibrary));
+
+    component.placeUnplacedCourt(savedCourt, 780, 80);
+    expect(component.unplacedCourts()).toHaveLength(0);
+    expect(component.draftLayout()!.items).toEqual(expect.arrayContaining([
+      expect.objectContaining({ type: 'COURT', courtId: 'court-1', x: 780, y: 80 })
     ]));
   });
 

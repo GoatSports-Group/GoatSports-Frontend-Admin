@@ -196,6 +196,7 @@ export class OwnerCourtManagementComponent {
 
   private pointerOperation: PointerOperation | null = null;
   private draggedLibraryType: FacilityObjectType | null = null;
+  private draggedUnplacedCourtId: string | null = null;
   private courtsReadyForVenue: string | null = null;
   private bookingsReadyContext: string | null = null;
   private venueBookingRequestId = 0;
@@ -849,22 +850,29 @@ export class OwnerCourtManagementComponent {
     this.layoutDirty.set(true);
   }
 
-  placeUnplacedCourt(court: OwnerVenueCourt): void {
+  placeUnplacedCourt(court: OwnerVenueCourt, x?: number, y?: number): void {
     const draft = this.draftLayout();
-    if (!draft) return;
+    if (!draft || this.layoutSaving() || draft.items.some(item => item.courtId === court.venueCourtId)) return;
     this.pushLayoutHistory();
     const index = draft.items.filter(item => item.type === 'COURT').length;
+    const placement = this.nextCourtPlacement(draft, index);
+    const itemX = Math.max(0, x ?? placement.x);
+    const itemY = Math.max(0, y ?? placement.y);
+    const containingZone = draft.zones.find(zone =>
+      itemX >= zone.x && itemX <= zone.x + zone.width
+      && itemY >= zone.y && itemY <= zone.y + zone.height
+    );
     const item: FacilityLayoutItem = {
       id: `court:${court.venueCourtId}`,
       type: 'COURT',
       courtId: court.venueCourtId,
       label: court.name,
-      x: 230 + (index % 3) * 215,
-      y: 80 + (Math.floor(index / 3) % 3) * 175,
+      x: itemX,
+      y: itemY,
       width: 190,
       height: 145,
       rotation: 0,
-      zoneId: 'zone-a'
+      zoneId: containingZone?.id
     };
     this.draftLayout.set({ ...draft, items: [...draft.items, item] });
     this.selectedLayoutItemId.set(item.id);
@@ -873,8 +881,16 @@ export class OwnerCourtManagementComponent {
   }
 
   beginLibraryDrag(event: DragEvent, type: FacilityObjectType): void {
+    this.draggedUnplacedCourtId = null;
     this.draggedLibraryType = type;
     event.dataTransfer?.setData('text/plain', type);
+    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'copy';
+  }
+
+  beginUnplacedCourtDrag(event: DragEvent, court: OwnerVenueCourt): void {
+    this.draggedLibraryType = null;
+    this.draggedUnplacedCourtId = court.venueCourtId;
+    event.dataTransfer?.setData('application/x-goatsports-court-id', court.venueCourtId);
     if (event.dataTransfer) event.dataTransfer.effectAllowed = 'copy';
   }
 
@@ -886,12 +902,20 @@ export class OwnerCourtManagementComponent {
 
   dropLibraryItem(event: DragEvent): void {
     event.preventDefault();
+    const courtId = this.draggedUnplacedCourtId
+      ?? event.dataTransfer?.getData('application/x-goatsports-court-id');
     const type = this.draggedLibraryType ?? event.dataTransfer?.getData('text/plain') as FacilityObjectType;
+    this.draggedUnplacedCourtId = null;
     this.draggedLibraryType = null;
-    if (!type || !this.facilityCanvas) return;
+    if ((!type && !courtId) || !this.facilityCanvas) return;
     const rect = this.facilityCanvas.nativeElement.getBoundingClientRect();
     const x = this.snap((event.clientX - rect.left) / rect.width * this.canvasWidth() - 70);
     const y = this.snap((event.clientY - rect.top) / rect.height * this.canvasHeight() - 35);
+    if (courtId) {
+      const court = this.unplacedCourts().find(item => item.venueCourtId === courtId);
+      if (court) this.placeUnplacedCourt(court, x, y);
+      return;
+    }
     if (type === 'CUSTOM') {
       this.openCustomObjectCreator(x, y);
       return;
@@ -968,6 +992,21 @@ export class OwnerCourtManagementComponent {
     this.draftLayout.set({ ...draft, items: [...draft.items, item] });
     this.selectedLayoutItemId.set(item.id);
     this.layoutDirty.set(true);
+  }
+
+  private nextCourtPlacement(layout: VenueFacilityLayout, index: number): { x: number; y: number } {
+    const secondaryZone = layout.zones[1];
+    if (secondaryZone) {
+      const existingInZone = layout.items.filter(item => item.type === 'COURT' && item.zoneId === secondaryZone.id).length;
+      return {
+        x: this.snap(secondaryZone.x + 15),
+        y: this.snap(secondaryZone.y + 50 + existingInZone * 170)
+      };
+    }
+    return {
+      x: 230 + (index % 3) * 215,
+      y: 80 + (Math.floor(index / 3) % 3) * 175
+    };
   }
 
   addZone(): void {

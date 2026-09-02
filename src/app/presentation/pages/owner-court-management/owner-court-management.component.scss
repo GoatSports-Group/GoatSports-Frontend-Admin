@@ -770,7 +770,7 @@ select:disabled {
   min-height: 575px;
 }
 
-.facility-workspace.is-saving .object-library,
+.facility-workspace.is-saving .layout-side-stack,
 .facility-workspace.is-saving .layout-inspector,
 .facility-workspace.is-saving .facility-canvas {
   pointer-events: none;
@@ -780,6 +780,19 @@ select:disabled {
 .facility-workspace.is-editing {
   grid-template-columns: 170px minmax(0, 1fr) 235px;
   gap: 8px;
+}
+
+.layout-side-stack {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.layout-side-stack .object-library {
+  min-height: 0;
+  flex: 1 1 auto;
 }
 
 .facility-stage {
@@ -1511,22 +1524,69 @@ select:disabled {
 }
 
 .unplaced-courts {
-  margin-top: 12px;
-  padding-top: 9px;
-  border-top: 1px solid var(--line-soft);
+  flex: none;
+  margin: 0;
+  padding: 9px;
+  border: 1px solid #b9ddcc;
+  border-radius: 8px;
+  background: #f0faf5;
 }
 
-.unplaced-courts>strong {
+.unplaced-courts>header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 7px;
+}
+
+.unplaced-courts button span {
+  min-width: 0;
+}
+
+.unplaced-courts>header strong,
+.unplaced-courts button strong,
+.unplaced-courts button small {
   display: block;
-  margin-bottom: 6px;
-  color: #68776f;
+}
+
+.unplaced-courts>header strong {
+  color: #176b4a;
+  font-size: 12px;
+}
+
+.unplaced-courts button small {
+  margin-top: 2px;
+  color: #718079;
+  font-size: 10px;
+  line-height: 1.25;
+}
+
+.unplaced-courts>header b {
+  display: grid;
+  min-width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 999px;
+  background: #0a8758;
+  color: #fff;
   font-size: 11px;
-  text-transform: uppercase;
 }
 
 .unplaced-courts button {
-  grid-template-columns: 1fr 14px;
-  cursor: pointer;
+  grid-template-columns: 22px minmax(0, 1fr) 14px;
+  margin-bottom: 0;
+  border-color: #a9d5c1;
+  background: #fff;
+  cursor: grab;
+}
+
+.unplaced-courts button strong {
+  overflow: hidden;
+  color: #253a30;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .unplaced-courts lucide-icon {

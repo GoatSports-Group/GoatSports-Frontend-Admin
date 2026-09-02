@@ -140,16 +140,21 @@
               thước.</small></span>
         </div>
         <div class="layout-mode-toolbar__actions">
-          <button type="button" (click)="undoLayout()" [disabled]="layoutSaving() || layoutHistory().length === 0" aria-label="Hoàn tác">
+          <button type="button" (click)="undoLayout()" [disabled]="layoutSaving() || layoutHistory().length === 0"
+            aria-label="Hoàn tác">
             <lucide-icon name="chevron-left" /> <span>Hoàn tác</span>
           </button>
-          <button type="button" (click)="redoLayout()" [disabled]="layoutSaving() || layoutFuture().length === 0" aria-label="Làm lại">
+          <button type="button" (click)="redoLayout()" [disabled]="layoutSaving() || layoutFuture().length === 0"
+            aria-label="Làm lại">
             <lucide-icon name="chevron-right" /> <span>Làm lại</span>
           </button>
-          <button type="button" (click)="addZone()" [disabled]="layoutSaving()"><lucide-icon name="plus" /> <span>Thêm khu</span></button>
-          <button type="button" (click)="resetLayout()" [disabled]="layoutSaving()"><lucide-icon name="rotate-ccw" /> <span>Đặt lại</span></button>
+          <button type="button" (click)="addZone()" [disabled]="layoutSaving()"><lucide-icon name="plus" /> <span>Thêm
+              khu</span></button>
+          <button type="button" (click)="resetLayout()" [disabled]="layoutSaving()"><lucide-icon name="rotate-ccw" />
+            <span>Đặt lại</span></button>
           <i></i>
-          <button type="button" (click)="cancelLayoutEdit()" [disabled]="layoutSaving()"><lucide-icon name="x" /> <span>Hủy</span></button>
+          <button type="button" (click)="cancelLayoutEdit()" [disabled]="layoutSaving()"><lucide-icon name="x" />
+            <span>Hủy</span></button>
           <button type="button" class="save-layout-button" (click)="saveLayout()"
             [disabled]="!layoutDirty() || layoutSaving()">
             @if (layoutSaving()) { <span class="mini-spinner"></span> Đang lưu... }
@@ -197,6 +202,23 @@
       } @else {
       <div class="facility-workspace" [class.is-editing]="layoutMode()" [class.is-saving]="layoutSaving()">
         @if (layoutMode()) {
+        <div class="layout-side-stack">
+          @if (unplacedCourts().length) {
+          <aside class="unplaced-courts" aria-label="Sân chưa bố trí">
+            <header>
+              <strong>Sân chưa bố trí</strong>
+              <b>{{ unplacedCourts().length }}</b>
+            </header>
+            @for (court of unplacedCourts(); track court.venueCourtId) {
+            <button type="button" draggable="true" (dragstart)="beginUnplacedCourtDrag($event, court)"
+              (click)="placeUnplacedCourt(court)">
+              <lucide-icon name="land-plot" />
+              <span>{{ sportLabel(court.sportType) }}</span>
+              <lucide-icon name="plus" />
+            </button>
+            }
+          </aside>
+          }
         <aside class="object-library" aria-label="Thư viện đối tượng">
           <header><strong>Thư viện đối tượng</strong></header>
           <button type="button" class="library-court" (click)="openCreate()">
@@ -208,25 +230,16 @@
             <lucide-icon [name]="item.icon" /><span>{{ item.label }}</span><lucide-icon name="grip-vertical" />
           </button>
           }
-          @if (unplacedCourts().length) {
-          <section class="unplaced-courts">
-            <strong>Sân chưa đặt</strong>
-            @for (court of unplacedCourts(); track court.venueCourtId) {
-            <button type="button" (click)="placeUnplacedCourt(court)"><span>{{ court.name }}</span><lucide-icon
-                name="plus" /></button>
-            }
-          </section>
-          }
-          <p><lucide-icon name="info" /> Bố cục được lưu riêng theo từng cơ sở.</p>
         </aside>
+        </div>
         }
 
         <div class="facility-stage">
           <div class="facility-scroll">
             <section #facilityCanvas class="facility-canvas" aria-label="Sơ đồ cơ sở thể thao"
               [style.min-width.px]="canvasRenderWidth()" [style.min-height.px]="canvasRenderHeight()"
-              [style.aspect-ratio]="canvasWidth() + ' / ' + canvasHeight()"
-              (click)="clearLayoutSelection()" (dragover)="allowLayoutDrop($event)" (drop)="dropLibraryItem($event)">
+              [style.aspect-ratio]="canvasWidth() + ' / ' + canvasHeight()" (click)="clearLayoutSelection()"
+              (dragover)="allowLayoutDrop($event)" (drop)="dropLibraryItem($event)">
               @for (zone of displayLayout()?.zones ?? []; track zone.id) {
               <div class="facility-zone" [class.is-editable]="layoutMode()"
                 [class.is-selected]="selectedLayoutZoneId() === zone.id" [attr.data-zone-id]="zone.id"
@@ -247,11 +260,11 @@
                 [style.transform]="'rotate(' + item.rotation + 'deg)'" (click)="selectLayoutItem($event, item)"
                 (pointerdown)="beginPointerOperation($event, item, 'MOVE')">
                 @if (item.type === 'PARKING') {
-                          <span class="parking-slots" aria-hidden="true">
-                            @for (slot of parkingSlots; track slot) {
-                              <i><lucide-icon name="car" /></i>
-                            }
-                          </span>
+                <span class="parking-slots" aria-hidden="true">
+                  @for (slot of parkingSlots; track slot) {
+                  <i><lucide-icon name="car" /></i>
+                  }
+                </span>
                 } @else {
                 <lucide-icon [name]="item.icon || facilityIcon($any(item.type))" />
                 <span>{{ item.label }}</span>
@@ -375,8 +388,8 @@
             </div>
           </section>
           <section class="inspector-actions">
-            <button type="button" class="danger-button" (click)="removeSelectedZone()"><lucide-icon
-                name="trash-2" /> Xóa khu vực</button>
+            <button type="button" class="danger-button" (click)="removeSelectedZone()"><lucide-icon name="trash-2" />
+              Xóa khu vực</button>
           </section>
           } @else {
           <section class="inspector-empty"><lucide-icon name="info" /><strong>Chọn một đối tượng</strong>
@@ -606,7 +619,10 @@
       <header>
         <div>
           <span><lucide-icon name="layout-grid" /></span>
-          <div><h2 id="custom-object-title">Tạo đối tượng tùy chỉnh</h2><p>Thêm tiện ích riêng theo mặt bằng của bạn.</p></div>
+          <div>
+            <h2 id="custom-object-title">Tạo đối tượng tùy chỉnh</h2>
+            <p>Thêm tiện ích riêng theo mặt bằng của bạn.</p>
+          </div>
         </div>
         <button type="button" (click)="closeCustomObjectCreator()" aria-label="Đóng"><lucide-icon name="x" /></button>
       </header>
@@ -630,8 +646,10 @@
           </div>
         </fieldset>
         <div class="custom-size-fields">
-          <label class="field"><span>Chiều rộng</span><input type="number" formControlName="width" min="90" max="800" /></label>
-          <label class="field"><span>Chiều cao</span><input type="number" formControlName="height" min="55" max="600" /></label>
+          <label class="field"><span>Chiều rộng</span><input type="number" formControlName="width" min="90"
+              max="800" /></label>
+          <label class="field"><span>Chiều cao</span><input type="number" formControlName="height" min="55"
+              max="600" /></label>
         </div>
         <footer>
           <button type="button" class="outline-button" (click)="closeCustomObjectCreator()">Hủy</button>

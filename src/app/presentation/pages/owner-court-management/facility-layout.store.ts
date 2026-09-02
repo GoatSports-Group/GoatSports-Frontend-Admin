@@ -32,8 +32,6 @@ export class FacilityLayoutStore {
       .map(item => item.id === 'facility:storage' && item.label === 'WC NỮ · P. TẮM'
         ? { ...item, label: 'P. TẮM', icon: 'droplets' }
         : item);
-    const placedCourtIds = new Set(currentItems.filter(item => item.type === 'COURT').map(item => item.courtId));
-    const missingCourts = fallback.items.filter(item => item.type === 'COURT' && !placedCourtIds.has(item.courtId));
     const hasLegacyCombinedBathroom = stored.items.some(item => item.id === 'facility:storage' && item.label === 'WC NỮ · P. TẮM');
     const missingFemaleBathroom = hasLegacyCombinedBathroom && !currentItems.some(item => item.id === 'facility:wc-female')
       ? fallback.items.filter(item => item.id === 'facility:wc-female')
@@ -42,7 +40,6 @@ export class FacilityLayoutStore {
       ...cloneFacilityLayout(stored),
       items: [
         ...currentItems,
-        ...missingCourts.map((item): FacilityLayoutItem => ({ ...item })),
         ...missingFemaleBathroom.map((item): FacilityLayoutItem => ({ ...item }))
       ],
       zones: Array.isArray(stored.zones) && stored.zones.length ? stored.zones.map(zone => ({ ...zone })) : fallback.zones
