@@ -104,6 +104,8 @@ describe('OwnerCourtManagementComponent', () => {
     expect(fixture.nativeElement.querySelectorAll('.court-object')).toHaveLength(2);
     expect(fixture.nativeElement.querySelectorAll('.facility-object')).toHaveLength(9);
     expect(fixture.nativeElement.querySelector('.court-detail')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.court-detail h2')?.textContent).toContain('Sân 01');
+    expect(fixture.nativeElement.querySelector('.court-detail > header > button')).toBeNull();
 
     fixture.componentInstance.selectCourt(savedCourt);
     fixture.detectChanges();
@@ -128,6 +130,8 @@ describe('OwnerCourtManagementComponent', () => {
     expect(component.draftLayout()!.items).toHaveLength(initialItemCount);
     component.saveLayout();
     expect(component.layoutMode()).toBe(false);
+    expect(component.panelMode()).toBe('DETAIL');
+    expect(component.selectedCourtId()).toBe('court-1');
     expect(notify.success).toHaveBeenCalledWith('Bố cục cơ sở đã được lưu trên thiết bị này.');
   });
 
@@ -210,5 +214,18 @@ describe('OwnerCourtManagementComponent', () => {
     expect(manageBookings.list).toHaveBeenCalledWith(expect.objectContaining({
       venueId: 'venue-1', venueCourtId: 'court-1', fromDate: '2030-05-10', toDate: '2030-05-10', page: 0, size: 20
     }));
+  });
+
+  it('mở date picker native khi nhấn vào toàn bộ bộ lọc ngày', () => {
+    manageCourts.list.mockReturnValue(of([savedCourt]));
+    const fixture = TestBed.createComponent(OwnerCourtManagementComponent);
+    fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('.booking-date-filter input') as HTMLInputElement;
+    const showPicker = vi.fn();
+    Object.defineProperty(input, 'showPicker', { configurable: true, value: showPicker });
+
+    fixture.componentInstance.openBookingDatePicker(new MouseEvent('click'));
+
+    expect(showPicker).toHaveBeenCalledOnce();
   });
 });

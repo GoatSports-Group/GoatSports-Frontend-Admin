@@ -142,6 +142,30 @@ select:focus-visible {
   grid-template-columns: minmax(0, 1fr) 315px;
 }
 
+.workspace-shell.has-map-detail {
+  grid-template-columns: minmax(0, 1fr) 315px;
+  column-gap: 10px;
+  align-items: start;
+}
+
+.workspace-shell.has-map-detail .workspace-primary {
+  display: contents;
+}
+
+.workspace-shell.has-map-detail .operations-toolbar {
+  grid-column: 1 / -1;
+  margin-top: 14px;
+}
+
+.workspace-shell.has-map-detail .map-meta-row {
+  grid-column: 1 / -1;
+}
+
+.workspace-shell.has-map-detail .facility-workspace {
+  grid-column: 1;
+  min-width: 0;
+}
+
 .workspace-primary {
   min-width: 0;
   padding-top: 14px;
@@ -153,6 +177,11 @@ select:focus-visible {
   gap: 9px;
   align-items: center;
   margin-bottom: 12px;
+}
+
+.operations-toolbar.has-booking-date {
+  grid-template-columns: minmax(180px, 220px) minmax(150px, 1fr) minmax(130px, 160px) minmax(145px, 180px) 142px auto;
+  gap: 9px;
 }
 
 .venue-select {
@@ -489,6 +518,7 @@ select:disabled {
 }
 
 .booking-date-filter {
+  position: relative;
   display: flex;
   height: 34px;
   flex: none;
@@ -499,6 +529,7 @@ select:disabled {
   border-radius: 8px;
   background: #fff;
   color: #53635b;
+  cursor: pointer;
 }
 
 .booking-date-filter:focus-within {
@@ -510,23 +541,47 @@ select:disabled {
   width: 14px;
   height: 14px;
   color: var(--green);
+  pointer-events: none;
 }
 
-.booking-date-filter>span {
-  font-size: 10px;
+.booking-date-filter__label {
+  font-size: 11px;
   font-weight: 700;
   white-space: nowrap;
 }
 
+.booking-date-filter__value {
+  color: #26372e;
+  font-size: 12px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .02em;
+  white-space: nowrap;
+}
+
 .booking-date-filter input {
-  width: 118px;
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
   border: 0;
   outline: 0;
-  background: transparent;
-  color: #26372e;
-  font: inherit;
-  font-size: 11px;
-  font-weight: 650;
+  opacity: 0;
+  pointer-events: none;
+  cursor: pointer;
+}
+
+.booking-date-filter--toolbar {
+  width: 100%;
+  height: 42px;
+  padding-inline: 7px;
+}
+
+.booking-date-filter--toolbar>span {
+  display: none;
 }
 
 .map-legend>span,
@@ -536,7 +591,7 @@ select:disabled {
   align-items: center;
   gap: 7px;
   color: #5d6d65;
-  font-size: 11px;
+  font-size: 12px;
   white-space: nowrap;
 }
 
@@ -634,7 +689,7 @@ select:disabled {
 .layout-mode-toolbar small {
   margin-top: 2px;
   color: #67766e;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 500;
 }
 
@@ -662,7 +717,7 @@ select:disabled {
   border-radius: 7px;
   background: transparent;
   color: #43534b;
-  font-size: 10px;
+  font-size: 11px;
   cursor: pointer;
 }
 
@@ -782,7 +837,7 @@ select:disabled {
   color: #fff;
   max-width: calc(100% - 12px);
   overflow: hidden;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 750;
   letter-spacing: .015em;
   text-overflow: ellipsis;
@@ -878,7 +933,7 @@ select:disabled {
 .court-object>strong {
   overflow: hidden;
   color: #24342c;
-  font-size: clamp(10px, .86vw, 12px);
+  font-size: clamp(12px, .9vw, 14px);
   line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -890,7 +945,7 @@ select:disabled {
   justify-content: center;
   gap: 5px;
   color: #4f815a;
-  font-size: clamp(8px, .72vw, 10px);
+  font-size: clamp(11px, .78vw, 12px);
   line-height: 1.15;
   white-space: nowrap;
 }
@@ -921,7 +976,7 @@ select:disabled {
 
 .court-object>small {
   color: #3b4942;
-  font-size: clamp(7px, .62vw, 9px);
+  font-size: clamp(11px, .74vw, 12px);
   font-variant-numeric: tabular-nums;
 }
 
@@ -963,7 +1018,7 @@ select:disabled {
   z-index: 2;
   overflow: hidden;
   max-width: 100%;
-  font-size: clamp(8px, .76vw, 11px);
+  font-size: clamp(11px, .82vw, 12px);
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1146,7 +1201,7 @@ select:disabled {
 
 .court-tooltip>strong {
   color: #223129;
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .court-tooltip>span {
@@ -1154,7 +1209,7 @@ select:disabled {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .court-tooltip>span:nth-child(2) {
@@ -1198,12 +1253,12 @@ select:disabled {
 .object-library>header strong,
 .layout-inspector>header strong {
   color: #314139;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .object-library>header small {
   color: #87928d;
-  font-size: 8px;
+  font-size: 11px;
   line-height: 1.35;
 }
 
@@ -1221,7 +1276,7 @@ select:disabled {
   border-radius: 6px;
   background: #fff;
   color: #4b5b53;
-  font-size: 9px;
+  font-size: 11px;
   text-align: left;
   cursor: grab;
 }
@@ -1258,13 +1313,13 @@ select:disabled {
 }
 
 .library-court span strong {
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .library-court span small {
   margin-top: 2px;
   color: #7b8982;
-  font-size: 7px;
+  font-size: 11px;
 }
 
 .object-library>p {
@@ -1276,7 +1331,7 @@ select:disabled {
   border-radius: 6px;
   background: #f6fbf8;
   color: #697870;
-  font-size: 8px;
+  font-size: 11px;
   line-height: 1.4;
 }
 
@@ -1297,7 +1352,7 @@ select:disabled {
   display: block;
   margin-bottom: 6px;
   color: #68776f;
-  font-size: 8px;
+  font-size: 11px;
   text-transform: uppercase;
 }
 
@@ -1326,7 +1381,7 @@ select:disabled {
   border-radius: 4px;
   background: #fff4df;
   color: #a76614;
-  font-size: 7px;
+  font-size: 11px;
   font-weight: 750;
 }
 
@@ -1361,13 +1416,13 @@ select:disabled {
 
 .inspector-summary strong {
   color: #2d3d35;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .inspector-summary small {
   margin-top: 2px;
   color: #89948e;
-  font-size: 8px;
+  font-size: 11px;
 }
 
 .inspector-fields {
@@ -1389,7 +1444,7 @@ select:disabled {
 
 .inspector-fields label>span {
   color: #66766e;
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 650;
 }
 
@@ -1402,7 +1457,7 @@ select:disabled {
   border-radius: 6px;
   outline: 0;
   color: #34443c;
-  font-size: 10px;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -1450,7 +1505,7 @@ select:disabled {
   border-radius: 7px;
   background: #fff;
   color: #4b5b53;
-  font-size: 9px;
+  font-size: 11px;
   cursor: pointer;
 }
 
@@ -1483,12 +1538,12 @@ select:disabled {
 
 .inspector-empty strong {
   color: #405048;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .inspector-empty p {
   margin: 0;
-  font-size: 8px;
+  font-size: 11px;
   line-height: 1.5;
 }
 
@@ -1496,9 +1551,52 @@ select:disabled {
   position: relative;
   z-index: 10;
   min-width: 0;
-  margin-top: -44px;
+  margin-top: 0;
   border-left: 1px solid var(--line);
   background: #fff;
+}
+
+.workspace-shell.has-map-detail .court-detail {
+  position: sticky;
+  top: 92px;
+  align-self: start;
+  max-height: calc(100vh - 108px);
+  grid-column: 2;
+  grid-row: 3;
+  margin: 0 0 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: #abc0b6 transparent;
+  scrollbar-width: thin;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(28, 54, 42, .06);
+}
+
+.workspace-shell.has-map-detail .court-detail::-webkit-scrollbar {
+  width: 6px;
+}
+
+.workspace-shell.has-map-detail .court-detail::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #abc0b6;
+}
+
+.workspace-shell.has-map-detail .court-detail>header {
+  position: sticky;
+  z-index: 4;
+  top: 0;
+  background: rgba(255, 255, 255, .97);
+  backdrop-filter: blur(8px);
+}
+
+.workspace-shell.has-map-detail .court-detail>.court-detail__footer {
+  position: sticky;
+  z-index: 3;
+  bottom: 0;
+  border-top: 1px solid var(--line-soft);
+  background: rgba(255, 255, 255, .97);
+  backdrop-filter: blur(8px);
 }
 
 .workspace-panel>header {
@@ -1550,7 +1648,7 @@ select:disabled {
   align-items: center;
   gap: 6px;
   color: #63736b;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 650;
   white-space: nowrap;
 }
@@ -1581,7 +1679,7 @@ select:disabled {
   display: block;
   overflow: hidden;
   color: #697870;
-  font-size: 10px;
+  font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1596,7 +1694,7 @@ select:disabled {
 .court-detail__identity>div:nth-child(2) small {
   margin-left: 2px;
   color: #7d8a83;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 500;
 }
 
@@ -1610,7 +1708,7 @@ select:disabled {
   border-radius: 7px;
   background: #fff;
   color: #4f6057;
-  font-size: 10px;
+  font-size: 12px;
   cursor: pointer;
 }
 
@@ -1636,7 +1734,7 @@ select:disabled {
   padding: 16px;
   border-bottom: 1px solid var(--line-soft);
   color: #65756d;
-  font-size: 10px;
+  font-size: 12px;
   text-align: center;
 }
 
@@ -1662,7 +1760,7 @@ select:disabled {
   border-radius: 6px;
   background: #fff;
   color: #a23f39;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -1680,14 +1778,14 @@ select:disabled {
 .today-schedule header span,
 .quick-actions h3 {
   color: #78867f;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 
 .booking-now header strong,
 .today-schedule header strong {
   color: #4d5d55;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .booking-now>div,
@@ -1709,7 +1807,7 @@ select:disabled {
 .booking-now>div span,
 .next-booking>div span {
   color: #63736b;
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .booking-now>p {
@@ -1745,20 +1843,20 @@ select:disabled {
 
 .booking-now--empty strong {
   color: #355c49;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .booking-now--empty span {
   margin-top: 2px;
   color: #7b8982;
-  font-size: 8px;
+  font-size: 11px;
 }
 
 .next-booking>p,
 .today-schedule>p {
   margin: 8px 0 0;
   color: #87938d;
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .today-schedule article {
@@ -1783,14 +1881,14 @@ select:disabled {
 
 .today-schedule article strong {
   color: #46564e;
-  font-size: 9px;
+  font-size: 11px;
   font-variant-numeric: tabular-nums;
 }
 
 .today-schedule article span {
   overflow: hidden;
   color: #78867f;
-  font-size: 9px;
+  font-size: 11px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1817,7 +1915,7 @@ select:disabled {
   border-radius: 7px;
   background: #fff;
   color: #3e6452;
-  font-size: 9px;
+  font-size: 11px;
   text-align: center;
   text-decoration: none;
   cursor: pointer;
@@ -1846,7 +1944,7 @@ select:disabled {
   border-bottom: 1px solid var(--line);
   background: #fff;
   color: var(--green);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 750;
   cursor: pointer;
 }
@@ -1875,7 +1973,7 @@ select:disabled {
 .court-editor h3 {
   margin: 0 0 2px;
   color: #405149;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .field {
@@ -1885,7 +1983,7 @@ select:disabled {
 
 .field>span {
   color: #506058;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
 }
 
@@ -1904,7 +2002,7 @@ select:disabled {
   outline: 0;
   background: #fff;
   color: #314139;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .field input:focus,
@@ -1920,7 +2018,7 @@ select:disabled {
 
 .field small {
   color: #c74641;
-  font-size: 8px;
+  font-size: 11px;
   line-height: 1.4;
 }
 
@@ -1941,7 +2039,7 @@ select:disabled {
   top: 50%;
   right: 10px;
   color: #8d9892;
-  font-size: 8px;
+  font-size: 11px;
   transform: translateY(-50%);
 }
 
@@ -1982,13 +2080,13 @@ select:disabled {
 
 .status-editor span strong {
   color: #53635b;
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .status-editor span small {
   margin-top: 3px;
   color: #919c96;
-  font-size: 8px;
+  font-size: 11px;
 }
 
 .court-editor form>footer {
@@ -2027,7 +2125,7 @@ select:disabled {
 .list-overview span {
   display: block;
   color: #78867f;
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .list-overview strong {
@@ -2059,7 +2157,7 @@ select:disabled {
   border-bottom: 1px solid var(--line);
   background: #eef6f1;
   color: #5b6a62;
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
 }
@@ -2081,7 +2179,7 @@ select:disabled {
   padding: 6px 12px;
   border-bottom: 1px solid var(--line-soft);
   color: #53635b;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .court-row:hover {
@@ -2131,13 +2229,13 @@ select:disabled {
 
 .court-identity strong {
   color: #2c3c34;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .court-identity small {
   margin-top: 2px;
   color: #87938d;
-  font-size: 8px;
+  font-size: 11px;
 }
 
 .court-actions {
@@ -2189,7 +2287,7 @@ select:disabled {
   border-radius: 5px;
   background: transparent;
   color: #a84843;
-  font-size: 9px;
+  font-size: 11px;
   cursor: pointer;
 }
 
@@ -2205,7 +2303,7 @@ select:disabled {
   gap: 12px;
   padding: 8px 12px;
   color: #78867f;
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .court-table__footer>div {
@@ -2247,7 +2345,7 @@ select:disabled {
   align-content: center;
   gap: 6px;
   color: #7c8982;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .court-table__no-result lucide-icon {
@@ -2268,7 +2366,7 @@ select:disabled {
   align-content: center;
   gap: 10px;
   color: #75837c;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .pricing-intro {
@@ -2291,7 +2389,7 @@ select:disabled {
   max-width: 650px;
   margin: 5px 0 0;
   color: #728078;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.5;
 }
 
@@ -2303,7 +2401,7 @@ select:disabled {
 .pricing-intro>div:last-child span {
   display: block;
   color: #7b8881;
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .pricing-intro>div:last-child strong {
@@ -2330,7 +2428,7 @@ select:disabled {
 .type-table>header {
   min-height: 40px;
   color: #77857e;
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
 }
@@ -2339,12 +2437,12 @@ select:disabled {
   min-height: 58px;
   border-top: 1px solid var(--line-soft);
   color: #596960;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .type-table>article strong {
   color: #2c3c34;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .type-table>article a {
@@ -2353,7 +2451,7 @@ select:disabled {
   justify-content: flex-end;
   gap: 5px;
   color: var(--green);
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   text-decoration: none;
 }
@@ -2367,7 +2465,7 @@ select:disabled {
   padding: 50px 15px;
   border-top: 1px solid var(--line-soft);
   color: #7e8b84;
-  font-size: 11px;
+  font-size: 12px;
   text-align: center;
 }
 
@@ -2529,6 +2627,11 @@ select:disabled {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .workspace-shell.has-map-detail {
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: 0;
+  }
+
   .workspace-panel {
     position: fixed;
     z-index: 25;
@@ -2541,6 +2644,35 @@ select:disabled {
     border: 1px solid var(--line);
     border-radius: 12px;
     box-shadow: 0 18px 50px rgba(23, 45, 35, .2);
+  }
+
+  .workspace-shell.has-map-detail .court-detail {
+    position: relative;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    grid-column: 1;
+    grid-row: auto;
+    width: 100%;
+    max-height: none;
+    margin: 12px 0 0;
+    overflow: hidden;
+  }
+
+  .operations-toolbar.has-booking-date {
+    grid-template-columns: 125px minmax(80px, 1fr) 100px 110px 140px 42px;
+    gap: 6px;
+  }
+
+  .operations-toolbar.has-booking-date .booking-date-filter>span,
+  .operations-toolbar.has-booking-date .edit-layout-button>span {
+    display: none;
+  }
+
+  .operations-toolbar.has-booking-date .edit-layout-button {
+    width: 42px;
+    min-width: 42px;
+    padding: 0;
   }
 
   .operations-toolbar {
@@ -2659,6 +2791,10 @@ select:disabled {
     gap: 7px;
   }
 
+  .operations-toolbar.has-booking-date {
+    grid-template-columns: minmax(0, 1fr) 44px;
+  }
+
   .venue-select {
     grid-column: 1 / -1;
   }
@@ -2683,6 +2819,20 @@ select:disabled {
   .operations-toolbar>.outline-button {
     grid-column: 1 / -1;
     min-height: 44px;
+  }
+
+  .booking-date-filter--toolbar {
+    grid-column: 1 / -1;
+    min-height: 44px;
+  }
+
+  .operations-toolbar.has-booking-date .booking-date-filter>span,
+  .operations-toolbar.has-booking-date .edit-layout-button>span {
+    display: inline;
+  }
+
+  .operations-toolbar.has-booking-date .edit-layout-button {
+    width: 100%;
   }
 
   .map-legend {
@@ -2721,6 +2871,18 @@ select:disabled {
     width: 100%;
     max-height: 84dvh;
     border-radius: 16px 16px 0 0;
+  }
+
+  .workspace-shell.has-map-detail .court-detail {
+    position: relative;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    width: 100%;
+    max-height: none;
+    margin-top: 12px;
+    border-radius: 10px;
   }
 
   .workspace-panel>header {

@@ -34,9 +34,11 @@
       </button>
     </nav>
 
-    <section class="workspace-shell" [class.has-panel]="panelMode() !== 'NONE'">
+    <section class="workspace-shell"
+      [class.has-panel]="panelMode() !== 'NONE'"
+      [class.has-map-detail]="activeView() === 'MAP' && panelMode() === 'DETAIL'">
       <div class="workspace-primary">
-        <div class="operations-toolbar">
+        <div class="operations-toolbar" [class.has-booking-date]="activeView() === 'MAP' && !layoutMode()">
           <div class="venue-select" (click)="$event.stopPropagation()">
             <button type="button" class="venue-select__trigger"
               (click)="toggleVenueMenu()"
@@ -110,8 +112,17 @@
           </div>
 
           @if (activeView() === 'MAP' && !layoutMode()) {
+            <label class="booking-date-filter booking-date-filter--toolbar" role="button" tabindex="0"
+              aria-label="Chọn ngày xem booking" (click)="openBookingDatePicker($event)"
+              (keydown.enter)="openBookingDatePicker($event)" (keydown.space)="openBookingDatePicker($event)">
+              <lucide-icon name="calendar" />
+              <span class="booking-date-filter__label">Ngày xem lịch</span>
+              <strong class="booking-date-filter__value">{{ bookingDateLabel() }}</strong>
+              <input #bookingDateInput type="date" tabindex="-1" [value]="selectedBookingDate()"
+                (click)="$event.stopPropagation()" (change)="changeBookingDate($event)" aria-label="Chọn ngày xem booking" />
+            </label>
             <button type="button" class="outline-button edit-layout-button" (click)="enterLayoutMode()">
-              <lucide-icon name="layout-grid" /> Chỉnh bố cục
+              <lucide-icon name="layout-grid" /> <span>Chỉnh bố cục</span>
             </button>
           } @else if (activeView() === 'LIST') {
             <button type="button" class="primary-button" (click)="openCreate()">
@@ -156,11 +167,6 @@
                 @if (bookingError()) {
                   <span class="sync-state sync-state--warning"><lucide-icon name="alert-triangle" /> {{ bookingError() }}</span>
                 }
-                <label class="booking-date-filter">
-                  <lucide-icon name="calendar" />
-                  <span>Ngày xem lịch</span>
-                  <input type="date" [value]="selectedBookingDate()" (change)="changeBookingDate($event)" aria-label="Chọn ngày xem booking" />
-                </label>
               </div>
             </div>
           }
@@ -404,7 +410,6 @@
         <aside class="workspace-panel court-detail" aria-labelledby="court-detail-title">
           <header>
             <div><h2 id="court-detail-title">{{ court.name }}</h2><span class="table-status" [attr.data-status]="operationalStatus(court)"><i></i>{{ operationalLabel(court) }}</span></div>
-            <button type="button" (click)="closePanel()" aria-label="Đóng chi tiết sân"><lucide-icon name="x" /></button>
           </header>
           <section class="court-detail__identity">
             <div class="detail-court-visual"><app-court-floor-marking [sportType]="court.sportType" /></div>

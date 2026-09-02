@@ -92,6 +92,7 @@ export class OwnerCourtManagementComponent {
   private readonly destroyRef = inject(DestroyRef);
 
   @ViewChild('facilityCanvas') private facilityCanvas?: ElementRef<HTMLElement>;
+  @ViewChild('bookingDateInput') private bookingDateInput?: ElementRef<HTMLInputElement>;
 
   readonly canvasWidth = FACILITY_CANVAS_WIDTH;
   readonly canvasHeight = FACILITY_CANVAS_HEIGHT;
@@ -440,6 +441,20 @@ export class OwnerCourtManagementComponent {
     }
   }
 
+  openBookingDatePicker(event: Event): void {
+    event.preventDefault();
+    const input = this.bookingDateInput?.nativeElement;
+    if (!input) return;
+
+    input.focus({ preventScroll: true });
+    try {
+      if (typeof input.showPicker === 'function') input.showPicker();
+      else input.click();
+    } catch {
+      input.focus({ preventScroll: true });
+    }
+  }
+
   openCreate(): void {
     if (this.saving()) return;
     this.editingCourt.set(null);
@@ -483,7 +498,12 @@ export class OwnerCourtManagementComponent {
   closeEditor(): void {
     if (this.saving()) return;
     this.editingCourt.set(null);
-    this.panelMode.set(this.selectedCourt() ? 'DETAIL' : 'NONE');
+    if (this.selectedCourt()) {
+      this.panelMode.set('DETAIL');
+    } else {
+      this.panelMode.set('NONE');
+      this.openDefaultCourtDetail();
+    }
   }
 
   submit(): void {
@@ -512,6 +532,7 @@ export class OwnerCourtManagementComponent {
         this.selectedCourtId.set(saved.venueCourtId);
         this.editingCourt.set(null);
         this.panelMode.set('DETAIL');
+        this.loadCourtBookings(saved.venueCourtId, true);
         this.notify.success(editing ? 'Sân thi đấu đã được cập nhật.' : 'Sân thi đấu đã được tạo.');
       },
       error: error => this.notify.error(this.errorMessage(error, 'Không thể lưu sân thi đấu.'))
@@ -567,6 +588,7 @@ export class OwnerCourtManagementComponent {
     this.layoutHistory.set([]);
     this.layoutFuture.set([]);
     this.selectedLayoutItemId.set(null);
+    this.openDefaultCourtDetail();
     return true;
   }
 
@@ -582,6 +604,7 @@ export class OwnerCourtManagementComponent {
       this.layoutHistory.set([]);
       this.layoutFuture.set([]);
       this.selectedLayoutItemId.set(null);
+      this.openDefaultCourtDetail();
       this.notify.success('Bố cục cơ sở đã được lưu trên thiết bị này.');
     } catch {
       this.notify.error('Không thể lưu bố cục trên thiết bị. Vui lòng thử lại.');
@@ -978,7 +1001,6 @@ export class OwnerCourtManagementComponent {
     this.filterOpen.set(false);
     this.actionMenuId.set(null);
     if (this.editorOpen()) this.closeEditor();
-    else if (this.panelMode() === 'DETAIL') this.closePanel();
   }
 
   @HostListener('document:click')
@@ -1100,10 +1122,7 @@ export class OwnerCourtManagementComponent {
     const bookingContext = venueId ? this.bookingContext(venueId, this.selectedBookingDate()) : null;
     if (!venueId || this.courtsReadyForVenue !== venueId || this.bookingsReadyContext !== bookingContext) return;
     if (this.activeView() !== 'MAP' || this.layoutMode() || this.panelMode() !== 'NONE' || !this.courts().length) return;
-    if (typeof window !== 'undefined' && window.innerWidth < 768) return;
-
-    const occupiedCourt = this.courts().find(court => this.currentBooking(court.venueCourtId));
-    this.selectCourt(occupiedCourt ?? this.courts()[0]);
+    this.selectCourt(this.courts()[0]);
   }
 
   private toRequest(): OwnerVenueCourtUpsert {

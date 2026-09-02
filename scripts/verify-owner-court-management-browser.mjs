@@ -126,6 +126,7 @@ async function verifyViewport(cdp, name, width, height) {
   await cdp.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 600 });
   await cdp.send('Page.navigate', { url: `http://127.0.0.1:${WEB_PORT}/admin/courts` });
   await waitFor(cdp, "document.querySelectorAll('.court-object').length === 8");
+  await waitFor(cdp, "!!document.querySelector('.court-detail h2')");
   const initial = await evaluate(cdp, `(() => ({
     route: location.pathname,
     title: document.querySelector('.page-heading h1')?.textContent?.trim(),
@@ -134,6 +135,11 @@ async function verifyViewport(cdp, name, width, height) {
     zones: document.querySelectorAll('.facility-zone').length,
     tabs: document.querySelectorAll('.workspace-tabs button').length,
     floatingMapControls: document.querySelectorAll('.map-controls').length,
+    initialDetailTitle: document.querySelector('.court-detail h2')?.textContent?.trim(),
+    detailCloseButtonCount: document.querySelectorAll('.court-detail > header > button').length,
+    dateFilterInline: Math.abs(document.querySelector('.booking-date-filter--toolbar').getBoundingClientRect().top - document.querySelector('.venue-select__trigger').getBoundingClientRect().top) < 2,
+    dateNativeInputOpacity: getComputedStyle(document.querySelector('.booking-date-filter--toolbar input')).opacity,
+    dateVisibleValue: document.querySelector('.booking-date-filter__value')?.textContent?.trim(),
     horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
     workspaceWidth: Math.round(document.querySelector('.workspace-shell').getBoundingClientRect().width)
   }))()`);
@@ -178,6 +184,9 @@ async function verifyViewport(cdp, name, width, height) {
     detailTitle: document.querySelector('.court-detail h2')?.textContent?.trim(),
     operationalStatusVisible: document.querySelector('.court-detail')?.innerText.includes('Đang sử dụng'),
     panelWithinViewport: document.querySelector('.court-detail').getBoundingClientRect().right <= innerWidth,
+    panelOverflow: getComputedStyle(document.querySelector('.court-detail')).overflowY,
+    stickyHeader: getComputedStyle(document.querySelector('.court-detail > header')).position,
+    stickyFooter: getComputedStyle(document.querySelector('.court-detail__footer')).position,
     bodyHorizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth
   }))()`);
   const screenshot = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
@@ -185,7 +194,7 @@ async function verifyViewport(cdp, name, width, height) {
   writeFileSync(screenshotPath, Buffer.from(screenshot.data, 'base64'));
   let editMode = null;
   if (width >= 768) {
-    await evaluate(cdp, "document.querySelector('.court-detail > header > button').click(); document.querySelector('.edit-layout-button').click()");
+    await evaluate(cdp, "document.querySelector('.edit-layout-button').click()");
     await waitFor(cdp, "!!document.querySelector('.facility-workspace.is-editing')");
     editMode = await evaluate(cdp, `(() => ({
       layoutMode: !!document.querySelector('.facility-workspace.is-editing'),
@@ -240,5 +249,6 @@ try {
     try { execFileSync('taskkill.exe', ['/pid', String(process.pid), '/t', '/f'], { stdio: 'ignore' }); }
     catch { /* already exited */ }
   }
-  rmSync(profileDir, { recursive: true, force: true });
+  try { rmSync(profileDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }); }
+  catch { /* Windows may release the temporary Chrome profile shortly after process exit. */ }
 }
