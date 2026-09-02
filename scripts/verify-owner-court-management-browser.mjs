@@ -133,6 +133,7 @@ async function verifyViewport(cdp, name, width, height) {
     facilities: document.querySelectorAll('.facility-object').length,
     zones: document.querySelectorAll('.facility-zone').length,
     tabs: document.querySelectorAll('.workspace-tabs button').length,
+    floatingMapControls: document.querySelectorAll('.map-controls').length,
     horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
     workspaceWidth: Math.round(document.querySelector('.workspace-shell').getBoundingClientRect().width)
   }))()`);

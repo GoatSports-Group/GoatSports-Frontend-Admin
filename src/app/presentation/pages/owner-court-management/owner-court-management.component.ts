@@ -153,7 +153,6 @@ export class OwnerCourtManagementComponent {
   readonly actionMenuId = signal<string | null>(null);
   readonly page = signal(1);
   readonly pageSize = 8;
-  readonly zoom = signal(1);
   readonly sortKey = signal<'NAME' | 'STATUS' | 'PRICE'>('NAME');
   readonly sortDirection = signal<'ASC' | 'DESC'>('ASC');
 
@@ -699,10 +698,6 @@ export class OwnerCourtManagementComponent {
     });
     this.layoutDirty.set(true);
   }
-
-  zoomIn(): void { this.zoom.update(value => Math.min(1.4, +(value + .1).toFixed(1))); }
-  zoomOut(): void { this.zoom.update(value => Math.max(.7, +(value - .1).toFixed(1))); }
-  fitMap(): void { this.zoom.set(1); }
 
   courtForItem(item: FacilityLayoutItem): OwnerVenueCourt | null {
     return this.courts().find(court => court.venueCourtId === item.courtId) ?? null;

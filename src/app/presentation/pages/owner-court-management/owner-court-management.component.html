@@ -1,7 +1,7 @@
 <main class="courts-page" aria-labelledby="courts-page-title">
   <header class="page-heading">
     <h1 id="courts-page-title">Sân thi đấu</h1>
-    <p>Quan sát toàn bộ cơ sở, trạng thái sân và lịch vận hành trong một không gian trực quan.</p>
+    <p>Quản lý danh sách sân, tình trạng và thông tin chi tiết của từng sân trong cơ sở.</p>
   </header>
 
   @if (loading()) {
@@ -127,12 +127,8 @@
                   <span [attr.data-status]="item.value"><i></i>{{ item.label }}</span>
                 }
               </div>
-              @if (bookingLoading()) {
-                <span class="sync-state"><span class="mini-spinner"></span> Đang đồng bộ lịch hôm nay</span>
-              } @else if (bookingError()) {
+              @if (bookingError()) {
                 <span class="sync-state sync-state--warning"><lucide-icon name="alert-triangle" /> {{ bookingError() }}</span>
-              } @else {
-                <span class="sync-state"><lucide-icon name="check-circle" /> Đã cập nhật lịch hôm nay</span>
               }
             </div>
           }
@@ -184,7 +180,7 @@
               <div class="facility-stage">
                 <div class="facility-scroll">
                   <section #facilityCanvas class="facility-canvas" aria-label="Sơ đồ cơ sở thể thao"
-                    [style.transform]="'scale(' + zoom() + ')'" (click)="clearLayoutSelection()"
+                    (click)="clearLayoutSelection()"
                     (dragover)="allowLayoutDrop($event)" (drop)="dropLibraryItem($event)">
                     @for (zone of displayLayout()?.zones ?? []; track zone.id) {
                       <div class="facility-zone"
@@ -253,12 +249,6 @@
                   </section>
                 </div>
 
-                <div class="map-controls" aria-label="Điều khiển sơ đồ">
-                  <button type="button" (click)="zoomIn()" aria-label="Phóng to">+</button>
-                  <button type="button" (click)="zoomOut()" aria-label="Thu nhỏ">−</button>
-                  <button type="button" (click)="fitMap()" aria-label="Vừa màn hình"><lucide-icon name="layout-grid" /></button>
-                  <span>{{ (zoom() * 100).toFixed(0) }}%</span>
-                </div>
               </div>
 
               @if (layoutMode()) {
