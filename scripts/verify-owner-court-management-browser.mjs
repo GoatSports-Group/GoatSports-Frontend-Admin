@@ -31,6 +31,26 @@ const courts = [
 ].map(([venueCourtId, name, sportType, capacity, surfaceType, active, availabilityStatus]) => ({
   venueCourtId, venueId: 'venue-1', name, sportType, capacity, surfaceType, active, availabilityStatus
 }));
+const today = new Date().toLocaleDateString('en-CA');
+const minutesNow = new Date().getHours() * 60 + new Date().getMinutes();
+const toTime = minutes => {
+  const normalized = Math.max(0, Math.min(1439, minutes));
+  return `${String(Math.floor(normalized / 60)).padStart(2, '0')}:${String(normalized % 60).padStart(2, '0')}:00`;
+};
+const bookings = [
+  {
+    bookingId: 'booking-current', venueId: 'venue-1', venueCourtId: 'court-02', venueName: 'The Goat Arena',
+    courtName: 'Sân 02', playDate: today, startTime: toTime(minutesNow - 25), endTime: toTime(minutesNow + 35), status: 'CHECKED_IN',
+    source: 'WALK_IN', totalPrice: 320000, depositAmount: 0, remainingAmount: 320000,
+    bookingCode: 'GS-CURRENT', walkInCustomerName: 'Anh Duy', createdAt: new Date().toISOString(), payments: [], allowedTransitions: ['COMPLETED']
+  },
+  {
+    bookingId: 'booking-next', venueId: 'venue-1', venueCourtId: 'court-03', venueName: 'The Goat Arena',
+    courtName: 'Sân 03', playDate: today, startTime: toTime(minutesNow + 55), endTime: toTime(minutesNow + 115), status: 'CONFIRMED',
+    source: 'DIRECT', totalPrice: 160000, depositAmount: 48000, remainingAmount: 112000,
+    bookingCode: 'GS-NEXT', createdAt: new Date().toISOString(), payments: [], allowedTransitions: ['CHECKED_IN']
+  }
+];
 
 function responseFor(request) {
   const url = new URL(request.url, `http://localhost:${API_PORT}`);
@@ -38,6 +58,9 @@ function responseFor(request) {
   if (url.pathname === '/venue-service/api/v1/owner/venues') return ok(venues);
   if (url.pathname === '/venue-service/api/v1/owner/venues/venue-1/courts') return ok(courts);
   if (url.pathname === '/venue-service/api/v1/owner/venues/venue-2/courts') return ok([]);
+  if (url.pathname === '/venue-service/api/v1/owner/bookings') {
+    return ok({ meta: { page: 0, pageSize: 200, pages: 1, total: bookings.length }, result: bookings });
+  }
   return ok([]);
 }
 
@@ -102,28 +125,46 @@ async function waitFor(cdp, expression, timeout = 20000) {
 async function verifyViewport(cdp, name, width, height) {
   await cdp.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 600 });
   await cdp.send('Page.navigate', { url: `http://127.0.0.1:${WEB_PORT}/admin/courts` });
-  await waitFor(cdp, "document.querySelectorAll('.court-row').length === 8");
+  await waitFor(cdp, "document.querySelectorAll('.court-object').length === 8");
   const initial = await evaluate(cdp, `(() => ({
     route: location.pathname,
     title: document.querySelector('.page-heading h1')?.textContent?.trim(),
-    rows: document.querySelectorAll('.court-row').length,
-    metrics: document.querySelectorAll('.metric-strip article').length,
+    courts: document.querySelectorAll('.court-object').length,
+    facilities: document.querySelectorAll('.facility-object').length,
+    zones: document.querySelectorAll('.facility-zone').length,
+    tabs: document.querySelectorAll('.workspace-tabs button').length,
     horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
-    sidebarPresent: !!document.querySelector('aside.sidebar, .sidebar, app-admin-sidebar'),
-    workspaceWidth: Math.round(document.querySelector('.court-workspace').getBoundingClientRect().width)
+    workspaceWidth: Math.round(document.querySelector('.workspace-shell').getBoundingClientRect().width)
   }))()`);
-  await evaluate(cdp, "document.querySelector('.court-row .icon-button').click()");
-  await waitFor(cdp, "!!document.querySelector('.court-editor')");
-  const editor = await evaluate(cdp, `(() => ({
-    editorOpen: !!document.querySelector('.court-editor'),
-    editorTitle: document.querySelector('.court-editor h2')?.textContent?.trim(),
-    editorWithinViewport: document.querySelector('.court-editor').getBoundingClientRect().right <= innerWidth,
+  await evaluate(cdp, "document.querySelectorAll('.court-object')[1].click()");
+  await waitFor(cdp, "!!document.querySelector('.court-detail')");
+  const detail = await evaluate(cdp, `(() => ({
+    detailOpen: !!document.querySelector('.court-detail'),
+    detailTitle: document.querySelector('.court-detail h2')?.textContent?.trim(),
+    operationalStatusVisible: document.querySelector('.court-detail')?.innerText.includes('Đang sử dụng'),
+    panelWithinViewport: document.querySelector('.court-detail').getBoundingClientRect().right <= innerWidth,
     bodyHorizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth
   }))()`);
   const screenshot = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
-  const screenshotPath = join(tmpdir(), `goatsports-owner-courts-${name}.png`);
+  const screenshotPath = join(tmpdir(), `goatsports-owner-courts-map-${name}.png`);
   writeFileSync(screenshotPath, Buffer.from(screenshot.data, 'base64'));
-  return { viewport: `${width}x${height}`, ...initial, ...editor, screenshotPath };
+  let editMode = null;
+  if (width >= 768) {
+    await evaluate(cdp, "document.querySelector('.court-detail > header > button').click(); document.querySelector('.edit-layout-button').click()");
+    await waitFor(cdp, "!!document.querySelector('.facility-workspace.is-editing')");
+    editMode = await evaluate(cdp, `(() => ({
+      layoutMode: !!document.querySelector('.facility-workspace.is-editing'),
+      libraryItems: document.querySelectorAll('.object-library > button').length,
+      inspectorVisible: !!document.querySelector('.layout-inspector'),
+      saveDisabledInitially: document.querySelector('.save-layout-button')?.disabled,
+      editHorizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth
+    }))()`);
+    const editScreenshot = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
+    const editScreenshotPath = join(tmpdir(), `goatsports-owner-courts-edit-${name}.png`);
+    writeFileSync(editScreenshotPath, Buffer.from(editScreenshot.data, 'base64'));
+    editMode.editScreenshotPath = editScreenshotPath;
+  }
+  return { viewport: `${width}x${height}`, ...initial, ...detail, screenshotPath, editMode };
 }
 
 let angularProcess;
