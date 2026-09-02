@@ -245,13 +245,30 @@ async function verifyViewport(cdp, name, width, height) {
     Object.assign(editMode, await evaluate(cdp, `(() => ({
       addedZoneSelected: !!document.querySelector('.facility-zone-border.is-selected'),
       zoneResizeHandleVisible: !!document.querySelector('.facility-zone-border.is-selected .zone-resize-handle'),
+      zoneResizeHandleCount: document.querySelectorAll('.facility-zone-border.is-selected .zone-resize-handle').length,
+      horizontalZoneResizeHandleVisible: !!document.querySelector('.facility-zone-border.is-selected .zone-resize-handle--width'),
+      verticalZoneResizeHandleVisible: !!document.querySelector('.facility-zone-border.is-selected .zone-resize-handle--height'),
       expandedCanvas: document.querySelector('.facility-canvas').scrollWidth > document.querySelector('.facility-stage').clientWidth,
       zoneInspectorVisible: document.querySelector('.layout-inspector')?.innerText.includes('Khu vực cơ sở'),
       zoneCountAfterAdd: document.querySelectorAll('.facility-zone').length
     }))()`));
+    const resizeBefore = await evaluate(cdp, "document.querySelector('.facility-zone-border.is-selected').getBoundingClientRect().width");
+    await evaluate(cdp, `(() => {
+      const handle = document.querySelector('.facility-zone-border.is-selected .zone-resize-handle--width');
+      const rect = handle.getBoundingClientRect();
+      const options = { bubbles: true, pointerId: 1, pointerType: 'mouse', button: 0, clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2 };
+      handle.dispatchEvent(new PointerEvent('pointerdown', options));
+      document.dispatchEvent(new PointerEvent('pointermove', { ...options, clientX: options.clientX + 80 }));
+      document.dispatchEvent(new PointerEvent('pointerup', { ...options, clientX: options.clientX + 80 }));
+    })()`);
+    await delay(100);
+    Object.assign(editMode, await evaluate(cdp, `(() => ({
+      horizontalResizeWorked: document.querySelector('.facility-zone-border.is-selected').getBoundingClientRect().width > ${resizeBefore},
+      interactionStateCleared: !document.querySelector('.facility-workspace').classList.contains('is-interacting')
+    }))()`));
     await evaluate(cdp, `(() => {
       const button = [...document.querySelectorAll('.object-library > button')]
-        .find(item => item.textContent.includes('Tiện ích khác'));
+        .find(item => item.textContent.includes('Tiện ích'));
       button?.click();
     })()`);
     await waitFor(cdp, "!!document.querySelector('.custom-object-dialog')");

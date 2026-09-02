@@ -200,7 +200,8 @@
           tiên</button>
       </section>
       } @else {
-      <div class="facility-workspace" [class.is-editing]="layoutMode()" [class.is-saving]="layoutSaving()">
+      <div class="facility-workspace" [class.is-editing]="layoutMode()" [class.is-saving]="layoutSaving()"
+        [class.is-interacting]="layoutInteracting()">
         @if (layoutMode()) {
         <div class="layout-side-stack">
           @if (unplacedCourts().length) {
@@ -219,18 +220,18 @@
             }
           </aside>
           }
-        <aside class="object-library" aria-label="Thư viện đối tượng">
-          <header><strong>Thư viện đối tượng</strong></header>
-          <button type="button" class="library-court" (click)="openCreate()">
-            <lucide-icon name="land-plot" /><span><strong>Tạo sân</strong></span><lucide-icon name="plus" />
-          </button>
-          @for (item of layoutLibrary; track item.type) {
-          <button type="button" [draggable]="item.type !== 'CUSTOM'" (dragstart)="beginLibraryDrag($event, item.type)"
-            (click)="addFacility(item.type)">
-            <lucide-icon [name]="item.icon" /><span>{{ item.label }}</span><lucide-icon name="grip-vertical" />
-          </button>
-          }
-        </aside>
+          <aside class="object-library" aria-label="Thư viện đối tượng">
+            <header><strong>Thư viện đối tượng</strong></header>
+            @for (item of layoutLibrary; track item.type) {
+            <button type="button" [draggable]="item.type !== 'CUSTOM'" (dragstart)="beginLibraryDrag($event, item.type)"
+              (click)="addFacility(item.type)">
+              <lucide-icon [name]="item.icon" /><span>{{ item.label }}</span>
+              @if(item.type !== 'CUSTOM') {
+              <lucide-icon name="grip-vertical" />
+              }
+            </button>
+            }
+          </aside>
         </div>
         }
 
@@ -321,7 +322,12 @@
                 [style.left.%]="itemPercent(zone.x, 'x')" [style.top.%]="itemPercent(zone.y, 'y')"
                 [style.width.%]="itemPercent(zone.width, 'x')" [style.height.%]="itemPercent(zone.height, 'y')">
                 @if (layoutMode() && selectedLayoutZoneId() === zone.id) {
-                <i class="zone-resize-handle" (pointerdown)="beginZonePointerOperation($event, zone, 'RESIZE')"></i>
+                <i class="zone-resize-handle zone-resize-handle--width"
+                  (pointerdown)="beginZonePointerOperation($event, zone, 'RESIZE', 'X')"></i>
+                <i class="zone-resize-handle zone-resize-handle--height"
+                  (pointerdown)="beginZonePointerOperation($event, zone, 'RESIZE', 'Y')"></i>
+                <i class="zone-resize-handle zone-resize-handle--both"
+                  (pointerdown)="beginZonePointerOperation($event, zone, 'RESIZE', 'BOTH')"></i>
                 }
               </div>
               }

@@ -225,7 +225,9 @@ describe('OwnerCourtManagementComponent', () => {
     expect(zone).toBeTruthy();
     expect(component.draftLayout()!.zones).toHaveLength(3);
     expect(component.canvasWidth()).toBeGreaterThan(component.baseCanvasWidth);
-    expect(fixture.nativeElement.querySelector('.facility-zone-border.is-selected .zone-resize-handle')).toBeTruthy();
+    expect(fixture.nativeElement.querySelectorAll('.facility-zone-border.is-selected .zone-resize-handle')).toHaveLength(3);
+    expect(fixture.nativeElement.querySelector('.zone-resize-handle--width')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.zone-resize-handle--height')).toBeTruthy();
     const canvas = fixture.nativeElement.querySelector('.facility-canvas') as HTMLElement;
     vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({ width: 1200, height: 700 } as DOMRect);
 
@@ -239,12 +241,15 @@ describe('OwnerCourtManagementComponent', () => {
 
     const movedZone = component.selectedLayoutZone()!;
     const initialWidth = movedZone.width;
+    const initialHeight = movedZone.height;
     component.beginZonePointerOperation({
       button: 0, clientX: 0, clientY: 0, preventDefault: vi.fn(), stopPropagation: vi.fn()
-    } as unknown as PointerEvent, movedZone, 'RESIZE');
+    } as unknown as PointerEvent, movedZone, 'RESIZE', 'X');
     component.handlePointerMove({ clientX: 20, clientY: 20 } as PointerEvent);
     component.handlePointerUp();
     expect(component.selectedLayoutZone()!.width).toBeGreaterThan(initialWidth);
+    expect(component.selectedLayoutZone()!.height).toBe(initialHeight);
+    expect(component.layoutInteracting()).toBe(false);
   });
 
   it('tải đủ booking theo ngày bằng các trang hợp lệ tối đa 20 phần tử', () => {

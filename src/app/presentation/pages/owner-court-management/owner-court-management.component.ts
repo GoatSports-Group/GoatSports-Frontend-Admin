@@ -65,6 +65,7 @@ type OperationalFilter = 'ALL' | OperationalStatus;
 interface PointerOperationBase {
   itemId: string;
   mode: 'MOVE' | 'RESIZE';
+  resizeAxis: 'BOTH' | 'X' | 'Y';
   startClientX: number;
   startClientY: number;
   canvasUnitsPerPixelX: number;
@@ -130,6 +131,7 @@ export class OwnerCourtManagementComponent {
     { value: 'DISABLED', label: 'Tạm ngưng' }
   ];
   readonly layoutLibrary: readonly LayoutLibraryItem[] = [
+    { type: 'CUSTOM', label: 'Tiện ích', icon: 'plus' },
     { type: 'RECEPTION', label: 'Lễ tân', icon: 'store' },
     { type: 'ENTRANCE', label: 'Cổng vào', icon: 'arrow-right' },
     { type: 'PARKING', label: 'Bãi xe', icon: 'land-plot' },
@@ -137,8 +139,7 @@ export class OwnerCourtManagementComponent {
     { type: 'WC', label: 'WC', icon: 'users' },
     { type: 'WAITING', label: 'Khu chờ', icon: 'clock' },
     { type: 'CAFE', label: 'Cafe', icon: 'sun' },
-    { type: 'STORAGE', label: 'Kho', icon: 'inbox' },
-    { type: 'CUSTOM', label: 'Tiện ích khác', icon: 'layout-grid' }
+    { type: 'STORAGE', label: 'Kho', icon: 'inbox' }
   ];
   readonly customObjectIcons: readonly LayoutLibraryItem[] = [
     { type: 'CUSTOM', label: 'Tiện ích', icon: 'layout-grid' },
@@ -193,8 +194,11 @@ export class OwnerCourtManagementComponent {
   readonly selectedLayoutItemId = signal<string | null>(null);
   readonly selectedLayoutZoneId = signal<string | null>(null);
   readonly customObjectDialogOpen = signal(false);
+  readonly layoutInteracting = signal(false);
 
   private pointerOperation: PointerOperation | null = null;
+  private pendingPointerPosition: { clientX: number; clientY: number } | null = null;
+  private pointerAnimationFrame: number | null = null;
   private draggedLibraryType: FacilityObjectType | null = null;
   private draggedUnplacedCourtId: string | null = null;
   private courtsReadyForVenue: string | null = null;
@@ -707,11 +711,13 @@ export class OwnerCourtManagementComponent {
     event.stopPropagation();
     this.selectedLayoutItemId.set(item.id);
     this.selectedLayoutZoneId.set(null);
+    this.layoutInteracting.set(true);
     if (item.courtId) this.selectedCourtId.set(item.courtId);
     this.pushLayoutHistory();
     this.pointerOperation = {
       itemId: item.id,
       mode,
+      resizeAxis: 'BOTH',
       startClientX: event.clientX,
       startClientY: event.clientY,
       canvasUnitsPerPixelX: this.canvasWidth() / Math.max(1, this.facilityCanvas?.nativeElement.getBoundingClientRect().width ?? 1),
@@ -721,17 +727,24 @@ export class OwnerCourtManagementComponent {
     };
   }
 
-  beginZonePointerOperation(event: PointerEvent, zone: FacilityZone, mode: 'MOVE' | 'RESIZE'): void {
+  beginZonePointerOperation(
+    event: PointerEvent,
+    zone: FacilityZone,
+    mode: 'MOVE' | 'RESIZE',
+    resizeAxis: 'BOTH' | 'X' | 'Y' = 'BOTH'
+  ): void {
     if (!this.layoutMode() || this.layoutSaving() || event.button !== 0) return;
     event.preventDefault();
     event.stopPropagation();
     this.selectedLayoutItemId.set(null);
     this.selectedLayoutZoneId.set(zone.id);
+    this.layoutInteracting.set(true);
     this.pushLayoutHistory();
     const rect = this.facilityCanvas?.nativeElement.getBoundingClientRect();
     this.pointerOperation = {
       itemId: zone.id,
       mode,
+      resizeAxis,
       startClientX: event.clientX,
       startClientY: event.clientY,
       canvasUnitsPerPixelX: this.canvasWidth() / Math.max(1, rect?.width ?? 1),
@@ -1194,24 +1207,44 @@ export class OwnerCourtManagementComponent {
 
   @HostListener('document:pointermove', ['$event'])
   handlePointerMove(event: PointerEvent): void {
+    if (!this.pointerOperation) return;
+    this.pendingPointerPosition = { clientX: event.clientX, clientY: event.clientY };
+    if (this.pointerAnimationFrame !== null) return;
+    if (typeof requestAnimationFrame !== 'function') {
+      this.applyPendingPointerMove();
+      return;
+    }
+    this.pointerAnimationFrame = requestAnimationFrame(() => {
+      this.pointerAnimationFrame = null;
+      this.applyPendingPointerMove();
+    });
+  }
+
+  private applyPendingPointerMove(): void {
     const operation = this.pointerOperation;
     const draft = this.draftLayout();
-    if (!operation || !draft) return;
-    const deltaX = (event.clientX - operation.startClientX) * operation.canvasUnitsPerPixelX;
-    const deltaY = (event.clientY - operation.startClientY) * operation.canvasUnitsPerPixelY;
+    const position = this.pendingPointerPosition;
+    this.pendingPointerPosition = null;
+    if (!operation || !draft || !position) return;
+    const deltaX = (position.clientX - operation.startClientX) * operation.canvasUnitsPerPixelX;
+    const deltaY = (position.clientY - operation.startClientY) * operation.canvasUnitsPerPixelY;
     if (operation.target === 'ZONE') {
       this.updateDraftZone(operation.itemId, zone => {
         if (operation.mode === 'MOVE') {
           return {
             ...zone,
-            x: this.snap(Math.max(0, operation.original.x + deltaX)),
-            y: this.snap(Math.max(0, operation.original.y + deltaY))
+            x: this.snapDuringPointer(Math.max(0, operation.original.x + deltaX)),
+            y: this.snapDuringPointer(Math.max(0, operation.original.y + deltaY))
           };
         }
         return {
           ...zone,
-          width: this.snap(Math.max(220, operation.original.width + deltaX)),
-          height: this.snap(Math.max(180, operation.original.height + deltaY))
+          width: operation.resizeAxis === 'Y'
+            ? operation.original.width
+            : this.snapDuringPointer(Math.max(220, operation.original.width + deltaX)),
+          height: operation.resizeAxis === 'X'
+            ? operation.original.height
+            : this.snapDuringPointer(Math.max(180, operation.original.height + deltaY))
         };
       });
       return;
@@ -1219,19 +1252,30 @@ export class OwnerCourtManagementComponent {
 
     this.updateDraftItem(operation.itemId, item => {
       if (operation.mode === 'MOVE') {
-        const x = this.snap(Math.max(0, operation.original.x + deltaX));
-        const y = this.snap(Math.max(0, operation.original.y + deltaY));
+        const x = this.snapDuringPointer(Math.max(0, operation.original.x + deltaX));
+        const y = this.snapDuringPointer(Math.max(0, operation.original.y + deltaY));
         return { ...item, x, y };
       }
-      const width = this.snap(Math.max(90, operation.original.width + deltaX));
-      const height = this.snap(Math.max(55, operation.original.height + deltaY));
+      const width = this.snapDuringPointer(Math.max(90, operation.original.width + deltaX));
+      const height = this.snapDuringPointer(Math.max(55, operation.original.height + deltaY));
       return { ...item, width, height };
     });
   }
 
   @HostListener('document:pointerup')
   handlePointerUp(): void {
+    if (this.pointerAnimationFrame !== null && typeof cancelAnimationFrame === 'function') {
+      cancelAnimationFrame(this.pointerAnimationFrame);
+    }
+    this.pointerAnimationFrame = null;
+    this.applyPendingPointerMove();
     this.pointerOperation = null;
+    this.layoutInteracting.set(false);
+  }
+
+  @HostListener('document:pointercancel')
+  handlePointerCancel(): void {
+    this.handlePointerUp();
   }
 
   @HostListener('document:keydown.escape')
@@ -1453,6 +1497,10 @@ export class OwnerCourtManagementComponent {
 
   private snap(value: number): number {
     return Math.round(value / FACILITY_GRID_SIZE) * FACILITY_GRID_SIZE;
+  }
+
+  private snapDuringPointer(value: number): number {
+    return Math.round(value / 5) * 5;
   }
 
   private sortCourts(courts: OwnerVenueCourt[]): OwnerVenueCourt[] {
