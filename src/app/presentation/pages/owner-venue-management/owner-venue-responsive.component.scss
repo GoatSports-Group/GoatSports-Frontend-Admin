@@ -1,186 +1,92 @@
-﻿.form-actions {
-  position: sticky;
-  z-index: 3;
-  bottom: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 14px;
-  border: 1px solid #dbe5ef;
-  border-radius: 16px;
-  background: rgb(255 255 255 / 94%);
-  box-shadow: 0 14px 35px rgb(15 23 42 / 12%);
-  backdrop-filter: blur(12px);
-}
-
-.form-actions__context {
-  min-width: 0;
-  overflow: hidden;
-  color: #64748b;
-  font-size: 9px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.form-actions__context strong {
-  color: #334155;
-}
-
-.form-actions > div {
-  display: flex;
-  flex: none;
-  gap: 10px;
-}
-
-.button,
-.state-card button,
-.state-card a,
-.detail-state button {
-  display: inline-flex;
-  min-height: 42px;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0 18px;
-  border-radius: 11px;
-  cursor: pointer;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 800;
-  text-decoration: none;
-}
-
-.button {
-  border: 0;
-}
-
-.button--primary,
-.state-card button,
-.state-card a,
-.detail-state button {
-  border: 0;
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: #fff;
-}
-
-.button--secondary {
-  border: 1px solid #dbe5ef;
-  background: #fff;
-  color: #475569;
-}
-
-.button:disabled {
-  cursor: not-allowed;
-  opacity: .55;
-}
-
-.button-spinner,
-.spinner {
-  border: 2px solid rgb(255 255 255 / 45%);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: spin .75s linear infinite;
-}
-
-.button-spinner {
-  width: 15px;
-  height: 15px;
-}
-
-.state-card,
-.detail-state {
-  display: grid;
-  min-height: 320px;
-  place-items: center;
-  padding: 42px 24px;
-  text-align: center;
-}
-
-.detail-state {
-  min-height: 420px;
-}
-
-.state-card lucide-icon,
-.detail-state > lucide-icon {
-  width: 46px;
-  color: #059669;
-}
-
-.state-card h2,
-.detail-state h2 {
-  margin: 14px 0 6px;
-  font-size: 20px;
-}
-
-.state-card p,
-.detail-state p {
-  max-width: 580px;
-  margin: 0 0 18px;
-  color: #64748b;
-  line-height: 1.6;
-}
-
-.state-card--error lucide-icon,
-.detail-state--error lucide-icon {
-  color: #dc2626;
-}
-
-.spinner {
-  width: 36px;
-  height: 36px;
-  border-color: #d1fae5;
-  border-top-color: #059669;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
 @media (max-width: 1100px) {
+  .venue-workspace {
+    grid-template-columns: minmax(280px, 34%) minmax(0, 1fr);
+  }
+
+  .venue-option {
+    grid-template-columns: 70px minmax(0, 1fr) 7px 14px;
+    padding-inline: 11px;
+  }
+
+  .venue-option.is-selected {
+    grid-template-columns: 70px minmax(0, 1fr) 7px;
+  }
+
+  .venue-option__thumb {
+    width: 70px;
+    height: 56px;
+  }
+
+  .venue-gallery {
+    grid-template-columns: minmax(0, 1.2fr) minmax(260px, 1fr);
+  }
+
+  .venue-gallery__thumbnails {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .form-section {
+    grid-template-columns: 150px minmax(0, 1fr);
+  }
+
+  .form-grid--hours {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 980px) {
   .venue-workspace {
     grid-template-columns: 1fr;
   }
 
+  .venue-selector,
+  .venue-editor,
+  .form-actions {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
   .venue-selector {
-    position: static;
+    border-right: 0;
+    border-bottom: 1px solid var(--venue-border);
   }
 
   .venue-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    max-height: none;
+    max-height: 300px;
+    overflow-y: auto;
   }
 
-  .venue-selector__note {
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
+  .venue-option:nth-child(odd) {
+    border-right: 1px solid #e8eeeb;
   }
 
-  .venue-selector__note a {
-    grid-column: auto;
+  .venue-selector__footer {
+    margin-top: 0;
+    border-top: 1px solid #edf1ef;
+  }
+
+  .venue-gallery__thumbnails {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 720px) {
   .owner-page {
-    padding: 18px 14px 92px;
+    padding: 20px 0 44px;
   }
 
   .page-heading {
-    display: grid;
+    margin-bottom: 17px;
   }
 
-  .venue-totals {
-    width: 100%;
+  .page-heading h1 {
+    font-size: 29px;
   }
 
-  .venue-totals > span {
-    flex: 1;
-    justify-content: center;
-  }
-
-  .venue-selector {
-    border-radius: 20px;
+  .venue-workspace {
+    overflow: visible;
+    border-radius: 12px;
   }
 
   .venue-list {
@@ -192,30 +98,56 @@
   }
 
   .venue-option {
-    width: min(280px, calc(100vw - 60px));
-    min-width: min(280px, calc(100vw - 60px));
+    width: min(300px, calc(100vw - 56px));
+    min-width: min(300px, calc(100vw - 56px));
+    border-right: 1px solid #e8eeeb;
     scroll-snap-align: start;
   }
 
-  .venue-selector__note {
-    grid-template-columns: auto 1fr;
-  }
-
-  .venue-selector__note a {
-    grid-column: 2;
+  .venue-selector__footer {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .selected-venue-heading {
     align-items: flex-start;
     flex-direction: column;
+    padding-block: 15px;
   }
 
-  .form-card {
-    padding: 18px 15px;
-    border-radius: 16px;
+  .venue-gallery {
+    height: auto;
+    grid-template-columns: 1fr;
   }
 
-  .form-grid {
+  .image-card--cover {
+    min-height: 220px;
+    aspect-ratio: 16 / 9;
+  }
+
+  .venue-gallery__thumbnails {
+    height: auto;
+    max-height: none;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: 116px;
+    overflow: visible;
+  }
+
+  .form-section {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 17px 15px;
+  }
+
+  .form-section > header,
+  .form-section--status > header {
+    align-items: center;
+    padding-top: 0;
+  }
+
+  .form-grid,
+  .form-grid--address,
+  .form-grid--hours {
     grid-template-columns: 1fr;
   }
 
@@ -223,77 +155,91 @@
     grid-column: auto;
   }
 
-  .image-field__heading {
-    align-items: flex-start;
-  }
-
-  .image-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .form-actions {
-    position: fixed;
-    right: 12px;
-    bottom: 12px;
-    left: 12px;
+    position: static;
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .form-actions__context {
-    display: none;
+    white-space: normal;
   }
 
-  .form-actions > div {
+  .form-actions > div,
+  .form-actions .button {
     width: 100%;
   }
 
   .form-actions .button {
     flex: 1;
-    padding: 0 10px;
+  }
+
+  .gallery-lightbox {
+    padding: 12px;
+  }
+
+  .gallery-lightbox__dialog {
+    max-width: calc(100vw - 24px);
+    max-height: calc(100vh - 24px);
+    border-radius: 12px;
+  }
+
+  .gallery-lightbox__stage,
+  .gallery-lightbox__stage img {
+    max-width: calc(100vw - 24px);
+    max-height: calc(100vh - 24px);
+  }
+
+  .gallery-lightbox__placeholder {
+    width: min(520px, calc(100vw - 24px));
+    height: min(320px, calc(100vh - 24px));
+  }
+
+  .gallery-lightbox__close {
+    top: 10px;
+    right: 10px;
+  }
+
+  .gallery-lightbox__nav {
+    width: 40px;
+    height: 40px;
+  }
+
+  .gallery-lightbox__nav lucide-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .gallery-lightbox__nav--previous {
+    left: 10px;
+  }
+
+  .gallery-lightbox__nav--next {
+    right: 10px;
   }
 }
 
 @media (max-width: 420px) {
-  .image-field__heading {
+  .venue-selector__heading {
+    padding-inline: 10px;
+  }
+
+  .venue-gallery__thumbnails {
+    grid-template-columns: 1fr;
+    grid-auto-rows: 150px;
+  }
+
+  .form-actions > div {
     display: grid;
-  }
-
-  .image-picker {
-    box-sizing: border-box;
-    width: 100%;
-  }
-
-  .image-grid {
     grid-template-columns: 1fr;
   }
-
 }
 
 @media (prefers-reduced-motion: reduce) {
   *,
+  *::before,
   *::after {
-    scroll-behavior: auto !important;
     animation-duration: .01ms !important;
     transition-duration: .01ms !important;
   }
-}
-
-/* Unified venue editor surface */
-.owner-venue-page { width: min(1440px, 100%); padding: 32px; }
-.venue-selector { border-radius: 14px; box-shadow: none; }
-.venue-option { border-radius: 10px; }
-.venue-option:hover:not(:disabled) { transform: none; }
-.venue-option.is-selected { border-color: #86cbb4; background: #f0fdf7; box-shadow: inset 3px 0 #047857; }
-.venue-editor { overflow: hidden; border: 1px solid #dce4ea; border-radius: 14px; background: #fff; }
-.venue-form { gap: 0; }
-.form-card { padding: 26px; border: 0; border-bottom: 1px solid #edf2f7; border-radius: 0; background: #fff; box-shadow: none; }
-.form-card:last-of-type { border-bottom: 0; }
-.card-icon { border-radius: 10px; }
-.form-actions { bottom: 0; margin: 0; border-width: 1px 0 0; border-radius: 0; box-shadow: 0 -10px 26px rgba(15, 23, 42, .07); backdrop-filter: blur(16px); }
-.button--primary, .state-card button, .state-card a, .detail-state button { background: #047857; }
-
-@media (max-width: 720px) {
-  .owner-venue-page { padding: 20px 14px 88px; }
-  .venue-editor { overflow: visible; border: 0; background: transparent; }
-  .form-card { margin-bottom: 12px; border: 1px solid #dce4ea; border-radius: 14px; }
-  .form-actions { margin: 0 -14px -88px; padding: 12px 14px; }
 }

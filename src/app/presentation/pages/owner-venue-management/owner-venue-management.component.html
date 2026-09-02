@@ -1,257 +1,366 @@
 <main class="owner-page" aria-labelledby="venue-page-title">
   <header class="page-heading">
     <div>
-      <span class="eyebrow">Không gian vận hành</span>
       <h1 id="venue-page-title">Quản lý cơ sở</h1>
-      <p>Chọn từng cơ sở để cập nhật thông tin vận hành, hình ảnh và tiện ích.</p>
+      <p>Cập nhật thông tin và quản lý các cơ sở của bạn.</p>
     </div>
-    @if (venues().length) {
-      <div class="venue-totals" aria-label="Tổng quan cơ sở">
-        <span><strong>{{ venues().length }}</strong> cơ sở</span>
-        <span><strong>{{ activeVenueCount() }}</strong> đang hoạt động</span>
-      </div>
-    }
   </header>
 
   @if (loading() && !venues().length) {
-    <app-page-loading title="Đang tải danh sách cơ sở"
-      description="GoatSports đang đồng bộ các cơ sở thuộc tài khoản của bạn." />
+  <app-page-loading title="Đang tải danh sách cơ sở"
+    description="GoatSports đang đồng bộ các cơ sở thuộc tài khoản của bạn." />
   } @else if (loadError()) {
-    <section class="state-card state-card--error" role="alert">
-      <lucide-icon name="alert-circle" />
-      <h2>Chưa thể tải dữ liệu</h2>
-      <p>{{ loadError() }}</p>
-      <button type="button" (click)="load()">Thử lại</button>
-    </section>
+  <section class="state-card state-card--error" role="alert">
+    <lucide-icon name="alert-circle" />
+    <h2>Chưa thể tải dữ liệu</h2>
+    <p>{{ loadError() }}</p>
+    <button type="button" (click)="load()">Thử lại</button>
+  </section>
   } @else if (!venues().length) {
-    <section class="state-card">
-      <lucide-icon name="inbox" />
-      <h2>Bạn chưa có cơ sở được phê duyệt</h2>
-      <p>Mỗi cơ sở chỉ xuất hiện ở đây sau khi hồ sơ tương ứng được quản trị viên phê duyệt.</p>
-      <a routerLink="/admin/applications">Đi đến Đơn đăng ký</a>
-    </section>
+  <section class="state-card">
+    <lucide-icon name="inbox" />
+    <h2>Bạn chưa có cơ sở được phê duyệt</h2>
+    <p>Mỗi cơ sở chỉ xuất hiện ở đây sau khi hồ sơ tương ứng được quản trị viên phê duyệt.</p>
+    <a routerLink="/admin/applications">Đi đến Đơn đăng ký</a>
+  </section>
   } @else {
-    <section class="venue-workspace" aria-label="Không gian quản lý nhiều cơ sở">
-      <aside class="venue-selector" aria-labelledby="venue-selector-title">
-        <header class="venue-selector__heading">
-          <div>
-            <span>Danh mục</span>
-            <h2 id="venue-selector-title">Cơ sở của bạn</h2>
-          </div>
-          <small>{{ venues().length }}</small>
-        </header>
+  <section class="venue-workspace" aria-label="Không gian quản lý cơ sở">
+    <aside class="venue-selector" aria-labelledby="venue-selector-title">
+      <header class="venue-selector__heading">
+        <h2 id="venue-selector-title">Danh sách cơ sở</h2>
+      </header>
 
-        <nav class="venue-list" aria-label="Chọn cơ sở cần chỉnh sửa">
-          @for (item of venues(); track item.venueId) {
-            <button
-              type="button"
-              class="venue-option"
-              [class.is-selected]="item.venueId === selectedVenueId()"
-              [attr.aria-pressed]="item.venueId === selectedVenueId()"
-              [disabled]="selectionLocked() && item.venueId !== selectedVenueId()"
-              (click)="selectVenue(item.venueId)">
-              <span class="venue-option__icon"><lucide-icon name="store" /></span>
-              <span class="venue-option__copy">
-                <strong>{{ item.name }}</strong>
-                <small><lucide-icon name="map-pin" />{{ venueAddress(item) }}</small>
-                <span class="venue-option__meta">
-                  <span>{{ item.courts.length || 0 }} sân</span>
-                  <span>{{ item.amenities.length || 0 }} tiện ích</span>
-                </span>
-              </span>
-              <span class="venue-option__side">
-                <span class="venue-option__status" [class.is-active]="item.active">
-                  {{ item.active ? 'Hoạt động' : 'Tạm ẩn' }}
-                </span>
-                <lucide-icon name="chevron-right" />
-              </span>
-            </button>
-          }
-        </nav>
+      <label class="venue-search">
+        <lucide-icon name="search" aria-hidden="true" />
+        <span class="sr-only">Tìm kiếm cơ sở</span>
+        <input type="search" placeholder="Tìm kiếm cơ sở..." [value]="venueSearch()"
+          (input)="updateVenueSearch($event)" />
+      </label>
 
-        <footer class="venue-selector__note">
-          <lucide-icon name="clipboard-check" />
-          <p>Cơ sở mới chỉ được thêm khi một hồ sơ đăng ký khác được phê duyệt.</p>
-          <a routerLink="/admin/applications">Xem hồ sơ</a>
-        </footer>
-      </aside>
-
-      <div class="venue-editor">
-        @if (detailLoading()) {
-          <section class="detail-state" aria-live="polite">
-            <span class="spinner" aria-hidden="true"></span>
-            <h2>Đang tải cơ sở đã chọn</h2>
-            <p>Thông tin chỉnh sửa sẽ xuất hiện trong giây lát.</p>
-          </section>
-        } @else if (detailError()) {
-          <section class="detail-state detail-state--error" role="alert">
-            <lucide-icon name="alert-circle" />
-            <h2>Chưa thể tải chi tiết cơ sở</h2>
-            <p>{{ detailError() }}</p>
-            <button type="button" (click)="retrySelectedVenue()">Thử lại</button>
-          </section>
-        } @else if (venue(); as selectedVenue) {
-          <header class="selected-venue-heading">
-            <div class="selected-venue-heading__identity">
-              <span><lucide-icon name="store" /></span>
-              <div>
-                <small>Đang chỉnh sửa</small>
-                <h2>{{ selectedVenue.name }}</h2>
-                <p><lucide-icon name="map-pin" />{{ venueAddress(selectedVenue) }}</p>
-              </div>
-            </div>
-            <span class="status-pill" [class.is-active]="selectedVenue.active">
-              <span></span>{{ selectedVenue.active ? 'Đang hoạt động' : 'Chưa hoạt động' }}
+      <nav class="venue-list" aria-label="Chọn cơ sở cần chỉnh sửa">
+        @for (item of pagedVenues(); track item.venueId) {
+        <button type="button" class="venue-option" [class.is-selected]="item.venueId === selectedVenueId()"
+          [attr.aria-pressed]="item.venueId === selectedVenueId()"
+          [disabled]="selectionLocked() && item.venueId !== selectedVenueId()" (click)="selectVenue(item.venueId)">
+          <span class="venue-option__thumb">
+            @if (venueThumbnail(item); as thumbnail) {
+            <img [src]="thumbnail" [alt]="'Ảnh ' + item.name" />
+            } @else {
+            <lucide-icon name="store" aria-hidden="true" />
+            }
+          </span>
+          <span class="venue-option__copy">
+            <strong>{{ item.name }}</strong>
+            <small>{{ venueAddress(item) }}</small>
+            <span class="venue-option__status" [class.is-active]="item.active">
+              {{ item.active ? 'Đang hoạt động' : 'Tạm ngưng' }}
             </span>
-          </header>
+          </span>
+          <span class="venue-option__dot" [class.is-active]="item.active" aria-hidden="true"></span>
+          <lucide-icon class="venue-option__chevron" name="chevron-right" aria-hidden="true" />
+        </button>
+        } @empty {
+        <div class="venue-list__empty">
+          <lucide-icon name="search" aria-hidden="true" />
+          <strong>Không tìm thấy cơ sở</strong>
+          <span>Thử tìm bằng tên hoặc khu vực khác.</span>
+        </div>
+        }
+      </nav>
 
-          <form class="venue-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
-            <section class="form-card">
-              <header class="card-heading">
-                <span class="card-icon"><lucide-icon name="store" /></span>
-                <div><h2>Thông tin vận hành</h2><p>Tên, mô tả, giờ mở cửa và trạng thái hiển thị.</p></div>
-              </header>
-              <div class="form-grid">
-                <label class="field field--wide">
-                  <span>Tên cơ sở <b>*</b></span>
-                  <input formControlName="name" maxlength="255" [attr.aria-invalid]="fieldInvalid('name')" />
-                  @if (fieldInvalid('name')) { <small>Vui lòng nhập tên cơ sở (tối đa 255 ký tự).</small> }
-                </label>
-                <label class="field field--wide">
-                  <span>Mô tả</span>
-                  <textarea formControlName="description" rows="4" maxlength="2000"></textarea>
-                  <em>{{ form.controls.description.value.length }}/2000</em>
-                </label>
-                <label class="field">
-                  <span>Giờ mở cửa <b>*</b></span>
-                  <input type="time" formControlName="openTime" />
-                </label>
-                <label class="field">
-                  <span>Giờ đóng cửa <b>*</b></span>
-                  <input type="time" formControlName="closeTime" />
-                </label>
-                <label class="switch-field field--wide">
-                  <input type="checkbox" formControlName="active" />
-                  <span class="switch" aria-hidden="true"></span>
-                  <span><strong>Cho phép cơ sở hoạt động</strong><small>Tắt trạng thái này để tạm ẩn cơ sở khỏi danh sách công khai.</small></span>
-                </label>
-              </div>
-            </section>
+      <footer class="venue-selector__footer">
+        <p>Hiển thị <strong>{{ pagedVenues().length }}/{{ filteredVenues().length }}</strong> cơ sở</p>
+        <nav aria-label="Phân trang danh sách cơ sở">
+          <button type="button" (click)="previousVenuePage()" [disabled]="venuePage() === 1" aria-label="Trang trước">
+            <lucide-icon name="chevron-left" />
+          </button>
+          <span>{{ venuePage() }}</span>
+          <button type="button" (click)="nextVenuePage()" [disabled]="venuePage() === venuePageCount()"
+            aria-label="Trang sau">
+            <lucide-icon name="chevron-right" />
+          </button>
+        </nav>
+      </footer>
+    </aside>
 
-            <section class="form-card">
-              <header class="card-heading">
-                <span class="card-icon"><lucide-icon name="map-pin" /></span>
-                <div><h2>Địa chỉ và liên hệ</h2><p>Thông tin khách hàng dùng để tìm và liên hệ cơ sở.</p></div>
-              </header>
-              <div class="form-grid">
-                <label class="field field--wide"><span>Địa chỉ <b>*</b></span><input formControlName="address" maxlength="500" /></label>
-                <label class="field"><span>Phường / xã</span><input formControlName="ward" maxlength="255" /></label>
-                <label class="field"><span>Quận / huyện</span><input formControlName="district" maxlength="255" /></label>
-                <label class="field"><span>Tỉnh / thành phố <b>*</b></span><input formControlName="city" maxlength="255" /></label>
-                <label class="field"><span>Số điện thoại <b>*</b></span><input formControlName="phone" maxlength="30" inputmode="tel" /></label>
-                <label class="field field--wide"><span>Email <b>*</b></span><input type="email" formControlName="email" maxlength="255" /></label>
-                <label class="field"><span>Vĩ độ</span><input type="number" formControlName="latitude" min="-90" max="90" step="any" /></label>
-                <label class="field"><span>Kinh độ</span><input type="number" formControlName="longitude" min="-180" max="180" step="any" /></label>
-              </div>
-            </section>
+    <div class="venue-editor">
+      @if (detailLoading()) {
+      <section class="detail-state" aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        <h2>Đang tải cơ sở đã chọn</h2>
+        <p>Thông tin chỉnh sửa sẽ xuất hiện trong giây lát.</p>
+      </section>
+      } @else if (detailError()) {
+      <section class="detail-state detail-state--error" role="alert">
+        <lucide-icon name="alert-circle" />
+        <h2>Chưa thể tải chi tiết cơ sở</h2>
+        <p>{{ detailError() }}</p>
+        <button type="button" (click)="retrySelectedVenue()">Thử lại</button>
+      </section>
+      } @else if (venue(); as selectedVenue) {
+      <header class="selected-venue-heading">
+        <h2>Thông tin cơ sở</h2>
+        <span class="status-pill" [class.is-active]="selectedVenue.active">
+          <span></span>{{ selectedVenue.active ? 'Đang hoạt động' : 'Tạm ngưng' }}
+        </span>
+      </header>
 
-            <section class="form-card">
-              <header class="card-heading">
-                <span class="card-icon"><lucide-icon name="image" /></span>
-                <div><h2>Hình ảnh và tiện ích</h2><p>Chọn nhiều ảnh để tải nền lên kho lưu trữ; tiện ích có thể nhập mỗi dòng hoặc phân tách bằng dấu phẩy.</p></div>
-              </header>
-              <div class="form-grid">
-                <div class="image-field field--wide">
-                  <div class="image-field__heading">
-                    <div><strong>Hình ảnh cơ sở</strong><small>{{ images().length }}/12 ảnh · PNG, JPG, WEBP · tối đa 10 MB/ảnh</small></div>
-                    <label class="image-picker" [class.is-disabled]="saving() || images().length >= 12">
-                      <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple
-                        (change)="selectImages($event)" [disabled]="saving() || images().length >= 12" />
-                      Chọn ảnh
-                    </label>
+      <form id="venue-management-form" class="venue-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <section class="venue-gallery" [class.venue-gallery--cover-only]="visibleSecondaryImages().length === 0"
+          aria-label="Hình ảnh cơ sở">
+          @if (primaryImage(); as cover) {
+          <article class="image-card image-card--cover is-primary" [class.is-uploading]="cover.uploading">
+            @if (cover.displayUrl) {
+            <img [src]="cover.displayUrl" [alt]="cover.fileName" (error)="handleImageError(cover)" />
+            } @else if (cover.resolving) {
+            <div class="image-placeholder"><span class="spinner"></span><span>Đang lấy ảnh</span></div>
+            } @else {
+            <div class="image-placeholder image-placeholder--error"><lucide-icon name="image" /><span>Không tải được
+                ảnh</span></div>
+            }
+            <span class="image-card__primary image-card__primary--selected sr-only">
+              <lucide-icon name="circle-check" /> Ảnh đại diện
+            </span>
+            <label class="cover-picker" [class.is-disabled]="saving() || images().length >= 12">
+              <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple
+                (change)="selectImages($event)" [disabled]="saving() || images().length >= 12" />
+              <lucide-icon name="image" /> Chỉnh sửa ảnh bìa
+            </label>
+            @if (!cover.uploading) {
+            <button type="button" class="image-card__remove" (click)="removeImage(cover)" [disabled]="saving()"
+              [attr.aria-label]="'Xóa ' + cover.fileName"><lucide-icon name="x" /></button>
+            }
+          </article>
+
+          <div class="venue-gallery__thumbnails" [attr.data-count]="visibleSecondaryImages().length">
+            @for (image of visibleSecondaryImages(); track image.id; let imageIndex = $index) {
+            <article class="image-card" [class.is-uploading]="image.uploading">
+              @if (image.displayUrl) {
+              <img [src]="image.displayUrl" [alt]="image.fileName" (error)="handleImageError(image)" />
+              } @else if (image.resolving) {
+              <div class="image-placeholder"><span class="mini-spinner"></span><span>Đang lấy ảnh</span></div>
+              } @else {
+              <div class="image-placeholder image-placeholder--error"><lucide-icon name="image" /></div>
+              }
+              <button type="button" class="image-card__primary" (click)="setPrimaryImage(image)"
+                [disabled]="saving() || uploadingImages()"
+                [attr.aria-label]="'Đặt ' + image.fileName + ' làm ảnh đại diện'">
+                <lucide-icon name="star" /> Chọn làm ảnh bìa
+              </button>
+              @if (image.uploading) {
+              <span class="image-card__uploading" aria-label="Đang tải ảnh lên"><span
+                  class="mini-spinner"></span></span>
+              } @else {
+              <button type="button" class="image-card__remove" (click)="removeImage(image)" [disabled]="saving()"
+                [attr.aria-label]="'Xóa ' + image.fileName"><lucide-icon name="x" /></button>
+              }
+              @if (imageIndex === 4 && hiddenImageCount() > 0) {
+              <button type="button" class="gallery-more" (click)="openImageGallery(image)"
+                [attr.aria-label]="'Xem toàn bộ ' + galleryImages().length + ' ảnh sân'">
+                <strong>+{{ hiddenImageCount() }}</strong><small>ảnh khác</small>
+              </button>
+              }
+            </article>
+            }
+          </div>
+          } @else {
+          <label class="gallery-empty">
+            <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple
+              (change)="selectImages($event)" [disabled]="saving()" />
+            <lucide-icon name="upload" />
+            <strong>Thêm hình ảnh cơ sở</strong>
+            <span>PNG, JPG hoặc WEBP · tối đa 10 MB/ảnh</span>
+          </label>
+          }
+        </section>
+
+        <div class="form-sections">
+          <section class="form-section">
+            <header><lucide-icon name="store" /><span>Thông tin cơ bản</span></header>
+            <div class="form-grid form-grid--basic">
+              <label class="field">
+                <span>Tên cơ sở <b>*</b></span>
+                <input formControlName="name" maxlength="255" placeholder="Nhập tên cơ sở"
+                  [attr.aria-invalid]="fieldInvalid('name')" />
+                @if (fieldInvalid('name')) { <small>Vui lòng nhập tên cơ sở.</small> }
+              </label>
+              <label class="field field--wide">
+                <span>Mô tả</span>
+                <textarea formControlName="description" rows="2" maxlength="2000"
+                  placeholder="Giới thiệu ngắn về cơ sở"></textarea>
+                <em>{{ form.controls.description.value.length }}/2000</em>
+              </label>
+            </div>
+          </section>
+
+          <section class="form-section">
+            <header><lucide-icon name="map-pin" /><span>Địa chỉ</span></header>
+            <div class="form-grid form-grid--address">
+              <div class="field field--wide address-field">
+                <label for="owner-venue-management-address">Địa chỉ <b>*</b></label>
+                <div class="address-autocomplete">
+                  <input id="owner-venue-management-address" formControlName="address" maxlength="500"
+                    placeholder="Nhập ít nhất 3 ký tự để tìm địa chỉ" autocomplete="street-address" role="combobox"
+                    aria-autocomplete="list" [attr.aria-expanded]="addressSuggestionsOpen()"
+                    aria-controls="owner-venue-management-address-suggestions"
+                    [attr.aria-invalid]="fieldInvalid('address')" [readOnly]="addressDetailLoading()"
+                    (input)="onAddressInput($event)" (focus)="openAddressSuggestions()"
+                    (blur)="closeAddressSuggestions()" (keydown)="handleAddressKeydown($event)" />
+
+                  @if (addressSearchLoading() || addressDetailLoading()) {
+                  <span class="address-autocomplete__loading" aria-live="polite">
+                    {{ addressDetailLoading() ? 'Đang lấy chi tiết...' : 'Đang tìm...' }}
+                  </span>
+                  }
+
+                  @if (addressSuggestionsOpen()) {
+                  <div id="owner-venue-management-address-suggestions" class="address-suggestions" role="listbox">
+                    @for (suggestion of addressSuggestions(); track suggestion.id; let index = $index) {
+                    <button type="button" role="option" [attr.aria-selected]="activeSuggestionIndex() === index"
+                      [class.is-active]="activeSuggestionIndex() === index" [disabled]="addressDetailLoading()"
+                      (mousedown)="$event.preventDefault()" (click)="selectAddressSuggestion(suggestion)">
+                      <strong>{{ suggestion.title }}</strong>
+                      <span>{{ suggestion.formattedAddress }}</span>
+                    </button>
+                    }
+                    @if (addressSearchError()) {
+                    <p class="address-suggestions__message" role="alert">{{ addressSearchError() }}</p>
+                    }
                   </div>
-
-                  @if (images().length) {
-                    <div class="image-grid" aria-live="polite">
-                      @for (image of images(); track image.id) {
-                        <article
-                          class="image-card"
-                          [class.is-uploading]="image.uploading"
-                          [class.is-primary]="isPrimaryImage(image)">
-                          @if (image.displayUrl) {
-                            <img [src]="image.displayUrl" [alt]="image.fileName" />
-                          } @else if (image.resolving) {
-                            <div class="image-placeholder"><span class="spinner"></span><span>Đang lấy ảnh</span></div>
-                          } @else {
-                            <div class="image-placeholder image-placeholder--error"><lucide-icon name="image" /><span>Không tải được ảnh</span></div>
-                          }
-                          @if (isPrimaryImage(image)) {
-                            <span class="image-card__primary image-card__primary--selected">
-                              <lucide-icon name="circle-check" /> Ảnh đại diện
-                            </span>
-                          } @else {
-                            <button
-                              type="button"
-                              class="image-card__primary"
-                              (click)="setPrimaryImage(image)"
-                              [disabled]="saving() || uploadingImages()"
-                              [attr.aria-label]="'Đặt ' + image.fileName + ' làm ảnh đại diện'">
-                              <lucide-icon name="star" /> Chọn làm ảnh đại diện
-                            </button>
-                          }
-                          @if (image.uploading) {
-                            <span class="image-card__uploading" aria-label="Đang tải ảnh lên">
-                              <span class="mini-spinner"></span>
-                            </span>
-                          } @else {
-                            <button
-                              type="button"
-                              class="image-card__remove"
-                              (click)="removeImage(image)"
-                              [disabled]="saving()"
-                              [attr.aria-label]="'Xóa ' + image.fileName">
-                              <lucide-icon name="x" />
-                            </button>
-                          }
-                        </article>
-                      }
-                    </div>
-                  } @else {
-                    <div class="image-empty"><lucide-icon name="image" /><span>Chưa có hình ảnh cơ sở</span></div>
                   }
                 </div>
-                <label class="field field--wide">
-                  <span>Tiện ích (tối đa 30)</span>
-                  <textarea formControlName="amenities" rows="4" placeholder="Bãi giữ xe&#10;Phòng thay đồ&#10;Wifi"></textarea>
-                </label>
               </div>
-            </section>
+              <label class="field"><span>Phường / Xã</span><input formControlName="ward" maxlength="255"
+                  placeholder="Nhập phường hoặc xã" autocomplete="address-level3" /></label>
+              <label class="field"><span>Quận / Huyện</span><input formControlName="district" maxlength="255"
+                  placeholder="Không bắt buộc với địa chỉ hành chính mới" autocomplete="address-level2" /></label>
+              <label class="field"><span>Tỉnh / Thành phố <b>*</b></span><input formControlName="city" maxlength="255"
+                  placeholder="Nhập tỉnh hoặc thành phố" autocomplete="address-level1" /></label>
+            </div>
+          </section>
 
-            <section class="form-card">
-              <header class="card-heading">
-                <span class="card-icon"><lucide-icon name="receipt" /></span>
-                <div><h2>Khoảng giá tham khảo</h2><p>Giá chi tiết theo sân và khung giờ thuộc task bảng giá sau này.</p></div>
-              </header>
-              <div class="form-grid">
-                <label class="field"><span>Giá tối thiểu (VNĐ) <b>*</b></span><input type="number" formControlName="minPrice" min="0" /></label>
-                <label class="field"><span>Giá tối đa (VNĐ) <b>*</b></span><input type="number" formControlName="maxPrice" min="0" /></label>
-              </div>
-            </section>
+          <section class="form-section">
+            <header><lucide-icon name="phone" /><span>Liên hệ</span></header>
+            <div class="form-grid form-grid--contact">
+              <label class="field"><span>Số điện thoại <b>*</b></span><input formControlName="phone" maxlength="30"
+                  inputmode="tel" placeholder="Nhập số điện thoại" /></label>
+              <label class="field"><span>Email <b>*</b></span><input type="email" formControlName="email"
+                  maxlength="255" placeholder="Nhập email liên hệ" /></label>
+            </div>
+          </section>
 
-            <footer class="form-actions">
-              <span class="form-actions__context">Đang lưu cho <strong>{{ selectedVenue.name }}</strong></span>
-              <div>
-                <button type="button" class="button button--secondary" (click)="reset()" [disabled]="saving() || uploadingImages() || !form.dirty">Hoàn tác</button>
-                <button type="submit" class="button button--primary" [disabled]="saving() || uploadingImages() || form.invalid || !form.dirty">
-                  @if (saving()) { <span class="button-spinner"></span> Đang lưu... }
-                  @else if (uploadingImages()) { <span class="button-spinner"></span> Đang tải ảnh... }
-                  @else { <lucide-icon name="save" /> Lưu thay đổi }
-                </button>
+          <section class="form-section">
+            <header><lucide-icon name="clock" /><span>Giờ hoạt động</span></header>
+            <div class="form-grid form-grid--hours">
+              <label class="field"><span>Giờ mở cửa <b>*</b></span><input type="time"
+                  formControlName="openTime" /></label>
+              <label class="field"><span>Giờ đóng cửa <b>*</b></span><input type="time"
+                  formControlName="closeTime" /></label>
+              <label class="field"><span>Giá thấp nhất (VNĐ) <b>*</b></span><input type="number"
+                  formControlName="minPrice" min="0" /></label>
+              <label class="field"><span>Giá cao nhất (VNĐ) <b>*</b></span><input type="number"
+                  formControlName="maxPrice" min="0" /></label>
+            </div>
+          </section>
+
+          <section class="form-section">
+            <header><lucide-icon name="sparkles" /><span>Tiện ích nổi bật</span></header>
+            <div class="form-grid">
+              <div class="field field--wide">
+                <span>Tiện ích (tối đa 30)</span>
+                <div class="amenities-editor">
+                  @for (amenity of amenityItems(); track amenity) {
+                  <span class="amenity-chip">
+                    {{ amenity }}
+                    <button type="button" (click)="removeAmenity(amenity)"
+                      [attr.aria-label]="'Xóa tiện ích ' + amenity">
+                      <lucide-icon name="x" />
+                    </button>
+                  </span>
+                  }
+                  <input #amenityInput type="text" maxlength="100" placeholder="Nhập tiện ích"
+                    aria-label="Tên tiện ích mới" [class.is-visible]="addingAmenity()"
+                    [attr.tabindex]="addingAmenity() ? 0 : -1" (keydown.enter)="addAmenity(amenityInput, $event)"
+                    (keydown.escape)="cancelAmenity(amenityInput)" />
+                  <button type="button" class="amenity-add" (click)="addAmenity(amenityInput)"
+                    [disabled]="amenityItems().length >= 30" [attr.aria-expanded]="addingAmenity()">
+                    <lucide-icon [name]="addingAmenity() ? 'check' : 'plus'" />
+                    {{ addingAmenity() ? 'Lưu tiện ích' : 'Thêm tiện ích' }}
+                  </button>
+                </div>
               </div>
-            </footer>
-          </form>
-        }
+            </div>
+          </section>
+
+          <section class="form-section form-section--status">
+            <header><lucide-icon name="circle-check" /><span>Trạng thái cơ sở</span></header>
+            <label class="switch-field">
+              <input type="checkbox" formControlName="active" />
+              <span class="switch" aria-hidden="true"></span>
+              <span><strong>{{ form.controls.active.value ? 'Đang hoạt động' : 'Tạm ngưng' }}</strong><small>Cho phép
+                  khách hàng tìm và đặt sân tại cơ sở này.</small></span>
+            </label>
+          </section>
+        </div>
+
+      </form>
+      }
+    </div>
+    @if (venue()) {
+    <footer class="form-actions">
+      <span class="form-actions__context"><lucide-icon name="circle-check" /> Thay đổi sẽ được lưu khi bạn nhấn Cập
+        nhật.</span>
+      <div>
+        <button type="button" class="button button--secondary" (click)="reset()"
+          [disabled]="saving() || uploadingImages() || !form.dirty">
+          Hủy bỏ
+        </button>
+        <button type="submit" form="venue-management-form" class="button button--primary"
+          [disabled]="saving() || uploadingImages() || form.invalid || !form.dirty">
+          @if (saving()) { <span class="button-spinner"></span> Đang lưu... }
+          @else if (uploadingImages()) { <span class="button-spinner"></span> Đang tải ảnh... }
+          @else { <lucide-icon name="save" /> Cập nhật cơ sở }
+        </button>
+      </div>
+    </footer>
+    }
+  </section>
+  @if (galleryOpen()) {
+  @if (currentGalleryImage(); as galleryImage) {
+  <div class="gallery-lightbox" role="presentation" (click)="closeImageGallery()">
+    <section class="gallery-lightbox__dialog" role="dialog" aria-modal="true" aria-label="Thư viện hình ảnh sân"
+      (click)="$event.stopPropagation()">
+      <div class="gallery-lightbox__stage">
+        <button type="button" class="gallery-lightbox__close" (click)="closeImageGallery()"
+          aria-label="Đóng thư viện ảnh">
+          <lucide-icon name="x" />
+        </button>
+
+        <button type="button" class="gallery-lightbox__nav gallery-lightbox__nav--previous"
+          (click)="previousGalleryImage()" [disabled]="galleryImages().length < 2" aria-label="Xem ảnh trước">
+          <lucide-icon name="chevron-left" />
+        </button>
+
+        <figure>
+          @if (galleryImage.displayUrl) {
+          <img [src]="galleryImage.displayUrl" [alt]="galleryImage.fileName" (error)="handleImageError(galleryImage)" />
+          } @else if (galleryImage.resolving) {
+          <div class="gallery-lightbox__placeholder"><span class="spinner"></span><span>Đang tải ảnh</span></div>
+          } @else {
+          <div class="gallery-lightbox__placeholder gallery-lightbox__placeholder--error">
+            <lucide-icon name="image" /><span>Không tải được ảnh</span>
+          </div>
+          }
+        </figure>
+
+        <button type="button" class="gallery-lightbox__nav gallery-lightbox__nav--next" (click)="nextGalleryImage()"
+          [disabled]="galleryImages().length < 2" aria-label="Xem ảnh tiếp theo">
+          <lucide-icon name="chevron-right" />
+        </button>
       </div>
     </section>
+  </div>
+  }
+  }
   }
 </main>
