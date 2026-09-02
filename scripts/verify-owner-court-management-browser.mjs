@@ -143,6 +143,32 @@ async function verifyViewport(cdp, name, width, height) {
     horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
     workspaceWidth: Math.round(document.querySelector('.workspace-shell').getBoundingClientRect().width)
   }))()`);
+  let firstCourtTooltip = null;
+  if (width >= 768) {
+    const hoverPoint = await evaluate(cdp, `(() => {
+      const rect = document.querySelector('.court-object').getBoundingClientRect();
+      return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    })()`);
+    await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: hoverPoint.x, y: hoverPoint.y });
+    await waitFor(cdp, "getComputedStyle(document.querySelector('.court-object .court-tooltip')).opacity === '1'");
+    firstCourtTooltip = await evaluate(cdp, `(() => {
+      const courtElement = document.querySelector('.court-object');
+      const borderElement = document.querySelector('.facility-zone-border');
+      const court = courtElement.getBoundingClientRect();
+      const tooltip = courtElement.querySelector('.court-tooltip').getBoundingClientRect();
+      const canvas = document.querySelector('.facility-canvas').getBoundingClientRect();
+      const courtZIndex = Number(getComputedStyle(courtElement).zIndex);
+      const zoneBorderZIndex = Number(getComputedStyle(borderElement).zIndex);
+      return {
+        opensBelow: tooltip.top >= court.bottom,
+        withinCanvas: tooltip.top >= canvas.top && tooltip.bottom <= canvas.bottom,
+        courtZIndex,
+        zoneBorderZIndex,
+        unobscured: courtZIndex > zoneBorderZIndex
+      };
+    })()`);
+    await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 1, y: 1 });
+  }
   await evaluate(cdp, "document.querySelector('.venue-select__trigger').click()");
   await waitFor(cdp, "!!document.querySelector('.venue-select__menu')");
   const venueDropdown = await evaluate(cdp, `(() => ({
@@ -200,15 +226,34 @@ async function verifyViewport(cdp, name, width, height) {
       layoutMode: !!document.querySelector('.facility-workspace.is-editing'),
       libraryItems: document.querySelectorAll('.object-library > button').length,
       inspectorVisible: !!document.querySelector('.layout-inspector'),
+      zoneBorderCount: document.querySelectorAll('.facility-zone-border').length,
+      parkingSlotCount: document.querySelectorAll('.parking-slots i').length,
+      parkingLucideCarCount: document.querySelectorAll('.parking-slots lucide-icon svg').length,
+      facilityDecorationCount: document.querySelectorAll('.facility-furniture').length,
+      libraryButtonFontSize: getComputedStyle(document.querySelector('.object-library > button')).fontSize,
+      toolbarButtonFontSize: getComputedStyle(document.querySelector('.layout-mode-toolbar__actions button')).fontSize,
       saveDisabledInitially: document.querySelector('.save-layout-button')?.disabled,
       editHorizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth
     }))()`);
+    await evaluate(cdp, `(() => {
+      const button = [...document.querySelectorAll('.layout-mode-toolbar__actions button')]
+        .find(item => item.textContent.includes('Thêm khu'));
+      button?.click();
+    })()`);
+    await waitFor(cdp, "document.querySelectorAll('.facility-zone').length === 3");
+    Object.assign(editMode, await evaluate(cdp, `(() => ({
+      addedZoneSelected: !!document.querySelector('.facility-zone-border.is-selected'),
+      zoneResizeHandleVisible: !!document.querySelector('.facility-zone-border.is-selected .zone-resize-handle'),
+      expandedCanvas: document.querySelector('.facility-canvas').scrollWidth > document.querySelector('.facility-stage').clientWidth,
+      zoneInspectorVisible: document.querySelector('.layout-inspector')?.innerText.includes('Khu vực cơ sở'),
+      zoneCountAfterAdd: document.querySelectorAll('.facility-zone').length
+    }))()`));
     const editScreenshot = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
     const editScreenshotPath = join(tmpdir(), `goatsports-owner-courts-edit-${name}.png`);
     writeFileSync(editScreenshotPath, Buffer.from(editScreenshot.data, 'base64'));
     editMode.editScreenshotPath = editScreenshotPath;
   }
-  return { viewport: `${width}x${height}`, ...initial, venueDropdown, searchFocus, sportDropdown, statusDropdown, ...detail, screenshotPath, editMode };
+  return { viewport: `${width}x${height}`, ...initial, firstCourtTooltip, venueDropdown, searchFocus, sportDropdown, statusDropdown, ...detail, screenshotPath, editMode };
 }
 
 let angularProcess;

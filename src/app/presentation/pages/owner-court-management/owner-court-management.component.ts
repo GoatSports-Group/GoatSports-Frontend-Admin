@@ -34,6 +34,7 @@ import {
   FACILITY_GRID_SIZE,
   FacilityLayoutItem,
   FacilityObjectType,
+  FacilityZone,
   LayoutLibraryItem,
   VenueFacilityLayout,
   cloneFacilityLayout,
@@ -60,13 +61,19 @@ type PanelMode = 'NONE' | 'DETAIL' | 'FORM';
 type OperationalStatus = 'AVAILABLE' | 'OCCUPIED' | 'UPCOMING' | 'MAINTENANCE' | 'DISABLED';
 type OperationalFilter = 'ALL' | OperationalStatus;
 
-interface PointerOperation {
+interface PointerOperationBase {
   itemId: string;
   mode: 'MOVE' | 'RESIZE';
   startClientX: number;
   startClientY: number;
-  original: FacilityLayoutItem;
+  canvasUnitsPerPixelX: number;
+  canvasUnitsPerPixelY: number;
 }
+
+type PointerOperation = PointerOperationBase & (
+  | { target: 'ITEM'; original: FacilityLayoutItem }
+  | { target: 'ZONE'; original: FacilityZone }
+);
 
 @Component({
   selector: 'app-owner-court-management',
@@ -94,8 +101,8 @@ export class OwnerCourtManagementComponent {
   @ViewChild('facilityCanvas') private facilityCanvas?: ElementRef<HTMLElement>;
   @ViewChild('bookingDateInput') private bookingDateInput?: ElementRef<HTMLInputElement>;
 
-  readonly canvasWidth = FACILITY_CANVAS_WIDTH;
-  readonly canvasHeight = FACILITY_CANVAS_HEIGHT;
+  readonly baseCanvasWidth = FACILITY_CANVAS_WIDTH;
+  readonly baseCanvasHeight = FACILITY_CANVAS_HEIGHT;
   readonly sports: readonly SportOption[] = [
     { value: 'FOOTBALL', label: 'Bóng đá' },
     { value: 'BADMINTON', label: 'Cầu lông' },
@@ -124,13 +131,14 @@ export class OwnerCourtManagementComponent {
     { type: 'RECEPTION', label: 'Lễ tân', icon: 'store' },
     { type: 'ENTRANCE', label: 'Cổng vào', icon: 'arrow-right' },
     { type: 'PARKING', label: 'Bãi xe', icon: 'land-plot' },
-    { type: 'LOCKER', label: 'Locker', icon: 'folder-open' },
+    { type: 'LOCKER', label: 'Tủ đồ', icon: 'folder-open' },
     { type: 'WC', label: 'WC', icon: 'users' },
     { type: 'WAITING', label: 'Khu chờ', icon: 'clock' },
     { type: 'CAFE', label: 'Cafe', icon: 'sun' },
     { type: 'STORAGE', label: 'Kho', icon: 'inbox' },
     { type: 'CUSTOM', label: 'Tiện ích khác', icon: 'layout-grid' }
   ];
+  readonly parkingSlots = Array.from({ length: 23 }, (_, index) => index + 1);
 
   readonly venues = signal<OwnerVenueOverview[]>([]);
   readonly selectedVenueId = signal<string | null>(null);
@@ -170,6 +178,7 @@ export class OwnerCourtManagementComponent {
   readonly layoutHistory = signal<VenueFacilityLayout[]>([]);
   readonly layoutFuture = signal<VenueFacilityLayout[]>([]);
   readonly selectedLayoutItemId = signal<string | null>(null);
+  readonly selectedLayoutZoneId = signal<string | null>(null);
 
   private pointerOperation: PointerOperation | null = null;
   private draggedLibraryType: FacilityObjectType | null = null;
@@ -182,10 +191,18 @@ export class OwnerCourtManagementComponent {
   readonly venue = computed(() => this.venues().find(item => item.venueId === this.selectedVenueId()) ?? null);
   readonly editorOpen = computed(() => this.panelMode() === 'FORM');
   readonly displayLayout = computed(() => this.layoutMode() ? this.draftLayout() : this.layout());
+  readonly canvasWidth = computed(() => this.canvasExtent('x'));
+  readonly canvasHeight = computed(() => this.canvasExtent('y'));
+  readonly canvasRenderWidth = computed(() => Math.round(760 * this.canvasWidth() / FACILITY_CANVAS_WIDTH));
+  readonly canvasRenderHeight = computed(() => Math.round(575 * this.canvasHeight() / FACILITY_CANVAS_HEIGHT));
   readonly selectedCourt = computed(() => this.courts().find(court => court.venueCourtId === this.selectedCourtId()) ?? null);
   readonly selectedLayoutItem = computed(() => {
     const itemId = this.selectedLayoutItemId();
     return this.draftLayout()?.items.find(item => item.id === itemId) ?? null;
+  });
+  readonly selectedLayoutZone = computed(() => {
+    const zoneId = this.selectedLayoutZoneId();
+    return this.draftLayout()?.zones.find(zone => zone.id === zoneId) ?? null;
   });
   readonly courtLayoutItems = computed(() => this.displayLayout()?.items.filter(item => item.type === 'COURT') ?? []);
   readonly facilityLayoutItems = computed(() => this.displayLayout()?.items.filter(item => item.type !== 'COURT') ?? []);
@@ -577,6 +594,7 @@ export class OwnerCourtManagementComponent {
     this.layoutMode.set(true);
     const firstCourt = current.items.find(item => item.type === 'COURT');
     this.selectedLayoutItemId.set(firstCourt?.id ?? current.items[0]?.id ?? null);
+    this.selectedLayoutZoneId.set(null);
   }
 
   cancelLayoutEdit(): boolean {
@@ -588,6 +606,7 @@ export class OwnerCourtManagementComponent {
     this.layoutHistory.set([]);
     this.layoutFuture.set([]);
     this.selectedLayoutItemId.set(null);
+    this.selectedLayoutZoneId.set(null);
     this.openDefaultCourtDetail();
     return true;
   }
@@ -604,6 +623,7 @@ export class OwnerCourtManagementComponent {
       this.layoutHistory.set([]);
       this.layoutFuture.set([]);
       this.selectedLayoutItemId.set(null);
+      this.selectedLayoutZoneId.set(null);
       this.openDefaultCourtDetail();
       this.notify.success('Bố cục cơ sở đã được lưu trên thiết bị này.');
     } catch {
@@ -619,6 +639,7 @@ export class OwnerCourtManagementComponent {
     this.draftLayout.set(createAutomaticFacilityLayout(venueId, this.courts()));
     this.layoutDirty.set(true);
     this.selectedLayoutItemId.set(null);
+    this.selectedLayoutZoneId.set(null);
   }
 
   undoLayout(): void {
@@ -648,6 +669,7 @@ export class OwnerCourtManagementComponent {
     event.preventDefault();
     event.stopPropagation();
     this.selectedLayoutItemId.set(item.id);
+    this.selectedLayoutZoneId.set(null);
     if (item.courtId) this.selectedCourtId.set(item.courtId);
     this.pushLayoutHistory();
     this.pointerOperation = {
@@ -655,18 +677,50 @@ export class OwnerCourtManagementComponent {
       mode,
       startClientX: event.clientX,
       startClientY: event.clientY,
+      canvasUnitsPerPixelX: this.canvasWidth() / Math.max(1, this.facilityCanvas?.nativeElement.getBoundingClientRect().width ?? 1),
+      canvasUnitsPerPixelY: this.canvasHeight() / Math.max(1, this.facilityCanvas?.nativeElement.getBoundingClientRect().height ?? 1),
+      target: 'ITEM',
       original: { ...item }
+    };
+  }
+
+  beginZonePointerOperation(event: PointerEvent, zone: FacilityZone, mode: 'MOVE' | 'RESIZE'): void {
+    if (!this.layoutMode() || event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.selectedLayoutItemId.set(null);
+    this.selectedLayoutZoneId.set(zone.id);
+    this.pushLayoutHistory();
+    const rect = this.facilityCanvas?.nativeElement.getBoundingClientRect();
+    this.pointerOperation = {
+      itemId: zone.id,
+      mode,
+      startClientX: event.clientX,
+      startClientY: event.clientY,
+      canvasUnitsPerPixelX: this.canvasWidth() / Math.max(1, rect?.width ?? 1),
+      canvasUnitsPerPixelY: this.canvasHeight() / Math.max(1, rect?.height ?? 1),
+      target: 'ZONE',
+      original: { ...zone }
     };
   }
 
   selectLayoutItem(event: Event, item: FacilityLayoutItem): void {
     event.stopPropagation();
     this.selectedLayoutItemId.set(item.id);
+    this.selectedLayoutZoneId.set(null);
     if (item.courtId) this.selectedCourtId.set(item.courtId);
   }
 
   clearLayoutSelection(): void {
-    if (this.layoutMode()) this.selectedLayoutItemId.set(null);
+    if (!this.layoutMode()) return;
+    this.selectedLayoutItemId.set(null);
+    this.selectedLayoutZoneId.set(null);
+  }
+
+  selectLayoutZone(event: Event, zone: FacilityZone): void {
+    event.stopPropagation();
+    this.selectedLayoutItemId.set(null);
+    this.selectedLayoutZoneId.set(zone.id);
   }
 
   rotateSelected(): void {
@@ -692,11 +746,44 @@ export class OwnerCourtManagementComponent {
     this.pushLayoutHistory();
     this.updateDraftItem(item.id, current => {
       const minimum = field === 'width' ? 90 : field === 'height' ? 55 : 0;
-      const maximum = field === 'x' || field === 'width' ? FACILITY_CANVAS_WIDTH :
-        field === 'y' || field === 'height' ? FACILITY_CANVAS_HEIGHT : 359;
-      const value = Math.max(minimum, Math.min(maximum, raw));
+      const value = field === 'rotation'
+        ? Math.max(0, Math.min(359, raw))
+        : this.snap(Math.max(minimum, raw));
       return { ...current, [field]: value };
     });
+  }
+
+  updateSelectedZoneLabel(event: Event): void {
+    const zone = this.selectedLayoutZone();
+    if (!zone) return;
+    this.pushLayoutHistory();
+    const name = (event.target as HTMLInputElement).value.trim().slice(0, 80) || zone.name;
+    this.updateDraftZone(zone.id, current => ({ ...current, name }));
+  }
+
+  updateSelectedZoneNumber(field: 'x' | 'y' | 'width' | 'height', event: Event): void {
+    const zone = this.selectedLayoutZone();
+    const raw = Number((event.target as HTMLInputElement).value);
+    if (!zone || !Number.isFinite(raw)) return;
+    this.pushLayoutHistory();
+    this.updateDraftZone(zone.id, current => ({
+      ...current,
+      [field]: this.snap(Math.max(field === 'width' ? 220 : field === 'height' ? 180 : 0, raw))
+    }));
+  }
+
+  removeSelectedZone(): void {
+    const zone = this.selectedLayoutZone();
+    const draft = this.draftLayout();
+    if (!zone || !draft) return;
+    this.pushLayoutHistory();
+    this.draftLayout.set({
+      ...draft,
+      zones: draft.zones.filter(current => current.id !== zone.id),
+      items: draft.items.map(item => item.zoneId === zone.id ? { ...item, zoneId: undefined } : item)
+    });
+    this.selectedLayoutZoneId.set(null);
+    this.layoutDirty.set(true);
   }
 
   duplicateSelected(): void {
@@ -708,8 +795,8 @@ export class OwnerCourtManagementComponent {
       ...item,
       id: `${item.type.toLowerCase()}:${Date.now()}`,
       label: `${item.label} mới`,
-      x: Math.min(FACILITY_CANVAS_WIDTH - item.width, item.x + 30),
-      y: Math.min(FACILITY_CANVAS_HEIGHT - item.height, item.y + 30)
+      x: item.x + 30,
+      y: item.y + 30
     };
     this.draftLayout.set({ ...draft, items: [...draft.items, copy] });
     this.selectedLayoutItemId.set(copy.id);
@@ -767,8 +854,8 @@ export class OwnerCourtManagementComponent {
     this.draggedLibraryType = null;
     if (!type || !this.facilityCanvas) return;
     const rect = this.facilityCanvas.nativeElement.getBoundingClientRect();
-    const x = this.snap((event.clientX - rect.left) / rect.width * FACILITY_CANVAS_WIDTH - 70);
-    const y = this.snap((event.clientY - rect.top) / rect.height * FACILITY_CANVAS_HEIGHT - 35);
+    const x = this.snap((event.clientX - rect.left) / rect.width * this.canvasWidth() - 70);
+    const y = this.snap((event.clientY - rect.top) / rect.height * this.canvasHeight() - 35);
     this.addFacility(type, x, y);
   }
 
@@ -782,8 +869,8 @@ export class OwnerCourtManagementComponent {
       id: `${type.toLowerCase()}:${Date.now()}`,
       type,
       label: count > 1 ? `${libraryItem.label} ${count}` : libraryItem.label,
-      x: Math.max(0, Math.min(FACILITY_CANVAS_WIDTH - 140, x)),
-      y: Math.max(0, Math.min(FACILITY_CANVAS_HEIGHT - 70, y)),
+      x: Math.max(0, x),
+      y: Math.max(0, y),
       width: type === 'PARKING' ? 240 : 140,
       height: type === 'PARKING' ? 90 : 70,
       rotation: 0
@@ -798,18 +885,26 @@ export class OwnerCourtManagementComponent {
     if (!draft) return;
     this.pushLayoutHistory();
     const number = draft.zones.length + 1;
+    const rightEdge = Math.max(FACILITY_CANVAS_WIDTH, ...draft.zones.map(zone => zone.x + zone.width));
+    const zone: FacilityZone = {
+      id: `zone:${Date.now()}`,
+      name: `Khu ${number}`,
+      x: this.snap(rightEdge + 40),
+      y: 40,
+      width: 360,
+      height: 520
+    };
     this.draftLayout.set({
       ...draft,
-      zones: [...draft.zones, {
-        id: `zone:${Date.now()}`,
-        name: `Khu ${number}`,
-        x: 120 + (number * 20),
-        y: 120 + (number * 20),
-        width: 420,
-        height: 260
-      }]
+      zones: [...draft.zones, zone]
     });
+    this.selectedLayoutItemId.set(null);
+    this.selectedLayoutZoneId.set(zone.id);
     this.layoutDirty.set(true);
+    requestAnimationFrame(() => {
+      const scroll = this.facilityCanvas?.nativeElement.parentElement;
+      scroll?.scrollTo?.({ left: scroll.scrollWidth, behavior: 'smooth' });
+    });
   }
 
   courtForItem(item: FacilityLayoutItem): OwnerVenueCourt | null {
@@ -827,7 +922,7 @@ export class OwnerCourtManagementComponent {
   }
 
   itemPercent(value: number, axis: 'x' | 'y'): number {
-    return value / (axis === 'x' ? FACILITY_CANVAS_WIDTH : FACILITY_CANVAS_HEIGHT) * 100;
+    return value / (axis === 'x' ? this.canvasWidth() : this.canvasHeight()) * 100;
   }
 
   sportLabel(value: string): string {
@@ -972,19 +1067,35 @@ export class OwnerCourtManagementComponent {
   handlePointerMove(event: PointerEvent): void {
     const operation = this.pointerOperation;
     const draft = this.draftLayout();
-    const canvas = this.facilityCanvas?.nativeElement;
-    if (!operation || !draft || !canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const deltaX = (event.clientX - operation.startClientX) / rect.width * FACILITY_CANVAS_WIDTH;
-    const deltaY = (event.clientY - operation.startClientY) / rect.height * FACILITY_CANVAS_HEIGHT;
+    if (!operation || !draft) return;
+    const deltaX = (event.clientX - operation.startClientX) * operation.canvasUnitsPerPixelX;
+    const deltaY = (event.clientY - operation.startClientY) * operation.canvasUnitsPerPixelY;
+    if (operation.target === 'ZONE') {
+      this.updateDraftZone(operation.itemId, zone => {
+        if (operation.mode === 'MOVE') {
+          return {
+            ...zone,
+            x: this.snap(Math.max(0, operation.original.x + deltaX)),
+            y: this.snap(Math.max(0, operation.original.y + deltaY))
+          };
+        }
+        return {
+          ...zone,
+          width: this.snap(Math.max(220, operation.original.width + deltaX)),
+          height: this.snap(Math.max(180, operation.original.height + deltaY))
+        };
+      });
+      return;
+    }
+
     this.updateDraftItem(operation.itemId, item => {
       if (operation.mode === 'MOVE') {
-        const x = this.snap(Math.max(0, Math.min(FACILITY_CANVAS_WIDTH - item.width, operation.original.x + deltaX)));
-        const y = this.snap(Math.max(0, Math.min(FACILITY_CANVAS_HEIGHT - item.height, operation.original.y + deltaY)));
+        const x = this.snap(Math.max(0, operation.original.x + deltaX));
+        const y = this.snap(Math.max(0, operation.original.y + deltaY));
         return { ...item, x, y };
       }
-      const width = this.snap(Math.max(90, Math.min(FACILITY_CANVAS_WIDTH - item.x, operation.original.width + deltaX)));
-      const height = this.snap(Math.max(55, Math.min(FACILITY_CANVAS_HEIGHT - item.y, operation.original.height + deltaY)));
+      const width = this.snap(Math.max(90, operation.original.width + deltaX));
+      const height = this.snap(Math.max(55, operation.original.height + deltaY));
       return { ...item, width, height };
     });
   }
@@ -1147,6 +1258,27 @@ export class OwnerCourtManagementComponent {
       items: draft.items.map(item => item.id === itemId ? update(item) : item)
     });
     this.layoutDirty.set(true);
+  }
+
+  private updateDraftZone(zoneId: string, update: (zone: FacilityZone) => FacilityZone): void {
+    const draft = this.draftLayout();
+    if (!draft) return;
+    this.draftLayout.set({
+      ...draft,
+      zones: draft.zones.map(zone => zone.id === zoneId ? update(zone) : zone)
+    });
+    this.layoutDirty.set(true);
+  }
+
+  private canvasExtent(axis: 'x' | 'y'): number {
+    const layout = this.displayLayout();
+    const base = axis === 'x' ? FACILITY_CANVAS_WIDTH : FACILITY_CANVAS_HEIGHT;
+    if (!layout) return base;
+    const furthest = axis === 'x'
+      ? Math.max(0, ...layout.items.map(item => item.x + item.width), ...layout.zones.map(zone => zone.x + zone.width))
+      : Math.max(0, ...layout.items.map(item => item.y + item.height), ...layout.zones.map(zone => zone.y + zone.height));
+    if (furthest <= base) return base;
+    return Math.ceil((furthest + 40) / FACILITY_GRID_SIZE) * FACILITY_GRID_SIZE;
   }
 
   private pushLayoutHistory(): void {

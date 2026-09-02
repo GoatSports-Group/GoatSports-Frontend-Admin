@@ -4,7 +4,7 @@ import { of, Subject } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   LucideActivity, LucideAlertCircle, LucideAlertTriangle, LucideArrowRight, LucideBan,
-  LucideCalendar, LucideCheck, LucideCheckCircle, LucideChevronDown, LucideChevronLeft,
+  LucideCalendar, LucideCar, LucideCheck, LucideCheckCircle, LucideChevronDown, LucideChevronLeft,
   LucideChevronRight, LucideClock, LucideConstruction, LucideFilePlus2, LucideFilter,
   LucideFolderOpen, LucideGripVertical, LucideInbox, LucideInfo, LucideLandPlot,
   LucideLayoutGrid, LucideMoreVertical, LucidePencil, LucidePlus, LucideReceipt,
@@ -47,7 +47,7 @@ describe('OwnerCourtManagementComponent', () => {
         provideRouter([]),
         provideLucideIcons(
           LucideActivity, LucideAlertCircle, LucideAlertTriangle, LucideArrowRight, LucideBan,
-          LucideCalendar, LucideCheck, LucideCheckCircle, LucideChevronDown, LucideChevronLeft,
+          LucideCalendar, LucideCar, LucideCheck, LucideCheckCircle, LucideChevronDown, LucideChevronLeft,
           LucideChevronRight, LucideClock, LucideConstruction, LucideFilePlus2, LucideFilter,
           LucideFolderOpen, LucideGripVertical, LucideInbox, LucideInfo, LucideLandPlot,
           LucideLayoutGrid, LucideMoreVertical, LucidePencil, LucidePlus, LucideReceipt,
@@ -103,6 +103,10 @@ describe('OwnerCourtManagementComponent', () => {
     expect(fixture.nativeElement.querySelectorAll('.workspace-tabs button')).toHaveLength(3);
     expect(fixture.nativeElement.querySelectorAll('.court-object')).toHaveLength(2);
     expect(fixture.nativeElement.querySelectorAll('.facility-object')).toHaveLength(9);
+    expect(fixture.nativeElement.querySelectorAll('.facility-zone-border')).toHaveLength(2);
+    expect(fixture.nativeElement.querySelectorAll('.parking-slots i')).toHaveLength(23);
+    expect(fixture.nativeElement.querySelectorAll('.parking-slots lucide-icon')).toHaveLength(23);
+    expect(fixture.nativeElement.querySelector('.facility-furniture')).toBeNull();
     expect(fixture.nativeElement.querySelector('.court-detail')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('.court-detail h2')?.textContent).toContain('Sân 01');
     expect(fixture.nativeElement.querySelector('.court-detail > header > button')).toBeNull();
@@ -133,6 +137,42 @@ describe('OwnerCourtManagementComponent', () => {
     expect(component.panelMode()).toBe('DETAIL');
     expect(component.selectedCourtId()).toBe('court-1');
     expect(notify.success).toHaveBeenCalledWith('Bố cục cơ sở đã được lưu trên thiết bị này.');
+  });
+
+  it('thêm khu ở phần canvas mở rộng và cho phép kéo, thay đổi kích thước khu', () => {
+    manageCourts.list.mockReturnValue(of([savedCourt]));
+    const fixture = TestBed.createComponent(OwnerCourtManagementComponent);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    component.enterLayoutMode();
+
+    component.addZone();
+    fixture.detectChanges();
+
+    const zone = component.selectedLayoutZone();
+    expect(zone).toBeTruthy();
+    expect(component.draftLayout()!.zones).toHaveLength(3);
+    expect(component.canvasWidth()).toBeGreaterThan(component.baseCanvasWidth);
+    expect(fixture.nativeElement.querySelector('.facility-zone-border.is-selected .zone-resize-handle')).toBeTruthy();
+    const canvas = fixture.nativeElement.querySelector('.facility-canvas') as HTMLElement;
+    vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({ width: 1200, height: 700 } as DOMRect);
+
+    const initialX = zone!.x;
+    component.beginZonePointerOperation({
+      button: 0, clientX: 0, clientY: 0, preventDefault: vi.fn(), stopPropagation: vi.fn()
+    } as unknown as PointerEvent, zone!, 'MOVE');
+    component.handlePointerMove({ clientX: 20, clientY: 0 } as PointerEvent);
+    component.handlePointerUp();
+    expect(component.selectedLayoutZone()!.x).toBeGreaterThan(initialX);
+
+    const movedZone = component.selectedLayoutZone()!;
+    const initialWidth = movedZone.width;
+    component.beginZonePointerOperation({
+      button: 0, clientX: 0, clientY: 0, preventDefault: vi.fn(), stopPropagation: vi.fn()
+    } as unknown as PointerEvent, movedZone, 'RESIZE');
+    component.handlePointerMove({ clientX: 20, clientY: 20 } as PointerEvent);
+    component.handlePointerUp();
+    expect(component.selectedLayoutZone()!.width).toBeGreaterThan(initialWidth);
   });
 
   it('tải đủ booking theo ngày bằng các trang hợp lệ tối đa 20 phần tử', () => {

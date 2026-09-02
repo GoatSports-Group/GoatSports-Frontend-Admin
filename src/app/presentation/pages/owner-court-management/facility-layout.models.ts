@@ -91,15 +91,15 @@ export function createAutomaticFacilityLayout(
   });
 
   const facilities: FacilityLayoutItem[] = [
-    { id: 'facility:locker', type: 'LOCKER', label: 'LOCKER', x: 25, y: 55, width: 100, height: 90, rotation: 0, zoneId: 'zone-a' },
-    { id: 'facility:wc', type: 'WC', label: 'WC NAM', x: 25, y: 145, width: 100, height: 90, rotation: 0, zoneId: 'zone-a' },
-    { id: 'facility:wc-female', type: 'WC', label: 'WC NỮ', x: 25, y: 235, width: 100, height: 90, rotation: 0, zoneId: 'zone-a' },
-    { id: 'facility:storage', type: 'STORAGE', label: 'P. TẮM', x: 25, y: 325, width: 100, height: 90, rotation: 0, zoneId: 'zone-a', icon: 'droplets' },
-    { id: 'facility:reception', type: 'RECEPTION', label: 'RECEPTION', x: 45, y: 465, width: 170, height: 90, rotation: 0, zoneId: 'zone-a' },
-    { id: 'facility:waiting', type: 'WAITING', label: 'WAITING AREA', x: 225, y: 465, width: 270, height: 90, rotation: 0, zoneId: 'zone-a' },
-    { id: 'facility:cafe', type: 'CAFE', label: 'CAFE', x: 505, y: 465, width: 220, height: 90, rotation: 0, zoneId: 'zone-a' },
-    { id: 'facility:entrance', type: 'ENTRANCE', label: 'ENTRANCE', x: 405, y: 555, width: 150, height: 55, rotation: 0 },
-    { id: 'facility:parking', type: 'PARKING', label: 'PARKING', x: 15, y: 600, width: 970, height: 85, rotation: 0 }
+    { id: 'facility:locker', type: 'LOCKER', label: 'Tủ đồ', x: 25, y: 55, width: 100, height: 90, rotation: 0, zoneId: 'zone-a' },
+    { id: 'facility:wc', type: 'WC', label: 'WC nam', x: 25, y: 145, width: 100, height: 90, rotation: 0, zoneId: 'zone-a' },
+    { id: 'facility:wc-female', type: 'WC', label: 'WC nữ', x: 25, y: 235, width: 100, height: 90, rotation: 0, zoneId: 'zone-a' },
+    { id: 'facility:storage', type: 'STORAGE', label: 'Phòng tắm', x: 25, y: 325, width: 100, height: 90, rotation: 0, zoneId: 'zone-a', icon: 'droplets' },
+    { id: 'facility:reception', type: 'RECEPTION', label: 'Quầy lễ tân', x: 45, y: 465, width: 170, height: 90, rotation: 0, zoneId: 'zone-a' },
+    { id: 'facility:waiting', type: 'WAITING', label: 'Khu vực chờ', x: 225, y: 465, width: 270, height: 90, rotation: 0, zoneId: 'zone-a' },
+    { id: 'facility:cafe', type: 'CAFE', label: 'Quán cà phê', x: 505, y: 465, width: 220, height: 90, rotation: 0, zoneId: 'zone-a' },
+    { id: 'facility:entrance', type: 'ENTRANCE', label: 'Lối vào', x: 405, y: 555, width: 150, height: 55, rotation: 0 },
+    { id: 'facility:parking', type: 'PARKING', label: 'Chỗ đỗ xe', x: 15, y: 600, width: 970, height: 85, rotation: 0 }
   ];
 
   return {
@@ -107,8 +107,8 @@ export function createAutomaticFacilityLayout(
     venueId,
     items: [...courtItems, ...facilities],
     zones: [
-      { id: 'zone-a', name: 'ZONE A – KHU TRONG NHÀ', x: 25, y: 25, width: 725, height: 545 },
-      { id: 'zone-b', name: 'ZONE B – KHU NGOÀI TRỜI', x: 765, y: 25, width: 210, height: 545 }
+      { id: 'zone-a', name: 'KHU TRONG NHÀ', x: 25, y: 25, width: 725, height: 545 },
+      { id: 'zone-b', name: 'KHU NGOÀI TRỜI', x: 765, y: 25, width: 210, height: 545 }
     ],
     updatedAt: new Date().toISOString()
   };
