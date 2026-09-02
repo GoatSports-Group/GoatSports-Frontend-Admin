@@ -6,6 +6,10 @@ import {
   OwnerVenueOverview,
   OwnerVenueUpdate
 } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
+import {
+  VenueFacilityLayout,
+  VenueFacilityLayoutUpdate
+} from '@application/dto/venue-owner-dashboard/venue-facility-layout.dto';
 
 export interface VenueOwnerDashboardRepository {
   getVenueOverview(venueId: string): Observable<OwnerVenueOverview>;
@@ -17,6 +21,11 @@ export interface VenueOwnerDashboardRepository {
   createVenueCourt(venueId: string, request: OwnerVenueCourtUpsert): Observable<OwnerVenueCourt>;
   updateVenueCourt(venueCourtId: string, request: OwnerVenueCourtUpsert): Observable<OwnerVenueCourt>;
   updateVenueCourtActive(venueCourtId: string, active: boolean): Observable<OwnerVenueCourt>;
+  getVenueFacilityLayout(venueId: string): Observable<VenueFacilityLayout | null>;
+  updateVenueFacilityLayout(
+    venueId: string,
+    request: VenueFacilityLayoutUpdate
+  ): Observable<VenueFacilityLayout>;
 }
 
 export const VENUE_OWNER_DASHBOARD_REPOSITORY_TOKEN =

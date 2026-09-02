@@ -1,43 +1,21 @@
 import { OwnerVenueCourt } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
+import {
+  FacilityLayoutItem,
+  FacilityObjectType,
+  FacilityZone,
+  VenueFacilityLayout
+} from '@application/dto/venue-owner-dashboard/venue-facility-layout.dto';
+
+export type {
+  FacilityLayoutItem,
+  FacilityObjectType,
+  FacilityZone,
+  VenueFacilityLayout
+} from '@application/dto/venue-owner-dashboard/venue-facility-layout.dto';
 
 export const FACILITY_CANVAS_WIDTH = 1000;
 export const FACILITY_CANVAS_HEIGHT = 700;
 export const FACILITY_GRID_SIZE = 20;
-
-export type FacilityObjectType =
-  | 'RECEPTION' | 'ENTRANCE' | 'PARKING' | 'LOCKER' | 'WC'
-  | 'WAITING' | 'CAFE' | 'STORAGE' | 'CUSTOM';
-
-export interface FacilityLayoutItem {
-  id: string;
-  type: 'COURT' | FacilityObjectType;
-  courtId?: string;
-  label: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  rotation: number;
-  zoneId?: string;
-  icon?: string;
-}
-
-export interface FacilityZone {
-  id: string;
-  name: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-export interface VenueFacilityLayout {
-  version: 1;
-  venueId: string;
-  items: FacilityLayoutItem[];
-  zones: FacilityZone[];
-  updatedAt: string;
-}
 
 export interface LayoutLibraryItem {
   type: FacilityObjectType;

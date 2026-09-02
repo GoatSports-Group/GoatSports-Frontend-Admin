@@ -7,6 +7,10 @@ import {
   OwnerVenueOverview,
   OwnerVenueUpdate
 } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
+import {
+  VenueFacilityLayout,
+  VenueFacilityLayoutUpdate
+} from '@application/dto/venue-owner-dashboard/venue-facility-layout.dto';
 import { VenueOwnerDashboardApi } from '@infrastructure/api/venue-owner-dashboard.api';
 
 @Injectable()
@@ -47,5 +51,16 @@ export class VenueOwnerDashboardRepositoryImpl implements VenueOwnerDashboardRep
 
   updateVenueCourtActive(venueCourtId: string, active: boolean): Observable<OwnerVenueCourt> {
     return this.api.updateVenueCourtActive(venueCourtId, active).pipe(map(response => response.data));
+  }
+
+  getVenueFacilityLayout(venueId: string): Observable<VenueFacilityLayout | null> {
+    return this.api.getVenueFacilityLayout(venueId).pipe(map(response => response?.data ?? null));
+  }
+
+  updateVenueFacilityLayout(
+    venueId: string,
+    request: VenueFacilityLayoutUpdate
+  ): Observable<VenueFacilityLayout> {
+    return this.api.updateVenueFacilityLayout(venueId, request).pipe(map(response => response.data));
   }
 }

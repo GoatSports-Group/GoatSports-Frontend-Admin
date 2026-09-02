@@ -8,6 +8,10 @@ import {
   OwnerVenueOverview,
   OwnerVenueUpdate
 } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
+import {
+  VenueFacilityLayout,
+  VenueFacilityLayoutUpdate
+} from '@application/dto/venue-owner-dashboard/venue-facility-layout.dto';
 import { environment } from '@environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -73,6 +77,22 @@ export class VenueOwnerDashboardApi {
     return this.http.patch<BaseResponse<OwnerVenueCourt>>(
       `${this.apiBase}/venue-service/api/v1/owner/venue-courts/${venueCourtId}`,
       { active }
+    );
+  }
+
+  getVenueFacilityLayout(venueId: string): Observable<BaseResponse<VenueFacilityLayout> | null> {
+    return this.http.get<BaseResponse<VenueFacilityLayout>>(
+      `${this.apiBase}/venue-service/api/v1/owner/venues/${venueId}/facility-layout`
+    );
+  }
+
+  updateVenueFacilityLayout(
+    venueId: string,
+    request: VenueFacilityLayoutUpdate
+  ): Observable<BaseResponse<VenueFacilityLayout>> {
+    return this.http.put<BaseResponse<VenueFacilityLayout>>(
+      `${this.apiBase}/venue-service/api/v1/owner/venues/${venueId}/facility-layout`,
+      request
     );
   }
 }

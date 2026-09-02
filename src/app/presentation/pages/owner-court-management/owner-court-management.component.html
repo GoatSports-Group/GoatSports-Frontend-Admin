@@ -140,18 +140,20 @@
               thước.</small></span>
         </div>
         <div class="layout-mode-toolbar__actions">
-          <button type="button" (click)="undoLayout()" [disabled]="layoutHistory().length === 0" aria-label="Hoàn tác">
+          <button type="button" (click)="undoLayout()" [disabled]="layoutSaving() || layoutHistory().length === 0" aria-label="Hoàn tác">
             <lucide-icon name="chevron-left" /> <span>Hoàn tác</span>
           </button>
-          <button type="button" (click)="redoLayout()" [disabled]="layoutFuture().length === 0" aria-label="Làm lại">
+          <button type="button" (click)="redoLayout()" [disabled]="layoutSaving() || layoutFuture().length === 0" aria-label="Làm lại">
             <lucide-icon name="chevron-right" /> <span>Làm lại</span>
           </button>
-          <button type="button" (click)="addZone()"><lucide-icon name="plus" /> <span>Thêm khu</span></button>
-          <button type="button" (click)="resetLayout()"><lucide-icon name="rotate-ccw" /> <span>Đặt lại</span></button>
+          <button type="button" (click)="addZone()" [disabled]="layoutSaving()"><lucide-icon name="plus" /> <span>Thêm khu</span></button>
+          <button type="button" (click)="resetLayout()" [disabled]="layoutSaving()"><lucide-icon name="rotate-ccw" /> <span>Đặt lại</span></button>
           <i></i>
-          <button type="button" (click)="cancelLayoutEdit()"><lucide-icon name="x" /> <span>Hủy</span></button>
-          <button type="button" class="save-layout-button" (click)="saveLayout()" [disabled]="!layoutDirty()">
-            <lucide-icon name="save" /> Lưu bố cục
+          <button type="button" (click)="cancelLayoutEdit()" [disabled]="layoutSaving()"><lucide-icon name="x" /> <span>Hủy</span></button>
+          <button type="button" class="save-layout-button" (click)="saveLayout()"
+            [disabled]="!layoutDirty() || layoutSaving()">
+            @if (layoutSaving()) { <span class="mini-spinner"></span> Đang lưu... }
+            @else { <lucide-icon name="save" /> Lưu bố cục }
           </button>
         </div>
       </div>
@@ -163,6 +165,9 @@
           }
         </div>
         <div class="map-meta-actions">
+          @if (layoutError()) {
+          <span class="sync-state sync-state--warning"><lucide-icon name="alert-triangle" /> {{ layoutError() }}</span>
+          }
           @if (bookingError()) {
           <span class="sync-state sync-state--warning"><lucide-icon name="alert-triangle" /> {{ bookingError() }}</span>
           }
@@ -170,7 +175,7 @@
       </div>
       }
 
-      @if (courtLoading()) {
+      @if (courtLoading() || layoutLoading()) {
       <section class="map-skeleton" aria-label="Đang tải sơ đồ">
         <span></span><span></span><span></span><span></span><span></span><span></span>
       </section>
@@ -190,7 +195,7 @@
           tiên</button>
       </section>
       } @else {
-      <div class="facility-workspace" [class.is-editing]="layoutMode()">
+      <div class="facility-workspace" [class.is-editing]="layoutMode()" [class.is-saving]="layoutSaving()">
         @if (layoutMode()) {
         <aside class="object-library" aria-label="Thư viện đối tượng">
           <header><strong>Thư viện đối tượng</strong></header>
@@ -198,7 +203,7 @@
             <lucide-icon name="land-plot" /><span><strong>Tạo sân</strong></span><lucide-icon name="plus" />
           </button>
           @for (item of layoutLibrary; track item.type) {
-          <button type="button" draggable="true" (dragstart)="beginLibraryDrag($event, item.type)"
+          <button type="button" [draggable]="item.type !== 'CUSTOM'" (dragstart)="beginLibraryDrag($event, item.type)"
             (click)="addFacility(item.type)">
             <lucide-icon [name]="item.icon" /><span>{{ item.label }}</span><lucide-icon name="grip-vertical" />
           </button>
@@ -592,5 +597,48 @@
     </aside>
     }
   </section>
+  }
+
+  @if (customObjectDialogOpen()) {
+  <div class="custom-object-backdrop" (click)="closeCustomObjectCreator()">
+    <section class="custom-object-dialog" role="dialog" aria-modal="true" aria-labelledby="custom-object-title"
+      (click)="$event.stopPropagation()">
+      <header>
+        <div>
+          <span><lucide-icon name="layout-grid" /></span>
+          <div><h2 id="custom-object-title">Tạo đối tượng tùy chỉnh</h2><p>Thêm tiện ích riêng theo mặt bằng của bạn.</p></div>
+        </div>
+        <button type="button" (click)="closeCustomObjectCreator()" aria-label="Đóng"><lucide-icon name="x" /></button>
+      </header>
+      <form [formGroup]="customObjectForm" (ngSubmit)="createCustomObject()">
+        <label class="field">
+          <span>Tên đối tượng <b>*</b></span>
+          <input formControlName="name" maxlength="80" placeholder="Ví dụ: Phòng y tế, khu vui chơi..." autofocus />
+          @if (customObjectForm.controls.name.touched && customObjectForm.controls.name.invalid) {
+          <small>Vui lòng nhập tên đối tượng.</small>
+          }
+        </label>
+        <fieldset class="custom-icon-picker">
+          <legend>Biểu tượng</legend>
+          <div>
+            @for (option of customObjectIcons; track option.icon) {
+            <button type="button" [class.is-selected]="customObjectForm.controls.icon.value === option.icon"
+              (click)="chooseCustomObjectIcon(option.icon)" [attr.aria-label]="option.label">
+              <lucide-icon [name]="option.icon" />
+            </button>
+            }
+          </div>
+        </fieldset>
+        <div class="custom-size-fields">
+          <label class="field"><span>Chiều rộng</span><input type="number" formControlName="width" min="90" max="800" /></label>
+          <label class="field"><span>Chiều cao</span><input type="number" formControlName="height" min="55" max="600" /></label>
+        </div>
+        <footer>
+          <button type="button" class="outline-button" (click)="closeCustomObjectCreator()">Hủy</button>
+          <button type="submit" class="primary-button"><lucide-icon name="plus" /> Tạo đối tượng</button>
+        </footer>
+      </form>
+    </section>
+  </div>
   }
 </main>

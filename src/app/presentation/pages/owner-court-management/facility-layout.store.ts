@@ -9,38 +9,16 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class FacilityLayoutStore {
-  private readonly prefix = 'goatsports:owner-facility-layout:v1:';
-
-  load(venueId: string, courts: OwnerVenueCourt[]): VenueFacilityLayout {
+  load(
+    venueId: string,
+    courts: OwnerVenueCourt[],
+    persisted: VenueFacilityLayout | null = null
+  ): VenueFacilityLayout {
     const fallback = createAutomaticFacilityLayout(venueId, courts);
-    const storage = this.storage();
-    if (!storage) return fallback;
-
-    try {
-      const value = storage.getItem(`${this.prefix}${venueId}`);
-      if (!value) return fallback;
-      const parsed = JSON.parse(value) as VenueFacilityLayout;
-      if (parsed.version !== 1 || parsed.venueId !== venueId || !Array.isArray(parsed.items)) return fallback;
-      return this.reconcile(parsed, fallback, courts);
-    } catch {
+    if (!persisted || persisted.version !== 1 || persisted.venueId !== venueId || !Array.isArray(persisted.items)) {
       return fallback;
     }
-  }
-
-  save(layout: VenueFacilityLayout): VenueFacilityLayout {
-    const saved = { ...cloneFacilityLayout(layout), updatedAt: new Date().toISOString() };
-    this.storage()?.setItem(`${this.prefix}${layout.venueId}`, JSON.stringify(saved));
-    return saved;
-  }
-
-  clear(venueId: string): void {
-    this.storage()?.removeItem(`${this.prefix}${venueId}`);
-  }
-
-  private storage(): Storage | null {
-    if (typeof window === 'undefined') return null;
-    try { return window.localStorage; }
-    catch { return null; }
+    return this.reconcile(persisted, fallback, courts);
   }
 
   private reconcile(

@@ -24,6 +24,7 @@ import {
 import { ManageOwnerBookingsUseCase } from '@application/usecase/owner-booking/manage-owner-bookings.usecase';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
 import { ManageOwnerVenueCourtsUseCase } from '@application/usecase/venue-owner-dashboard/manage-owner-venue-courts.usecase';
+import { ManageOwnerVenueFacilityLayoutUseCase } from '@application/usecase/venue-owner-dashboard/manage-owner-venue-facility-layout.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-loading.component';
@@ -94,6 +95,7 @@ export class OwnerCourtManagementComponent {
   private readonly getMyVenues = inject(GetMyOwnerVenuesUseCase);
   private readonly manageCourts = inject(ManageOwnerVenueCourtsUseCase);
   private readonly manageBookings = inject(ManageOwnerBookingsUseCase);
+  private readonly manageFacilityLayout = inject(ManageOwnerVenueFacilityLayoutUseCase);
   private readonly layoutStore = inject(FacilityLayoutStore);
   private readonly notify = inject(NotifyService);
   private readonly destroyRef = inject(DestroyRef);
@@ -138,6 +140,14 @@ export class OwnerCourtManagementComponent {
     { type: 'STORAGE', label: 'Kho', icon: 'inbox' },
     { type: 'CUSTOM', label: 'Tiện ích khác', icon: 'layout-grid' }
   ];
+  readonly customObjectIcons: readonly LayoutLibraryItem[] = [
+    { type: 'CUSTOM', label: 'Tiện ích', icon: 'layout-grid' },
+    { type: 'CUSTOM', label: 'Cửa hàng', icon: 'store' },
+    { type: 'CUSTOM', label: 'Tủ / phòng', icon: 'folder-open' },
+    { type: 'CUSTOM', label: 'Khu sinh hoạt', icon: 'users' },
+    { type: 'CUSTOM', label: 'Ngoài trời', icon: 'sun' },
+    { type: 'CUSTOM', label: 'Kho chứa', icon: 'inbox' }
+  ];
   readonly parkingSlots = Array.from({ length: 23 }, (_, index) => index + 1);
 
   readonly venues = signal<OwnerVenueOverview[]>([]);
@@ -154,6 +164,9 @@ export class OwnerCourtManagementComponent {
   readonly bookingError = signal<string | null>(null);
   readonly courtBookingError = signal<string | null>(null);
   readonly saving = signal(false);
+  readonly layoutLoading = signal(false);
+  readonly layoutSaving = signal(false);
+  readonly layoutError = signal<string | null>(null);
   readonly togglingId = signal<string | null>(null);
   readonly activeView = signal<WorkspaceView>('MAP');
   readonly panelMode = signal<PanelMode>('NONE');
@@ -179,6 +192,7 @@ export class OwnerCourtManagementComponent {
   readonly layoutFuture = signal<VenueFacilityLayout[]>([]);
   readonly selectedLayoutItemId = signal<string | null>(null);
   readonly selectedLayoutZoneId = signal<string | null>(null);
+  readonly customObjectDialogOpen = signal(false);
 
   private pointerOperation: PointerOperation | null = null;
   private draggedLibraryType: FacilityObjectType | null = null;
@@ -186,7 +200,9 @@ export class OwnerCourtManagementComponent {
   private bookingsReadyContext: string | null = null;
   private venueBookingRequestId = 0;
   private courtBookingRequestId = 0;
+  private layoutRequestId = 0;
   private courtBookingContext: string | null = null;
+  private customObjectPosition = { x: 420, y: 300 };
 
   readonly venue = computed(() => this.venues().find(item => item.venueId === this.selectedVenueId()) ?? null);
   readonly editorOpen = computed(() => this.panelMode() === 'FORM');
@@ -274,6 +290,12 @@ export class OwnerCourtManagementComponent {
     surfaceType: ['', Validators.maxLength(255)],
     active: [true]
   });
+  readonly customObjectForm = this.formBuilder.nonNullable.group({
+    name: ['', [Validators.required, Validators.maxLength(80)]],
+    icon: ['layout-grid', Validators.required],
+    width: [140, [Validators.required, Validators.min(90), Validators.max(800)]],
+    height: [70, [Validators.required, Validators.min(55), Validators.max(600)]]
+  });
 
   constructor() {
     this.load();
@@ -322,6 +344,8 @@ export class OwnerCourtManagementComponent {
     if ((!force && venueId === this.selectedVenueId()) || this.saving() || this.courtLoading()) return;
     if (this.layoutMode() && !this.cancelLayoutEdit()) return;
     this.selectedVenueId.set(venueId);
+    this.layout.set(null);
+    this.layoutError.set(null);
     this.selectedBookingDate.set(this.todayIso());
     this.courtsReadyForVenue = null;
     this.bookingsReadyContext = null;
@@ -599,6 +623,7 @@ export class OwnerCourtManagementComponent {
 
   cancelLayoutEdit(): boolean {
     if (!this.layoutMode()) return true;
+    if (this.layoutSaving()) return false;
     if (this.layoutDirty() && !window.confirm('Bỏ các thay đổi chưa lưu trong bố cục sân?')) return false;
     this.layoutMode.set(false);
     this.layoutDirty.set(false);
@@ -607,34 +632,45 @@ export class OwnerCourtManagementComponent {
     this.layoutFuture.set([]);
     this.selectedLayoutItemId.set(null);
     this.selectedLayoutZoneId.set(null);
+    this.customObjectDialogOpen.set(false);
     this.openDefaultCourtDetail();
     return true;
   }
 
   saveLayout(): void {
     const draft = this.draftLayout();
-    if (!draft) return;
-    try {
-      const saved = this.layoutStore.save(draft);
-      this.layout.set(saved);
-      this.layoutMode.set(false);
-      this.layoutDirty.set(false);
-      this.draftLayout.set(null);
-      this.layoutHistory.set([]);
-      this.layoutFuture.set([]);
-      this.selectedLayoutItemId.set(null);
-      this.selectedLayoutZoneId.set(null);
-      this.openDefaultCourtDetail();
-      this.notify.success('Bố cục cơ sở đã được lưu trên thiết bị này.');
-    } catch {
-      this.notify.error('Không thể lưu bố cục trên thiết bị. Vui lòng thử lại.');
-    }
+    const venueId = this.selectedVenueId();
+    if (!draft || !venueId || this.layoutSaving()) return;
+    this.layoutSaving.set(true);
+    this.manageFacilityLayout.save(venueId, { items: draft.items, zones: draft.zones }).pipe(
+      take(1),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.layoutSaving.set(false))
+    ).subscribe({
+      next: persisted => {
+        const saved = this.layoutStore.load(venueId, this.courts(), persisted);
+        this.layout.set(saved);
+        this.layoutMode.set(false);
+        this.layoutDirty.set(false);
+        this.draftLayout.set(null);
+        this.layoutHistory.set([]);
+        this.layoutFuture.set([]);
+        this.selectedLayoutItemId.set(null);
+        this.selectedLayoutZoneId.set(null);
+        this.layoutError.set(null);
+        this.openDefaultCourtDetail();
+        this.notify.success('Bố cục cơ sở đã được lưu vào hệ thống.');
+      },
+      error: error => {
+        this.notify.error(this.errorMessage(error, 'Không thể lưu bố cục vào hệ thống. Vui lòng thử lại.'));
+      }
+    });
   }
 
   resetLayout(): void {
     const venueId = this.selectedVenueId();
     const draft = this.draftLayout();
-    if (!venueId || !draft) return;
+    if (!venueId || !draft || this.layoutSaving()) return;
     this.pushLayoutHistory();
     this.draftLayout.set(createAutomaticFacilityLayout(venueId, this.courts()));
     this.layoutDirty.set(true);
@@ -645,7 +681,7 @@ export class OwnerCourtManagementComponent {
   undoLayout(): void {
     const history = this.layoutHistory();
     const current = this.draftLayout();
-    if (!history.length || !current) return;
+    if (!history.length || !current || this.layoutSaving()) return;
     const previous = history[history.length - 1];
     this.layoutFuture.update(items => [cloneFacilityLayout(current), ...items].slice(0, 30));
     this.layoutHistory.set(history.slice(0, -1));
@@ -656,7 +692,7 @@ export class OwnerCourtManagementComponent {
   redoLayout(): void {
     const future = this.layoutFuture();
     const current = this.draftLayout();
-    if (!future.length || !current) return;
+    if (!future.length || !current || this.layoutSaving()) return;
     const next = future[0];
     this.layoutHistory.update(items => [...items, cloneFacilityLayout(current)].slice(-30));
     this.layoutFuture.set(future.slice(1));
@@ -665,7 +701,7 @@ export class OwnerCourtManagementComponent {
   }
 
   beginPointerOperation(event: PointerEvent, item: FacilityLayoutItem, mode: 'MOVE' | 'RESIZE'): void {
-    if (!this.layoutMode() || event.button !== 0) return;
+    if (!this.layoutMode() || this.layoutSaving() || event.button !== 0) return;
     event.preventDefault();
     event.stopPropagation();
     this.selectedLayoutItemId.set(item.id);
@@ -685,7 +721,7 @@ export class OwnerCourtManagementComponent {
   }
 
   beginZonePointerOperation(event: PointerEvent, zone: FacilityZone, mode: 'MOVE' | 'RESIZE'): void {
-    if (!this.layoutMode() || event.button !== 0) return;
+    if (!this.layoutMode() || this.layoutSaving() || event.button !== 0) return;
     event.preventDefault();
     event.stopPropagation();
     this.selectedLayoutItemId.set(null);
@@ -856,24 +892,78 @@ export class OwnerCourtManagementComponent {
     const rect = this.facilityCanvas.nativeElement.getBoundingClientRect();
     const x = this.snap((event.clientX - rect.left) / rect.width * this.canvasWidth() - 70);
     const y = this.snap((event.clientY - rect.top) / rect.height * this.canvasHeight() - 35);
+    if (type === 'CUSTOM') {
+      this.openCustomObjectCreator(x, y);
+      return;
+    }
     this.addFacility(type, x, y);
   }
 
   addFacility(type: FacilityObjectType, x = 420, y = 300): void {
+    if (type === 'CUSTOM') {
+      this.openCustomObjectCreator(x, y);
+      return;
+    }
+    this.addFacilityItem(type, x, y);
+  }
+
+  openCustomObjectCreator(x = 420, y = 300): void {
+    if (!this.layoutMode()) return;
+    this.customObjectPosition = { x, y };
+    this.customObjectForm.reset({ name: '', icon: 'layout-grid', width: 140, height: 70 });
+    this.customObjectDialogOpen.set(true);
+  }
+
+  closeCustomObjectCreator(): void {
+    this.customObjectDialogOpen.set(false);
+  }
+
+  chooseCustomObjectIcon(icon: string): void {
+    this.customObjectForm.controls.icon.setValue(icon);
+  }
+
+  createCustomObject(): void {
+    if (this.customObjectForm.invalid) {
+      this.customObjectForm.markAllAsTouched();
+      return;
+    }
+    const value = this.customObjectForm.getRawValue();
+    this.addFacilityItem(
+      'CUSTOM',
+      this.customObjectPosition.x,
+      this.customObjectPosition.y,
+      value.name.trim(),
+      value.icon,
+      value.width,
+      value.height
+    );
+    this.closeCustomObjectCreator();
+  }
+
+  private addFacilityItem(
+    type: FacilityObjectType,
+    x: number,
+    y: number,
+    customLabel?: string,
+    customIcon?: string,
+    customWidth?: number,
+    customHeight?: number
+  ): void {
     const draft = this.draftLayout();
     const libraryItem = this.layoutLibrary.find(item => item.type === type);
-    if (!draft || !libraryItem) return;
+    if (!draft || !libraryItem || this.layoutSaving()) return;
     this.pushLayoutHistory();
     const count = draft.items.filter(item => item.type === type).length + 1;
     const item: FacilityLayoutItem = {
       id: `${type.toLowerCase()}:${Date.now()}`,
       type,
-      label: count > 1 ? `${libraryItem.label} ${count}` : libraryItem.label,
+      label: customLabel || (count > 1 ? `${libraryItem.label} ${count}` : libraryItem.label),
       x: Math.max(0, x),
       y: Math.max(0, y),
-      width: type === 'PARKING' ? 240 : 140,
-      height: type === 'PARKING' ? 90 : 70,
-      rotation: 0
+      width: customWidth ?? (type === 'PARKING' ? 240 : 140),
+      height: customHeight ?? (type === 'PARKING' ? 90 : 70),
+      rotation: 0,
+      icon: customIcon
     };
     this.draftLayout.set({ ...draft, items: [...draft.items, item] });
     this.selectedLayoutItemId.set(item.id);
@@ -882,7 +972,7 @@ export class OwnerCourtManagementComponent {
 
   addZone(): void {
     const draft = this.draftLayout();
-    if (!draft) return;
+    if (!draft || this.layoutSaving()) return;
     this.pushLayoutHistory();
     const number = draft.zones.length + 1;
     const rightEdge = Math.max(FACILITY_CANVAS_WIDTH, ...draft.zones.map(zone => zone.x + zone.width));
@@ -1111,6 +1201,7 @@ export class OwnerCourtManagementComponent {
     this.sportMenuOpen.set(false);
     this.filterOpen.set(false);
     this.actionMenuId.set(null);
+    if (this.customObjectDialogOpen()) this.closeCustomObjectCreator();
     if (this.editorOpen()) this.closeEditor();
   }
 
@@ -1225,7 +1316,36 @@ export class OwnerCourtManagementComponent {
   private syncLayoutWithCourts(): void {
     const venueId = this.selectedVenueId();
     if (!venueId || this.layoutMode()) return;
-    this.layout.set(this.layoutStore.load(venueId, this.courts()));
+    const current = this.layout();
+    if (current?.venueId === venueId) {
+      this.layout.set(this.layoutStore.load(venueId, this.courts(), current));
+      return;
+    }
+    this.loadFacilityLayout(venueId);
+  }
+
+  private loadFacilityLayout(venueId: string): void {
+    const requestId = ++this.layoutRequestId;
+    this.layoutLoading.set(true);
+    this.layoutError.set(null);
+    this.manageFacilityLayout.get(venueId).pipe(
+      take(1),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => {
+        if (requestId === this.layoutRequestId) this.layoutLoading.set(false);
+      })
+    ).subscribe({
+      next: persisted => {
+        if (requestId !== this.layoutRequestId || venueId !== this.selectedVenueId()) return;
+        this.layout.set(this.layoutStore.load(venueId, this.courts(), persisted));
+        this.openDefaultCourtDetail();
+      },
+      error: error => {
+        if (requestId !== this.layoutRequestId || venueId !== this.selectedVenueId()) return;
+        this.layout.set(this.layoutStore.load(venueId, this.courts()));
+        this.layoutError.set(this.errorMessage(error, 'Chưa thể tải bố cục đã lưu. Đang hiển thị bố cục mặc định.'));
+      }
+    });
   }
 
   private openDefaultCourtDetail(): void {

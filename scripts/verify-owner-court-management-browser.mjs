@@ -56,6 +56,7 @@ function responseFor(request) {
   const url = new URL(request.url, `http://localhost:${API_PORT}`);
   if (url.pathname === '/auth-service/api/v1/auth/me') return ok(user);
   if (url.pathname === '/venue-service/api/v1/owner/venues') return ok(venues);
+  if (url.pathname.endsWith('/facility-layout')) return ok(null);
   if (url.pathname === '/venue-service/api/v1/owner/venues/venue-1/courts') return ok(courts);
   if (url.pathname === '/venue-service/api/v1/owner/venues/venue-2/courts') return ok([]);
   if (url.pathname === '/venue-service/api/v1/owner/bookings') {
@@ -248,6 +249,18 @@ async function verifyViewport(cdp, name, width, height) {
       zoneInspectorVisible: document.querySelector('.layout-inspector')?.innerText.includes('Khu vực cơ sở'),
       zoneCountAfterAdd: document.querySelectorAll('.facility-zone').length
     }))()`));
+    await evaluate(cdp, `(() => {
+      const button = [...document.querySelectorAll('.object-library > button')]
+        .find(item => item.textContent.includes('Tiện ích khác'));
+      button?.click();
+    })()`);
+    await waitFor(cdp, "!!document.querySelector('.custom-object-dialog')");
+    Object.assign(editMode, await evaluate(cdp, `(() => ({
+      customObjectDialogVisible: !!document.querySelector('.custom-object-dialog'),
+      customObjectIconChoices: document.querySelectorAll('.custom-icon-picker button').length,
+      customObjectNamePlaceholder: document.querySelector('.custom-object-dialog input[formcontrolname="name"]')?.placeholder
+    }))()`));
+    await evaluate(cdp, `document.querySelector('.custom-object-dialog > header > button')?.click()`);
     const editScreenshot = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
     const editScreenshotPath = join(tmpdir(), `goatsports-owner-courts-edit-${name}.png`);
     writeFileSync(editScreenshotPath, Buffer.from(editScreenshot.data, 'base64'));

@@ -16,6 +16,7 @@ import { OwnerVenueCourt, OwnerVenueOverview } from '@application/dto/venue-owne
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
 import { ManageOwnerBookingsUseCase } from '@application/usecase/owner-booking/manage-owner-bookings.usecase';
 import { ManageOwnerVenueCourtsUseCase } from '@application/usecase/venue-owner-dashboard/manage-owner-venue-courts.usecase';
+import { ManageOwnerVenueFacilityLayoutUseCase } from '@application/usecase/venue-owner-dashboard/manage-owner-venue-facility-layout.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { OwnerCourtManagementComponent } from './owner-court-management.component';
 
@@ -31,6 +32,7 @@ describe('OwnerCourtManagementComponent', () => {
   const getMyVenues = { execute: vi.fn() };
   const manageCourts = { list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(), toggle: vi.fn() };
   const manageBookings = { list: vi.fn() };
+  const manageFacilityLayout = { get: vi.fn(), save: vi.fn() };
   const notify = { success: vi.fn(), error: vi.fn(), warning: vi.fn() };
 
   beforeEach(async () => {
@@ -40,6 +42,13 @@ describe('OwnerCourtManagementComponent', () => {
     manageCourts.update.mockReset().mockReturnValue(of(savedCourt));
     manageCourts.toggle.mockReset().mockReturnValue(of(savedCourt));
     manageBookings.list.mockReset().mockReturnValue(of({ items: [], page: 0, pageSize: 20, pages: 0, total: 0 }));
+    manageFacilityLayout.get.mockReset().mockReturnValue(of(null));
+    manageFacilityLayout.save.mockReset().mockImplementation((venueId, request) => of({
+      version: 1,
+      venueId,
+      ...request,
+      updatedAt: '2026-09-03T10:00:00'
+    }));
     notify.success.mockReset(); notify.error.mockReset();
     await TestBed.configureTestingModule({
       imports: [OwnerCourtManagementComponent],
@@ -57,6 +66,7 @@ describe('OwnerCourtManagementComponent', () => {
         { provide: GetMyOwnerVenuesUseCase, useValue: getMyVenues },
         { provide: ManageOwnerVenueCourtsUseCase, useValue: manageCourts },
         { provide: ManageOwnerBookingsUseCase, useValue: manageBookings },
+        { provide: ManageOwnerVenueFacilityLayoutUseCase, useValue: manageFacilityLayout },
         { provide: NotifyService, useValue: notify }
       ]
     }).compileComponents();
@@ -133,10 +143,55 @@ describe('OwnerCourtManagementComponent', () => {
     component.undoLayout();
     expect(component.draftLayout()!.items).toHaveLength(initialItemCount);
     component.saveLayout();
+    expect(manageFacilityLayout.save).toHaveBeenCalledWith('venue-1', expect.objectContaining({
+      items: expect.any(Array), zones: expect.any(Array)
+    }));
     expect(component.layoutMode()).toBe(false);
     expect(component.panelMode()).toBe('DETAIL');
     expect(component.selectedCourtId()).toBe('court-1');
-    expect(notify.success).toHaveBeenCalledWith('Bố cục cơ sở đã được lưu trên thiết bị này.');
+    expect(notify.success).toHaveBeenCalledWith('Bố cục cơ sở đã được lưu vào hệ thống.');
+  });
+
+  it('tải bố cục đã lưu từ API thay vì bộ nhớ trình duyệt', () => {
+    manageCourts.list.mockReturnValue(of([savedCourt]));
+    manageFacilityLayout.get.mockReturnValue(of({
+      version: 1,
+      venueId: 'venue-1',
+      updatedAt: '2026-09-03T10:00:00',
+      zones: [{ id: 'zone-a', name: 'KHU A', x: 0, y: 0, width: 700, height: 500 }],
+      items: [{
+        id: 'custom:medical', type: 'CUSTOM', label: 'Phòng y tế', icon: 'users',
+        x: 520, y: 360, width: 180, height: 90, rotation: 0, zoneId: 'zone-a'
+      }]
+    }));
+
+    const fixture = TestBed.createComponent(OwnerCourtManagementComponent);
+    fixture.detectChanges();
+
+    expect(manageFacilityLayout.get).toHaveBeenCalledWith('venue-1');
+    expect(fixture.componentInstance.layout()!.items).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'custom:medical', label: 'Phòng y tế' }),
+      expect.objectContaining({ type: 'COURT', courtId: 'court-1' })
+    ]));
+  });
+
+  it('tạo đối tượng tùy chỉnh với tên, icon và kích thước do chủ sân chọn', () => {
+    manageCourts.list.mockReturnValue(of([savedCourt]));
+    const fixture = TestBed.createComponent(OwnerCourtManagementComponent);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    component.enterLayoutMode();
+
+    component.openCustomObjectCreator(520, 360);
+    component.customObjectForm.setValue({ name: 'Phòng y tế', icon: 'users', width: 180, height: 90 });
+    component.createCustomObject();
+
+    const custom = component.draftLayout()!.items.at(-1)!;
+    expect(custom).toEqual(expect.objectContaining({
+      type: 'CUSTOM', label: 'Phòng y tế', icon: 'users', x: 520, y: 360, width: 180, height: 90
+    }));
+    expect(component.customObjectDialogOpen()).toBe(false);
+    expect(component.layoutDirty()).toBe(true);
   });
 
   it('thêm khu ở phần canvas mở rộng và cho phép kéo, thay đổi kích thước khu', () => {
