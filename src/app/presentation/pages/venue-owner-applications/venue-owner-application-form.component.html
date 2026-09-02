@@ -1,42 +1,105 @@
 <div class="owner-form-layout">
-  <section class="owner-form-card">
-    <header class="owner-form-card__header">
-      <h2>{{ steps[currentStep() - 1] }}</h2>
-      <p>Bước {{ currentStep() }}/4 • {{ stepDescriptions[currentStep() - 1] }}</p>
-      <ol class="stepper" aria-label="Tiến trình nhập hồ sơ">
-        @for (step of steps; track step; let index = $index; let last = $last) {
-          <li [class.is-active]="currentStep() === index + 1" [class.is-complete]="currentStep() > index + 1">
-            <button type="button" (click)="goToStep(index + 1)" [disabled]="index + 1 > currentStep()">
-              {{ currentStep() > index + 1 ? '✓' : index + 1 }}
-            </button>
+  <aside class="owner-form-progress" aria-label="Tiến trình nhập hồ sơ">
+    <p class="owner-form-progress__count">
+      <span>Bước {{ currentStep() }}/4</span>
+      <strong>{{ steps[currentStep() - 1] }}</strong>
+    </p>
+    <ol class="stepper">
+      @for (step of steps; track step; let index = $index; let last = $last) {
+        <li
+          [class.is-active]="currentStep() === index + 1"
+          [class.is-complete]="currentStep() > index + 1"
+          [attr.aria-current]="currentStep() === index + 1 ? 'step' : null">
+          <button
+            type="button"
+            (click)="goToStep(index + 1)"
+            [disabled]="index + 1 > currentStep() || submitting()"
+            [attr.aria-label]="'Mở bước ' + (index + 1) + ': ' + step">
+            @if (currentStep() > index + 1) {
+              <app-lucide-icon name="check" [size]="14" aria-hidden="true" />
+            } @else {
+              {{ index + 1 }}
+            }
+          </button>
+          <div>
             <strong>{{ step }}</strong>
-            @if (!last) { <span class="stepper__line"></span> }
-          </li>
-        }
-      </ol>
+            <span>{{ stepDescriptions[index] }}</span>
+          </div>
+          @if (!last) { <i class="stepper__line" aria-hidden="true"></i> }
+        </li>
+      }
+    </ol>
+
+    <section class="preparation-list" aria-labelledby="preparation-title">
+      <h3 id="preparation-title">Chuẩn bị trước khi bắt đầu</h3>
+      <ul>
+        <li><app-lucide-icon name="circle-check" [size]="16" aria-hidden="true" /> Giấy tờ tùy thân còn hiệu lực</li>
+        <li><app-lucide-icon name="circle-check" [size]="16" aria-hidden="true" /> Thông tin cơ sở và địa chỉ chính xác</li>
+        <li><app-lucide-icon name="circle-check" [size]="16" aria-hidden="true" /> Giấy phép kinh doanh nếu có</li>
+        <li><app-lucide-icon name="circle-check" [size]="16" aria-hidden="true" /> Hình ảnh hoặc giấy tờ liên quan</li>
+      </ul>
+    </section>
+  </aside>
+
+  <section class="owner-form-panel">
+    <header class="owner-form-panel__header">
+      <h2>{{ steps[currentStep() - 1] }}</h2>
+      <p>{{ currentStep() === 1
+        ? 'Cung cấp thông tin của người đại diện pháp lý hoặc người chịu trách nhiệm quản lý cơ sở.'
+        : stepDescriptions[currentStep() - 1] + ' để GoatSports kiểm tra hồ sơ của bạn.' }}</p>
     </header>
 
     <form (ngSubmit)="currentStep() < 4 ? nextStep() : submit()" novalidate>
-      <div class="owner-form-card__body">
+      <div class="owner-form-panel__body" [class.owner-form-panel__body--documents]="currentStep() === 4">
         @if (currentStep() === 1) {
           <div class="form-grid">
-            <label class="span-2">HỌ VÀ TÊN <em>*</em><input name="fullName" [(ngModel)]="form.fullName" placeholder="Nhập họ và tên"></label>
-            <label>SỐ ĐIỆN THOẠI <em>*</em><input name="phone" [(ngModel)]="form.phone" placeholder="Nhập số điện thoại" type="tel"></label>
-            <label>EMAIL <em>*</em><input name="email" [(ngModel)]="form.email" placeholder="example@email.com" type="email"></label>
-            <label class="span-2">SỐ CCCD / HỘ CHIẾU <em>*</em><input name="identityNumber" [(ngModel)]="form.identityNumber" placeholder="Nhập số CCCD / Hộ chiếu"></label>
+            <label>
+              <span class="field-label">Họ và tên <em>*</em></span>
+              <input name="fullName" [(ngModel)]="form.fullName" placeholder="Nhập họ và tên" autocomplete="name" maxlength="100">
+            </label>
+            <label>
+              <span class="field-label">Số điện thoại <em>*</em></span>
+              <input name="phone" [(ngModel)]="form.phone" placeholder="Nhập số điện thoại" type="tel" inputmode="tel" autocomplete="tel" maxlength="16">
+              <small>Số điện thoại dùng để liên hệ và xác minh thông tin.</small>
+            </label>
+            <label>
+              <span class="field-label">Email <em>*</em></span>
+              <input name="email" [(ngModel)]="form.email" placeholder="Nhập địa chỉ email" type="email" inputmode="email" autocomplete="email" spellcheck="false" maxlength="160">
+              <small>Email dùng để nhận thông báo và trao đổi.</small>
+            </label>
+            <label>
+              <span class="field-label">Số CCCD / Hộ chiếu <em>*</em></span>
+              <input name="identityNumber" [(ngModel)]="form.identityNumber" placeholder="Nhập số CCCD hoặc hộ chiếu" autocomplete="off" spellcheck="false" maxlength="12">
+              <small>Dùng để xác minh danh tính. Thông tin này chỉ phục vụ quá trình xét duyệt.</small>
+            </label>
+            <p class="privacy-note">
+              <app-lucide-icon name="shield-check" [size]="16" aria-hidden="true" />
+              Thông tin được bảo vệ theo chính sách của GoatSports.
+            </p>
           </div>
         } @else if (currentStep() === 2) {
           <div class="form-grid">
-            <label class="span-2">TÊN DOANH NGHIỆP / CƠ SỞ <em>*</em><input name="businessName" [(ngModel)]="form.businessName" placeholder="Tên cơ sở kinh doanh"></label>
-            <label>LOẠI HÌNH KINH DOANH <em>*</em>
-              <select name="businessType" [(ngModel)]="form.businessType"><option value="INDIVIDUAL">Cá nhân</option><option value="COMPANY">Doanh nghiệp</option></select>
+            <label>
+              <span class="field-label">Tên doanh nghiệp / Cơ sở <em>*</em></span>
+              <input name="businessName" [(ngModel)]="form.businessName" placeholder="Nhập tên cơ sở kinh doanh" autocomplete="organization" maxlength="160">
             </label>
-            <label>MÃ SỐ THUẾ <em>*</em><input name="taxCode" [(ngModel)]="form.taxCode" placeholder="10 hoặc 13 chữ số" inputmode="numeric"></label>
+            <label>
+              <span class="field-label">Loại hình kinh doanh <em>*</em></span>
+              <select name="businessType" [(ngModel)]="form.businessType">
+                <option value="INDIVIDUAL">Cá nhân</option>
+                <option value="COMPANY">Doanh nghiệp</option>
+              </select>
+            </label>
+            <label>
+              <span class="field-label">Mã số thuế <em>*</em></span>
+              <input name="taxCode" [(ngModel)]="form.taxCode" placeholder="Nhập 10 hoặc 13 chữ số" inputmode="numeric" autocomplete="off" maxlength="13">
+              <small>Nhập đúng mã số thuế đã đăng ký cho cơ sở.</small>
+            </label>
           </div>
         } @else if (currentStep() === 3) {
           <div class="form-grid">
-            <div class="span-2 address-field">
-              <label for="owner-venue-address">ĐỊA CHỈ CHI TIẾT <em>*</em></label>
+            <div class="address-field">
+              <label for="owner-venue-address" class="field-label">Địa chỉ chi tiết <em>*</em></label>
               <div class="address-autocomplete">
                 <input
                   id="owner-venue-address"
@@ -49,7 +112,7 @@
                   placeholder="Nhập ít nhất 3 ký tự để tìm địa chỉ"
                   maxlength="160"
                   [disabled]="addressDetailLoading()"
-                  autocomplete="off"
+                  autocomplete="street-address"
                   role="combobox"
                   aria-autocomplete="list"
                   [attr.aria-expanded]="addressSuggestionsOpen()"
@@ -77,28 +140,42 @@
                       </button>
                     }
                     @if (addressSearchError()) {
-                      <p class="address-suggestions__message">{{ addressSearchError() }}</p>
+                      <p class="address-suggestions__message" role="alert">{{ addressSearchError() }}</p>
                     }
                   </div>
                 }
               </div>
               @if (form.latitude !== null && form.longitude !== null) {
-                <small class="address-coordinate-status">✓ Đã xác định và sẽ lưu tọa độ sân</small>
+                <small class="address-coordinate-status">
+                  <app-lucide-icon name="circle-check" [size]="15" aria-hidden="true" />
+                  Đã xác định và sẽ lưu tọa độ sân
+                </small>
               }
             </div>
-            <label>PHƯỜNG / XÃ <em>*</em><input name="ward" [(ngModel)]="form.ward"></label>
-            <label>QUẬN / HUYỆN <input name="district" [(ngModel)]="form.district" placeholder="Không bắt buộc với địa chỉ hành chính mới"></label>
-            <label class="span-2">TỈNH / THÀNH PHỐ <em>*</em><input name="city" [(ngModel)]="form.city" placeholder="Nhập tỉnh / thành phố"></label>
+            <label>
+              <span class="field-label">Phường / Xã <em>*</em></span>
+              <input name="ward" [(ngModel)]="form.ward" placeholder="Nhập phường hoặc xã" autocomplete="address-level3">
+            </label>
+            <label>
+              <span class="field-label">Quận / Huyện</span>
+              <input name="district" [(ngModel)]="form.district" placeholder="Không bắt buộc với địa chỉ hành chính mới" autocomplete="address-level2">
+            </label>
+            <label>
+              <span class="field-label">Tỉnh / Thành phố <em>*</em></span>
+              <input name="city" [(ngModel)]="form.city" placeholder="Nhập tỉnh hoặc thành phố" autocomplete="address-level1">
+            </label>
           </div>
         } @else {
           <div class="document-grid">
             @for (key of fileKeys; track key) {
-              <label class="document-card">
-                <span class="document-card__icon">⇧</span>
+              <label class="document-card" [class.has-file]="files[key]">
+                <span class="document-card__icon" aria-hidden="true">
+                  <app-lucide-icon [name]="files[key] ? 'circle-check' : 'upload'" [size]="20" />
+                </span>
                 <strong>{{ fileLabels[key] }}</strong>
                 @if (files[key]; as file) {
-                  <small title="{{ file.name }}">✓ {{ file.name }}</small>
-                  <button type="button" (click)="removeFile(key)">Chọn lại</button>
+                  <small [title]="file.name">{{ file.name }}</small>
+                  <button type="button" (click)="$event.preventDefault(); $event.stopPropagation(); removeFile(key)">Chọn lại</button>
                 } @else {
                   <small>Ảnh hoặc PDF, tối đa 2MB</small>
                 }
@@ -109,27 +186,24 @@
         }
       </div>
 
-      <footer class="owner-form-card__footer">
-        @if (currentStep() > 1) { <button type="button" class="button--ghost" (click)="previousStep()">Quay lại</button> }
-        @else { <span></span> }
+      <footer class="owner-form-panel__footer">
+        @if (currentStep() > 1) {
+          <button type="button" class="button--secondary" (click)="previousStep()" [disabled]="submitting()">
+            <app-lucide-icon name="arrow-left" [size]="17" aria-hidden="true" />
+            Quay lại
+          </button>
+        } @else {
+          <button type="button" class="button--secondary" (click)="cancel()" [disabled]="submitting()">
+            <app-lucide-icon name="history" [size]="17" aria-hidden="true" />
+            Quay lại lịch sử
+          </button>
+        }
+
         <button type="submit" class="button--primary" [disabled]="submitting()">
           {{ currentStep() < 4 ? 'Tiếp tục' : (submitting() ? 'Đang gửi...' : 'Gửi đơn đăng ký') }}
-          @if (!submitting()) { <kbd>Enter ↵</kbd> }
+          @if (!submitting()) { <app-lucide-icon name="arrow-right" [size]="17" aria-hidden="true" /> }
         </button>
       </footer>
     </form>
   </section>
-
-  <aside class="owner-form-aside">
-    <section class="owner-info-card">
-      <p>TRẠNG THÁI HỒ SƠ</p>
-      <h2>Sẵn sàng để bắt đầu</h2>
-      <small>Sau khi gửi, đội ngũ GOAT SPORTS thường phản hồi trong vòng 1–2 ngày làm việc.</small>
-    </section>
-    <section class="owner-info-card">
-      <h2>Chuẩn bị trước khi gửi</h2>
-      <ul><li>✓ Giấy tờ tùy thân còn hiệu lực</li><li>✓ Thông tin pháp lý của cơ sở</li></ul>
-    </section>
-    <div class="owner-help">⌕ &nbsp; Cần trợ giúp? Đội ngũ hỗ trợ luôn sẵn sàng đồng hành cùng bạn.</div>
-  </aside>
 </div>

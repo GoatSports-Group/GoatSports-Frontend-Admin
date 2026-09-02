@@ -2,46 +2,194 @@
   <div class="owner-page__container">
     <header class="owner-page__header">
       <div>
-        <p class="owner-page__eyebrow">{{ activeView() === 'history' ? 'Quản lý hồ sơ' : 'Hồ sơ đối tác' }}</p>
-        <h1>{{ activeView() === 'history' ? 'Lịch sử đăng ký' : 'Đăng ký trở thành chủ sân' }}</h1>
+        <h1>{{ activeView() === 'history' ? 'Đơn đăng ký' : 'Tạo hồ sơ chủ sân' }}</h1>
         <p>{{ activeView() === 'history'
-          ? 'Theo dõi những hồ sơ đã tạo và tiếp tục hoàn thiện khi cần.'
-          : 'Hoàn tất vài thông tin thiết yếu để GOAT SPORTS xác minh và đưa sân của bạn lên hệ thống.' }}</p>
+          ? 'Quản lý và theo dõi tất cả hồ sơ đăng ký chủ sân của bạn.'
+          : 'Hoàn tất thông tin để GoatSports xác minh cơ sở của bạn.' }}</p>
       </div>
-      <button type="button" (click)="activeView() === 'history' ? openForm() : openHistory()"
+
+      <button type="button" class="owner-page__action" [class.owner-page__action--back]="activeView() === 'form'"
+        (click)="activeView() === 'history' ? openForm() : openHistory()"
         [disabled]="activeView() === 'history' && hasPendingApplication()"
         [title]="hasPendingApplication() ? 'Bạn đang có một đơn chờ duyệt' : ''">
-        <app-lucide-icon [name]="activeView() === 'history' ? 'file-plus-2' : 'history'" [size]="18" />
+        <app-lucide-icon [name]="activeView() === 'history' ? 'plus' : 'arrow-left'" [size]="18" />
         {{ activeView() === 'history'
-          ? (hasPendingApplication() ? 'Đang có đơn chờ duyệt' : 'Đăng ký chủ sân')
-          : 'Xem lịch sử đăng ký' }}
+        ? (hasPendingApplication() ? 'Đang có đơn chờ duyệt' : 'Tạo hồ sơ mới')
+        : 'Quay lại lịch sử' }}
       </button>
     </header>
 
     @if (activeView() === 'form') {
-      <app-venue-owner-application-form (submitted)="handleSubmitted()" />
+    <app-venue-owner-application-form (submitted)="handleSubmitted()" (cancelled)="openHistory()" />
     } @else if (loading()) {
-      <app-page-loading title="Đang tải hồ sơ đăng ký"
-        description="GoatSports đang đồng bộ lịch sử và trạng thái xét duyệt của bạn." />
+    <app-page-loading title="Đang tải hồ sơ đăng ký"
+      description="GoatSports đang đồng bộ lịch sử và trạng thái xét duyệt của bạn." />
     } @else if (error()) {
-      <app-owner-application-progress
-        [application]="null" [loading]="false" [error]="error()"
-        applicationUrl="/admin/applications" (retry)="loadApplications()" />
+    <app-owner-application-progress [application]="null" [loading]="false" [error]="error()"
+      applicationUrl="/admin/applications" (retry)="loadApplications()" />
     } @else if (applications().length === 0) {
-      <div class="empty-state">
-        <span aria-hidden="true"><app-lucide-icon name="file-plus-2" [size]="24" /></span>
-        <h2>Chưa có hồ sơ đăng ký</h2>
-        <p>Tạo hồ sơ đầu tiên để bắt đầu quá trình xét duyệt đối tác chủ sân.</p>
-        <button type="button" (click)="openForm()">Tạo hồ sơ đầu tiên</button>
-      </div>
+    <div class="empty-state">
+      <span aria-hidden="true"><app-lucide-icon name="file-plus-2" [size]="24" /></span>
+      <h2>Chưa có hồ sơ đăng ký</h2>
+      <p>Tạo hồ sơ đầu tiên để bắt đầu quá trình xét duyệt đối tác chủ sân.</p>
+      <button type="button" (click)="openForm()">Tạo hồ sơ đầu tiên</button>
+    </div>
     } @else {
-      <div class="application-list">
-        @for (application of applications(); track application.ownerApplicationId) {
-          <app-owner-application-progress
-            [application]="application" [loading]="false" [error]="null"
-            applicationUrl="/admin/applications" />
+    <div class="application-workspace">
+      <aside class="application-browser" aria-label="Danh sách hồ sơ đăng ký">
+        <div class="application-search">
+          <app-lucide-icon name="search" [size]="18" aria-hidden="true" />
+          <input type="search" aria-label="Tìm hồ sơ đăng ký"
+            placeholder="Tìm kiếm theo tên cở sở, người đại diện hoặc trạng thái" [value]="searchQuery()"
+            (input)="updateSearch($any($event.target).value)" />
+        </div>
+
+        @if (pagedApplications().length === 0) {
+        <div class="application-browser__empty" role="status">
+          <app-lucide-icon name="search" [size]="22" aria-hidden="true" />
+          <strong>Không tìm thấy hồ sơ</strong>
+          <p>Thử tìm theo tên cơ sở, người đại diện hoặc trạng thái.</p>
+        </div>
+        } @else {
+        <div class="application-list">
+          @for (application of pagedApplications(); track application.ownerApplicationId) {
+          <button type="button" class="application-list__item"
+            [class.is-selected]="selectedApplication().ownerApplicationId === application.ownerApplicationId"
+            [class]="'application-list__item application-list__item--' + getStatusTone(application.status)"
+            [attr.aria-pressed]="selectedApplication().ownerApplicationId === application.ownerApplicationId"
+            (click)="selectApplication(application)">
+            <span class="application-list__status-icon" aria-hidden="true">
+              <app-lucide-icon [name]="getStatusIcon(application.status)" [size]="18" />
+            </span>
+            <span class="application-list__identity">
+              <strong>{{ application.businessName }}</strong>
+              <time [attr.datetime]="application.createdAt">
+                {{ application.createdAt ? (application.createdAt | date:'dd/MM/yyyy HH:mm') : 'Đang cập nhật' }}
+              </time>
+            </span>
+            <span class="application-list__status">{{ getStatusLabel(application.status) }}</span>
+            <app-lucide-icon class="application-list__chevron" name="chevron-right" [size]="17" aria-hidden="true" />
+          </button>
+          }
+        </div>
         }
-      </div>
+
+        <footer class="application-browser__footer">
+          <p>Hiển thị {{ pagedApplications().length }} trong tổng số {{ filteredApplications().length }} hồ sơ</p>
+          @if (totalPages() > 1) {
+          <nav aria-label="Phân trang hồ sơ">
+            <button type="button" aria-label="Trang trước" [disabled]="currentPage() === 1" (click)="previousPage()">
+              <app-lucide-icon name="chevron-left" [size]="17" />
+            </button>
+            <span aria-current="page">{{ currentPage() }}</span>
+            <button type="button" aria-label="Trang sau" [disabled]="currentPage() === totalPages()"
+              (click)="nextPage()">
+              <app-lucide-icon name="chevron-right" [size]="17" />
+            </button>
+          </nav>
+          }
+        </footer>
+      </aside>
+
+      @if (selectedApplication(); as application) {
+      <article class="application-detail" [attr.aria-label]="'Chi tiết hồ sơ ' + application.businessName">
+        <header class="application-detail__header">
+          <div>
+            <span>{{ getBusinessTypeLabel(application.businessType) }}</span>
+            <h2>{{ application.businessName }}</h2>
+            <div class="application-detail__status-line">
+              <span [class]="'detail-status detail-status--' + getStatusTone(application.status)">
+                <app-lucide-icon [name]="getStatusIcon(application.status)" [size]="15" aria-hidden="true" />
+                {{ getStatusLabel(application.status) }}
+              </span>
+              <span aria-hidden="true">·</span>
+              <time [attr.datetime]="application.createdAt">
+                Nộp ngày {{ application.createdAt ? (application.createdAt | date:'dd/MM/yyyy HH:mm') : 'đang cập nhật'
+                }}
+              </time>
+            </div>
+          </div>
+        </header>
+
+        <dl class="application-detail__facts">
+          <div>
+            <dt>Người đại diện</dt>
+            <dd>{{ application.fullName }}</dd>
+          </div>
+          <div>
+            <dt>Số điện thoại</dt>
+            <dd><a [href]="'tel:' + application.phone">{{ application.phone }}</a></dd>
+          </div>
+          <div>
+            <dt>Địa chỉ</dt>
+            <dd>{{ getAddress(application) }}</dd>
+          </div>
+          <div>
+            <dt>Email</dt>
+            <dd><a [href]="'mailto:' + application.email">{{ application.email }}</a></dd>
+          </div>
+          <div>
+            <dt>Số CCCD / Hộ chiếu</dt>
+            <dd>{{ application.identityNumber }}</dd>
+          </div>
+          <div>
+            <dt>Mã số thuế</dt>
+            <dd>{{ application.taxCode || 'Không có' }}</dd>
+          </div>
+        </dl>
+
+        @if (application.status === 'REJECTED') {
+        <div class="application-detail__rejection" role="note">
+          <app-lucide-icon name="alert-triangle" [size]="18" aria-hidden="true" />
+          <div>
+            <span>Lý do từ chối</span>
+            <strong>{{ application.rejectReason || 'Chưa có lý do cụ thể' }}</strong>
+          </div>
+        </div>
+        }
+
+        @if (selectedProgress(); as progress) {
+        <section class="application-timeline" aria-labelledby="application-progress-title">
+          <h3 id="application-progress-title">Tiến trình xét duyệt</h3>
+          <ol [attr.aria-label]="progress.summary">
+            @for (step of progress.steps; track step.title; let last = $last) {
+            <li [class]="'timeline-step timeline-step--' + step.state"
+              [attr.aria-current]="step.state === 'current' ? 'step' : null">
+              <div class="timeline-step__rail" aria-hidden="true">
+                <span>
+                  @if (step.state === 'completed') {
+                  <app-lucide-icon name="check" [size]="13" />
+                  } @else if (step.state === 'rejected' || step.state === 'cancelled') {
+                  <app-lucide-icon name="x" [size]="13" />
+                  }
+                </span>
+                @if (!last) { <i></i> }
+              </div>
+              <div class="timeline-step__content">
+                <strong>{{ step.title }}</strong>
+                <p>{{ step.description }}</p>
+              </div>
+              @if (step.timestamp) {
+              <time [attr.datetime]="step.timestamp">{{ step.timestamp | date:'dd/MM/yyyy HH:mm' }}</time>
+              }
+            </li>
+            }
+          </ol>
+
+          <div [class]="'application-timeline__update application-timeline__update--' + progress.tone"
+            aria-live="polite">
+            <app-lucide-icon [name]="progress.tone === 'approved' ? 'circle-check' : 'info'" [size]="17"
+              aria-hidden="true" />
+            <strong>{{ progress.detail }}</strong>
+            @if (progress.updatedAt) {
+            <time [attr.datetime]="progress.updatedAt">{{ progress.updatedAt | date:'dd/MM/yyyy HH:mm' }}</time>
+            }
+          </div>
+        </section>
+        }
+      </article>
+      }
+    </div>
     }
   </div>
 </section>

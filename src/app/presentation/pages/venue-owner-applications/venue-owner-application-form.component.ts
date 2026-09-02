@@ -18,6 +18,7 @@ import { FormsModule } from '@angular/forms';
 import { BusinessType } from '@application/dto/owner-application/owner-application.dto';
 import { SubmitOwnerApplicationUseCase } from '@application/usecase/owner-application/submit-owner-application.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
+import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { VenueOwnerSubmissionLoaderComponent } from './venue-owner-submission-loader.component';
 import { SearchAddressSuggestionsUseCase } from '@application/usecase/owner-application/search-address-suggestions.usecase';
 import { AddressSuggestion } from '@application/dto/owner-application/address-suggestion.dto';
@@ -33,7 +34,7 @@ type ApplicationForm = {
 @Component({
   selector: 'app-venue-owner-application-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, OverlayModule],
+  imports: [CommonModule, FormsModule, OverlayModule, LucideIconComponent],
   templateUrl: './venue-owner-application-form.component.html',
   styleUrl: './venue-owner-application-form.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -50,6 +51,7 @@ export class VenueOwnerApplicationFormComponent {
   private selectedAddressValue = '';
 
   readonly submitted = output<void>();
+  readonly cancelled = output<void>();
   readonly currentStep = signal(1);
   readonly submitting = signal(false);
   readonly addressSuggestions = signal<AddressSuggestion[]>([]);
@@ -58,8 +60,13 @@ export class VenueOwnerApplicationFormComponent {
   readonly addressSuggestionsOpen = signal(false);
   readonly addressSearchError = signal('');
   readonly activeSuggestionIndex = signal(-1);
-  readonly steps = ['Người đại diện', 'Cơ sở', 'Địa chỉ', 'Hồ sơ'];
-  readonly stepDescriptions = ['Thông tin cá nhân', 'Thông tin kinh doanh', 'Địa chỉ cơ sở', 'Giấy tờ pháp lý'];
+  readonly steps = ['Người đại diện', 'Thông tin cơ sở', 'Địa chỉ sân', 'Hồ sơ pháp lý'];
+  readonly stepDescriptions = [
+    'Thông tin liên hệ của người đại diện',
+    'Tên cơ sở, loại hình và quy mô',
+    'Vị trí và thông tin địa chỉ',
+    'Giấy tờ và thông tin pháp lý'
+  ];
   readonly fileLabels: Record<FileKey, string> = {
     idCardFront: 'CCCD mặt trước', idCardBack: 'CCCD mặt sau',
     businessLicense: 'Giấy phép kinh doanh', venueImage: 'Hình ảnh cơ sở / sân'
@@ -112,6 +119,10 @@ export class VenueOwnerApplicationFormComponent {
 
   previousStep(): void {
     this.currentStep.update(step => Math.max(1, step - 1));
+  }
+
+  cancel(): void {
+    if (!this.submitting()) this.cancelled.emit();
   }
 
   onAddressInput(value: string): void {
