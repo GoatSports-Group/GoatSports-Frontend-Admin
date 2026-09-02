@@ -37,35 +37,60 @@
     <section class="workspace-shell" [class.has-panel]="panelMode() !== 'NONE'">
       <div class="workspace-primary">
         <div class="operations-toolbar">
-          <label class="venue-select">
-            <span class="sr-only">Chọn cơ sở</span>
-            <lucide-icon name="store" />
-            <select [value]="selectedVenueId()" (change)="selectVenue($any($event.target).value)"
-              [disabled]="courtLoading() || saving() || layoutMode()">
-              @for (item of venues(); track item.venueId) {
-                <option [value]="item.venueId">{{ item.name }}</option>
-              }
-            </select>
-            <lucide-icon name="chevron-down" />
-          </label>
+          <div class="venue-select" (click)="$event.stopPropagation()">
+            <button type="button" class="venue-select__trigger"
+              (click)="toggleVenueMenu()"
+              [disabled]="courtLoading() || saving() || layoutMode()"
+              [attr.aria-expanded]="venueMenuOpen()" aria-haspopup="listbox">
+              <lucide-icon name="store" />
+              <span>{{ venue()?.name || 'Chọn cơ sở' }}</span>
+              <lucide-icon name="chevron-down" [class.is-open]="venueMenuOpen()" />
+            </button>
+            @if (venueMenuOpen()) {
+              <div class="venue-select__menu" role="listbox" aria-label="Chọn cơ sở">
+                @for (item of venues(); track item.venueId) {
+                  <button type="button" role="option"
+                    [class.is-selected]="selectedVenueId() === item.venueId"
+                    [attr.aria-selected]="selectedVenueId() === item.venueId"
+                    (click)="selectVenueFromMenu(item.venueId)">
+                    <span><strong>{{ item.name }}</strong><small>{{ item.city || item.district || 'Cơ sở thể thao' }}</small></span>
+                    @if (selectedVenueId() === item.venueId) { <lucide-icon name="check" /> }
+                  </button>
+                }
+              </div>
+            }
+          </div>
 
           <label class="court-search">
             <lucide-icon name="search" />
             <input type="search" placeholder="Tìm sân..." [value]="query()" (input)="updateQuery($event)" />
           </label>
 
-          <label class="select-control">
-            <span class="sr-only">Lọc môn thể thao</span>
-            <lucide-icon name="land-plot" />
-            <select [value]="sportFilter()" (change)="setSportFilter($event)">
-              <option value="ALL">Tất cả môn</option>
-              @for (sport of sports; track sport.value) { <option [value]="sport.value">{{ sport.label }}</option> }
-            </select>
-            <lucide-icon name="chevron-down" />
-          </label>
+          <div class="sport-select" (click)="$event.stopPropagation()">
+            <button type="button" class="select-control" (click)="toggleSportMenu()"
+              [attr.aria-expanded]="sportMenuOpen()" aria-haspopup="listbox">
+              <lucide-icon name="land-plot" />
+              <span>{{ sportFilterLabel() }}</span>
+              <lucide-icon name="chevron-down" [class.is-open]="sportMenuOpen()" />
+            </button>
+            @if (sportMenuOpen()) {
+              <div class="court-filter__menu sport-select__menu" role="listbox" aria-label="Lọc môn thể thao">
+                <button type="button" role="option" [class.is-selected]="sportFilter() === 'ALL'"
+                  [attr.aria-selected]="sportFilter() === 'ALL'" (click)="setSportFilter('ALL')">
+                  <span>Tất cả môn</span>@if (sportFilter() === 'ALL') { <lucide-icon name="check" /> }
+                </button>
+                @for (sport of sports; track sport.value) {
+                  <button type="button" role="option" [class.is-selected]="sportFilter() === sport.value"
+                    [attr.aria-selected]="sportFilter() === sport.value" (click)="setSportFilter(sport.value)">
+                    <span>{{ sport.label }}</span>@if (sportFilter() === sport.value) { <lucide-icon name="check" /> }
+                  </button>
+                }
+              </div>
+            }
+          </div>
 
-          <div class="court-filter">
-            <button type="button" (click)="filterOpen.set(!filterOpen())"
+          <div class="court-filter" (click)="$event.stopPropagation()">
+            <button type="button" (click)="toggleStatusMenu()"
               [class.is-active]="statusFilter() !== 'ALL'" [attr.aria-expanded]="filterOpen()">
               <lucide-icon name="filter" />
               <span>{{ statusFilterLabel() }}</span>
@@ -199,7 +224,13 @@
                         [style.transform]="'rotate(' + item.rotation + 'deg)'"
                         (click)="selectLayoutItem($event, item)"
                         (pointerdown)="beginPointerOperation($event, item, 'MOVE')">
-                        <lucide-icon [name]="facilityIcon($any(item.type))" />
+                        @if (item.type === 'PARKING') {
+                          <span class="parking-cars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+                        }
+                        @if (item.type === 'RECEPTION' || item.type === 'WAITING' || item.type === 'CAFE') {
+                          <span class="facility-furniture" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                        }
+                        <lucide-icon [name]="item.icon || facilityIcon($any(item.type))" />
                         <span>{{ item.label }}</span>
                         @if (layoutMode() && selectedLayoutItemId() === item.id) {
                           <i class="resize-handle" (pointerdown)="beginPointerOperation($event, item, 'RESIZE')"></i>
@@ -399,13 +430,18 @@
           <section class="quick-actions">
             <h3>Thao tác nhanh</h3>
             <div>
-              <a routerLink="/admin/schedule"><lucide-icon name="calendar" /><span>Xem lịch</span></a>
-              <a routerLink="/admin/owner-bookings"><lucide-icon name="plus" /><span>Tạo booking</span></a>
+              <a routerLink="/admin/owner-bookings"><lucide-icon name="calendar" /><span>Đặt sân</span></a>
+              <a routerLink="/admin/check-in"><lucide-icon name="check-circle" /><span>Check-in</span></a>
               <button type="button" (click)="openEdit(court)"><lucide-icon name="pencil" /><span>Chỉnh sửa</span></button>
               <a routerLink="/admin/schedule"><lucide-icon name="construction" /><span>Bảo trì</span></a>
               <button type="button" (click)="toggle(court)"><lucide-icon [name]="court.active ? 'ban' : 'activity'" /><span>{{ court.active ? 'Tạm ngưng' : 'Bật sân' }}</span></button>
+              <button type="button" (click)="duplicateCourt(court)"><lucide-icon name="file-plus-2" /><span>Nhân bản</span></button>
+              <a routerLink="/admin/schedule"><lucide-icon name="clock" /><span>Xem lịch</span></a>
             </div>
           </section>
+          <button type="button" class="court-detail__footer" (click)="openEdit(court)">
+            Xem chi tiết sân <lucide-icon name="arrow-right" />
+          </button>
         </aside>
       }
 

@@ -150,6 +150,8 @@ export class OwnerCourtManagementComponent {
   readonly sportFilter = signal<'ALL' | SportType>('ALL');
   readonly statusFilter = signal<OperationalFilter>('ALL');
   readonly filterOpen = signal(false);
+  readonly venueMenuOpen = signal(false);
+  readonly sportMenuOpen = signal(false);
   readonly actionMenuId = signal<string | null>(null);
   readonly page = signal(1);
   readonly pageSize = 8;
@@ -166,6 +168,8 @@ export class OwnerCourtManagementComponent {
 
   private pointerOperation: PointerOperation | null = null;
   private draggedLibraryType: FacilityObjectType | null = null;
+  private courtsReadyForVenue: string | null = null;
+  private bookingsReadyForVenue: string | null = null;
 
   readonly venue = computed(() => this.venues().find(item => item.venueId === this.selectedVenueId()) ?? null);
   readonly editorOpen = computed(() => this.panelMode() === 'FORM');
@@ -289,6 +293,8 @@ export class OwnerCourtManagementComponent {
     if ((!force && venueId === this.selectedVenueId()) || this.saving() || this.courtLoading()) return;
     if (this.layoutMode() && !this.cancelLayoutEdit()) return;
     this.selectedVenueId.set(venueId);
+    this.courtsReadyForVenue = null;
+    this.bookingsReadyForVenue = null;
     this.closePanel();
     this.query.set('');
     this.sportFilter.set('ALL');
@@ -298,11 +304,38 @@ export class OwnerCourtManagementComponent {
     this.loadTodayBookings(venueId, true);
   }
 
+  selectVenueFromMenu(venueId: string): void {
+    this.venueMenuOpen.set(false);
+    this.selectVenue(venueId);
+  }
+
+  toggleVenueMenu(): void {
+    const next = !this.venueMenuOpen();
+    this.sportMenuOpen.set(false);
+    this.filterOpen.set(false);
+    this.venueMenuOpen.set(next);
+  }
+
+  toggleSportMenu(): void {
+    const next = !this.sportMenuOpen();
+    this.venueMenuOpen.set(false);
+    this.filterOpen.set(false);
+    this.sportMenuOpen.set(next);
+  }
+
+  toggleStatusMenu(): void {
+    const next = !this.filterOpen();
+    this.venueMenuOpen.set(false);
+    this.sportMenuOpen.set(false);
+    this.filterOpen.set(next);
+  }
+
   setView(view: WorkspaceView): void {
     if (view === this.activeView()) return;
     if (this.layoutMode() && !this.cancelLayoutEdit()) return;
     this.activeView.set(view);
     this.closePanel();
+    if (view === 'MAP') this.openDefaultCourtDetail();
   }
 
   updateQuery(event: Event): void {
@@ -314,9 +347,15 @@ export class OwnerCourtManagementComponent {
     }
   }
 
-  setSportFilter(event: Event): void {
-    this.sportFilter.set((event.target as HTMLSelectElement).value as 'ALL' | SportType);
+  setSportFilter(value: 'ALL' | SportType): void {
+    this.sportFilter.set(value);
+    this.sportMenuOpen.set(false);
     this.page.set(1);
+  }
+
+  sportFilterLabel(): string {
+    if (this.sportFilter() === 'ALL') return 'Tất cả môn';
+    return this.sports.find(option => option.value === this.sportFilter())?.label ?? 'Tất cả môn';
   }
 
   setStatusFilter(filter: OperationalFilter): void {
@@ -387,6 +426,22 @@ export class OwnerCourtManagementComponent {
       active: court.active
     });
     this.form.markAsPristine();
+    this.panelMode.set('FORM');
+  }
+
+  duplicateCourt(court: OwnerVenueCourt): void {
+    if (this.saving()) return;
+    this.actionMenuId.set(null);
+    this.selectedCourtId.set(court.venueCourtId);
+    this.editingCourt.set(null);
+    this.form.reset({
+      name: `${court.name} - Bản sao`,
+      sportType: court.sportType as SportType,
+      capacity: court.capacity,
+      surfaceType: court.surfaceType ?? '',
+      active: false
+    });
+    this.form.markAsDirty();
     this.panelMode.set('FORM');
   }
 
@@ -842,10 +897,19 @@ export class OwnerCourtManagementComponent {
 
   @HostListener('document:keydown.escape')
   handleEscape(): void {
+    this.venueMenuOpen.set(false);
+    this.sportMenuOpen.set(false);
     this.filterOpen.set(false);
     this.actionMenuId.set(null);
     if (this.editorOpen()) this.closeEditor();
     else if (this.panelMode() === 'DETAIL') this.closePanel();
+  }
+
+  @HostListener('document:click')
+  handleDocumentClick(): void {
+    this.venueMenuOpen.set(false);
+    this.sportMenuOpen.set(false);
+    this.filterOpen.set(false);
   }
 
   @HostListener('window:beforeunload', ['$event'])
@@ -864,7 +928,9 @@ export class OwnerCourtManagementComponent {
     ).subscribe({
       next: courts => {
         this.courts.set(this.sortCourts(courts));
+        this.courtsReadyForVenue = venueId;
         this.syncLayoutWithCourts();
+        this.openDefaultCourtDetail();
       },
       error: error => {
         if (showLoading) this.courts.set([]);
@@ -882,10 +948,16 @@ export class OwnerCourtManagementComponent {
       takeUntilDestroyed(this.destroyRef),
       finalize(() => this.bookingLoading.set(false))
     ).subscribe({
-      next: page => this.bookings.set(page.items),
+      next: page => {
+        this.bookings.set(page.items);
+        this.bookingsReadyForVenue = venueId;
+        this.openDefaultCourtDetail();
+      },
       error: error => {
         this.bookings.set([]);
+        this.bookingsReadyForVenue = venueId;
         this.bookingError.set(this.errorMessage(error, 'Chưa thể đồng bộ lịch đặt sân hôm nay.'));
+        this.openDefaultCourtDetail();
       }
     });
   }
@@ -894,6 +966,16 @@ export class OwnerCourtManagementComponent {
     const venueId = this.selectedVenueId();
     if (!venueId || this.layoutMode()) return;
     this.layout.set(this.layoutStore.load(venueId, this.courts()));
+  }
+
+  private openDefaultCourtDetail(): void {
+    const venueId = this.selectedVenueId();
+    if (!venueId || this.courtsReadyForVenue !== venueId || this.bookingsReadyForVenue !== venueId) return;
+    if (this.activeView() !== 'MAP' || this.layoutMode() || this.panelMode() !== 'NONE' || !this.courts().length) return;
+    if (typeof window !== 'undefined' && window.innerWidth < 768) return;
+
+    const occupiedCourt = this.courts().find(court => this.currentBooking(court.venueCourtId));
+    this.selectCourt(occupiedCourt ?? this.courts()[0]);
   }
 
   private toRequest(): OwnerVenueCourtUpsert {

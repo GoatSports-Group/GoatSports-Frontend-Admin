@@ -19,6 +19,7 @@ export interface FacilityLayoutItem {
   height: number;
   rotation: number;
   zoneId?: string;
+  icon?: string;
 }
 
 export interface FacilityZone {
@@ -53,7 +54,7 @@ export function createAutomaticFacilityLayout(
   const courtWidth = columns === 2 ? 245 : 160;
   const courtHeight = 145;
   const courtGapX = columns === 2 ? 32 : 25;
-  const courtStartX = columns === 2 ? 225 : 205;
+  const courtStartX = columns === 2 ? 190 : 165;
   const courtStartY = 80;
 
   const courtItems = courts.map((court, index): FacilityLayoutItem => {
@@ -90,14 +91,15 @@ export function createAutomaticFacilityLayout(
   });
 
   const facilities: FacilityLayoutItem[] = [
-    { id: 'facility:locker', type: 'LOCKER', label: 'LOCKER', x: 45, y: 80, width: 135, height: 95, rotation: 0, zoneId: 'zone-a' },
-    { id: 'facility:wc', type: 'WC', label: 'WC NAM', x: 45, y: 190, width: 135, height: 95, rotation: 0, zoneId: 'zone-a' },
-    { id: 'facility:storage', type: 'STORAGE', label: 'WC NỮ · P. TẮM', x: 45, y: 300, width: 135, height: 95, rotation: 0, zoneId: 'zone-a' },
-    { id: 'facility:reception', type: 'RECEPTION', label: 'RECEPTION', x: 100, y: 465, width: 170, height: 90, rotation: 0, zoneId: 'zone-a' },
-    { id: 'facility:waiting', type: 'WAITING', label: 'WAITING AREA', x: 300, y: 465, width: 190, height: 90, rotation: 0, zoneId: 'zone-a' },
-    { id: 'facility:cafe', type: 'CAFE', label: 'CAFE', x: 520, y: 465, width: 190, height: 90, rotation: 0, zoneId: 'zone-a' },
+    { id: 'facility:locker', type: 'LOCKER', label: 'LOCKER', x: 25, y: 55, width: 100, height: 90, rotation: 0, zoneId: 'zone-a' },
+    { id: 'facility:wc', type: 'WC', label: 'WC NAM', x: 25, y: 145, width: 100, height: 90, rotation: 0, zoneId: 'zone-a' },
+    { id: 'facility:wc-female', type: 'WC', label: 'WC NỮ', x: 25, y: 235, width: 100, height: 90, rotation: 0, zoneId: 'zone-a' },
+    { id: 'facility:storage', type: 'STORAGE', label: 'P. TẮM', x: 25, y: 325, width: 100, height: 90, rotation: 0, zoneId: 'zone-a', icon: 'droplets' },
+    { id: 'facility:reception', type: 'RECEPTION', label: 'RECEPTION', x: 45, y: 465, width: 170, height: 90, rotation: 0, zoneId: 'zone-a' },
+    { id: 'facility:waiting', type: 'WAITING', label: 'WAITING AREA', x: 225, y: 465, width: 270, height: 90, rotation: 0, zoneId: 'zone-a' },
+    { id: 'facility:cafe', type: 'CAFE', label: 'CAFE', x: 505, y: 465, width: 220, height: 90, rotation: 0, zoneId: 'zone-a' },
     { id: 'facility:entrance', type: 'ENTRANCE', label: 'ENTRANCE', x: 405, y: 555, width: 150, height: 55, rotation: 0 },
-    { id: 'facility:parking', type: 'PARKING', label: 'PARKING', x: 100, y: 615, width: 800, height: 70, rotation: 0 }
+    { id: 'facility:parking', type: 'PARKING', label: 'PARKING', x: 15, y: 600, width: 970, height: 85, rotation: 0 }
   ];
 
   return {

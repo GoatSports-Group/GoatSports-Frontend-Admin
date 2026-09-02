@@ -8,7 +8,7 @@ import {
   LucideChevronRight, LucideClock, LucideConstruction, LucideFilePlus2, LucideFilter,
   LucideFolderOpen, LucideGripVertical, LucideInbox, LucideInfo, LucideLandPlot,
   LucideLayoutGrid, LucideMoreVertical, LucidePencil, LucidePlus, LucideReceipt,
-  LucideRotateCcw, LucideSave, LucideSearch, LucideStore, LucideSun, LucideTable,
+  LucideDroplets, LucideRotateCcw, LucideSave, LucideSearch, LucideStore, LucideSun, LucideTable,
   LucideTrash2, LucideUsers, LucideX, provideLucideIcons
 } from '@lucide/angular';
 import { OwnerVenueCourt, OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
@@ -50,7 +50,7 @@ describe('OwnerCourtManagementComponent', () => {
           LucideChevronRight, LucideClock, LucideConstruction, LucideFilePlus2, LucideFilter,
           LucideFolderOpen, LucideGripVertical, LucideInbox, LucideInfo, LucideLandPlot,
           LucideLayoutGrid, LucideMoreVertical, LucidePencil, LucidePlus, LucideReceipt,
-          LucideRotateCcw, LucideSave, LucideSearch, LucideStore, LucideSun, LucideTable,
+          LucideDroplets, LucideRotateCcw, LucideSave, LucideSearch, LucideStore, LucideSun, LucideTable,
           LucideTrash2, LucideUsers, LucideX
         ),
         { provide: GetMyOwnerVenuesUseCase, useValue: getMyVenues },
@@ -101,7 +101,8 @@ describe('OwnerCourtManagementComponent', () => {
     expect(manageBookings.list).toHaveBeenCalledWith(expect.objectContaining({ venueId: 'venue-1' }));
     expect(fixture.nativeElement.querySelectorAll('.workspace-tabs button')).toHaveLength(3);
     expect(fixture.nativeElement.querySelectorAll('.court-object')).toHaveLength(2);
-    expect(fixture.nativeElement.querySelectorAll('.facility-object')).toHaveLength(8);
+    expect(fixture.nativeElement.querySelectorAll('.facility-object')).toHaveLength(9);
+    expect(fixture.nativeElement.querySelector('.court-detail')).toBeTruthy();
 
     fixture.componentInstance.selectCourt(savedCourt);
     fixture.detectChanges();

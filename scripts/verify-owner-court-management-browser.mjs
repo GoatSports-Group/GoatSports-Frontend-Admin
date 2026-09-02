@@ -75,7 +75,7 @@ const apiServer = createServer((request, response) => {
 });
 
 const delay = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
-async function waitForUrl(url, timeout = 60000) {
+async function waitForUrl(url, timeout = 120000) {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
     try { if ((await fetch(url)).ok) return; } catch { /* still starting */ }
@@ -137,6 +137,40 @@ async function verifyViewport(cdp, name, width, height) {
     horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
     workspaceWidth: Math.round(document.querySelector('.workspace-shell').getBoundingClientRect().width)
   }))()`);
+  await evaluate(cdp, "document.querySelector('.venue-select__trigger').click()");
+  await waitFor(cdp, "!!document.querySelector('.venue-select__menu')");
+  const venueDropdown = await evaluate(cdp, `(() => ({
+    customTriggerVisible: !!document.querySelector('.venue-select__trigger'),
+    nativeSelectCount: document.querySelectorAll('.venue-select select').length,
+    optionCount: document.querySelectorAll('.venue-select__menu [role="option"]').length,
+    selectedOptionVisible: !!document.querySelector('.venue-select__menu .is-selected'),
+    optionContentLayout: getComputedStyle(document.querySelector('.venue-select__menu [role="option"] > span')).display
+  }))()`);
+  await evaluate(cdp, "document.querySelector('.venue-select__trigger').click()");
+  await evaluate(cdp, "document.querySelector('.court-search input').focus()");
+  const searchFocus = await evaluate(cdp, `(() => {
+    const input = document.querySelector('.court-search input');
+    const wrapper = document.querySelector('.court-search');
+    return {
+      inputOutlineWidth: getComputedStyle(input).outlineWidth,
+      inputBoxShadow: getComputedStyle(input).boxShadow,
+      wrapperBoxShadow: getComputedStyle(wrapper).boxShadow
+    };
+  })()`);
+  await evaluate(cdp, "document.querySelector('.sport-select .select-control').click()");
+  await waitFor(cdp, "!!document.querySelector('.sport-select__menu')");
+  const sportDropdown = await evaluate(cdp, `(() => ({
+    nativeToolbarSelectCount: document.querySelectorAll('.operations-toolbar select').length,
+    optionCount: document.querySelectorAll('.sport-select__menu [role="option"]').length,
+    widthMatchesTrigger: Math.abs(document.querySelector('.sport-select__menu').getBoundingClientRect().width - document.querySelector('.sport-select .select-control').getBoundingClientRect().width) < 1
+  }))()`);
+  await evaluate(cdp, "document.querySelector('.sport-select .select-control').click(); document.querySelector('.court-filter > button').click()");
+  await waitFor(cdp, "!!document.querySelector('.court-filter__menu:not(.sport-select__menu)')");
+  const statusDropdown = await evaluate(cdp, `(() => ({
+    optionCount: document.querySelectorAll('.court-filter__menu:not(.sport-select__menu) [role="button"], .court-filter__menu:not(.sport-select__menu) > button').length,
+    widthMatchesTrigger: Math.abs(document.querySelector('.court-filter__menu:not(.sport-select__menu)').getBoundingClientRect().width - document.querySelector('.court-filter > button').getBoundingClientRect().width) < 1
+  }))()`);
+  await evaluate(cdp, "document.querySelector('.court-filter > button').click()");
   await evaluate(cdp, "document.querySelectorAll('.court-object')[1].click()");
   await waitFor(cdp, "!!document.querySelector('.court-detail')");
   const detail = await evaluate(cdp, `(() => ({
@@ -165,7 +199,7 @@ async function verifyViewport(cdp, name, width, height) {
     writeFileSync(editScreenshotPath, Buffer.from(editScreenshot.data, 'base64'));
     editMode.editScreenshotPath = editScreenshotPath;
   }
-  return { viewport: `${width}x${height}`, ...initial, ...detail, screenshotPath, editMode };
+  return { viewport: `${width}x${height}`, ...initial, venueDropdown, searchFocus, sportDropdown, statusDropdown, ...detail, screenshotPath, editMode };
 }
 
 let angularProcess;
@@ -192,6 +226,7 @@ try {
   await cdp.send('Page.enable');
   await cdp.send('Runtime.enable');
   const results = [
+    await verifyViewport(cdp, 'widescreen', 1920, 900),
     await verifyViewport(cdp, 'desktop', 1440, 960),
     await verifyViewport(cdp, 'tablet', 1024, 900),
     await verifyViewport(cdp, 'mobile', 390, 844)
