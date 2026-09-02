@@ -1,68 +1,267 @@
 <main class="courts-page" aria-labelledby="courts-page-title">
   <header class="page-heading">
-    <div><span class="eyebrow">Không gian vận hành</span><h1 id="courts-page-title">Sân thi đấu</h1><p>Tạo và quản lý các sân thuộc cơ sở đã được phê duyệt của bạn.</p></div>
-    @if (venue()) {
-      <button type="button" class="primary-button" (click)="openCreate()" [disabled]="saving()">
-        <lucide-icon name="plus" /> Thêm sân thi đấu
-      </button>
-    }
+    <h1 id="courts-page-title">Sân thi đấu</h1>
+    <p>Quản lý danh sách sân, tình trạng và thông tin chi tiết của từng sân trong cơ sở.</p>
   </header>
 
   @if (loading()) {
     <app-page-loading title="Đang tải danh sách sân"
       description="Thông tin trạng thái sân đang được đồng bộ từ Venue Service." />
-  } @else if (loadError()) {
-    <section class="state-card state-card--error" role="alert"><lucide-icon name="alert-circle" /><h2>Chưa thể tải dữ liệu</h2><p>{{ loadError() }}</p><button type="button" (click)="load()">Thử lại</button></section>
-  } @else if (!venue()) {
-    <section class="state-card"><lucide-icon name="inbox" /><h2>Chưa có cơ sở để quản lý sân</h2><p>Venue chỉ được tạo sau khi đơn đăng ký chủ sân được phê duyệt. Hãy kiểm tra tiến trình hồ sơ trước.</p><a routerLink="/admin/applications">Đi đến Đơn đăng ký</a></section>
-  } @else {
-    <section class="venue-summary">
-      <div class="summary-icon"><lucide-icon name="store" /></div>
-      <div><span>Cơ sở đang quản lý</span><strong>{{ venue()?.name }}</strong><small>{{ venue()?.address }}, {{ venue()?.district }}, {{ venue()?.city }}</small></div>
-      <dl><div><dt>Tổng số sân</dt><dd>{{ courts().length }}</dd></div><div><dt>Đang hoạt động</dt><dd>{{ activeCount() }}</dd></div><div><dt>Đang trống</dt><dd>{{ availableNowCount() }}</dd></div></dl>
+  } @else if (loadError() && venues().length === 0) {
+    <section class="state-card state-card--error" role="alert">
+      <lucide-icon name="alert-circle" />
+      <h2>Chưa thể tải dữ liệu</h2>
+      <p>{{ loadError() }}</p>
+      <button type="button" (click)="load()">Thử lại</button>
     </section>
+  } @else if (venues().length === 0) {
+    <section class="state-card">
+      <lucide-icon name="inbox" />
+      <h2>Chưa có cơ sở để quản lý sân</h2>
+      <p>Venue chỉ được tạo sau khi đơn đăng ký chủ sân được phê duyệt.</p>
+      <a routerLink="/admin/applications">Đi đến Đơn đăng ký</a>
+    </section>
+  } @else {
+    <section class="court-workspace" [class.is-editor-open]="editorOpen()">
+      <div class="court-content">
+        <div class="court-toolbar court-toolbar--venue">
+          <label class="venue-select">
+            <span>Cơ sở</span>
+            <div>
+              <span class="venue-select__avatar"><lucide-icon name="store" /></span>
+              <select [value]="selectedVenueId()" (change)="selectVenue($any($event.target).value)"
+                [disabled]="courtLoading() || saving()">
+                @for (item of venues(); track item.venueId) {
+                  <option [value]="item.venueId">{{ item.name }}</option>
+                }
+              </select>
+              <lucide-icon name="chevron-down" />
+            </div>
+          </label>
 
-    @if (courts().length === 0) {
-      <section class="state-card state-card--compact"><lucide-icon name="activity" /><h2>Chưa có sân thi đấu</h2><p>Tạo sân đầu tiên với đúng môn thể thao, sức chứa và loại mặt sân.</p><button type="button" (click)="openCreate()"><lucide-icon name="plus" /> Tạo sân đầu tiên</button></section>
-    } @else {
-      <section class="court-grid" role="table" aria-label="Danh sách sân thi đấu">
-        <div class="court-table__header" role="row">
-          <span role="columnheader">Sân thi đấu</span>
-          <span role="columnheader">Mặt sân</span>
-          <span role="columnheader">Sức chứa</span>
-          <span role="columnheader">Trạng thái trực tiếp</span>
-          <span role="columnheader">Thao tác</span>
+          <button type="button" class="primary-button" (click)="openCreate()"
+            [disabled]="saving() || courtLoading()">
+            <lucide-icon name="plus" /> Thêm sân
+          </button>
         </div>
-        @for (court of courts(); track court.venueCourtId) {
-          <article class="court-card" role="row" [class.is-inactive]="!court.active" [attr.data-availability]="court.availabilityStatus || (court.active ? 'AVAILABLE' : 'INACTIVE')">
-            <div class="court-identity" role="cell"><span class="sport-icon">{{ sportLabel(court.sportType).slice(0, 1) }}</span><div><h2>{{ court.name }}</h2><span class="sport-name">{{ sportLabel(court.sportType) }}</span></div></div>
-            <div class="court-surface" role="cell"><span class="mobile-label">Mặt sân</span><strong>{{ court.surfaceType || 'Chưa cập nhật' }}</strong></div>
-            <div class="court-capacity" role="cell"><span class="mobile-label">Sức chứa</span><strong>{{ court.capacity }} người</strong></div>
-            <div class="court-live" role="cell"><span class="court-status" [attr.data-availability]="court.availabilityStatus || (court.active ? 'AVAILABLE' : 'INACTIVE')"><i></i>{{ availabilityLabels[court.availabilityStatus || (court.active ? 'AVAILABLE' : 'INACTIVE')] }}</span>@if (court.unavailableUntil) { <small>Đến {{ court.unavailableUntil.slice(0, 5) }}</small> }</div>
+
+        <section class="metric-strip" aria-label="Tổng quan sân thi đấu">
+          <article>
+            <span>Tổng số sân</span>
+            <strong>{{ courts().length }}</strong>
+            <lucide-icon name="land-plot" />
+          </article>
+          <article class="metric-strip__active">
+            <span>Sân đang hoạt động</span>
+            <strong>{{ activeCount() }} <i></i></strong>
+            <lucide-icon name="activity" />
+          </article>
+          <article class="metric-strip__maintenance">
+            <span>Sân đang bảo trì</span>
+            <strong>{{ maintenanceCount() }} <i></i></strong>
+            <lucide-icon name="construction" />
+          </article>
+          <article class="metric-strip__inactive">
+            <span>Sân ngừng hoạt động</span>
+            <strong>{{ inactiveCount() }} <i></i></strong>
+            <lucide-icon name="ban" />
+          </article>
+          <article class="metric-strip__capacity">
+            <span>Tổng sức chứa</span>
+            <strong>{{ totalCapacity() }}</strong>
+            <lucide-icon name="users" />
+          </article>
+        </section>
+
+        <div class="court-toolbar court-toolbar--search">
+          <label class="court-search">
+            <lucide-icon name="search" />
+            <input type="search" placeholder="Tìm kiếm sân (tên, mã sân...)" [value]="query()"
+              (input)="updateQuery($event)" />
+          </label>
+
+          <div class="court-filter">
+            <button type="button" (click)="filterOpen.set(!filterOpen())" [class.is-active]="statusFilter() !== 'ALL'"
+              [attr.aria-expanded]="filterOpen()">
+              <lucide-icon name="filter" />
+              {{ statusFilter() === 'ALL' ? 'Bộ lọc' : statusFilterLabel() }}
+              <lucide-icon name="chevron-down" />
+            </button>
+            @if (filterOpen()) {
+              <div class="court-filter__menu">
+                @for (option of filterOptions; track option.value) {
+                  <button type="button" [class.is-selected]="statusFilter() === option.value"
+                    (click)="setStatusFilter(option.value)">
+                    <span>{{ option.label }}</span>
+                    @if (statusFilter() === option.value) { <lucide-icon name="check" /> }
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        @if (courtLoading()) {
+          <section class="table-loading" aria-live="polite"><span class="spinner"></span> Đang tải sân của cơ sở...</section>
+        } @else if (loadError()) {
+          <section class="table-empty" role="alert">
+            <lucide-icon name="alert-circle" />
+            <strong>Chưa thể tải danh sách sân</strong>
+            <span>{{ loadError() }}</span>
+            <button type="button" (click)="selectVenue(selectedVenueId()!, true)">Thử lại</button>
+          </section>
+        } @else if (courts().length === 0) {
+          <section class="table-empty">
+            <lucide-icon name="land-plot" />
+            <strong>Chưa có sân thi đấu</strong>
+            <span>Tạo sân đầu tiên với đúng môn thể thao, sức chứa và loại mặt sân.</span>
+            <button type="button" (click)="openCreate()"><lucide-icon name="plus" /> Tạo sân đầu tiên</button>
+          </section>
+        } @else {
+          <section class="court-table" role="table" aria-label="Danh sách sân thi đấu">
+            <div class="court-table__header" role="row">
+              <span role="columnheader">Sân</span>
+              <span role="columnheader">Môn thể thao</span>
+              <span role="columnheader">Mặt sân</span>
+              <span role="columnheader">Sức chứa</span>
+              <span role="columnheader">Trạng thái</span>
+              <span role="columnheader">Hành động</span>
+            </div>
+
+            @for (court of pagedCourts(); track court.venueCourtId) {
+              <article class="court-row" role="row" [class.is-inactive]="!court.active">
+                <div class="court-identity" role="cell">
+                  <span class="sport-visual" [attr.data-tone]="sportOption(court.sportType).tone">
+                    <i></i><b>{{ sportOption(court.sportType).symbol }}</b>
+                  </span>
+                  <div><strong>{{ court.name }}</strong><small>{{ courtCode(court) }}</small></div>
+                </div>
+                <div class="court-sport" role="cell">
+                  <span [attr.data-tone]="sportOption(court.sportType).tone">{{ sportOption(court.sportType).symbol }}</span>
+                  {{ sportLabel(court.sportType) }}
+                </div>
+                <div class="court-surface" role="cell">{{ court.surfaceType || 'Chưa cập nhật' }}</div>
+                <div class="court-capacity" role="cell">{{ court.capacity }}</div>
+                <div class="court-status-cell" role="cell">
+                  <span class="court-status" [attr.data-status]="courtAvailability(court)">
+                    <i></i>{{ availabilityLabels[courtAvailability(court)] }}
+                  </span>
+                  @if (court.unavailableUntil) { <small>Đến {{ court.unavailableUntil.slice(0, 5) }}</small> }
+                </div>
+                <div class="court-actions" role="cell">
+                  <button type="button" class="icon-button" (click)="openEdit(court)" aria-label="Chỉnh sửa sân">
+                    <lucide-icon name="pencil" />
+                  </button>
+                  <div class="court-actions__menu">
+                    <button type="button" class="icon-button" (click)="toggleActionMenu(court.venueCourtId)"
+                      aria-label="Mở thao tác khác"><lucide-icon name="more-vertical" /></button>
+                    @if (actionMenuId() === court.venueCourtId) {
+                      <div>
+                        <button type="button" (click)="toggle(court)" [disabled]="togglingId() !== null">
+                          <lucide-icon [name]="court.active ? 'ban' : 'activity'" />
+                          {{ court.active ? 'Ngừng hoạt động' : 'Bật hoạt động' }}
+                        </button>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </article>
+            } @empty {
+              <div class="court-table__no-result">Không tìm thấy sân phù hợp với điều kiện lọc.</div>
+            }
+
+            <footer class="court-table__footer">
+              <span>Hiển thị {{ resultStart() }} đến {{ resultEnd() }} trong tổng số {{ filteredCourts().length }} sân</span>
+              <div>
+                <button type="button" (click)="previousPage()" [disabled]="page() <= 1" aria-label="Trang trước">
+                  <lucide-icon name="chevron-left" />
+                </button>
+                <strong>{{ page() }}</strong>
+                <button type="button" (click)="nextPage()" [disabled]="page() >= pageCount()" aria-label="Trang sau">
+                  <lucide-icon name="chevron-right" />
+                </button>
+              </div>
+            </footer>
+          </section>
+        }
+      </div>
+
+      @if (editorOpen()) {
+        <aside class="court-editor" aria-labelledby="court-editor-title">
+          <header>
+            <h2 id="court-editor-title">{{ editingCourt() ? 'Chỉnh sửa sân' : 'Thêm sân mới' }}</h2>
+            <button type="button" (click)="closeEditor()" [disabled]="saving()" aria-label="Đóng">
+              <lucide-icon name="x" />
+            </button>
+          </header>
+
+          <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+            <section>
+              <h3>Thông tin cơ bản</h3>
+              <label class="field">
+                <span>Tên sân <b>*</b></span>
+                <input formControlName="name" maxlength="255" placeholder="Ví dụ: Sân 01" />
+                @if (fieldInvalid('name')) { <small>Vui lòng nhập tên sân.</small> }
+              </label>
+
+              @if (editingCourt(); as court) {
+                <label class="field">
+                  <span>Mã hệ thống</span>
+                  <input [value]="courtCode(court)" readonly />
+                  <small class="field__hint">Mã được tạo tự động để quản lý sân.</small>
+                </label>
+              }
+
+              <label class="field">
+                <span>Môn thể thao <b>*</b></span>
+                <select formControlName="sportType">
+                  @for (sport of sports; track sport.value) {
+                    <option [value]="sport.value">{{ sport.symbol }} &nbsp;{{ sport.label }}</option>
+                  }
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Mặt sân</span>
+                <input formControlName="surfaceType" maxlength="255" list="court-surface-options"
+                  placeholder="Ví dụ: Thảm PVC" />
+                <datalist id="court-surface-options">
+                  @for (surface of surfaceOptions; track surface) { <option [value]="surface"></option> }
+                </datalist>
+              </label>
+
+              <label class="field">
+                <span>Sức chứa <b>*</b></span>
+                <div class="capacity-input"><input type="number" formControlName="capacity" min="1" max="100000" /><span>người</span></div>
+                @if (fieldInvalid('capacity')) { <small>Sức chứa phải từ 1 người.</small> }
+              </label>
+            </section>
+
+            <section class="status-editor">
+              <h3>Trạng thái</h3>
+              <label>
+                <input type="radio" formControlName="active" [value]="true" />
+                <i></i>
+                <span><strong>Đang hoạt động</strong><small>Sân đang sẵn sàng để đặt.</small></span>
+              </label>
+              <label>
+                <input type="radio" formControlName="active" [value]="false" />
+                <i></i>
+                <span><strong>Ngừng hoạt động</strong><small>Sân không hiển thị để đặt.</small></span>
+              </label>
+            </section>
+
             <footer>
-              <button type="button" class="edit-button" (click)="openEdit(court)" [disabled]="saving() || togglingId() === court.venueCourtId"><lucide-icon name="pencil" /> Xem / sửa</button>
-              <button type="button" class="toggle-button" [class.turn-on]="!court.active" (click)="toggle(court)" [disabled]="togglingId() !== null || saving()">
-                @if (togglingId() === court.venueCourtId) { <span class="mini-spinner"></span> } @else { {{ court.active ? 'Tạm ngừng' : 'Bật hoạt động' }} }
+              <button type="button" class="secondary-button" (click)="closeEditor()" [disabled]="saving()">Hủy</button>
+              <button type="submit" class="primary-button"
+                [disabled]="saving() || form.invalid || (editingCourt() !== null && !form.dirty)">
+                @if (saving()) { <span class="mini-spinner"></span> Đang lưu... }
+                @else { <lucide-icon name="save" /> {{ editingCourt() ? 'Lưu thay đổi' : 'Tạo sân' }} }
               </button>
             </footer>
-          </article>
-        }
-      </section>
-    }
-  }
-
-  @if (editorOpen()) {
-    <div class="editor-backdrop" (click)="closeEditor()" role="presentation">
-      <section class="editor" role="dialog" aria-modal="true" aria-labelledby="court-editor-title" (click)="$event.stopPropagation()">
-        <header><div><span>{{ editingCourt() ? 'Chi tiết sân thi đấu' : 'Sân thi đấu mới' }}</span><h2 id="court-editor-title">{{ editingCourt()?.name || 'Thêm sân vào cơ sở' }}</h2></div><button type="button" (click)="closeEditor()" [disabled]="saving()" aria-label="Đóng"><lucide-icon name="x" /></button></header>
-        <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-          <label class="field"><span>Tên sân <b>*</b></span><input formControlName="name" maxlength="255" placeholder="Ví dụ: Sân Pickleball 01" />@if (fieldInvalid('name')) { <small>Vui lòng nhập tên sân.</small> }</label>
-          <label class="field"><span>Môn thể thao <b>*</b></span><select formControlName="sportType">@for (sport of sports; track sport.value) { <option [value]="sport.value">{{ sport.label }}</option> }</select></label>
-          <div class="field-row"><label class="field"><span>Sức chứa <b>*</b></span><input type="number" formControlName="capacity" min="1" max="100000" />@if (fieldInvalid('capacity')) { <small>Sức chứa phải từ 1 người.</small> }</label><label class="field"><span>Loại mặt sân</span><input formControlName="surfaceType" maxlength="255" placeholder="Thảm PVC, cỏ nhân tạo..." /></label></div>
-          <label class="switch-field"><input type="checkbox" formControlName="active" /><span class="switch"></span><span><strong>Đang hoạt động</strong><small>Cho phép sân sẵn sàng cho các bước lịch và bảng giá sau này.</small></span></label>
-          <footer><button type="button" class="secondary-button" (click)="closeEditor()" [disabled]="saving()">Hủy</button><button type="submit" class="primary-button" [disabled]="saving() || form.invalid || (editingCourt() !== null && !form.dirty)">@if (saving()) { <span class="mini-spinner"></span> Đang lưu... } @else { <lucide-icon name="save" /> {{ editingCourt() ? 'Lưu thay đổi' : 'Tạo sân' }} }</button></footer>
-        </form>
-      </section>
-    </div>
+          </form>
+        </aside>
+      }
+    </section>
   }
 </main>

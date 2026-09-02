@@ -3,11 +3,13 @@ import { provideRouter } from '@angular/router';
 import { of, Subject } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  LucideActivity, LucideAlertCircle, LucideInbox, LucidePencil,
-  LucidePlus, LucideSave, LucideStore, LucideX, provideLucideIcons
+  LucideActivity, LucideAlertCircle, LucideBan, LucideCheck, LucideChevronDown,
+  LucideChevronLeft, LucideChevronRight, LucideConstruction, LucideFilter,
+  LucideInbox, LucideLandPlot, LucideMoreVertical, LucidePencil, LucidePlus,
+  LucideSave, LucideSearch, LucideStore, LucideUsers, LucideX, provideLucideIcons
 } from '@lucide/angular';
 import { OwnerVenueCourt, OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
-import { GetMyOwnerVenueUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venue.usecase';
+import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
 import { ManageOwnerVenueCourtsUseCase } from '@application/usecase/venue-owner-dashboard/manage-owner-venue-courts.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { OwnerCourtManagementComponent } from './owner-court-management.component';
@@ -21,12 +23,12 @@ describe('OwnerCourtManagementComponent', () => {
     venueCourtId: 'court-1', venueId: 'venue-1', name: 'Sân 01', sportType: 'BADMINTON',
     capacity: 4, surfaceType: 'Thảm PVC', active: true
   };
-  const getMyVenue = { execute: vi.fn() };
+  const getMyVenues = { execute: vi.fn() };
   const manageCourts = { list: vi.fn(), get: vi.fn(), create: vi.fn(), update: vi.fn(), toggle: vi.fn() };
   const notify = { success: vi.fn(), error: vi.fn(), warning: vi.fn() };
 
   beforeEach(async () => {
-    getMyVenue.execute.mockReset().mockReturnValue(of(venue));
+    getMyVenues.execute.mockReset().mockReturnValue(of([venue]));
     manageCourts.list.mockReset().mockReturnValue(of([]));
     manageCourts.create.mockReset().mockReturnValue(of(savedCourt));
     manageCourts.update.mockReset().mockReturnValue(of(savedCourt));
@@ -36,8 +38,13 @@ describe('OwnerCourtManagementComponent', () => {
       imports: [OwnerCourtManagementComponent],
       providers: [
         provideRouter([]),
-        provideLucideIcons(LucideActivity, LucideAlertCircle, LucideInbox, LucidePencil, LucidePlus, LucideSave, LucideStore, LucideX),
-        { provide: GetMyOwnerVenueUseCase, useValue: getMyVenue },
+        provideLucideIcons(
+          LucideActivity, LucideAlertCircle, LucideBan, LucideCheck, LucideChevronDown,
+          LucideChevronLeft, LucideChevronRight, LucideConstruction, LucideFilter,
+          LucideInbox, LucideLandPlot, LucideMoreVertical, LucidePencil, LucidePlus,
+          LucideSave, LucideSearch, LucideStore, LucideUsers, LucideX
+        ),
+        { provide: GetMyOwnerVenuesUseCase, useValue: getMyVenues },
         { provide: ManageOwnerVenueCourtsUseCase, useValue: manageCourts },
         { provide: NotifyService, useValue: notify }
       ]
@@ -45,7 +52,7 @@ describe('OwnerCourtManagementComponent', () => {
   });
 
   it('không tải danh sách court khi owner chưa có Venue', () => {
-    getMyVenue.execute.mockReturnValue(of(null));
+    getMyVenues.execute.mockReturnValue(of([]));
     const fixture = TestBed.createComponent(OwnerCourtManagementComponent);
     fixture.detectChanges();
     expect(manageCourts.list).not.toHaveBeenCalled();
