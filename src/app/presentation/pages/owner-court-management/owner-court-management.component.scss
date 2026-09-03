@@ -55,7 +55,15 @@ select:focus-visible {
 }
 
 .page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
   margin-bottom: 10px;
+}
+
+.page-heading__content {
+  min-width: 0;
 }
 
 .page-heading h1 {
@@ -74,61 +82,19 @@ select:focus-visible {
   line-height: 1.5;
 }
 
-.workspace-tabs {
-  display: flex;
-  min-height: 43px;
-  align-items: flex-end;
-  gap: 26px;
-  overflow-x: auto;
-  border-bottom: 1px solid var(--line);
-  scrollbar-width: none;
-}
-
-.workspace-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.workspace-tabs button {
-  position: relative;
-  display: inline-flex;
-  height: 43px;
+.page-heading__create {
+  min-width: 126px;
+  min-height: 46px;
   flex: none;
-  align-items: center;
-  gap: 7px;
-  padding: 0 2px;
-  border: 0;
-  background: transparent;
-  color: #55655d;
+  padding: 0 18px;
+  border-radius: 11px;
   font-size: 14px;
-  font-weight: 650;
-  cursor: pointer;
-  transition: color .18s ease;
+  box-shadow: 0 8px 18px rgba(8, 125, 78, .14);
 }
 
-.workspace-tabs button::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  height: 2px;
-  background: var(--green);
-  transform: scaleX(0);
-  transition: transform .18s ease;
-}
-
-.workspace-tabs button:hover,
-.workspace-tabs button.is-active {
-  color: var(--green-dark);
-}
-
-.workspace-tabs button.is-active::after {
-  transform: scaleX(1);
-}
-
-.workspace-tabs lucide-icon {
-  width: 15px;
-  height: 15px;
+.page-heading__create lucide-icon {
+  width: 17px;
+  height: 17px;
 }
 
 .workspace-shell {
@@ -3748,15 +3714,6 @@ select:disabled {
   }
 
   .page-heading p {
-    font-size: 12px;
-  }
-
-  .workspace-tabs {
-    gap: 20px;
-  }
-
-  .workspace-tabs button {
-    min-height: 44px;
     font-size: 12px;
   }
 

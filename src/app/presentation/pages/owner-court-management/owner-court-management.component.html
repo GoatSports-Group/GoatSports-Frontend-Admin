@@ -1,7 +1,14 @@
 <main class="courts-page" aria-labelledby="courts-page-title">
   <header class="page-heading">
-    <h1 id="courts-page-title">Sân thi đấu</h1>
-    <p>Quản lý danh sách sân, tình trạng và thông tin chi tiết của từng sân trong cơ sở.</p>
+    <div class="page-heading__content">
+      <h1 id="courts-page-title">Sân thi đấu</h1>
+      <p>Quản lý danh sách sân, tình trạng và thông tin chi tiết của từng sân trong cơ sở.</p>
+    </div>
+    <button type="button" class="primary-button page-heading__create" (click)="openCreate()"
+      [disabled]="loading() || venues().length === 0 || saving() || layoutMode()">
+      <lucide-icon name="plus" />
+      <span>Thêm sân</span>
+    </button>
   </header>
 
   @if (loading()) {
@@ -22,18 +29,6 @@
     <a routerLink="/admin/applications">Đi đến Đơn đăng ký</a>
   </section>
   } @else {
-  <nav class="workspace-tabs" aria-label="Các chế độ quản lý sân">
-    <button type="button" [class.is-active]="activeView() === 'MAP'" (click)="setView('MAP')">
-      <lucide-icon name="layout-grid" /> Bố trí sân
-    </button>
-    <button type="button" [class.is-active]="activeView() === 'LIST'" (click)="setView('LIST')">
-      <lucide-icon name="table" /> Danh sách sân
-    </button>
-    <button type="button" [class.is-active]="activeView() === 'PRICING'" (click)="setView('PRICING')">
-      <lucide-icon name="receipt" /> Loại sân &amp; Giá
-    </button>
-  </nav>
-
   <section class="workspace-shell" [class.has-panel]="panelMode() === 'DETAIL'"
     [class.has-map-detail]="activeView() === 'MAP' && panelMode() === 'DETAIL'">
     <div class="workspace-primary">
@@ -122,12 +117,6 @@
         <button type="button" class="outline-button edit-layout-button" (click)="enterLayoutMode()">
           <lucide-icon name="layout-grid" /> <span>Chỉnh bố cục</span>
         </button>
-        } @else if (activeView() === 'LIST') {
-        <button type="button" class="primary-button" (click)="openCreate()">
-          <lucide-icon name="plus" /> Thêm sân
-        </button>
-        } @else if (activeView() === 'PRICING') {
-        <a class="outline-button" routerLink="/admin/schedule"><lucide-icon name="calendar" /> Lịch và bảng giá</a>
         }
       </div>
 
