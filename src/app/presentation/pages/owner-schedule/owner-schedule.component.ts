@@ -7,6 +7,7 @@ import {
   CourtPricingRule,
   CourtPricingRuleUpsert,
   OwnerTimeSlot,
+  OwnerTimeSlotStatus,
   ScheduleDayOfWeek
 } from '@application/dto/owner-schedule/owner-schedule.dto';
 import {
@@ -42,6 +43,7 @@ export class OwnerScheduleComponent {
   private readonly requestedVenueId = this.route.snapshot.queryParamMap.get('venueId') ?? '';
   private readonly requestedCourtId = this.route.snapshot.queryParamMap.get('venueCourtId') ?? '';
   private readonly requestedTab = this.route.snapshot.queryParamMap.get('tab') ?? '';
+  private readonly requestedSlotStatus = this.route.snapshot.queryParamMap.get('status') ?? '';
 
   readonly days: readonly DayOption[] = [
     { value: 'MONDAY', label: 'Thứ Hai' }, { value: 'TUESDAY', label: 'Thứ Ba' },
@@ -55,6 +57,9 @@ export class OwnerScheduleComponent {
   readonly selectedCourtId = signal('');
   readonly rules = signal<CourtPricingRule[]>([]);
   readonly slots = signal<OwnerTimeSlot[]>([]);
+  readonly slotStatusFilter = signal<'ALL' | OwnerTimeSlotStatus>(
+    this.isSlotStatus(this.requestedSlotStatus) ? this.requestedSlotStatus : 'ALL'
+  );
   readonly activeTab = signal<'pricing' | 'calendar'>('pricing');
   readonly loadingContext = signal(true);
   readonly loadingData = signal(false);
@@ -72,9 +77,13 @@ export class OwnerScheduleComponent {
   readonly selectedCourt = computed(() =>
     this.courts().find(court => court.venueCourtId === this.selectedCourtId()) ?? null
   );
+  readonly filteredSlots = computed(() => {
+    const status = this.slotStatusFilter();
+    return this.slots().filter(slot => status === 'ALL' || slot.status === status);
+  });
   readonly slotGroups = computed<SlotGroup[]>(() => {
     const grouped = new Map<string, OwnerTimeSlot[]>();
-    for (const slot of this.slots()) {
+    for (const slot of this.filteredSlots()) {
       grouped.set(slot.date, [...(grouped.get(slot.date) ?? []), slot]);
     }
     return [...grouped.entries()].map(([date, slots]) => ({ date, slots }));
@@ -303,10 +312,18 @@ export class OwnerScheduleComponent {
   formatDate(value: string): string { return new Intl.DateTimeFormat('vi-VN', { dateStyle: 'full' }).format(new Date(`${value}T00:00:00`)); }
   timeValue(value: string): string { return value.slice(0, 5); }
 
+  selectSlotStatus(value: string): void {
+    this.slotStatusFilter.set(this.isSlotStatus(value) ? value : 'ALL');
+  }
+
   private sortRules(rules: CourtPricingRule[]): CourtPricingRule[] {
     const dayOrder = this.days.map(day => day.value);
     return [...rules].sort((a, b) => dayOrder.indexOf(a.dayOfWeek) - dayOrder.indexOf(b.dayOfWeek)
       || a.startTime.localeCompare(b.startTime));
+  }
+
+  private isSlotStatus(value: string): value is OwnerTimeSlotStatus {
+    return ['AVAILABLE', 'LOCKED', 'BOOKED', 'MAINTENANCE'].includes(value);
   }
 
   private today(): string { return this.localDate(new Date()); }

@@ -35,6 +35,10 @@ const court = {
   venueCourtId: 'court-1', venueId: venue.venueId, sportType: 'BADMINTON',
   name: 'San cau long A', capacity: 4, surfaceType: 'SYNTHETIC', active: true
 };
+const otherCourt = {
+  venueCourtId: 'court-other', venueId: venue.venueId, sportType: 'FOOTBALL',
+  name: 'San bong da mac dinh', capacity: 10, surfaceType: 'GRASS', active: true
+};
 const rules = [{
   pricingRuleId: 'rule-1', courtId: court.venueCourtId, dayOfWeek: 'MONDAY',
   startTime: '06:00:00', endTime: '12:00:00', pricePerHour: 180000,
@@ -48,7 +52,7 @@ const slots = [
 function responseFor(url) {
   if (url.pathname === '/auth-service/api/v1/auth/me') return ok(user);
   if (url.pathname === '/venue-service/api/v1/owner/venues') return ok([venue]);
-  if (url.pathname === `/venue-service/api/v1/owner/venues/${venue.venueId}/courts`) return ok([court]);
+  if (url.pathname === `/venue-service/api/v1/owner/venues/${venue.venueId}/courts`) return ok([otherCourt, court]);
   if (url.pathname.endsWith('/pricing-rules')) return ok(rules);
   if (url.pathname.endsWith('/time-slots')) return ok(slots);
   return ok([]);
@@ -71,7 +75,7 @@ const apiServer = createServer((request, response) => {
 
 const delay = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 
-async function waitForUrl(url, timeout = 60000) {
+async function waitForUrl(url, timeout = 120000) {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
     try {
@@ -151,10 +155,41 @@ async function verifyViewport(cdp, name, width, height) {
     }))()`,
     returnByValue: true
   });
+  await cdp.send('Page.navigate', {
+    url: `http://127.0.0.1:${WEB_PORT}/admin/schedule?tab=calendar&status=AVAILABLE&venueId=venue-1&venueCourtId=court-1`
+  });
+  await waitForExpression(cdp, "document.querySelectorAll('.slot-card').length === 1");
+  const availableFilter = await cdp.send('Runtime.evaluate', {
+    expression: `(() => ({
+      activeTab: document.querySelector('.schedule-tabs button.active')?.textContent.includes('Lịch slot'),
+      selectedCourt: document.querySelector('.context-bar label:nth-child(2) select')?.value,
+      selectedCourtLabel: document.querySelector('.context-bar label:nth-child(2) select option:checked')?.textContent.trim(),
+      selectedStatus: document.querySelector('.generation-bar label:nth-of-type(4) select')?.value,
+      slots: document.querySelectorAll('.slot-card').length,
+      tabSlotCount: document.querySelector('.schedule-tabs button.active span')?.textContent.trim(),
+      onlyAvailable: [...document.querySelectorAll('.slot-card .status')]
+        .every(status => status.getAttribute('data-status') === 'AVAILABLE')
+    }))()`,
+    returnByValue: true
+  });
+  const availableResult = availableFilter.result.value;
+  if (!availableResult.activeTab || availableResult.selectedCourt !== 'court-1'
+    || availableResult.selectedCourtLabel !== court.name
+    || availableResult.selectedStatus !== 'AVAILABLE' || availableResult.slots !== 1
+    || availableResult.tabSlotCount !== '1'
+    || !availableResult.onlyAvailable) {
+    throw new Error(`Schedule deep-link filter failed: ${JSON.stringify(availableResult)}`);
+  }
   const screenshot = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
   const screenshotPath = join(tmpdir(), `goatsports-owner-schedule-${name}.png`);
   writeFileSync(screenshotPath, Buffer.from(screenshot.data, 'base64'));
-  return { viewport: `${width}x${height}`, ...pricing.result.value, ...calendar.result.value, screenshotPath };
+  return {
+    viewport: `${width}x${height}`,
+    ...pricing.result.value,
+    ...calendar.result.value,
+    availableFilter: availableResult,
+    screenshotPath
+  };
 }
 
 let angularProcess;

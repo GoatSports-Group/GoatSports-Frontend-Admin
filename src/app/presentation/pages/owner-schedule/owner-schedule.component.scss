@@ -68,7 +68,7 @@ select:hover, input:hover { border-color: #94a3b8; }
 .form-actions { display: grid; grid-template-columns: 1fr 1.3fr; gap: 10px; padding-top: 4px; }
 
 .calendar-workspace { padding: 20px; }
-.generation-bar { display: grid; grid-template-columns: minmax(180px,1fr) repeat(3,minmax(130px,.7fr)) auto; gap: 12px; align-items: end; margin-bottom: 20px; padding: 16px; border: 1px solid #dbeafe; border-radius: 15px; background: #f8fbff; }
+.generation-bar { display: grid; grid-template-columns: minmax(180px,1fr) repeat(4,minmax(120px,.65fr)) auto; gap: 12px; align-items: end; margin-bottom: 20px; padding: 16px; border: 1px solid #dbeafe; border-radius: 15px; background: #f8fbff; }
 .generation-bar > div { display: grid; gap: 4px; align-self: center; }
 .generation-bar > div strong { font-size: 16px; }
 .calendar-list { display: grid; gap: 14px; }

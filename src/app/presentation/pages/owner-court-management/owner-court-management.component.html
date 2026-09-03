@@ -565,7 +565,7 @@
               [name]="court.active ? 'ban' : 'activity'" /><span>{{ court.active ? 'Tạm ngưng' : 'Bật sân'
               }}</span></button>
           <a routerLink="/admin/schedule"
-            [queryParams]="{ tab: 'calendar', venueId: court.venueId, venueCourtId: court.venueCourtId }"><lucide-icon
+            [queryParams]="{ tab: 'calendar', status: 'AVAILABLE', venueId: court.venueId, venueCourtId: court.venueCourtId }"><lucide-icon
               name="clock" /><span>Xem lịch</span></a>
           <button type="button" class="is-danger" (click)="deleteCourt(court)"
             [disabled]="isCourtInUse(court) || deletingId() === court.venueCourtId"

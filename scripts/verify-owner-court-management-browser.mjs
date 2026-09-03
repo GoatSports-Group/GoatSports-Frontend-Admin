@@ -246,6 +246,8 @@ async function verifyViewport(cdp, name, width, height) {
       .map(button => button.textContent.trim()),
     duplicateActionCount: [...document.querySelectorAll('.court-detail .quick-actions a, .court-detail .quick-actions button')]
       .filter(action => action.textContent.trim() === 'Nhân bản').length,
+    scheduleLink: [...document.querySelectorAll('.court-detail .quick-actions a')]
+      .find(action => action.textContent.trim() === 'Xem lịch')?.getAttribute('href'),
     detailHasCourtThumbnail: !!document.querySelector('.court-detail .detail-court-visual'),
     detailTimelineDotCount: document.querySelectorAll('.court-detail .daily-bookings article > i').length,
     detailTimelineLabelCount: document.querySelectorAll('.court-detail .daily-bookings article > b').length,
@@ -260,6 +262,9 @@ async function verifyViewport(cdp, name, width, height) {
   const expectedDisabledActions = ['Check-in', 'Bảo trì', 'Tạm ngưng', 'Xóa sân'];
   if (detail.detailQuickActionCount !== 7
     || detail.duplicateActionCount !== 0
+    || !detail.scheduleLink?.includes('tab=calendar')
+    || !detail.scheduleLink?.includes('status=AVAILABLE')
+    || !detail.scheduleLink?.includes('venueCourtId=court-02')
     || JSON.stringify(detail.disabledActionLabels) !== JSON.stringify(expectedDisabledActions)) {
     throw new Error(`Unexpected occupied-court quick actions: ${JSON.stringify(detail)}`);
   }
