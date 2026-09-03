@@ -53,10 +53,11 @@ const bookings = [
   }
 ];
 const timeSlots = [
-  { timeSlotId: 'slot-available', venueCourtId: 'court-02', date: today, startTime: '06:00:00', endTime: '07:00:00', pricePerHour: 100000, status: 'AVAILABLE' },
-  { timeSlotId: 'slot-locked', venueCourtId: 'court-02', date: today, startTime: '07:00:00', endTime: '08:00:00', pricePerHour: 100000, status: 'LOCKED' },
-  { timeSlotId: 'slot-booked', venueCourtId: 'court-02', date: today, startTime: '08:00:00', endTime: '09:00:00', pricePerHour: 100000, status: 'BOOKED' },
-  { timeSlotId: 'slot-maintenance', venueCourtId: 'court-02', date: today, startTime: '09:00:00', endTime: '10:00:00', pricePerHour: 100000, status: 'MAINTENANCE' }
+  { timeSlotId: 'slot-past', venueCourtId: 'court-02', date: today, startTime: toTime(minutesNow - 20), endTime: toTime(minutesNow - 10), pricePerHour: 100000, status: 'AVAILABLE' },
+  { timeSlotId: 'slot-available', venueCourtId: 'court-02', date: today, startTime: toTime(minutesNow + 5), endTime: toTime(minutesNow + 10), pricePerHour: 100000, status: 'AVAILABLE' },
+  { timeSlotId: 'slot-locked', venueCourtId: 'court-02', date: today, startTime: toTime(minutesNow + 10), endTime: toTime(minutesNow + 15), pricePerHour: 100000, status: 'LOCKED' },
+  { timeSlotId: 'slot-booked', venueCourtId: 'court-02', date: today, startTime: toTime(minutesNow + 15), endTime: toTime(minutesNow + 20), pricePerHour: 100000, status: 'BOOKED' },
+  { timeSlotId: 'slot-maintenance', venueCourtId: 'court-02', date: today, startTime: toTime(minutesNow + 20), endTime: toTime(minutesNow + 25), pricePerHour: 100000, status: 'MAINTENANCE' }
 ];
 
 function responseFor(request) {
@@ -296,6 +297,7 @@ async function verifyViewport(cdp, name, width, height) {
     return {
       visible: !!document.querySelector('.maintenance-dialog'),
       slotCount: slots.length,
+      pastSlotVisible: slots.some(item => item.textContent.includes('${toTime(minutesNow - 20).slice(0, 5)}')),
       unavailableSlotCount: slots.filter(item => item.disabled).length,
       lockedDisabled: slots.find(item => item.textContent.includes('Đang giữ chỗ'))?.disabled,
       bookedDisabled: slots.find(item => item.textContent.includes('Đã đặt'))?.disabled
@@ -316,6 +318,9 @@ async function verifyViewport(cdp, name, width, height) {
         .filter(item => !item.disabled).every(item => item.textContent.includes('Đang bảo trì'))
     }))()`))
   };
+  if (maintenanceDialog.pastSlotVisible) {
+    throw new Error(`Past maintenance slot is still visible: ${JSON.stringify(maintenanceDialog)}`);
+  }
   await evaluate(cdp, "document.querySelector('.maintenance-dialog > header > button').click()");
   await waitFor(cdp, "!document.querySelector('.maintenance-dialog')");
   const screenshot = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });

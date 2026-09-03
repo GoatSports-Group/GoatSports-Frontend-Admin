@@ -646,7 +646,8 @@
       <div class="maintenance-toolbar">
         <label>
           <span>Ngày áp dụng</span>
-          <input type="date" [value]="maintenanceDate()" (change)="changeMaintenanceDate($event)"
+          <input type="date" [value]="maintenanceDate()" [min]="minimumMaintenanceDate"
+            (change)="changeMaintenanceDate($event)"
             [disabled]="maintenanceLoading() || maintenanceSaving()" />
         </label>
         <div class="maintenance-modes" aria-label="Loại thao tác bảo trì">
@@ -679,8 +680,13 @@
         } @empty {
         <div class="maintenance-empty">
           <lucide-icon name="calendar" />
+          @if (maintenanceDate() === minimumMaintenanceDate) {
+          <strong>Không còn time slot sắp tới trong hôm nay</strong>
+          <span>Các khung giờ đã kết thúc được tự động ẩn khỏi danh sách bảo trì.</span>
+          } @else {
           <strong>Ngày này chưa có time slot</strong>
           <span>Hãy tạo khung giờ trong tab Lịch và bảng giá trước khi đặt lịch bảo trì.</span>
+          }
         </div>
         }
         }

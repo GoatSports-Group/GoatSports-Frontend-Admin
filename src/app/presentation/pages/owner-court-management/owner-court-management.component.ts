@@ -161,6 +161,7 @@ export class OwnerCourtManagementComponent {
   readonly bookings = signal<OwnerBooking[]>([]);
   readonly courtBookings = signal<OwnerBooking[]>([]);
   readonly selectedBookingDate = signal(this.todayIso());
+  readonly minimumMaintenanceDate = this.todayIso();
   readonly loading = signal(true);
   readonly courtLoading = signal(false);
   readonly bookingLoading = signal(false);
@@ -605,7 +606,9 @@ export class OwnerCourtManagementComponent {
   openMaintenance(court: OwnerVenueCourt): void {
     if (this.deletingId() || this.maintenanceSaving() || this.isCourtInUse(court)) return;
     this.maintenanceCourt.set(court);
-    this.maintenanceDate.set(this.selectedBookingDate());
+    this.maintenanceDate.set(this.selectedBookingDate() < this.minimumMaintenanceDate
+      ? this.minimumMaintenanceDate
+      : this.selectedBookingDate());
     this.maintenanceMode.set(court.availabilityStatus === 'MAINTENANCE' ? 'END' : 'START');
     this.selectedMaintenanceSlotIds.set([]);
     this.maintenanceError.set(null);
@@ -623,7 +626,9 @@ export class OwnerCourtManagementComponent {
   }
 
   changeMaintenanceDate(event: Event): void {
-    const date = (event.target as HTMLInputElement).value || this.todayIso();
+    const requestedDate = (event.target as HTMLInputElement).value || this.minimumMaintenanceDate;
+    const date = requestedDate < this.minimumMaintenanceDate ? this.minimumMaintenanceDate : requestedDate;
+    (event.target as HTMLInputElement).value = date;
     this.maintenanceDate.set(date);
     this.selectedMaintenanceSlotIds.set([]);
     this.loadMaintenanceSlots();
@@ -710,8 +715,9 @@ export class OwnerCourtManagementComponent {
       takeUntilDestroyed(this.destroyRef),
       finalize(() => this.maintenanceLoading.set(false))
     ).subscribe({
-      next: slots => this.maintenanceSlots.set([...slots].sort((a, b) =>
-        a.startTime.localeCompare(b.startTime))),
+      next: slots => this.maintenanceSlots.set(slots
+        .filter(slot => this.maintenanceSlotHasNotEnded(slot, date))
+        .sort((a, b) => a.startTime.localeCompare(b.startTime))),
       error: error => {
         this.maintenanceSlots.set([]);
         this.maintenanceError.set(this.errorMessage(error, 'Không thể tải khung giờ của sân.'));
@@ -1664,6 +1670,12 @@ export class OwnerCourtManagementComponent {
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  private maintenanceSlotHasNotEnded(slot: OwnerTimeSlot, date: string): boolean {
+    if (date > this.minimumMaintenanceDate) return true;
+    if (date < this.minimumMaintenanceDate) return false;
+    return this.timeMinutes(slot.endTime) > this.currentMinutes();
   }
 
   private currentMinutes(): number {
