@@ -2221,13 +2221,16 @@ select:disabled {
   color: #dc4944;
 }
 
-.quick-actions .is-danger:disabled {
+.quick-actions button:disabled {
+  border-color: #e0e6e2;
+  background: #f5f7f6;
+  color: #98a49e;
   opacity: 1;
   cursor: not-allowed;
 }
 
 .quick-actions a:hover,
-.quick-actions button:hover {
+.quick-actions button:hover:not(:disabled) {
   border-color: #a3d2bd;
   background: #f4faf7;
   color: var(--green);

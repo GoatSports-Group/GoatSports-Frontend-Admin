@@ -546,23 +546,30 @@
           <a routerLink="/admin/owner-bookings"
             [queryParams]="{ action: 'walk-in', venueId: court.venueId, venueCourtId: court.venueCourtId }"><lucide-icon
               name="calendar" /><span>Đặt sân</span></a>
+          @if (isCourtInUse(court)) {
+          <button type="button" disabled title="Không thể check-in khi sân đang được sử dụng">
+            <lucide-icon name="qr-code" /><span>Check-in</span>
+          </button>
+          } @else {
           <a routerLink="/admin/check-in"
             [queryParams]="{ mode: 'qr', venueId: court.venueId, venueCourtId: court.venueCourtId }"><lucide-icon
               name="qr-code" /><span>Check-in</span></a>
+          }
           <button type="button" (click)="openEdit(court)"><lucide-icon name="pencil" /><span>Chỉnh sửa</span></button>
-          <button type="button" (click)="openMaintenance(court)">
+          <button type="button" (click)="openMaintenance(court)" [disabled]="isCourtInUse(court)"
+            [title]="isCourtInUse(court) ? 'Không thể bảo trì khi sân đang được sử dụng' : ''">
             <lucide-icon name="construction" /><span>Bảo trì</span>
           </button>
-          <button type="button" (click)="toggle(court)"><lucide-icon
+          <button type="button" (click)="toggle(court)" [disabled]="isCourtInUse(court) || togglingId() === court.venueCourtId"
+            [title]="isCourtInUse(court) ? 'Không thể tạm ngưng khi sân đang được sử dụng' : ''"><lucide-icon
               [name]="court.active ? 'ban' : 'activity'" /><span>{{ court.active ? 'Tạm ngưng' : 'Bật sân'
               }}</span></button>
-          <button type="button" (click)="duplicateCourt(court)"><lucide-icon name="file-plus-2" /><span>Nhân
-              bản</span></button>
           <a routerLink="/admin/schedule"
             [queryParams]="{ tab: 'calendar', venueId: court.venueId, venueCourtId: court.venueCourtId }"><lucide-icon
               name="clock" /><span>Xem lịch</span></a>
           <button type="button" class="is-danger" (click)="deleteCourt(court)"
-            [disabled]="deletingId() === court.venueCourtId">
+            [disabled]="isCourtInUse(court) || deletingId() === court.venueCourtId"
+            [title]="isCourtInUse(court) ? 'Không thể xóa khi sân đang được sử dụng' : ''">
             <lucide-icon name="trash-2" /><span>Xóa sân</span>
           </button>
         </div>

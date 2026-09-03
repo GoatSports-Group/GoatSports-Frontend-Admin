@@ -539,22 +539,6 @@ export class OwnerCourtManagementComponent {
     this.panelMode.set('FORM');
   }
 
-  duplicateCourt(court: OwnerVenueCourt): void {
-    if (this.saving()) return;
-    this.actionMenuId.set(null);
-    this.selectedCourtId.set(court.venueCourtId);
-    this.editingCourt.set(null);
-    this.form.reset({
-      name: `${court.name} - Bản sao`,
-      sportType: court.sportType as SportType,
-      capacity: court.capacity,
-      surfaceType: court.surfaceType ?? '',
-      active: false
-    });
-    this.form.markAsDirty();
-    this.panelMode.set('FORM');
-  }
-
   closeEditor(): void {
     if (this.saving()) return;
     this.editingCourt.set(null);
@@ -600,7 +584,7 @@ export class OwnerCourtManagementComponent {
   }
 
   toggle(court: OwnerVenueCourt): void {
-    if (this.togglingId()) return;
+    if (this.togglingId() || this.isCourtInUse(court)) return;
     this.actionMenuId.set(null);
     const active = !court.active;
     if (!active && !window.confirm(`Ngừng hoạt động của “${court.name}”?`)) return;
@@ -619,7 +603,7 @@ export class OwnerCourtManagementComponent {
   }
 
   openMaintenance(court: OwnerVenueCourt): void {
-    if (this.deletingId() || this.maintenanceSaving()) return;
+    if (this.deletingId() || this.maintenanceSaving() || this.isCourtInUse(court)) return;
     this.maintenanceCourt.set(court);
     this.maintenanceDate.set(this.selectedBookingDate());
     this.maintenanceMode.set(court.availabilityStatus === 'MAINTENANCE' ? 'END' : 'START');
@@ -736,7 +720,7 @@ export class OwnerCourtManagementComponent {
   }
 
   deleteCourt(court: OwnerVenueCourt): void {
-    if (this.deletingId() || this.maintenanceSaving() || this.togglingId()) return;
+    if (this.deletingId() || this.maintenanceSaving() || this.togglingId() || this.isCourtInUse(court)) return;
     if (!window.confirm(
       `Xóa sân “${court.name}” khỏi danh sách? Lịch sử booking và các quan hệ dữ liệu vẫn được giữ lại.`
     )) return;
@@ -1251,6 +1235,10 @@ export class OwnerCourtManagementComponent {
       DISABLED: 'Tạm ngưng'
     };
     return labels[this.operationalStatus(court)];
+  }
+
+  isCourtInUse(court: OwnerVenueCourt): boolean {
+    return this.operationalStatus(court) === 'OCCUPIED';
   }
 
   currentBooking(courtId: string): OwnerBooking | null {

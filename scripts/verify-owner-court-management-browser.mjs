@@ -241,6 +241,10 @@ async function verifyViewport(cdp, name, width, height) {
     detailPriceRowHeight: Math.round(document.querySelector('.court-detail__identity').getBoundingClientRect().height),
     detailCloseButtonCount: document.querySelectorAll('.court-detail > header > button').length,
     detailQuickActionCount: document.querySelectorAll('.court-detail .quick-actions a, .court-detail .quick-actions button').length,
+    disabledActionLabels: [...document.querySelectorAll('.court-detail .quick-actions button:disabled')]
+      .map(button => button.textContent.trim()),
+    duplicateActionCount: [...document.querySelectorAll('.court-detail .quick-actions a, .court-detail .quick-actions button')]
+      .filter(action => action.textContent.trim() === 'Nhân bản').length,
     detailHasCourtThumbnail: !!document.querySelector('.court-detail .detail-court-visual'),
     detailTimelineDotCount: document.querySelectorAll('.court-detail .daily-bookings article > i').length,
     detailTimelineLabelCount: document.querySelectorAll('.court-detail .daily-bookings article > b').length,
@@ -252,6 +256,14 @@ async function verifyViewport(cdp, name, width, height) {
     detailFooterCount: document.querySelectorAll('.court-detail__footer').length,
     bodyHorizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth
   }))()`);
+  const expectedDisabledActions = ['Check-in', 'Bảo trì', 'Tạm ngưng', 'Xóa sân'];
+  if (detail.detailQuickActionCount !== 7
+    || detail.duplicateActionCount !== 0
+    || JSON.stringify(detail.disabledActionLabels) !== JSON.stringify(expectedDisabledActions)) {
+    throw new Error(`Unexpected occupied-court quick actions: ${JSON.stringify(detail)}`);
+  }
+  await evaluate(cdp, "document.querySelectorAll('.court-object')[0].click()");
+  await waitFor(cdp, "document.querySelector('.court-detail h2')?.textContent.trim() === 'Sân 01'");
   await evaluate(cdp, `(() => {
     const button = [...document.querySelectorAll('.quick-actions button')]
       .find(item => item.textContent.trim() === 'Bảo trì');
