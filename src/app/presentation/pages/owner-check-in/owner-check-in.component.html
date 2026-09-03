@@ -29,6 +29,9 @@
     <button type="button" [class.active]="activeTab() === 'check-in'" (click)="setTab('check-in')">
       <app-lucide-icon name="user-check" [size]="18" /> Đối soát
     </button>
+    <button type="button" [class.active]="activeTab() === 'walk-in'" (click)="setTab('walk-in')">
+      <app-lucide-icon name="user-plus" [size]="18" /> Khách Walk-in
+    </button>
     <button type="button" [class.active]="activeTab() === 'history'" (click)="setTab('history')">
       <app-lucide-icon name="clock" [size]="18" /> Lịch sử
     </button>
@@ -155,7 +158,15 @@
                 <div><strong>Check-in thành công</strong><span>{{ result.checkIn.method }} · {{ result.checkIn.checkedInAt }}</span></div>
               </div>
             } @else {
-              @if (result.outstandingAmount > 0) {
+              @if (pendingWalkInPayment()) {
+                <div class="walkin-payment-note">
+                  <app-lucide-icon name="banknote" [size]="21" />
+                  <div>
+                    <strong>Thanh toán Walk-in trước khi nhận sân</strong>
+                    <span>Hệ thống sẽ ghi nhận tiền mặt, chuyển booking sang Đã xác nhận rồi mới check-in.</span>
+                  </div>
+                </div>
+              } @else if (result.outstandingAmount > 0) {
                 <fieldset class="payment-choice">
                   <legend>Khoản tiền còn lại</legend>
                   <label><input type="radio" name="paymentMode" value="CASH"
@@ -167,11 +178,51 @@
               <button type="button" class="primary confirm-button" [disabled]="confirming()" (click)="confirm()">
                 @if (confirming()) { <app-lucide-icon name="loader-2" class="spin" [size]="19" /> }
                 @else { <app-lucide-icon name="circle-check" [size]="19" /> }
-                {{ confirming() ? 'Đang xác nhận…' : 'Xác nhận nhận sân' }}
+                {{ confirming() ? 'Đang xử lý…' : (pendingWalkInPayment() ? 'Thu tiền & check-in' : 'Xác nhận nhận sân') }}
               </button>
             }
           }
         </article>
+      </section>
+    }
+
+    @if (activeTab() === 'walk-in') {
+      <section class="panel walkin-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="step">Khách tại quầy</p>
+            <h2>Tạo booking Walk-in</h2>
+            <p class="section-copy">Chọn khung giờ còn trống. Booking sẽ được giữ chỗ để thanh toán trước khi check-in.</p>
+          </div>
+          <span class="scope-badge">{{ selectedCourt()?.name }}</span>
+        </div>
+
+        <form class="walkin-form" [formGroup]="walkInForm" (ngSubmit)="createWalkIn()">
+          <label class="full">
+            <span>Khung giờ</span>
+            <select formControlName="timeSlotId">
+              <option value="">Chọn khung giờ khả dụng</option>
+              @for (slot of availableSlots(); track slot.timeSlotId) {
+                <option [value]="slot.timeSlotId">
+                  {{ time(slot.startTime) }} – {{ time(slot.endTime) }} · {{ money(slot.pricePerHour) }}/giờ
+                </option>
+              }
+            </select>
+          </label>
+          <label>
+            <span>Tên khách hàng</span>
+            <input formControlName="customerName" placeholder="Nhập tên khách Walk-in" autocomplete="name" />
+          </label>
+          <label>
+            <span>Số điện thoại</span>
+            <input formControlName="customerPhone" placeholder="Nhập số điện thoại" autocomplete="tel" />
+          </label>
+          <button type="submit" class="primary full" [disabled]="creatingWalkIn() || !availableSlots().length">
+            @if (creatingWalkIn()) { <app-lucide-icon name="loader-2" class="spin" [size]="18" /> }
+            @else { <app-lucide-icon name="user-plus" [size]="18" /> }
+            {{ creatingWalkIn() ? 'Đang tạo booking…' : 'Tạo booking Walk-in' }}
+          </button>
+        </form>
       </section>
     }
 

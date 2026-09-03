@@ -12,7 +12,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { finalize, forkJoin, of, switchMap, take } from 'rxjs';
+import { finalize, forkJoin, of, switchMap, take, throwError } from 'rxjs';
 import {
   CheckInMethod,
   OwnerCheckInResult,
@@ -24,6 +24,7 @@ import {
   OwnerVenueOverview
 } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { ManageOwnerCheckInUseCase } from '@application/usecase/owner-check-in/manage-owner-check-in.usecase';
+import { ManageOwnerBookingsUseCase } from '@application/usecase/owner-booking/manage-owner-bookings.usecase';
 import { ManageOwnerScheduleUseCase } from '@application/usecase/owner-schedule/manage-owner-schedule.usecase';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
 import { ManageOwnerVenueCourtsUseCase } from '@application/usecase/venue-owner-dashboard/manage-owner-venue-courts.usecase';
@@ -54,6 +55,7 @@ export class OwnerCheckInComponent implements OnDestroy {
   private readonly manageCourts = inject(ManageOwnerVenueCourtsUseCase);
   private readonly manageSchedule = inject(ManageOwnerScheduleUseCase);
   private readonly manageCheckIn = inject(ManageOwnerCheckInUseCase);
+  private readonly manageBookings = inject(ManageOwnerBookingsUseCase);
   private readonly notify = inject(NotifyService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
@@ -93,6 +95,12 @@ export class OwnerCheckInComponent implements OnDestroy {
     this.courts().find(court => court.venueCourtId === this.selectedCourtId()) ?? null
   );
   readonly availableSlots = computed(() => this.slots().filter(slot => slot.status === 'AVAILABLE'));
+  readonly pendingWalkInPayment = computed(() => {
+    const result = this.reconciliation();
+    return result?.booking.source === 'WALK_IN'
+      && result.booking.status === 'PENDING_PAYMENT'
+      && result.outstandingAmount > 0;
+  });
 
   readonly lookupForm = this.formBuilder.nonNullable.group({
     value: ['', [Validators.required, Validators.maxLength(500)]]
@@ -228,23 +236,46 @@ export class OwnerCheckInComponent implements OnDestroy {
   confirm(): void {
     const result = this.reconciliation();
     if (!result || this.confirming()) return;
-    if (!window.confirm(`Xác nhận nhận sân cho mã ${result.booking.bookingCode}?`)) return;
+    const collectWalkInCash = this.pendingWalkInPayment();
+    const confirmationMessage = collectWalkInCash
+      ? `Thu ${this.money(result.outstandingAmount)} và check-in cho mã ${result.booking.bookingCode}?`
+      : `Xác nhận nhận sân cho mã ${result.booking.bookingCode}?`;
+    if (!window.confirm(confirmationMessage)) return;
     this.confirming.set(true);
     this.actionError.set(null);
     const method = this.reconciliationMethod();
     const evidence = this.lookupForm.getRawValue().value.trim();
-    this.manageCheckIn.confirm({
+    const checkInRequest = {
       bookingId: result.booking.bookingId,
       method,
-      paymentMode: result.outstandingAmount > 0 ? this.paymentMode() : 'NONE',
+      paymentMode: collectWalkInCash ? 'NONE' as const
+        : result.outstandingAmount > 0 ? this.paymentMode() : 'NONE' as const,
       qrCode: method === 'QR_CODE' ? evidence : undefined,
       bookingCode: method === 'BOOKING_CODE' ? evidence : undefined
-    }).pipe(
+    };
+    const checkIn$ = collectWalkInCash
+      ? this.manageBookings.createPayment(result.booking.bookingId, 'CASH').pipe(
+          switchMap(payment => payment.status === 'SUCCEEDED'
+            ? this.manageBookings.detail(result.booking.bookingId)
+            : throwError(() => new Error('Thanh toán Walk-in chưa được xác nhận thành công.'))),
+          switchMap(booking => {
+            if (booking.status !== 'CONFIRMED') {
+              return throwError(() => new Error('Booking Walk-in chưa chuyển sang trạng thái đã xác nhận.'));
+            }
+            this.reconciliation.update(current => current ? { ...current, booking } : current);
+            return this.manageCheckIn.confirm(checkInRequest);
+          })
+        )
+      : this.manageCheckIn.confirm(checkInRequest);
+
+    checkIn$.pipe(
       take(1), takeUntilDestroyed(this.destroyRef), finalize(() => this.confirming.set(false))
     ).subscribe({
       next: checkedIn => {
         this.reconciliation.set(checkedIn);
-        this.notify.success('Check-in thành công.');
+        this.notify.success(collectWalkInCash
+          ? 'Đã thanh toán và check-in Walk-in thành công.'
+          : 'Check-in thành công.');
         this.loadCourtData();
       },
       error: error => this.actionError.set(this.errorMessage(error, 'Không thể xác nhận check-in.'))
@@ -274,7 +305,7 @@ export class OwnerCheckInComponent implements OnDestroy {
         this.paymentMode.set(result.outstandingAmount > 0 ? 'CASH' : 'NONE');
         this.activeTab.set('check-in');
         this.walkInForm.reset({ timeSlotId: '', customerName: '', customerPhone: '' });
-        this.notify.success('Đã xếp lịch walk-in. Kiểm tra và xác nhận nhận sân.');
+        this.notify.success('Đã tạo đơn Walk-in. Thu tiền thành công trước khi xác nhận nhận sân.');
         this.loadCourtData();
       },
       error: error => this.actionError.set(this.errorMessage(error, 'Không thể xếp lịch walk-in.'))
