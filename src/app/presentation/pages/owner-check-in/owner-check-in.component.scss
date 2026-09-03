@@ -48,7 +48,7 @@ input:focus, select:focus { border-color: var(--green); box-shadow: 0 0 0 3px rg
 }
 .tabs button.active, .mode-toggle button.active { color: #fff; background: var(--green); box-shadow: 0 7px 20px rgba(0, 143, 104, .18); }
 
-.workspace-grid { display: grid; grid-template-columns: minmax(320px, .8fr) minmax(420px, 1.2fr); gap: 20px; align-items: start; }
+.workspace-grid { display: grid; grid-template-columns: minmax(0, 760px); gap: 20px; align-items: start; }
 .panel { padding: clamp(20px, 3vw, 30px); box-shadow: 0 14px 40px rgba(15, 23, 42, .05); }
 .panel-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 22px; }
 .panel-heading h2, .state-card h2 { margin: 3px 0 0; font-size: 22px; letter-spacing: -.02em; }
@@ -73,6 +73,35 @@ button:disabled { opacity: .55; cursor: not-allowed; }
 
 .empty-reconciliation { min-height: 230px; display: grid; place-items: center; align-content: center; gap: 12px; text-align: center; color: #7b8ca2; }
 .empty-reconciliation p { max-width: 360px; margin: 0; }
+.reconciliation-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, .58);
+  backdrop-filter: blur(3px);
+}
+.reconciliation-panel {
+  width: min(760px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+  border-radius: 18px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, .28);
+}
+.dialog-close {
+  flex: 0 0 42px;
+  width: 42px;
+  min-height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: #fff;
+  color: #475569;
+}
+.dialog-close:hover { border-color: #91b9ac; color: var(--green-dark); background: #f1fbf7; }
 .booking-summary { display: flex; justify-content: space-between; gap: 18px; padding-bottom: 18px; border-bottom: 1px dashed var(--line); }
 .booking-summary h3 { margin: 9px 0 2px; font-size: 24px; color: var(--green); }
 .booking-summary p, .slot-summary span { margin: 0; color: var(--muted); font-size: 13px; }
@@ -165,7 +194,7 @@ h1 { color: var(--ink); font-size: clamp(32px, 4vw, 46px); }
 .tabs button { border-bottom: 2px solid transparent; border-radius: 0; }
 .tabs button.active { border-bottom-color: var(--green); background: transparent; color: var(--green-dark); box-shadow: none; }
 .panel { border-radius: 14px; box-shadow: none; }
-.lookup-panel { position: sticky; top: 90px; }
+.lookup-panel { position: static; }
 .mode-toggle { border-radius: 10px; }
 .mode-toggle button.active { box-shadow: none; }
 .primary { box-shadow: none; }

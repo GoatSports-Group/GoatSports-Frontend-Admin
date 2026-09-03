@@ -3,7 +3,7 @@
     <div>
       <p class="eyebrow"><app-lucide-icon name="shield-check" [size]="16" /> Vận hành tại quầy</p>
       <h1>Check-in khách</h1>
-      <p>Đối soát đúng booking, khung giờ và payment trước khi bàn giao sân.</p>
+      <p>Đối soát booking, khách hàng, khung giờ và trạng thái thanh toán trước khi bàn giao sân.</p>
     </div>
     <div class="context-selectors" aria-label="Phạm vi cơ sở và sân">
       <label>
@@ -108,8 +108,17 @@
           <p class="helper">Không quét được QR? Chuyển sang Booking Code hiển thị dưới vé điện tử.</p>
         </article>
 
-        <article class="panel reconciliation-panel">
-          <div class="panel-heading"><div><p class="step">Bước 2</p><h2>Thông tin đối soát</h2></div></div>
+        @if (reconciliation()) {
+        <div class="reconciliation-backdrop" (click)="closeReconciliation()">
+        <article class="panel reconciliation-panel" role="dialog" aria-modal="true"
+                 aria-labelledby="reconciliation-title" (click)="$event.stopPropagation()">
+          <div class="panel-heading">
+            <div><p class="step">Đối chiếu booking</p><h2 id="reconciliation-title">Thông tin nhận sân</h2></div>
+            <button type="button" class="dialog-close" aria-label="Đóng thông tin booking"
+                    (click)="closeReconciliation()">
+              <app-lucide-icon name="x" [size]="21" />
+            </button>
+          </div>
           @if (!reconciliation()) {
             <div class="empty-reconciliation">
               <app-lucide-icon name="receipt" [size]="30" />
@@ -135,13 +144,13 @@
             <dl class="money-grid">
               <div><dt>Tổng tiền</dt><dd>{{ money(result.booking.totalPrice) }}</dd></div>
               <div><dt>Tiền cọc</dt><dd>{{ money(result.booking.depositAmount) }}</dd></div>
-              <div><dt>Còn phải đối soát</dt><dd>{{ money(result.outstandingAmount) }}</dd></div>
+              <div><dt>Còn chưa thanh toán</dt><dd>{{ money(result.outstandingAmount) }}</dd></div>
             </dl>
 
             <div class="payments">
               <h3><app-lucide-icon name="credit-card" [size]="18" /> Payment source of truth</h3>
               @if (!result.booking.payments.length) {
-                <p class="muted">Chưa có payment; khách walk-in tiền mặt sẽ được ghi tại CheckInRecord.</p>
+                <p class="muted">Booking chưa phát sinh giao dịch thanh toán và vẫn có thể check-in.</p>
               }
               @for (payment of result.booking.payments; track payment.paymentId) {
                 <div class="payment-row">
@@ -158,31 +167,25 @@
                 <div><strong>Check-in thành công</strong><span>{{ result.checkIn.method }} · {{ result.checkIn.checkedInAt }}</span></div>
               </div>
             } @else {
-              @if (pendingWalkInPayment()) {
+              @if (result.outstandingAmount > 0) {
                 <div class="walkin-payment-note">
                   <app-lucide-icon name="banknote" [size]="21" />
                   <div>
-                    <strong>Thanh toán Walk-in trước khi nhận sân</strong>
-                    <span>Hệ thống sẽ ghi nhận tiền mặt, chuyển booking sang Đã xác nhận rồi mới check-in.</span>
+                    <strong>Còn {{ money(result.outstandingAmount) }} chưa thanh toán</strong>
+                    <span>Booking vẫn có thể check-in. Khoản tiền này có thể thu ngay hoặc sau khi khách sử dụng sân.</span>
                   </div>
                 </div>
-              } @else if (result.outstandingAmount > 0) {
-                <fieldset class="payment-choice">
-                  <legend>Khoản tiền còn lại</legend>
-                  <label><input type="radio" name="paymentMode" value="CASH"
-                                [checked]="paymentMode() === 'CASH'" (change)="paymentMode.set('CASH')" /> Thu tiền mặt</label>
-                  <label><input type="radio" name="paymentMode" value="ONLINE"
-                                [checked]="paymentMode() === 'ONLINE'" (change)="paymentMode.set('ONLINE')" /> Đã thanh toán online</label>
-                </fieldset>
               }
               <button type="button" class="primary confirm-button" [disabled]="confirming()" (click)="confirm()">
                 @if (confirming()) { <app-lucide-icon name="loader-2" class="spin" [size]="19" /> }
                 @else { <app-lucide-icon name="circle-check" [size]="19" /> }
-                {{ confirming() ? 'Đang xử lý…' : (pendingWalkInPayment() ? 'Thu tiền & check-in' : 'Xác nhận nhận sân') }}
+                {{ confirming() ? 'Đang xử lý…' : 'Xác nhận check-in' }}
               </button>
             }
           }
         </article>
+        </div>
+        }
       </section>
     }
 
@@ -192,7 +195,7 @@
           <div>
             <p class="step">Khách tại quầy</p>
             <h2>Tạo booking Walk-in</h2>
-            <p class="section-copy">Chọn khung giờ còn trống. Booking sẽ được giữ chỗ để thanh toán trước khi check-in.</p>
+            <p class="section-copy">Chọn khung giờ còn trống. Booking được xác nhận và phát hành QR ngay; có thể thanh toán trước hoặc sau khi sử dụng sân.</p>
           </div>
           <span class="scope-badge">{{ selectedCourt()?.name }}</span>
         </div>

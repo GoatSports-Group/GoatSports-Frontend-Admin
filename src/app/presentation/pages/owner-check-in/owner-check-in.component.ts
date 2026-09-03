@@ -12,19 +12,14 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { finalize, forkJoin, of, switchMap, take, throwError } from 'rxjs';
-import {
-  CheckInMethod,
-  OwnerCheckInResult,
-  PaymentCollectionMode
-} from '@application/dto/owner-check-in/owner-check-in.dto';
+import { finalize, forkJoin, of, switchMap, take } from 'rxjs';
+import { CheckInMethod, OwnerCheckInResult } from '@application/dto/owner-check-in/owner-check-in.dto';
 import { OwnerTimeSlot } from '@application/dto/owner-schedule/owner-schedule.dto';
 import {
   OwnerVenueCourt,
   OwnerVenueOverview
 } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { ManageOwnerCheckInUseCase } from '@application/usecase/owner-check-in/manage-owner-check-in.usecase';
-import { ManageOwnerBookingsUseCase } from '@application/usecase/owner-booking/manage-owner-bookings.usecase';
 import { ManageOwnerScheduleUseCase } from '@application/usecase/owner-schedule/manage-owner-schedule.usecase';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
 import { ManageOwnerVenueCourtsUseCase } from '@application/usecase/venue-owner-dashboard/manage-owner-venue-courts.usecase';
@@ -55,7 +50,6 @@ export class OwnerCheckInComponent implements OnDestroy {
   private readonly manageCourts = inject(ManageOwnerVenueCourtsUseCase);
   private readonly manageSchedule = inject(ManageOwnerScheduleUseCase);
   private readonly manageCheckIn = inject(ManageOwnerCheckInUseCase);
-  private readonly manageBookings = inject(ManageOwnerBookingsUseCase);
   private readonly notify = inject(NotifyService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
@@ -64,6 +58,7 @@ export class OwnerCheckInComponent implements OnDestroy {
   private readonly requestedMode = this.route.snapshot.queryParamMap.get('mode') ?? '';
   private mediaStream?: MediaStream;
   private scannerFrame?: number;
+  private scannerAutoStarted = false;
 
   readonly activeTab = signal<WorkspaceTab>('check-in');
   readonly lookupMode = signal<LookupMode>('bookingCode');
@@ -78,7 +73,6 @@ export class OwnerCheckInComponent implements OnDestroy {
   readonly historyPages = signal(0);
   readonly reconciliation = signal<OwnerCheckInResult | null>(null);
   readonly reconciliationMethod = signal<CheckInMethod>('BOOKING_CODE');
-  readonly paymentMode = signal<PaymentCollectionMode>('CASH');
   readonly loadingContext = signal(true);
   readonly loadingCourt = signal(false);
   readonly lookingUp = signal(false);
@@ -95,13 +89,6 @@ export class OwnerCheckInComponent implements OnDestroy {
     this.courts().find(court => court.venueCourtId === this.selectedCourtId()) ?? null
   );
   readonly availableSlots = computed(() => this.slots().filter(slot => slot.status === 'AVAILABLE'));
-  readonly pendingWalkInPayment = computed(() => {
-    const result = this.reconciliation();
-    return result?.booking.source === 'WALK_IN'
-      && result.booking.status === 'PENDING_PAYMENT'
-      && result.outstandingAmount > 0;
-  });
-
   readonly lookupForm = this.formBuilder.nonNullable.group({
     value: ['', [Validators.required, Validators.maxLength(500)]]
   });
@@ -203,6 +190,10 @@ export class OwnerCheckInComponent implements OnDestroy {
       next: result => {
         this.slots.set(result.slots);
         this.applyHistory(result.history);
+        if (this.requestedMode === 'qr' && !this.scannerAutoStarted) {
+          this.scannerAutoStarted = true;
+          setTimeout(() => void this.startScanner());
+        }
       },
       error: error => this.loadError.set(this.errorMessage(error, 'Không thể tải dữ liệu check-in.'))
     });
@@ -221,9 +212,14 @@ export class OwnerCheckInComponent implements OnDestroy {
       take(1), takeUntilDestroyed(this.destroyRef), finalize(() => this.lookingUp.set(false))
     ).subscribe({
       next: result => {
+        if (this.selectedCourtId() && result.booking.venueCourtId !== this.selectedCourtId()) {
+          this.stopScanner();
+          this.reconciliation.set(null);
+          this.actionError.set('Booking trong mã QR không thuộc sân đang check-in.');
+          return;
+        }
         this.reconciliation.set(result);
         this.reconciliationMethod.set(this.lookupMode() === 'qrCode' ? 'QR_CODE' : 'BOOKING_CODE');
-        this.paymentMode.set(result.outstandingAmount > 0 ? 'CASH' : 'NONE');
         this.stopScanner();
       },
       error: error => {
@@ -236,11 +232,6 @@ export class OwnerCheckInComponent implements OnDestroy {
   confirm(): void {
     const result = this.reconciliation();
     if (!result || this.confirming()) return;
-    const collectWalkInCash = this.pendingWalkInPayment();
-    const confirmationMessage = collectWalkInCash
-      ? `Thu ${this.money(result.outstandingAmount)} và check-in cho mã ${result.booking.bookingCode}?`
-      : `Xác nhận nhận sân cho mã ${result.booking.bookingCode}?`;
-    if (!window.confirm(confirmationMessage)) return;
     this.confirming.set(true);
     this.actionError.set(null);
     const method = this.reconciliationMethod();
@@ -248,34 +239,16 @@ export class OwnerCheckInComponent implements OnDestroy {
     const checkInRequest = {
       bookingId: result.booking.bookingId,
       method,
-      paymentMode: collectWalkInCash ? 'NONE' as const
-        : result.outstandingAmount > 0 ? this.paymentMode() : 'NONE' as const,
+      paymentMode: 'NONE' as const,
       qrCode: method === 'QR_CODE' ? evidence : undefined,
       bookingCode: method === 'BOOKING_CODE' ? evidence : undefined
     };
-    const checkIn$ = collectWalkInCash
-      ? this.manageBookings.createPayment(result.booking.bookingId, 'CASH').pipe(
-          switchMap(payment => payment.status === 'SUCCEEDED'
-            ? this.manageBookings.detail(result.booking.bookingId)
-            : throwError(() => new Error('Thanh toán Walk-in chưa được xác nhận thành công.'))),
-          switchMap(booking => {
-            if (booking.status !== 'CONFIRMED') {
-              return throwError(() => new Error('Booking Walk-in chưa chuyển sang trạng thái đã xác nhận.'));
-            }
-            this.reconciliation.update(current => current ? { ...current, booking } : current);
-            return this.manageCheckIn.confirm(checkInRequest);
-          })
-        )
-      : this.manageCheckIn.confirm(checkInRequest);
-
-    checkIn$.pipe(
+    this.manageCheckIn.confirm(checkInRequest).pipe(
       take(1), takeUntilDestroyed(this.destroyRef), finalize(() => this.confirming.set(false))
     ).subscribe({
       next: checkedIn => {
         this.reconciliation.set(checkedIn);
-        this.notify.success(collectWalkInCash
-          ? 'Đã thanh toán và check-in Walk-in thành công.'
-          : 'Check-in thành công.');
+        this.notify.success('Check-in thành công.');
         this.loadCourtData();
       },
       error: error => this.actionError.set(this.errorMessage(error, 'Không thể xác nhận check-in.'))
@@ -300,12 +273,8 @@ export class OwnerCheckInComponent implements OnDestroy {
       take(1), takeUntilDestroyed(this.destroyRef), finalize(() => this.creatingWalkIn.set(false))
     ).subscribe({
       next: result => {
-        this.reconciliation.set(result);
-        this.reconciliationMethod.set('MANUAL');
-        this.paymentMode.set(result.outstandingAmount > 0 ? 'CASH' : 'NONE');
-        this.activeTab.set('check-in');
         this.walkInForm.reset({ timeSlotId: '', customerName: '', customerPhone: '' });
-        this.notify.success('Đã tạo đơn Walk-in. Thu tiền thành công trước khi xác nhận nhận sân.');
+        this.notify.success(`Đã tạo booking ${result.booking.bookingCode} và phát hành mã QR check-in.`);
         this.loadCourtData();
       },
       error: error => this.actionError.set(this.errorMessage(error, 'Không thể xếp lịch walk-in.'))
@@ -351,6 +320,12 @@ export class OwnerCheckInComponent implements OnDestroy {
     this.mediaStream?.getTracks().forEach(track => track.stop());
     this.mediaStream = undefined;
     this.scannerActive.set(false);
+  }
+
+  closeReconciliation(): void {
+    if (this.confirming()) return;
+    this.reconciliation.set(null);
+    this.actionError.set(null);
   }
 
   money(value: number): string {

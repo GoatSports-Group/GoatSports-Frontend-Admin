@@ -547,7 +547,7 @@
             [queryParams]="{ action: 'walk-in', venueId: court.venueId, venueCourtId: court.venueCourtId }"><lucide-icon
               name="calendar" /><span>Đặt sân</span></a>
           @if (isCourtInUse(court)) {
-          <button type="button" disabled title="Không thể check-in khi sân đang được sử dụng">
+          <button type="button" disabled title="Sân đã có booking được check-in">
             <lucide-icon name="qr-code" /><span>Check-in</span>
           </button>
           } @else {

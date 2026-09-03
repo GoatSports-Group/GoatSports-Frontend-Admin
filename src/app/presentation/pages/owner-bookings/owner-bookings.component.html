@@ -203,7 +203,7 @@
         <footer class="modal-footer">
           <button type="button" class="secondary-button" (click)="closeCreateBooking()" [disabled]="createLoading()">Hủy</button>
           <button type="submit" class="primary-button" [disabled]="createLoading() || slotsLoading() || createForm.invalid || !selectedCreateSlot()">
-            @if (createLoading()) { <span class="spinner-small"></span> Đang tạo… } @else { <lucide-icon name="file-plus-2" /> Tạo đơn & thanh toán }
+            @if (createLoading()) { <span class="spinner-small"></span> Đang tạo… } @else { <lucide-icon name="file-plus-2" /> Tạo booking }
           </button>
         </footer>
       </form>
@@ -217,13 +217,31 @@
       <header class="modal-header">
         <div>
           <span class="eyebrow">{{ booking.bookingCode }}</span>
-          <h2 id="payment-title">Thu tiền đơn walk-in</h2>
+          <h2 id="payment-title">Vé nhận sân & thanh toán</h2>
           <p>{{ booking.courtName }} · {{ formatDate(booking.playDate) }} · {{ timeValue(booking.startTime) }}–{{ timeValue(booking.endTime) }}</p>
         </div>
         <button type="button" class="icon-button" (click)="closePayment()" [disabled]="!!paymentLoading()" aria-label="Đóng"><lucide-icon name="x" /></button>
       </header>
 
+      <div class="booking-ticket">
+        @if (!booking.qrCode) {
+          <span class="ticket-qr-missing"><lucide-icon name="qr-code" /></span>
+        } @else if (bookingTicketQr()) {
+          <img [src]="bookingTicketQr()" [alt]="'Mã QR check-in ' + booking.bookingCode" />
+        } @else {
+          <span class="ticket-qr-loading"><span class="spinner-small"></span></span>
+        }
+        <div>
+          <span class="eyebrow">MÃ QR CHECK-IN</span>
+          <strong>{{ booking.bookingCode }}</strong>
+          <p>{{ booking.qrCode
+            ? 'Đưa mã này cho nhân viên quét khi nhận sân. QR độc lập với khoản tiền còn lại.'
+            : 'Booking cũ chưa có QR; nhân viên có thể tra cứu bằng Booking Code.' }}</p>
+        </div>
+      </div>
+
       <div class="payment-total"><span>Khách cần thanh toán</span><strong>{{ formatMoney(booking.remainingAmount) }}</strong></div>
+      <p class="pay-later-note">Có thể thanh toán ngay hoặc đóng cửa sổ này để thu tiền sau khi khách sử dụng sân.</p>
 
       @if (paymentCompleted()) {
         <div class="payment-success">

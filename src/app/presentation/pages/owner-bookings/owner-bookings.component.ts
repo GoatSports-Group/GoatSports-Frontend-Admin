@@ -3,6 +3,7 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Subject, catchError, filter, finalize, map, of, switchMap, take, takeUntil, timer } from 'rxjs';
+import { toDataURL } from 'qrcode';
 import {
   OwnerBooking,
   OwnerBookingFilter,
@@ -82,6 +83,7 @@ export class OwnerBookingsComponent {
   readonly paymentLoading = signal<OwnerBookingPaymentMethod | null>(null);
   readonly checkoutQr = signal<string | null>(null);
   readonly checkoutUrl = signal<string | null>(null);
+  readonly bookingTicketQr = signal<string | null>(null);
   readonly paymentCompleted = signal(false);
   private readonly stopPaymentPolling = new Subject<void>();
 
@@ -255,8 +257,7 @@ export class OwnerBookingsComponent {
   }
 
   canCollectPayment(booking: OwnerBooking): boolean {
-    return booking.source === 'WALK_IN'
-      && booking.status === 'PENDING_PAYMENT'
+    return ['PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN', 'COMPLETED'].includes(booking.status)
       && booking.remainingAmount > 0
       && !this.isPaid(booking);
   }
@@ -273,7 +274,15 @@ export class OwnerBookingsComponent {
     this.paymentBooking.set(booking);
     this.checkoutQr.set(null);
     this.checkoutUrl.set(null);
+    this.bookingTicketQr.set(null);
     this.paymentCompleted.set(this.isPaid(booking));
+    if (booking.qrCode) {
+      void toDataURL(booking.qrCode, { width: 220, margin: 1, errorCorrectionLevel: 'M' })
+        .then(image => {
+          if (this.paymentBooking()?.bookingId === booking.bookingId) this.bookingTicketQr.set(image);
+        })
+        .catch(() => this.notify.error('Không thể hiển thị mã QR check-in.'));
+    }
   }
 
   closePayment(): void {
@@ -282,6 +291,7 @@ export class OwnerBookingsComponent {
     this.paymentBooking.set(null);
     this.checkoutQr.set(null);
     this.checkoutUrl.set(null);
+    this.bookingTicketQr.set(null);
     this.paymentCompleted.set(false);
   }
 
