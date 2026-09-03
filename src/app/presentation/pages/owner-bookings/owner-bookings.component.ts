@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { Subject, catchError, filter, finalize, map, of, switchMap, take, takeUntil, timer } from 'rxjs';
 import {
   OwnerBooking,
@@ -41,6 +42,11 @@ export class OwnerBookingsComponent {
   private readonly manageSchedule = inject(ManageOwnerScheduleUseCase);
   private readonly notify = inject(NotifyService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly route = inject(ActivatedRoute);
+  private readonly requestedVenueId = this.route.snapshot.queryParamMap.get('venueId') ?? '';
+  private readonly requestedCourtId = this.route.snapshot.queryParamMap.get('venueCourtId') ?? '';
+  private readonly requestedAction = this.route.snapshot.queryParamMap.get('action') ?? '';
+  private routeActionHandled = false;
 
   readonly statuses: readonly StatusOption[] = [
     { value: '', label: 'Tất cả trạng thái' },
@@ -121,14 +127,27 @@ export class OwnerBookingsComponent {
       take(1),
       switchMap(venues => {
         this.venues.set(venues);
-        const venueId = venues[0]?.venueId ?? '';
+        const venueId = venues.some(venue => venue.venueId === this.requestedVenueId)
+          ? this.requestedVenueId
+          : venues[0]?.venueId ?? '';
         this.filterForm.controls.venueId.setValue(venueId);
         return venueId ? this.manageCourts.list(venueId) : of([] as OwnerVenueCourt[]);
       }),
       takeUntilDestroyed(this.destroyRef),
       finalize(() => this.contextLoading.set(false))
     ).subscribe({
-      next: courts => { this.courts.set(courts); this.loadBookings(0); },
+      next: courts => {
+        this.courts.set(courts);
+        const courtId = courts.some(court => court.venueCourtId === this.requestedCourtId)
+          ? this.requestedCourtId
+          : '';
+        this.filterForm.controls.venueCourtId.setValue(courtId);
+        this.loadBookings(0);
+        if (!this.routeActionHandled && this.requestedAction === 'walk-in') {
+          this.routeActionHandled = true;
+          this.openCreateBooking(courtId);
+        }
+      },
       error: error => this.loadError.set(this.errorMessage(error, 'Không thể tải cơ sở của bạn.'))
     });
   }
@@ -145,14 +164,19 @@ export class OwnerBookingsComponent {
     });
   }
 
-  openCreateBooking(): void {
+  openCreateBooking(preferredCourtId = ''): void {
     const venueId = this.filterForm.controls.venueId.value || this.venues()[0]?.venueId || '';
     const courts = venueId === this.filterForm.controls.venueId.value ? this.courts() : [];
+    const selectedCourtId = courts.some(court => court.venueCourtId === preferredCourtId)
+      ? preferredCourtId
+      : courts.some(court => court.venueCourtId === this.filterForm.controls.venueCourtId.value)
+        ? this.filterForm.controls.venueCourtId.value
+        : courts[0]?.venueCourtId ?? '';
     this.createCourts.set(courts);
     this.createSlots.set([]);
     this.createForm.reset({
       venueId,
-      venueCourtId: courts[0]?.venueCourtId ?? '',
+      venueCourtId: selectedCourtId,
       playDate: this.today(),
       timeSlotId: '',
       customerName: '',

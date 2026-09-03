@@ -9,6 +9,7 @@ const API_PORT = 17074;
 const DEBUG_PORT = 9227;
 const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 const profileDir = mkdtempSync(join(tmpdir(), 'goatsports-courts-chrome-'));
+const requestedPaths = [];
 const ok = data => ({ statusCode: 200, message: 'OK', error: null, data });
 const user = {
   userId: 'owner-1', email: 'owner@goatsports.test', username: 'venue-owner', fullName: 'Hoàng Minh',
@@ -51,9 +52,16 @@ const bookings = [
     bookingCode: 'GS-NEXT', createdAt: new Date().toISOString(), payments: [], allowedTransitions: ['CHECKED_IN']
   }
 ];
+const timeSlots = [
+  { timeSlotId: 'slot-available', venueCourtId: 'court-02', date: today, startTime: '06:00:00', endTime: '07:00:00', pricePerHour: 100000, status: 'AVAILABLE' },
+  { timeSlotId: 'slot-locked', venueCourtId: 'court-02', date: today, startTime: '07:00:00', endTime: '08:00:00', pricePerHour: 100000, status: 'LOCKED' },
+  { timeSlotId: 'slot-booked', venueCourtId: 'court-02', date: today, startTime: '08:00:00', endTime: '09:00:00', pricePerHour: 100000, status: 'BOOKED' },
+  { timeSlotId: 'slot-maintenance', venueCourtId: 'court-02', date: today, startTime: '09:00:00', endTime: '10:00:00', pricePerHour: 100000, status: 'MAINTENANCE' }
+];
 
 function responseFor(request) {
   const url = new URL(request.url, `http://localhost:${API_PORT}`);
+  requestedPaths.push(`${request.method} ${url.pathname}${url.search}`);
   if (url.pathname === '/auth-service/api/v1/auth/me') return ok(user);
   if (url.pathname === '/venue-service/api/v1/owner/venues') return ok(venues);
   if (url.pathname.endsWith('/facility-layout')) return ok(null);
@@ -62,6 +70,7 @@ function responseFor(request) {
   if (url.pathname === '/venue-service/api/v1/owner/bookings') {
     return ok({ meta: { page: 0, pageSize: 20, pages: 1, total: bookings.length }, result: bookings });
   }
+  if (url.pathname.endsWith('/time-slots')) return ok(timeSlots);
   return ok([]);
 }
 
@@ -93,9 +102,16 @@ async function connectCdp(webSocketUrl) {
   });
   let id = 0;
   const pending = new Map();
+  const events = [];
   socket.addEventListener('message', event => {
     const message = JSON.parse(event.data);
-    if (!message.id || !pending.has(message.id)) return;
+    if (!message.id) {
+      if (message.method === 'Runtime.exceptionThrown' || message.method === 'Runtime.consoleAPICalled') {
+        events.push(message);
+      }
+      return;
+    }
+    if (!pending.has(message.id)) return;
     const callback = pending.get(message.id);
     pending.delete(message.id);
     message.error ? callback.reject(new Error(message.error.message)) : callback.resolve(message.result);
@@ -106,6 +122,7 @@ async function connectCdp(webSocketUrl) {
       socket.send(JSON.stringify({ id: messageId, method, params }));
       return new Promise((resolve, reject) => pending.set(messageId, { resolve, reject }));
     },
+    events,
     close() { socket.close(); }
   };
 }
@@ -232,9 +249,63 @@ async function verifyViewport(cdp, name, width, height) {
     panelWithinViewport: document.querySelector('.court-detail').getBoundingClientRect().right <= innerWidth,
     panelOverflow: getComputedStyle(document.querySelector('.court-detail')).overflowY,
     stickyHeader: getComputedStyle(document.querySelector('.court-detail > header')).position,
-    stickyFooter: getComputedStyle(document.querySelector('.court-detail__footer')).position,
+    detailFooterCount: document.querySelectorAll('.court-detail__footer').length,
     bodyHorizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth
   }))()`);
+  await evaluate(cdp, `(() => {
+    const button = [...document.querySelectorAll('.quick-actions button')]
+      .find(item => item.textContent.trim() === 'Bảo trì');
+    button?.click();
+  })()`);
+  await waitFor(cdp, "!!document.querySelector('.maintenance-dialog')");
+  await delay(1200);
+  const maintenanceSlotCount = await evaluate(cdp, "document.querySelectorAll('.maintenance-slot').length");
+  if (maintenanceSlotCount !== 4) {
+    const maintenanceDebug = await evaluate(cdp, `(() => ({
+      text: document.querySelector('.maintenance-dialog')?.innerText,
+      error: document.querySelector('.maintenance-error')?.innerText,
+      empty: document.querySelector('.maintenance-empty')?.innerText,
+      loading: !!document.querySelector('.maintenance-loading')
+    }))()`);
+    const runtimeEvents = cdp.events.map(event => {
+      const details = event.params?.exceptionDetails;
+      if (details) {
+        return details.exception?.description ?? details.text;
+      }
+      return (event.params?.args ?? [])
+        .map(argument => argument.value ?? argument.description ?? argument.type)
+        .join(' ');
+    });
+    throw new Error(`Unexpected maintenance slots: ${JSON.stringify({ maintenanceDebug, requestedPaths, runtimeEvents })}`);
+  }
+  await waitFor(cdp, "document.querySelectorAll('.maintenance-slot').length === 4");
+  const maintenanceStart = await evaluate(cdp, `(() => {
+    const slots = [...document.querySelectorAll('.maintenance-slot')];
+    return {
+      visible: !!document.querySelector('.maintenance-dialog'),
+      slotCount: slots.length,
+      unavailableSlotCount: slots.filter(item => item.disabled).length,
+      lockedDisabled: slots.find(item => item.textContent.includes('Đang giữ chỗ'))?.disabled,
+      bookedDisabled: slots.find(item => item.textContent.includes('Đã đặt'))?.disabled
+    };
+  })()`);
+  await evaluate(cdp, `[...document.querySelectorAll('.maintenance-slot')]
+    .find(item => item.textContent.includes('Khả dụng'))?.click()`);
+  await waitFor(cdp, "document.querySelectorAll('.maintenance-slot.is-selected').length === 1");
+  await evaluate(cdp, `[...document.querySelectorAll('.maintenance-modes button')]
+    .find(item => item.textContent.includes('Kết thúc'))?.click()`);
+  await waitFor(cdp, "[...document.querySelectorAll('.maintenance-slot')].filter(item => !item.disabled).length === 1");
+  const maintenanceDialog = {
+    ...maintenanceStart,
+    ...(await evaluate(cdp, `(() => ({
+      startModeSelectedCount: 1,
+      endModeSelectableCount: [...document.querySelectorAll('.maintenance-slot')].filter(item => !item.disabled).length,
+      endModeTargetsMaintenance: [...document.querySelectorAll('.maintenance-slot')]
+        .filter(item => !item.disabled).every(item => item.textContent.includes('Đang bảo trì'))
+    }))()`))
+  };
+  await evaluate(cdp, "document.querySelector('.maintenance-dialog > header > button').click()");
+  await waitFor(cdp, "!document.querySelector('.maintenance-dialog')");
   const screenshot = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
   const screenshotPath = join(tmpdir(), `goatsports-owner-courts-map-${name}.png`);
   writeFileSync(screenshotPath, Buffer.from(screenshot.data, 'base64'));
@@ -302,7 +373,7 @@ async function verifyViewport(cdp, name, width, height) {
     writeFileSync(editScreenshotPath, Buffer.from(editScreenshot.data, 'base64'));
     editMode.editScreenshotPath = editScreenshotPath;
   }
-  return { viewport: `${width}x${height}`, ...initial, firstCourtTooltip, venueDropdown, searchFocus, sportDropdown, statusDropdown, ...detail, screenshotPath, editMode };
+  return { viewport: `${width}x${height}`, ...initial, firstCourtTooltip, venueDropdown, searchFocus, sportDropdown, statusDropdown, ...detail, maintenanceDialog, screenshotPath, editMode };
 }
 
 let angularProcess;

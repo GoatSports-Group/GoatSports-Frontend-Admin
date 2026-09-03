@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize, forkJoin, of, switchMap, take } from 'rxjs';
 import {
   CourtPricingRule,
@@ -38,6 +38,10 @@ export class OwnerScheduleComponent {
   private readonly manageSchedule = inject(ManageOwnerScheduleUseCase);
   private readonly notify = inject(NotifyService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly route = inject(ActivatedRoute);
+  private readonly requestedVenueId = this.route.snapshot.queryParamMap.get('venueId') ?? '';
+  private readonly requestedCourtId = this.route.snapshot.queryParamMap.get('venueCourtId') ?? '';
+  private readonly requestedTab = this.route.snapshot.queryParamMap.get('tab') ?? '';
 
   readonly days: readonly DayOption[] = [
     { value: 'MONDAY', label: 'Thứ Hai' }, { value: 'TUESDAY', label: 'Thứ Ba' },
@@ -91,7 +95,10 @@ export class OwnerScheduleComponent {
     slotDurationMinutes: [60, [Validators.required, Validators.min(30), Validators.max(240)]]
   });
 
-  constructor() { this.loadContext(); }
+  constructor() {
+    if (this.requestedTab === 'calendar') this.activeTab.set('calendar');
+    this.loadContext();
+  }
 
   loadContext(): void {
     this.loadingContext.set(true);
@@ -100,8 +107,9 @@ export class OwnerScheduleComponent {
       take(1),
       switchMap(venues => {
         this.venues.set(venues);
-        const venueId = venues.some(item => item.venueId === this.selectedVenueId())
-          ? this.selectedVenueId() : venues[0]?.venueId ?? '';
+        const preferredVenueId = this.requestedVenueId || this.selectedVenueId();
+        const venueId = venues.some(item => item.venueId === preferredVenueId)
+          ? preferredVenueId : venues[0]?.venueId ?? '';
         this.selectedVenueId.set(venueId);
         return venueId ? this.manageCourts.list(venueId) : of([] as OwnerVenueCourt[]);
       }),
@@ -110,7 +118,10 @@ export class OwnerScheduleComponent {
     ).subscribe({
       next: courts => {
         this.courts.set(courts);
-        this.selectCourt(courts[0]?.venueCourtId ?? '');
+        const courtId = courts.some(court => court.venueCourtId === this.requestedCourtId)
+          ? this.requestedCourtId
+          : courts[0]?.venueCourtId ?? '';
+        this.selectCourt(courtId);
       },
       error: error => this.loadError.set(this.errorMessage(error, 'Không thể tải cơ sở và sân thi đấu.'))
     });

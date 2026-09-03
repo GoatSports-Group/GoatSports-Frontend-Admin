@@ -80,6 +80,12 @@ export class VenueOwnerDashboardApi {
     );
   }
 
+  deleteVenueCourt(venueCourtId: string): Observable<void> {
+    return this.http.delete<void>(
+      `${this.apiBase}/venue-service/api/v1/owner/venue-courts/${venueCourtId}`
+    );
+  }
+
   getVenueFacilityLayout(venueId: string): Observable<BaseResponse<VenueFacilityLayout> | null> {
     return this.http.get<BaseResponse<VenueFacilityLayout>>(
       `${this.apiBase}/venue-service/api/v1/owner/venues/${venueId}/facility-layout`

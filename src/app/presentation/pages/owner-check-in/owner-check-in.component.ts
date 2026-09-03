@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { finalize, forkJoin, of, switchMap, take } from 'rxjs';
 import {
   CheckInMethod,
@@ -55,6 +56,10 @@ export class OwnerCheckInComponent implements OnDestroy {
   private readonly manageCheckIn = inject(ManageOwnerCheckInUseCase);
   private readonly notify = inject(NotifyService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly route = inject(ActivatedRoute);
+  private readonly requestedVenueId = this.route.snapshot.queryParamMap.get('venueId') ?? '';
+  private readonly requestedCourtId = this.route.snapshot.queryParamMap.get('venueCourtId') ?? '';
+  private readonly requestedMode = this.route.snapshot.queryParamMap.get('mode') ?? '';
   private mediaStream?: MediaStream;
   private scannerFrame?: number;
 
@@ -98,7 +103,10 @@ export class OwnerCheckInComponent implements OnDestroy {
     customerPhone: ['', [Validators.required, Validators.pattern(/^\+?[0-9 .-]{8,20}$/)]]
   });
 
-  constructor() { this.loadContext(); }
+  constructor() {
+    if (this.requestedMode === 'qr') this.lookupMode.set('qrCode');
+    this.loadContext();
+  }
 
   ngOnDestroy(): void { this.stopScanner(); }
 
@@ -123,7 +131,9 @@ export class OwnerCheckInComponent implements OnDestroy {
       take(1),
       switchMap(venues => {
         this.venues.set(venues);
-        const venueId = venues[0]?.venueId ?? '';
+        const venueId = venues.some(venue => venue.venueId === this.requestedVenueId)
+          ? this.requestedVenueId
+          : venues[0]?.venueId ?? '';
         this.selectedVenueId.set(venueId);
         return venueId ? this.manageCourts.list(venueId) : of([] as OwnerVenueCourt[]);
       }),
@@ -132,7 +142,10 @@ export class OwnerCheckInComponent implements OnDestroy {
     ).subscribe({
       next: courts => {
         this.courts.set(courts);
-        this.selectedCourtId.set(courts[0]?.venueCourtId ?? '');
+        const courtId = courts.some(court => court.venueCourtId === this.requestedCourtId)
+          ? this.requestedCourtId
+          : courts[0]?.venueCourtId ?? '';
+        this.selectedCourtId.set(courtId);
         this.loadCourtData();
       },
       error: error => this.loadError.set(this.errorMessage(error, 'Không thể tải cơ sở và sân thi đấu.'))

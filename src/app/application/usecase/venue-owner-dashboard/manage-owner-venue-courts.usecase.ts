@@ -35,4 +35,8 @@ export class ManageOwnerVenueCourtsUseCase {
   toggle(venueCourtId: string, active: boolean): Observable<OwnerVenueCourt> {
     return this.repository.updateVenueCourtActive(venueCourtId, active);
   }
+
+  delete(venueCourtId: string): Observable<void> {
+    return this.repository.deleteVenueCourt(venueCourtId);
+  }
 }

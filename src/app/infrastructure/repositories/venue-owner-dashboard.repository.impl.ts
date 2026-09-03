@@ -53,6 +53,10 @@ export class VenueOwnerDashboardRepositoryImpl implements VenueOwnerDashboardRep
     return this.api.updateVenueCourtActive(venueCourtId, active).pipe(map(response => response.data));
   }
 
+  deleteVenueCourt(venueCourtId: string): Observable<void> {
+    return this.api.deleteVenueCourt(venueCourtId);
+  }
+
   getVenueFacilityLayout(venueId: string): Observable<VenueFacilityLayout | null> {
     return this.api.getVenueFacilityLayout(venueId).pipe(map(response => response?.data ?? null));
   }

@@ -12,8 +12,9 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { EMPTY, Observable, expand, finalize, interval, reduce, take } from 'rxjs';
+import { EMPTY, Observable, expand, finalize, forkJoin, interval, reduce, take } from 'rxjs';
 import { OwnerBooking, OwnerBookingFilter } from '@application/dto/owner-booking/owner-booking.dto';
+import { OwnerTimeSlot, OwnerTimeSlotStatus } from '@application/dto/owner-schedule/owner-schedule.dto';
 import {
   CourtAvailabilityStatus,
   OwnerVenueCourt,
@@ -22,6 +23,7 @@ import {
   SportType
 } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { ManageOwnerBookingsUseCase } from '@application/usecase/owner-booking/manage-owner-bookings.usecase';
+import { ManageOwnerScheduleUseCase } from '@application/usecase/owner-schedule/manage-owner-schedule.usecase';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
 import { ManageOwnerVenueCourtsUseCase } from '@application/usecase/venue-owner-dashboard/manage-owner-venue-courts.usecase';
 import { ManageOwnerVenueFacilityLayoutUseCase } from '@application/usecase/venue-owner-dashboard/manage-owner-venue-facility-layout.usecase';
@@ -61,6 +63,7 @@ type WorkspaceView = 'MAP' | 'LIST' | 'PRICING';
 type PanelMode = 'NONE' | 'DETAIL' | 'FORM';
 type OperationalStatus = 'AVAILABLE' | 'OCCUPIED' | 'UPCOMING' | 'MAINTENANCE' | 'DISABLED';
 type OperationalFilter = 'ALL' | OperationalStatus;
+type MaintenanceMode = 'START' | 'END';
 
 interface PointerOperationBase {
   itemId: string;
@@ -96,6 +99,7 @@ export class OwnerCourtManagementComponent {
   private readonly getMyVenues = inject(GetMyOwnerVenuesUseCase);
   private readonly manageCourts = inject(ManageOwnerVenueCourtsUseCase);
   private readonly manageBookings = inject(ManageOwnerBookingsUseCase);
+  private readonly manageSchedule = inject(ManageOwnerScheduleUseCase);
   private readonly manageFacilityLayout = inject(ManageOwnerVenueFacilityLayoutUseCase);
   private readonly layoutStore = inject(FacilityLayoutStore);
   private readonly notify = inject(NotifyService);
@@ -169,6 +173,16 @@ export class OwnerCourtManagementComponent {
   readonly layoutSaving = signal(false);
   readonly layoutError = signal<string | null>(null);
   readonly togglingId = signal<string | null>(null);
+  readonly deletingId = signal<string | null>(null);
+  readonly maintenanceDialogOpen = signal(false);
+  readonly maintenanceCourt = signal<OwnerVenueCourt | null>(null);
+  readonly maintenanceSlots = signal<OwnerTimeSlot[]>([]);
+  readonly maintenanceDate = signal(this.todayIso());
+  readonly maintenanceMode = signal<MaintenanceMode>('START');
+  readonly selectedMaintenanceSlotIds = signal<string[]>([]);
+  readonly maintenanceLoading = signal(false);
+  readonly maintenanceSaving = signal(false);
+  readonly maintenanceError = signal<string | null>(null);
   readonly activeView = signal<WorkspaceView>('MAP');
   readonly panelMode = signal<PanelMode>('NONE');
   readonly selectedCourtId = signal<string | null>(null);
@@ -601,6 +615,155 @@ export class OwnerCourtManagementComponent {
         this.notify.success(active ? 'Sân đã được bật hoạt động.' : 'Sân đã ngừng hoạt động.');
       },
       error: error => this.notify.error(this.errorMessage(error, 'Không thể đổi trạng thái sân.'))
+    });
+  }
+
+  openMaintenance(court: OwnerVenueCourt): void {
+    if (this.deletingId() || this.maintenanceSaving()) return;
+    this.maintenanceCourt.set(court);
+    this.maintenanceDate.set(this.selectedBookingDate());
+    this.maintenanceMode.set(court.availabilityStatus === 'MAINTENANCE' ? 'END' : 'START');
+    this.selectedMaintenanceSlotIds.set([]);
+    this.maintenanceError.set(null);
+    this.maintenanceDialogOpen.set(true);
+    this.loadMaintenanceSlots();
+  }
+
+  closeMaintenance(): void {
+    if (this.maintenanceSaving()) return;
+    this.maintenanceDialogOpen.set(false);
+    this.maintenanceCourt.set(null);
+    this.maintenanceSlots.set([]);
+    this.selectedMaintenanceSlotIds.set([]);
+    this.maintenanceError.set(null);
+  }
+
+  changeMaintenanceDate(event: Event): void {
+    const date = (event.target as HTMLInputElement).value || this.todayIso();
+    this.maintenanceDate.set(date);
+    this.selectedMaintenanceSlotIds.set([]);
+    this.loadMaintenanceSlots();
+  }
+
+  setMaintenanceMode(mode: MaintenanceMode): void {
+    if (mode === this.maintenanceMode() || this.maintenanceSaving()) return;
+    this.maintenanceMode.set(mode);
+    this.selectedMaintenanceSlotIds.set([]);
+  }
+
+  toggleMaintenanceSlot(slot: OwnerTimeSlot): void {
+    if (!this.maintenanceSlotSelectable(slot) || this.maintenanceSaving()) return;
+    this.selectedMaintenanceSlotIds.update(ids => ids.includes(slot.timeSlotId)
+      ? ids.filter(id => id !== slot.timeSlotId)
+      : [...ids, slot.timeSlotId]);
+  }
+
+  maintenanceSlotSelected(slotId: string): boolean {
+    return this.selectedMaintenanceSlotIds().includes(slotId);
+  }
+
+  maintenanceSlotSelectable(slot: OwnerTimeSlot): boolean {
+    return this.maintenanceMode() === 'START'
+      ? slot.status === 'AVAILABLE'
+      : slot.status === 'MAINTENANCE';
+  }
+
+  maintenanceStatusLabel(status: OwnerTimeSlotStatus): string {
+    return ({
+      AVAILABLE: 'Khả dụng',
+      LOCKED: 'Đang giữ chỗ',
+      BOOKED: 'Đã đặt',
+      MAINTENANCE: 'Đang bảo trì'
+    } as const)[status];
+  }
+
+  applyMaintenance(): void {
+    const court = this.maintenanceCourt();
+    const selectedIds = this.selectedMaintenanceSlotIds();
+    if (!court || !selectedIds.length || this.maintenanceSaving()) return;
+
+    const targetStatus: OwnerTimeSlotStatus = this.maintenanceMode() === 'START'
+      ? 'MAINTENANCE'
+      : 'AVAILABLE';
+    this.maintenanceSaving.set(true);
+    this.maintenanceError.set(null);
+    forkJoin(selectedIds.map(slotId => this.manageSchedule.setSlotStatus(slotId, targetStatus))).pipe(
+      take(1),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.maintenanceSaving.set(false))
+    ).subscribe({
+      next: () => {
+        const venueId = this.selectedVenueId();
+        if (venueId) this.refreshCourts(venueId, false);
+        this.maintenanceDialogOpen.set(false);
+        this.maintenanceCourt.set(null);
+        this.maintenanceSlots.set([]);
+        this.selectedMaintenanceSlotIds.set([]);
+        this.notify.success(targetStatus === 'MAINTENANCE'
+          ? 'Đã chuyển các khung giờ đã chọn sang bảo trì.'
+          : 'Đã kết thúc bảo trì và trả các khung giờ về khả dụng.');
+      },
+      error: error => {
+        const message = this.errorMessage(
+          error,
+          'Không thể cập nhật một hoặc nhiều khung giờ. Dữ liệu đã được tải lại.'
+        );
+        this.notify.error(message);
+        this.selectedMaintenanceSlotIds.set([]);
+        this.loadMaintenanceSlots();
+      }
+    });
+  }
+
+  private loadMaintenanceSlots(): void {
+    const court = this.maintenanceCourt();
+    const date = this.maintenanceDate();
+    if (!court || !date) return;
+    this.maintenanceLoading.set(true);
+    this.maintenanceError.set(null);
+    this.manageSchedule.listSlots(court.venueCourtId, date, date).pipe(
+      take(1),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.maintenanceLoading.set(false))
+    ).subscribe({
+      next: slots => this.maintenanceSlots.set([...slots].sort((a, b) =>
+        a.startTime.localeCompare(b.startTime))),
+      error: error => {
+        this.maintenanceSlots.set([]);
+        this.maintenanceError.set(this.errorMessage(error, 'Không thể tải khung giờ của sân.'));
+      }
+    });
+  }
+
+  deleteCourt(court: OwnerVenueCourt): void {
+    if (this.deletingId() || this.maintenanceSaving() || this.togglingId()) return;
+    if (!window.confirm(
+      `Xóa sân “${court.name}” khỏi danh sách? Lịch sử booking và các quan hệ dữ liệu vẫn được giữ lại.`
+    )) return;
+
+    this.deletingId.set(court.venueCourtId);
+    this.manageCourts.delete(court.venueCourtId).pipe(
+      take(1),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.deletingId.set(null))
+    ).subscribe({
+      next: () => {
+        const remaining = this.courts().filter(item => item.venueCourtId !== court.venueCourtId);
+        this.courts.set(remaining);
+        const currentLayout = this.layout();
+        if (currentLayout) {
+          this.layout.set({
+            ...currentLayout,
+            items: currentLayout.items.filter(item => item.courtId !== court.venueCourtId)
+          });
+        }
+        this.panelMode.set('NONE');
+        this.selectedCourtId.set(null);
+        this.editingCourt.set(null);
+        if (remaining.length && this.activeView() === 'MAP') this.selectCourt(remaining[0]);
+        this.notify.success('Sân đã được xóa mềm. Dữ liệu booking trước đây vẫn được bảo toàn.');
+      },
+      error: error => this.notify.error(this.errorMessage(error, 'Không thể xóa sân thi đấu.'))
     });
   }
 
@@ -1284,6 +1447,7 @@ export class OwnerCourtManagementComponent {
     this.filterOpen.set(false);
     this.actionMenuId.set(null);
     if (this.customObjectDialogOpen()) this.closeCustomObjectCreator();
+    if (this.maintenanceDialogOpen()) this.closeMaintenance();
     if (this.editorOpen()) this.closeEditor();
   }
 

@@ -21,6 +21,7 @@ export interface VenueOwnerDashboardRepository {
   createVenueCourt(venueId: string, request: OwnerVenueCourtUpsert): Observable<OwnerVenueCourt>;
   updateVenueCourt(venueCourtId: string, request: OwnerVenueCourtUpsert): Observable<OwnerVenueCourt>;
   updateVenueCourtActive(venueCourtId: string, active: boolean): Observable<OwnerVenueCourt>;
+  deleteVenueCourt(venueCourtId: string): Observable<void>;
   getVenueFacilityLayout(venueId: string): Observable<VenueFacilityLayout | null>;
   updateVenueFacilityLayout(
     venueId: string,

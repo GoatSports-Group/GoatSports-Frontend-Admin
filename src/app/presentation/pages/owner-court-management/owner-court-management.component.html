@@ -34,7 +34,7 @@
     </button>
   </nav>
 
-  <section class="workspace-shell" [class.has-panel]="panelMode() !== 'NONE'"
+  <section class="workspace-shell" [class.has-panel]="panelMode() === 'DETAIL'"
     [class.has-map-detail]="activeView() === 'MAP' && panelMode() === 'DETAIL'">
     <div class="workspace-primary">
       <div class="operations-toolbar" [class.has-booking-date]="activeView() === 'MAP' && !layoutMode()">
@@ -543,29 +543,37 @@
       <section class="quick-actions">
         <h3>Thao tác nhanh</h3>
         <div>
-          <a routerLink="/admin/owner-bookings"><lucide-icon name="calendar" /><span>Đặt sân</span></a>
-          <a routerLink="/admin/check-in"><lucide-icon name="check-circle" /><span>Check-in</span></a>
+          <a routerLink="/admin/owner-bookings"
+            [queryParams]="{ action: 'walk-in', venueId: court.venueId, venueCourtId: court.venueCourtId }"><lucide-icon
+              name="calendar" /><span>Đặt sân</span></a>
+          <a routerLink="/admin/check-in"
+            [queryParams]="{ mode: 'qr', venueId: court.venueId, venueCourtId: court.venueCourtId }"><lucide-icon
+              name="qr-code" /><span>Check-in</span></a>
           <button type="button" (click)="openEdit(court)"><lucide-icon name="pencil" /><span>Chỉnh sửa</span></button>
-          <a routerLink="/admin/schedule"><lucide-icon name="construction" /><span>Bảo trì</span></a>
+          <button type="button" (click)="openMaintenance(court)">
+            <lucide-icon name="construction" /><span>Bảo trì</span>
+          </button>
           <button type="button" (click)="toggle(court)"><lucide-icon
               [name]="court.active ? 'ban' : 'activity'" /><span>{{ court.active ? 'Tạm ngưng' : 'Bật sân'
               }}</span></button>
           <button type="button" (click)="duplicateCourt(court)"><lucide-icon name="file-plus-2" /><span>Nhân
               bản</span></button>
-          <a routerLink="/admin/schedule"><lucide-icon name="clock" /><span>Xem lịch</span></a>
-          <button type="button" class="is-danger" disabled title="API hiện chưa hỗ trợ xóa sân">
+          <a routerLink="/admin/schedule"
+            [queryParams]="{ tab: 'calendar', venueId: court.venueId, venueCourtId: court.venueCourtId }"><lucide-icon
+              name="clock" /><span>Xem lịch</span></a>
+          <button type="button" class="is-danger" (click)="deleteCourt(court)"
+            [disabled]="deletingId() === court.venueCourtId">
             <lucide-icon name="trash-2" /><span>Xóa sân</span>
           </button>
         </div>
       </section>
-      <button type="button" class="court-detail__footer" (click)="openEdit(court)">
-        Xem chi tiết sân <lucide-icon name="arrow-right" />
-      </button>
     </aside>
     }
 
     @if (editorOpen()) {
-    <aside class="workspace-panel court-editor" aria-labelledby="court-editor-title">
+    <div class="court-editor-backdrop" role="presentation" (click)="closeEditor()">
+    <aside class="workspace-panel court-editor" role="dialog" aria-modal="true"
+      aria-labelledby="court-editor-title" (click)="$event.stopPropagation()">
       <header>
         <h2 id="court-editor-title">{{ editingCourt() ? 'Chỉnh sửa sân' : 'Thêm sân mới' }}</h2>
         <button type="button" (click)="closeEditor()" [disabled]="saving()" aria-label="Đóng"><lucide-icon
@@ -608,8 +616,83 @@
         </footer>
       </form>
     </aside>
+    </div>
     }
   </section>
+  }
+
+  @if (maintenanceCourt(); as court) {
+  <div class="maintenance-backdrop" role="presentation" (click)="closeMaintenance()">
+    <section class="maintenance-dialog" role="dialog" aria-modal="true" aria-labelledby="maintenance-dialog-title"
+      (click)="$event.stopPropagation()">
+      <header>
+        <div>
+          <span>Bảo trì theo khung giờ</span>
+          <h2 id="maintenance-dialog-title">{{ maintenanceCourt()?.name }}</h2>
+          <p>Chỉ slot khả dụng được đưa vào bảo trì. Slot giữ chỗ hoặc đã đặt không thể thay đổi.</p>
+        </div>
+        <button type="button" (click)="closeMaintenance()" [disabled]="maintenanceSaving()" aria-label="Đóng">
+          <lucide-icon name="x" />
+        </button>
+      </header>
+
+      <div class="maintenance-toolbar">
+        <label>
+          <span>Ngày áp dụng</span>
+          <input type="date" [value]="maintenanceDate()" (change)="changeMaintenanceDate($event)"
+            [disabled]="maintenanceLoading() || maintenanceSaving()" />
+        </label>
+        <div class="maintenance-modes" aria-label="Loại thao tác bảo trì">
+          <button type="button" [class.is-active]="maintenanceMode() === 'START'"
+            (click)="setMaintenanceMode('START')">Đặt bảo trì</button>
+          <button type="button" [class.is-active]="maintenanceMode() === 'END'"
+            (click)="setMaintenanceMode('END')">Kết thúc bảo trì</button>
+        </div>
+      </div>
+
+      @if (maintenanceError()) {
+      <p class="maintenance-error" role="alert"><lucide-icon name="alert-circle" />{{ maintenanceError() }}</p>
+      }
+
+      <div class="maintenance-slot-list">
+        @if (maintenanceLoading()) {
+        <div class="maintenance-loading"><span class="spinner"></span>Đang tải khung giờ...</div>
+        } @else {
+        @for (slot of maintenanceSlots(); track slot.timeSlotId) {
+        <button type="button" class="maintenance-slot" [class.is-selected]="maintenanceSlotSelected(slot.timeSlotId)"
+          [class.is-disabled]="!maintenanceSlotSelectable(slot)" [disabled]="!maintenanceSlotSelectable(slot)"
+          (click)="toggleMaintenanceSlot(slot)">
+          <span class="maintenance-slot__check">
+            @if (maintenanceSlotSelected(slot.timeSlotId)) { <lucide-icon name="check" /> }
+          </span>
+          <strong>{{ slot.startTime.slice(0, 5) }} – {{ slot.endTime.slice(0, 5) }}</strong>
+          <span class="maintenance-slot__status" [attr.data-status]="slot.status">{{ maintenanceStatusLabel(slot.status)
+            }}</span>
+        </button>
+        } @empty {
+        <div class="maintenance-empty">
+          <lucide-icon name="calendar" />
+          <strong>Ngày này chưa có time slot</strong>
+          <span>Hãy tạo khung giờ trong tab Lịch và bảng giá trước khi đặt lịch bảo trì.</span>
+        </div>
+        }
+        }
+      </div>
+
+      <footer>
+        <span>{{ selectedMaintenanceSlotIds().length }}/{{ maintenanceSlots().length }} khung giờ đã chọn</span>
+        <div>
+          <button type="button" class="outline-button" (click)="closeMaintenance()"
+            [disabled]="maintenanceSaving()">Hủy</button>
+          <button type="button" class="primary-button" (click)="applyMaintenance()"
+            [disabled]="maintenanceSaving() || selectedMaintenanceSlotIds().length === 0">
+            @if (maintenanceSaving()) { <span class="mini-spinner"></span>Đang cập nhật... }
+            @else { {{ maintenanceMode() === 'START' ? 'Đặt bảo trì' : 'Chuyển về khả dụng' }} }
+          </button>
+        </div>
+      </footer>
+    </section>
+  </div>
   }
 
   @if (customObjectDialogOpen()) {
