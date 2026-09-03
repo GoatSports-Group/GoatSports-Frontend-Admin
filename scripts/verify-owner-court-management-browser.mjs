@@ -41,7 +41,7 @@ const toTime = minutes => {
 const bookings = [
   {
     bookingId: 'booking-current', venueId: 'venue-1', venueCourtId: 'court-02', venueName: 'The Goat Arena',
-    courtName: 'Sân 02', playDate: today, startTime: toTime(minutesNow - 25), endTime: toTime(minutesNow + 35), status: 'CHECKED_IN',
+    courtName: 'Sân 02', playDate: today, startTime: toTime(minutesNow - 25), endTime: toTime(minutesNow + 35), status: 'PENDING_PAYMENT',
     source: 'WALK_IN', totalPrice: 320000, depositAmount: 0, remainingAmount: 320000,
     bookingCode: 'GS-CURRENT', walkInCustomerName: 'Anh Duy', createdAt: new Date().toISOString(), payments: [], allowedTransitions: ['COMPLETED']
   },

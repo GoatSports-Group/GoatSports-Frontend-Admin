@@ -1257,7 +1257,7 @@ export class OwnerCourtManagementComponent {
     if (this.selectedBookingDate() !== this.todayIso()) return null;
     const now = this.currentMinutes();
     return this.bookingsForCourt(courtId).find(booking =>
-      ['CONFIRMED', 'CHECKED_IN'].includes(booking.status)
+      this.isActiveBooking(booking)
       && this.timeMinutes(booking.startTime) <= now
       && this.timeMinutes(booking.endTime) > now
     ) ?? null;
@@ -1293,7 +1293,7 @@ export class OwnerCourtManagementComponent {
     if (this.selectedBookingDate() !== this.todayIso()) return null;
     const now = this.currentMinutes();
     return this.detailBookingsForCourt(courtId).find(booking =>
-      ['CONFIRMED', 'CHECKED_IN'].includes(booking.status)
+      this.isActiveBooking(booking)
       && this.timeMinutes(booking.startTime) <= now
       && this.timeMinutes(booking.endTime) > now
     ) ?? null;
@@ -1686,6 +1686,10 @@ export class OwnerCourtManagementComponent {
   private timeMinutes(value: string): number {
     const [hours, minutes] = value.split(':').map(Number);
     return (hours || 0) * 60 + (minutes || 0);
+  }
+
+  private isActiveBooking(booking: OwnerBooking): boolean {
+    return ['PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN'].includes(booking.status);
   }
 
   private errorMessage(error: any, fallback: string): string {
