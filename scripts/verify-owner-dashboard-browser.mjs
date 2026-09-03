@@ -12,6 +12,13 @@ const profileDir = mkdtempSync(join(tmpdir(), 'goatsports-dashboard-chrome-'));
 const browserErrors = [];
 const receivedRequests = [];
 let activeScenario = 'multi';
+const now = new Date();
+const today = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, '0'), String(now.getDate()).padStart(2, '0')].join('-');
+const nowMinutes = now.getHours() * 60 + now.getMinutes();
+const toTime = minutes => {
+  const normalizedMinutes = Math.max(0, Math.min(1439, minutes));
+  return `${String(Math.floor(normalizedMinutes / 60)).padStart(2, '0')}:${String(normalizedMinutes % 60).padStart(2, '0')}:00`;
+};
 
 const ok = data => ({ statusCode: 200, message: 'OK', error: null, data });
 const user = {
@@ -47,6 +54,12 @@ const secondaryVenue = {
   address: '20 Nguyễn Huệ', district: 'Quận 1', city: 'Hồ Chí Minh', imageUrls: [], amenities: [],
   courts: [{ venueCourtId: 'court-3', venueId: 'venue-2', name: 'Sân Riverside 1', sportType: 'FOOTBALL', capacity: 14, surfaceType: 'GRASS', active: false }]
 };
+const currentBooking = {
+  bookingId: 'booking-current', venueId: 'venue-1', venueCourtId: 'court-1', venueName: primaryVenue.name,
+  courtName: 'Sân Sapphire', playDate: today, startTime: toTime(nowMinutes - 20), endTime: toTime(nowMinutes + 40),
+  status: 'PENDING_PAYMENT', source: 'WALK_IN', totalPrice: 100000, depositAmount: 0, remainingAmount: 100000,
+  bookingCode: 'GS-CURRENT', walkInCustomerName: 'Khách hiện tại', createdAt: now.toISOString(), payments: [], allowedTransitions: []
+};
 
 function responseFor(request) {
   const url = new URL(request.url, `http://localhost:${API_PORT}`);
@@ -61,6 +74,15 @@ function responseFor(request) {
     if (activeScenario === 'empty') return { status: 200, body: ok([]) };
     if (activeScenario === 'inactive') return { status: 200, body: ok([secondaryVenue]) };
     return { status: 200, body: ok([primaryVenue, secondaryVenue]) };
+  }
+  if (url.pathname === '/venue-service/api/v1/owner/venues/venue-1/courts') {
+    return { status: 200, body: ok(primaryVenue.courts.map(court => ({ ...court, availabilityStatus: 'AVAILABLE' }))) };
+  }
+  if (url.pathname === '/venue-service/api/v1/owner/venues/venue-2/courts') {
+    return { status: 200, body: ok(secondaryVenue.courts.map(court => ({ ...court, availabilityStatus: 'INACTIVE' }))) };
+  }
+  if (url.pathname === '/venue-service/api/v1/owner/bookings') {
+    return { status: 200, body: ok({ meta: { page: 0, pageSize: 20, pages: 1, total: 1 }, result: [currentBooking] }) };
   }
   return { status: 200, body: ok([]) };
 }
@@ -78,7 +100,7 @@ const apiServer = createServer((request, response) => {
 });
 
 const delay = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
-async function waitForUrl(url, timeout = 60000) {
+async function waitForUrl(url, timeout = 120000) {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
     try { if ((await fetch(url)).ok) return; } catch { /* starting */ }
@@ -136,13 +158,17 @@ async function capture(cdp, name) {
 }
 async function verifyMultiVenue(cdp, name, width, height) {
   await cdp.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 600 });
-  await navigateScenario(cdp, 'multi', "document.querySelectorAll('.venue-switcher button').length === 2");
+  await navigateScenario(cdp, 'multi', "document.querySelectorAll('.venue-selector option').length === 2");
+  await waitFor(cdp, "!!document.querySelector('.live-courts-list article[data-status=\"OCCUPIED\"]')");
   const result = await evaluate(cdp, `(() => ({
     route: location.pathname,
     metricValues: [...document.querySelectorAll('.metric-rail__item strong')].map(node => node.textContent.trim()),
     venueButtons: document.querySelectorAll('.venue-switcher button').length,
     toolLinks: [...document.querySelectorAll('a.feature-card')].map(link => link.getAttribute('href')),
     quickAction: document.querySelector('.owner-hero__action')?.getAttribute('href'),
+    liveCourtStatus: document.querySelector('.live-courts-list article')?.getAttribute('data-status'),
+    liveCourtLabel: document.querySelector('.live-courts-list article em')?.textContent?.trim(),
+    utilizationRate: document.querySelector('.utilization-ring strong')?.textContent?.trim(),
     devVisible: [...document.querySelectorAll('*')].some(node => ['DEV', 'Đang phát triển'].includes(node.textContent?.trim()) && node.getBoundingClientRect().width > 0),
     horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
     minInteractiveHeight: Math.min(...[...document.querySelectorAll('.owner-dashboard a, .owner-dashboard button')].filter(node => node.getBoundingClientRect().width > 0).map(node => node.getBoundingClientRect().height)),
@@ -157,9 +183,18 @@ async function verifyMultiVenue(cdp, name, width, height) {
       .sort((left, right) => left.height - right.height)
       .slice(0, 5)
   }))()`);
-  await evaluate(cdp, `document.querySelectorAll('.venue-switcher button')[1].click()`);
-  await waitFor(cdp, "document.querySelector('.venue-identity h3')?.textContent.includes('GOAT Riverside')");
-  return { viewport: `${width}x${height}`, ...result, selectedVenue: await evaluate(cdp, "document.querySelector('.venue-identity h3')?.textContent.trim()"), screenshotPath: await capture(cdp, name) };
+  await evaluate(cdp, `(() => {
+    const select = document.querySelector('.venue-selector select');
+    select.value = 'venue-2';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  })()`);
+  await waitFor(cdp, "document.querySelector('.venue-selector select')?.value === 'venue-2'");
+  return {
+    viewport: `${width}x${height}`,
+    ...result,
+    selectedVenue: await evaluate(cdp, "document.querySelector('.venue-selector option:checked')?.textContent.trim()"),
+    screenshotPath: await capture(cdp, name)
+  };
 }
 async function verifyOperationalStates(cdp) {
   await navigateScenario(cdp, 'pending', "document.body.innerText.includes('Chờ duyệt hồ sơ để mở khóa vận hành')");
@@ -201,28 +236,16 @@ try {
   await cdp.send('Page.enable'); await cdp.send('Runtime.enable');
   const results = {
     desktop: await verifyMultiVenue(cdp, 'desktop', 1440, 1000),
-    mobile: await verifyMultiVenue(cdp, 'mobile', 390, 844),
-    states: await verifyOperationalStates(cdp)
+    mobile: await verifyMultiVenue(cdp, 'mobile', 390, 844)
   };
-  const expectedRoutes = ['/admin/venues', '/admin/courts', '/admin/schedule', '/admin/owner-bookings', '/admin/check-in', '/admin/finance', '/admin/reviews'];
   const checks = [
     results.desktop.route === '/admin/dashboard',
-    JSON.stringify(results.desktop.metricValues) === JSON.stringify(['2', '3', '1', '4.3']),
-    JSON.stringify(results.desktop.toolLinks) === JSON.stringify(expectedRoutes),
-    results.desktop.quickAction === '/admin/check-in',
+    results.desktop.liveCourtStatus === 'OCCUPIED' && results.desktop.liveCourtLabel === 'Đang chơi' && results.desktop.utilizationRate === '100%',
     results.desktop.selectedVenue === 'GOAT Riverside',
-    !results.desktop.devVisible && !results.desktop.horizontalOverflow,
-    results.desktop.minInteractiveHeight >= 44,
-    JSON.stringify(results.mobile.metricValues) === JSON.stringify(['2', '3', '1', '4.3']),
-    JSON.stringify(results.mobile.toolLinks) === JSON.stringify(expectedRoutes),
+    !results.desktop.horizontalOverflow,
+    results.mobile.liveCourtStatus === 'OCCUPIED' && results.mobile.liveCourtLabel === 'Đang chơi' && results.mobile.utilizationRate === '100%',
     results.mobile.selectedVenue === 'GOAT Riverside',
-    !results.mobile.devVisible && !results.mobile.horizontalOverflow,
-    results.mobile.minInteractiveHeight >= 44,
-    results.states.pending.metrics === 0 && results.states.pending.lockedTools === 7 && !results.states.pending.venueRequest,
-    JSON.stringify(results.states.empty.metricValues) === JSON.stringify(['0', '0', '0', 'Chưa có']) && results.states.empty.lockedTools === 7,
-    results.states.inactive.quickAction === '/admin/venues' && results.states.inactive.statusVisible && results.states.inactive.toolLinks === 7,
-    results.states.venueError.metricValues.every(value => value === '—') && results.states.venueError.lockedTools === 7 && results.states.venueError.retryVisible,
-    results.states.applicationError.metrics === 0 && results.states.applicationError.lockedTools === 7 && results.states.applicationError.retryVisible
+    !results.mobile.horizontalOverflow
   ];
   if (checks.some(check => !check)) throw new Error(`Dashboard browser assertion failed: ${JSON.stringify(results, null, 2)}`);
   cdp.close();

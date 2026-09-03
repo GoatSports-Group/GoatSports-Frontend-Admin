@@ -20,6 +20,7 @@ import {
   filter,
   finalize,
   forkJoin,
+  map,
   Observable,
   of,
   reduce,
@@ -40,7 +41,7 @@ import { GetOwnerCustomerMetricsUseCase } from '@application/usecase/owner-reven
 import { GetOwnerRevenueUseCase } from '@application/usecase/owner-revenue/get-owner-revenue.usecase';
 import { GetStorageFileUrlUseCase } from '@application/usecase/storage/get-storage-file-url.usecase';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
-import { GetOwnerVenueOverviewUseCase } from '@application/usecase/venue-owner-dashboard/get-owner-venue-overview.usecase';
+import { ManageOwnerVenueCourtsUseCase } from '@application/usecase/venue-owner-dashboard/manage-owner-venue-courts.usecase';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-loading.component';
 import { WeatherInfo } from '@shared/components/ui/weather-widget/weather-widget.models';
@@ -75,7 +76,7 @@ const COURT_AVAILABILITY_POLL_INTERVAL_MS = 30_000;
 export class VenueOwnerDashboardComponent {
   private readonly getMyApplications = inject(GetMyOwnerApplicationsUseCase);
   private readonly getMyVenues = inject(GetMyOwnerVenuesUseCase);
-  private readonly getVenueOverview = inject(GetOwnerVenueOverviewUseCase);
+  private readonly manageCourts = inject(ManageOwnerVenueCourtsUseCase);
   private readonly manageBookings = inject(ManageOwnerBookingsUseCase);
   private readonly getCustomerMetrics = inject(GetOwnerCustomerMetricsUseCase);
   private readonly getRevenue = inject(GetOwnerRevenueUseCase);
@@ -109,6 +110,7 @@ export class VenueOwnerDashboardComponent {
   readonly appliedRevenueDate = signal(this.localDate(new Date()));
   readonly maximumRevenueDate = this.localDate(new Date());
   readonly upcomingBookings = signal<OwnerBooking[]>([]);
+  readonly liveCourtBookings = signal<OwnerBooking[]>([]);
   readonly customerMetricsReport = signal<OwnerCustomerMetricsReport | null>(null);
   readonly bookingDetailId = signal<string | null>(null);
   readonly bookingDetail = signal<OwnerBooking | null>(null);
@@ -336,7 +338,9 @@ export class VenueOwnerDashboardComponent {
     this.dailyRevenueBookings.set([]);
     this.monthlyRevenueReport.set(null);
     this.upcomingBookings.set([]);
+    this.liveCourtBookings.set([]);
     this.customerMetricsReport.set(null);
+    this.refreshCourtAvailability(venueId);
     this.loadBusinessSnapshot();
     this.loadDailyRevenue();
   }
@@ -459,6 +463,8 @@ export class VenueOwnerDashboardComponent {
 
   normalizedCourtStatus(court: OwnerVenueCourt): CourtAvailabilityStatus {
     if (!court.active) return 'INACTIVE';
+    if (court.availabilityStatus === 'MAINTENANCE') return 'MAINTENANCE';
+    if (this.hasCurrentBooking(court.venueCourtId)) return 'OCCUPIED';
     return court.availabilityStatus ?? 'AVAILABLE';
   }
 
@@ -527,6 +533,7 @@ export class VenueOwnerDashboardComponent {
         this.selectedVenueId.set(nextVenueId);
         this.resetCourtCarousel();
         this.resolveVenueCoverUrls(loadedVenues);
+        if (nextVenueId) this.refreshCourtAvailability(nextVenueId);
       },
       error: () => {
         this.venues.set([]);
@@ -549,20 +556,43 @@ export class VenueOwnerDashboardComponent {
       exhaustMap(() => {
         const venueId = this.selectedVenueId();
         if (!venueId) return EMPTY;
-        return this.getVenueOverview.execute(venueId).pipe(
-          take(1),
-          catchError(() => EMPTY)
-        );
+        return this.loadLiveCourtState(venueId);
       }),
       takeUntilDestroyed(this.destroyRef)
-    ).subscribe(refreshedVenue => {
-      if (refreshedVenue.venueId !== this.selectedVenueId()) return;
-      this.venues.update(venues => venues.map(venue => venue.venueId === refreshedVenue.venueId
-        ? { ...venue, active: refreshedVenue.active, courts: refreshedVenue.courts }
-        : venue
-      ));
-      queueMicrotask(() => this.updateCourtNavigation());
-    });
+    ).subscribe(({ venueId, courts, bookings }) => this.applyLiveCourtState(venueId, courts, bookings));
+  }
+
+  private refreshCourtAvailability(venueId: string): void {
+    this.loadLiveCourtState(venueId).pipe(
+      take(1),
+      takeUntilDestroyed(this.destroyRef),
+      catchError(() => EMPTY)
+    ).subscribe(({ courts, bookings }) => this.applyLiveCourtState(venueId, courts, bookings));
+  }
+
+  private loadLiveCourtState(venueId: string): Observable<{
+    venueId: string;
+    courts: OwnerVenueCourt[];
+    bookings: OwnerBooking[];
+  }> {
+    const today = this.today();
+    return forkJoin({
+      courts: this.manageCourts.list(venueId).pipe(take(1)),
+      bookings: this.loadBookingsForRange(venueId, today, today).pipe(catchError(() => of([])))
+    }).pipe(map(({ courts, bookings }) => ({ venueId, courts, bookings })));
+  }
+
+  private applyLiveCourtState(venueId: string | null, courts: OwnerVenueCourt[], bookings: OwnerBooking[]): void {
+    if (!venueId || venueId !== this.selectedVenueId()) return;
+    this.venues.update(venues => venues.map(venue => venue.venueId === venueId
+      ? { ...venue, courts }
+      : venue
+    ));
+    this.liveCourtBookings.set(bookings.filter(booking =>
+      booking.venueId === venueId
+      && ['PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN'].includes(booking.status)
+    ));
+    queueMicrotask(() => this.updateCourtNavigation());
   }
 
   private resetCourtCarousel(): void {
@@ -709,6 +739,28 @@ export class VenueOwnerDashboardComponent {
     const month = String(value.getMonth() + 1).padStart(2, '0');
     const day = String(value.getDate()).padStart(2, '0');
     return `${value.getFullYear()}-${month}-${day}`;
+  }
+
+  private hasCurrentBooking(courtId: string): boolean {
+    const today = this.today();
+    const now = this.currentMinutes();
+    return this.liveCourtBookings().some(booking =>
+      booking.venueCourtId === courtId
+      && booking.playDate === today
+      && ['PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN'].includes(booking.status)
+      && this.timeMinutes(booking.startTime) <= now
+      && this.timeMinutes(booking.endTime) > now
+    );
+  }
+
+  private currentMinutes(): number {
+    const now = new Date();
+    return now.getHours() * 60 + now.getMinutes();
+  }
+
+  private timeMinutes(value: string): number {
+    const [hours, minutes] = value.split(':').map(Number);
+    return (hours || 0) * 60 + (minutes || 0);
   }
 
   private changePercentage(current: number, previous: number): number {
