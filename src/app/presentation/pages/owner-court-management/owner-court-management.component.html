@@ -546,21 +546,22 @@
           <a routerLink="/admin/owner-bookings"
             [queryParams]="{ action: 'walk-in', venueId: court.venueId, venueCourtId: court.venueCourtId }"><lucide-icon
               name="calendar" /><span>Đặt sân</span></a>
-          @if (isCourtInUse(court)) {
-          <button type="button" disabled title="Sân đã có booking được check-in">
+          @if (isCourtCheckedIn(court)) {
+          <button type="button" disabled title="Booking hiện tại đã được check-in">
             <lucide-icon name="qr-code" /><span>Check-in</span>
           </button>
           } @else {
-          <a routerLink="/admin/check-in"
-            [queryParams]="{ mode: 'qr', venueId: court.venueId, venueCourtId: court.venueCourtId }"><lucide-icon
-              name="qr-code" /><span>Check-in</span></a>
+          <button type="button" (click)="openCourtCheckIn(court)">
+            <lucide-icon name="qr-code" /><span>Check-in</span>
+          </button>
           }
           <button type="button" (click)="openEdit(court)"><lucide-icon name="pencil" /><span>Chỉnh sửa</span></button>
           <button type="button" (click)="openMaintenance(court)" [disabled]="isCourtInUse(court)"
             [title]="isCourtInUse(court) ? 'Không thể bảo trì khi sân đang được sử dụng' : ''">
             <lucide-icon name="construction" /><span>Bảo trì</span>
           </button>
-          <button type="button" (click)="toggle(court)" [disabled]="isCourtInUse(court) || togglingId() === court.venueCourtId"
+          <button type="button" (click)="toggle(court)"
+            [disabled]="isCourtInUse(court) || togglingId() === court.venueCourtId"
             [title]="isCourtInUse(court) ? 'Không thể tạm ngưng khi sân đang được sử dụng' : ''"><lucide-icon
               [name]="court.active ? 'ban' : 'activity'" /><span>{{ court.active ? 'Tạm ngưng' : 'Bật sân'
               }}</span></button>
@@ -579,53 +580,173 @@
 
     @if (editorOpen()) {
     <div class="court-editor-backdrop" role="presentation" (click)="closeEditor()">
-    <aside class="workspace-panel court-editor" role="dialog" aria-modal="true"
-      aria-labelledby="court-editor-title" (click)="$event.stopPropagation()">
-      <header>
-        <h2 id="court-editor-title">{{ editingCourt() ? 'Chỉnh sửa sân' : 'Thêm sân mới' }}</h2>
-        <button type="button" (click)="closeEditor()" [disabled]="saving()" aria-label="Đóng"><lucide-icon
-            name="x" /></button>
-      </header>
-      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-        <section>
-          <h3>Thông tin cơ bản</h3>
-          <label class="field"><span>Tên sân <b>*</b></span><input formControlName="name" maxlength="255"
-              placeholder="Ví dụ: Sân 01" />@if (fieldInvalid('name')) { <small>Vui lòng nhập tên sân.</small> }</label>
-          @if (editingCourt(); as editing) {
-          <label class="field"><span>Mã hệ thống</span><input [value]="courtCode(editing)" readonly /><small
-              class="field__hint">Mã được tạo tự động để quản lý sân.</small></label>
-          }
-          <label class="field"><span>Môn thể thao <b>*</b></span><select formControlName="sportType">@for (sport of
-              sports; track sport.value) { <option [value]="sport.value">{{ sport.label }}</option> }</select></label>
-          <label class="field"><span>Mặt sân</span><input formControlName="surfaceType" maxlength="255"
-              list="court-surface-options" placeholder="Ví dụ: Thảm PVC" /><datalist id="court-surface-options">@for
-              (surface of surfaceOptions; track surface) { <option [value]="surface"></option> }</datalist></label>
-          <label class="field"><span>Sức chứa <b>*</b></span>
-            <div class="capacity-input"><input type="number" formControlName="capacity" min="1"
-                max="100000" /><span>người</span></div>@if (fieldInvalid('capacity')) { <small>Sức chứa phải từ 1
-              người.</small> }
-          </label>
-        </section>
-        <section class="status-editor">
-          <h3>Trạng thái</h3>
-          <label><input type="radio" formControlName="active" [value]="true" /><i></i><span><strong>Đang hoạt
-                động</strong><small>Sân đang sẵn sàng để đặt.</small></span></label>
-          <label><input type="radio" formControlName="active" [value]="false" /><i></i><span><strong>Ngừng hoạt
-                động</strong><small>Sân không hiển thị để đặt.</small></span></label>
-        </section>
-        <footer>
-          <button type="button" class="outline-button" (click)="closeEditor()" [disabled]="saving()">Hủy</button>
-          <button type="submit" class="primary-button"
-            [disabled]="saving() || form.invalid || (editingCourt() !== null && !form.dirty)">
-            @if (saving()) { <span class="mini-spinner"></span> Đang lưu... } @else { <lucide-icon name="save" /> {{
-            editingCourt() ? 'Lưu thay đổi' : 'Tạo sân' }} }
-          </button>
-        </footer>
-      </form>
-    </aside>
+      <aside class="workspace-panel court-editor" role="dialog" aria-modal="true" aria-labelledby="court-editor-title"
+        (click)="$event.stopPropagation()">
+        <header>
+          <h2 id="court-editor-title">{{ editingCourt() ? 'Chỉnh sửa sân' : 'Thêm sân mới' }}</h2>
+          <button type="button" (click)="closeEditor()" [disabled]="saving()" aria-label="Đóng"><lucide-icon
+              name="x" /></button>
+        </header>
+        <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          <section>
+            <h3>Thông tin cơ bản</h3>
+            <label class="field"><span>Tên sân <b>*</b></span><input formControlName="name" maxlength="255"
+                placeholder="Ví dụ: Sân 01" />@if (fieldInvalid('name')) { <small>Vui lòng nhập tên sân.</small>
+              }</label>
+            @if (editingCourt(); as editing) {
+            <label class="field"><span>Mã hệ thống</span><input [value]="courtCode(editing)" readonly /><small
+                class="field__hint">Mã được tạo tự động để quản lý sân.</small></label>
+            }
+            <label class="field"><span>Môn thể thao <b>*</b></span><select formControlName="sportType">@for (sport of
+                sports; track sport.value) { <option [value]="sport.value">{{ sport.label }}</option> }</select></label>
+            <label class="field"><span>Mặt sân</span><input formControlName="surfaceType" maxlength="255"
+                list="court-surface-options" placeholder="Ví dụ: Thảm PVC" /><datalist id="court-surface-options">@for
+                (surface of surfaceOptions; track surface) { <option [value]="surface"></option> }</datalist></label>
+            <label class="field"><span>Sức chứa <b>*</b></span>
+              <div class="capacity-input"><input type="number" formControlName="capacity" min="1"
+                  max="100000" /><span>người</span></div>@if (fieldInvalid('capacity')) { <small>Sức chứa phải từ 1
+                người.</small> }
+            </label>
+          </section>
+          <section class="status-editor">
+            <h3>Trạng thái</h3>
+            <label><input type="radio" formControlName="active" [value]="true" /><i></i><span><strong>Đang hoạt
+                  động</strong><small>Sân đang sẵn sàng để đặt.</small></span></label>
+            <label><input type="radio" formControlName="active" [value]="false" /><i></i><span><strong>Ngừng hoạt
+                  động</strong><small>Sân không hiển thị để đặt.</small></span></label>
+          </section>
+          <footer>
+            <button type="button" class="outline-button" (click)="closeEditor()" [disabled]="saving()">Hủy</button>
+            <button type="submit" class="primary-button"
+              [disabled]="saving() || form.invalid || (editingCourt() !== null && !form.dirty)">
+              @if (saving()) { <span class="mini-spinner"></span> Đang lưu... } @else { <lucide-icon name="save" /> {{
+              editingCourt() ? 'Lưu thay đổi' : 'Tạo sân' }} }
+            </button>
+          </footer>
+        </form>
+      </aside>
     </div>
     }
   </section>
+  }
+
+  @if (checkInDialogOpen()) {
+  <div class="court-checkin-backdrop" role="presentation" (click)="closeCourtCheckIn()">
+    <section class="court-checkin-dialog" role="dialog" aria-modal="true" aria-labelledby="court-checkin-title"
+      (click)="$event.stopPropagation()">
+      <header>
+        <div>
+          <span>Check-in bằng mã QR</span>
+          <h2 id="court-checkin-title">{{ checkInCourt()?.name }}</h2>
+          <p>Quét vé của khách và đối chiếu thông tin trước khi xác nhận nhận sân.</p>
+        </div>
+        <button type="button" (click)="closeCourtCheckIn()" [disabled]="checkInConfirming()" aria-label="Đóng">
+          <lucide-icon name="x" />
+        </button>
+      </header>
+
+      @if (checkInError()) {
+      <div class="court-checkin-error" role="alert">
+        <lucide-icon name="alert-circle" />
+        <span>{{ checkInError() }}</span>
+      </div>
+      }
+
+      @if (!checkInResult()) {
+      <div class="court-scanner">
+        <video #courtCheckInVideo muted playsinline aria-label="Camera quét mã QR check-in"></video>
+        <div class="court-scanner__guide" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        @if (checkInScannerStarting() || checkInLookupLoading()) {
+        <div class="court-scanner__state">
+          <span class="spinner"></span>
+          <strong>{{ checkInLookupLoading() ? 'Đang kiểm tra booking...' : 'Đang mở camera...' }}</strong>
+        </div>
+        } @else if (!checkInScannerActive()) {
+        <div class="court-scanner__state">
+          <lucide-icon name="camera" />
+          <strong>Camera chưa sẵn sàng</strong>
+          <button type="button" class="outline-button" (click)="retryCourtScanner()">Mở lại camera</button>
+        </div>
+        }
+      </div>
+      <div class="court-scanner-help">
+        <lucide-icon name="shield-check" />
+        <span>QR được xác thực bằng chữ ký số và chỉ chấp nhận đơn đặt thuộc {{ checkInCourt()?.name }}.</span>
+      </div>
+      } @else {
+      @let result = checkInResult()!;
+      <div class="court-checkin-booking">
+        <div class="court-checkin-booking__status" [class.is-success]="!!result.checkIn">
+          <lucide-icon [name]="result.checkIn ? 'circle-check' : 'badge-check'" />
+          <span>{{ result.checkIn ? 'Đã check-in thành công' : 'Booking hợp lệ để nhận sân' }}</span>
+        </div>
+
+        <section class="court-checkin-booking__identity">
+          <div>
+            <span>Mã booking</span>
+            <strong>{{ result.booking.bookingCode }}</strong>
+          </div>
+          <span class="court-checkin-source">{{ result.booking.source === 'WALK_IN' ? 'Walk-in' : 'Online' }}</span>
+        </section>
+
+        <dl class="court-checkin-facts">
+          <div>
+            <dt>Khách hàng</dt>
+            <dd>{{ result.booking.walkInCustomerName || ('Player ' + result.booking.playerId) }}</dd>
+          </div>
+          @if (result.booking.walkInCustomerPhone) {
+          <div>
+            <dt>Số điện thoại</dt>
+            <dd>{{ result.booking.walkInCustomerPhone }}</dd>
+          </div>
+          }
+          <div>
+            <dt>Sân</dt>
+            <dd>{{ result.booking.courtName }}</dd>
+          </div>
+          <div>
+            <dt>Ngày sử dụng</dt>
+            <dd>{{ checkInBookingDate(result.booking.playDate) }}</dd>
+          </div>
+          <div>
+            <dt>Khung giờ</dt>
+            <dd>{{ bookingRange(result.booking) }}</dd>
+          </div>
+          <div>
+            <dt>Tổng tiền</dt>
+            <dd>{{ formatCurrency(result.booking.totalPrice) }}</dd>
+          </div>
+          <div>
+            <dt>Còn chưa thanh toán</dt>
+            <dd [class.has-debt]="result.outstandingAmount > 0">{{ formatCurrency(result.outstandingAmount) }}</dd>
+          </div>
+        </dl>
+
+        @if (result.outstandingAmount > 0 && !result.checkIn) {
+        <div class="court-checkin-debt">
+          <lucide-icon name="banknote" />
+          <span>Khách còn {{ formatCurrency(result.outstandingAmount) }}. Booking vẫn được check-in và có thể thanh toán
+            sau khi sử dụng sân.</span>
+        </div>
+        }
+      </div>
+
+      <footer>
+        @if (result.checkIn) {
+        <button type="button" class="primary-button" (click)="closeCourtCheckIn()">Hoàn tất</button>
+        } @else {
+        <button type="button" class="outline-button" (click)="retryCourtScanner()" [disabled]="checkInConfirming()">
+          Quét mã khác
+        </button>
+        <button type="button" class="primary-button" (click)="confirmCourtCheckIn()" [disabled]="checkInConfirming()">
+          @if (checkInConfirming()) { <span class="mini-spinner"></span> Đang xác nhận... }
+          @else { <lucide-icon name="user-check" /> Xác nhận check-in }
+        </button>
+        }
+      </footer>
+      }
+    </section>
+  </div>
   }
 
   @if (maintenanceCourt(); as court) {
@@ -647,14 +768,13 @@
         <label>
           <span>Ngày áp dụng</span>
           <input type="date" [value]="maintenanceDate()" [min]="minimumMaintenanceDate"
-            (change)="changeMaintenanceDate($event)"
-            [disabled]="maintenanceLoading() || maintenanceSaving()" />
+            (change)="changeMaintenanceDate($event)" [disabled]="maintenanceLoading() || maintenanceSaving()" />
         </label>
         <div class="maintenance-modes" aria-label="Loại thao tác bảo trì">
           <button type="button" [class.is-active]="maintenanceMode() === 'START'"
             (click)="setMaintenanceMode('START')">Đặt bảo trì</button>
-          <button type="button" [class.is-active]="maintenanceMode() === 'END'"
-            (click)="setMaintenanceMode('END')">Kết thúc bảo trì</button>
+          <button type="button" [class.is-active]="maintenanceMode() === 'END'" (click)="setMaintenanceMode('END')">Kết
+            thúc bảo trì</button>
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import {
   DestroyRef,
   ElementRef,
   HostListener,
+  OnDestroy,
   ViewChild,
   computed,
   inject,
@@ -13,7 +14,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { EMPTY, Observable, expand, finalize, forkJoin, interval, reduce, take } from 'rxjs';
+import { BrowserQRCodeReader, IScannerControls } from '@zxing/browser';
 import { OwnerBooking, OwnerBookingFilter } from '@application/dto/owner-booking/owner-booking.dto';
+import { OwnerCheckInResult } from '@application/dto/owner-check-in/owner-check-in.dto';
 import { OwnerTimeSlot, OwnerTimeSlotStatus } from '@application/dto/owner-schedule/owner-schedule.dto';
 import {
   CourtAvailabilityStatus,
@@ -23,6 +26,7 @@ import {
   SportType
 } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { ManageOwnerBookingsUseCase } from '@application/usecase/owner-booking/manage-owner-bookings.usecase';
+import { ManageOwnerCheckInUseCase } from '@application/usecase/owner-check-in/manage-owner-check-in.usecase';
 import { ManageOwnerScheduleUseCase } from '@application/usecase/owner-schedule/manage-owner-schedule.usecase';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
 import { ManageOwnerVenueCourtsUseCase } from '@application/usecase/venue-owner-dashboard/manage-owner-venue-courts.usecase';
@@ -94,11 +98,12 @@ type PointerOperation = PointerOperationBase & (
   styleUrl: './owner-court-management.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class OwnerCourtManagementComponent {
+export class OwnerCourtManagementComponent implements OnDestroy {
   private readonly formBuilder = inject(FormBuilder);
   private readonly getMyVenues = inject(GetMyOwnerVenuesUseCase);
   private readonly manageCourts = inject(ManageOwnerVenueCourtsUseCase);
   private readonly manageBookings = inject(ManageOwnerBookingsUseCase);
+  private readonly manageCheckIn = inject(ManageOwnerCheckInUseCase);
   private readonly manageSchedule = inject(ManageOwnerScheduleUseCase);
   private readonly manageFacilityLayout = inject(ManageOwnerVenueFacilityLayoutUseCase);
   private readonly layoutStore = inject(FacilityLayoutStore);
@@ -107,6 +112,7 @@ export class OwnerCourtManagementComponent {
 
   @ViewChild('facilityCanvas') private facilityCanvas?: ElementRef<HTMLElement>;
   @ViewChild('bookingDateInput') private bookingDateInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('courtCheckInVideo') private courtCheckInVideo?: ElementRef<HTMLVideoElement>;
 
   readonly baseCanvasWidth = FACILITY_CANVAS_WIDTH;
   readonly baseCanvasHeight = FACILITY_CANVAS_HEIGHT;
@@ -184,6 +190,14 @@ export class OwnerCourtManagementComponent {
   readonly maintenanceLoading = signal(false);
   readonly maintenanceSaving = signal(false);
   readonly maintenanceError = signal<string | null>(null);
+  readonly checkInDialogOpen = signal(false);
+  readonly checkInCourt = signal<OwnerVenueCourt | null>(null);
+  readonly checkInResult = signal<OwnerCheckInResult | null>(null);
+  readonly checkInScannerStarting = signal(false);
+  readonly checkInScannerActive = signal(false);
+  readonly checkInLookupLoading = signal(false);
+  readonly checkInConfirming = signal(false);
+  readonly checkInError = signal<string | null>(null);
   readonly activeView = signal<WorkspaceView>('MAP');
   readonly panelMode = signal<PanelMode>('NONE');
   readonly selectedCourtId = signal<string | null>(null);
@@ -223,6 +237,9 @@ export class OwnerCourtManagementComponent {
   private layoutRequestId = 0;
   private courtBookingContext: string | null = null;
   private customObjectPosition = { x: 420, y: 300 };
+  private readonly courtQrReader = new BrowserQRCodeReader();
+  private courtScannerControls?: IScannerControls;
+  private scannedCourtQr = '';
 
   readonly venue = computed(() => this.venues().find(item => item.venueId === this.selectedVenueId()) ?? null);
   readonly editorOpen = computed(() => this.panelMode() === 'FORM');
@@ -330,6 +347,10 @@ export class OwnerCourtManagementComponent {
         }
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.stopCourtScanner();
   }
 
   load(): void {
@@ -514,6 +535,152 @@ export class OwnerCourtManagementComponent {
     } catch {
       input.focus({ preventScroll: true });
     }
+  }
+
+  openCourtCheckIn(court: OwnerVenueCourt): void {
+    if (this.isCourtCheckedIn(court) || this.checkInConfirming()) return;
+    this.selectedCourtId.set(court.venueCourtId);
+    this.checkInCourt.set(court);
+    this.checkInResult.set(null);
+    this.checkInError.set(null);
+    this.scannedCourtQr = '';
+    this.checkInDialogOpen.set(true);
+    setTimeout(() => void this.startCourtScanner());
+  }
+
+  closeCourtCheckIn(): void {
+    if (this.checkInConfirming()) return;
+    this.stopCourtScanner();
+    this.checkInDialogOpen.set(false);
+    this.checkInCourt.set(null);
+    this.checkInResult.set(null);
+    this.checkInError.set(null);
+    this.scannedCourtQr = '';
+  }
+
+  async startCourtScanner(): Promise<void> {
+    if (!this.checkInDialogOpen() || this.checkInScannerStarting() || this.checkInScannerActive()) return;
+    const video = this.courtCheckInVideo?.nativeElement;
+    if (!video) {
+      this.checkInError.set('Không thể khởi tạo vùng xem camera. Vui lòng thử lại.');
+      return;
+    }
+
+    this.checkInScannerStarting.set(true);
+    this.checkInError.set(null);
+    try {
+      const controls = await this.courtQrReader.decodeFromConstraints(
+        { video: { facingMode: { ideal: 'environment' } }, audio: false },
+        video,
+        (result, _error, scannerControls) => {
+          if (!result || this.checkInLookupLoading() || this.checkInResult()) return;
+          scannerControls.stop();
+          this.courtScannerControls = undefined;
+          this.checkInScannerActive.set(false);
+          this.lookupScannedCourtQr(result.getText());
+        }
+      );
+      if (!this.checkInDialogOpen() || this.checkInResult()) {
+        controls.stop();
+        return;
+      }
+      this.courtScannerControls = controls;
+      this.checkInScannerActive.set(true);
+    } catch (error) {
+      this.checkInError.set(this.cameraErrorMessage(error));
+      this.checkInScannerActive.set(false);
+    } finally {
+      this.checkInScannerStarting.set(false);
+    }
+  }
+
+  retryCourtScanner(): void {
+    this.stopCourtScanner();
+    this.checkInResult.set(null);
+    this.checkInError.set(null);
+    this.scannedCourtQr = '';
+    setTimeout(() => void this.startCourtScanner());
+  }
+
+  confirmCourtCheckIn(): void {
+    const court = this.checkInCourt();
+    const result = this.checkInResult();
+    if (!court || !result || !this.scannedCourtQr || result.checkIn || this.checkInConfirming()) return;
+
+    this.checkInConfirming.set(true);
+    this.checkInError.set(null);
+    this.manageCheckIn.confirm({
+      bookingId: result.booking.bookingId,
+      method: 'QR_CODE',
+      paymentMode: 'NONE',
+      qrCode: this.scannedCourtQr
+    }).pipe(
+      take(1),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.checkInConfirming.set(false))
+    ).subscribe({
+      next: checkedIn => {
+        this.checkInResult.set(checkedIn);
+        const venueId = this.selectedVenueId();
+        if (venueId) {
+          this.refreshCourts(venueId, false);
+          this.loadBookingsForSelectedDate(venueId, false);
+        }
+        this.loadCourtBookings(court.venueCourtId, false);
+        this.notify.success(`Đã check-in booking ${checkedIn.booking.bookingCode}.`);
+      },
+      error: error => this.checkInError.set(this.errorMessage(error, 'Không thể xác nhận check-in.'))
+    });
+  }
+
+  checkInBookingDate(value: string): string {
+    const [year, month, day] = value.split('-');
+    return year && month && day ? `${day}/${month}/${year}` : value;
+  }
+
+  private lookupScannedCourtQr(qrCode: string): void {
+    const court = this.checkInCourt();
+    if (!court || !qrCode.trim()) return;
+    this.scannedCourtQr = qrCode.trim();
+    this.checkInLookupLoading.set(true);
+    this.checkInError.set(null);
+    this.manageCheckIn.lookup({ qrCode: this.scannedCourtQr }).pipe(
+      take(1),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.checkInLookupLoading.set(false))
+    ).subscribe({
+      next: result => {
+        if (result.booking.venueCourtId !== court.venueCourtId) {
+          this.scannedCourtQr = '';
+          this.checkInError.set(`Mã QR không thuộc ${court.name}. Vui lòng quét đúng vé của sân này.`);
+          return;
+        }
+        this.checkInResult.set(result);
+      },
+      error: error => {
+        this.scannedCourtQr = '';
+        this.checkInError.set(this.errorMessage(error, 'Mã QR không hợp lệ hoặc chưa đến giờ check-in.'));
+      }
+    });
+  }
+
+  private stopCourtScanner(): void {
+    this.courtScannerControls?.stop();
+    this.courtScannerControls = undefined;
+    const video = this.courtCheckInVideo?.nativeElement;
+    const stream = video?.srcObject;
+    if (stream instanceof MediaStream) stream.getTracks().forEach(track => track.stop());
+    if (video) video.srcObject = null;
+    this.checkInScannerActive.set(false);
+    this.checkInScannerStarting.set(false);
+  }
+
+  private cameraErrorMessage(error: unknown): string {
+    const name = (error as { name?: string })?.name;
+    if (name === 'NotAllowedError') return 'Camera đã bị từ chối quyền truy cập. Hãy cấp quyền camera rồi thử lại.';
+    if (name === 'NotFoundError') return 'Không tìm thấy camera trên thiết bị này.';
+    if (name === 'NotReadableError') return 'Camera đang được ứng dụng khác sử dụng. Hãy đóng ứng dụng đó rồi thử lại.';
+    return 'Không thể mở camera. Camera chỉ hoạt động trên HTTPS hoặc localhost và cần được cấp quyền.';
   }
 
   openCreate(): void {
@@ -1247,6 +1414,10 @@ export class OwnerCourtManagementComponent {
     return this.operationalStatus(court) === 'OCCUPIED';
   }
 
+  isCourtCheckedIn(court: OwnerVenueCourt): boolean {
+    return this.currentBooking(court.venueCourtId)?.status === 'CHECKED_IN';
+  }
+
   currentBooking(courtId: string): OwnerBooking | null {
     if (this.selectedBookingDate() !== this.todayIso()) return null;
     const now = this.currentMinutes();
@@ -1440,6 +1611,7 @@ export class OwnerCourtManagementComponent {
     this.sportMenuOpen.set(false);
     this.filterOpen.set(false);
     this.actionMenuId.set(null);
+    if (this.checkInDialogOpen()) this.closeCourtCheckIn();
     if (this.customObjectDialogOpen()) this.closeCustomObjectCreator();
     if (this.maintenanceDialogOpen()) this.closeMaintenance();
     if (this.editorOpen()) this.closeEditor();
