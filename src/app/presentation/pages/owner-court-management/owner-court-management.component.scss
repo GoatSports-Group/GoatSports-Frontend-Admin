@@ -650,11 +650,6 @@ select:disabled {
   background: #b35a27;
 }
 
-[data-status='COMPLETED']>i,
-.table-status[data-status='COMPLETED'] i {
-  background: #087f5b;
-}
-
 [data-status='UPCOMING']>i,
 .table-status[data-status='UPCOMING'] i {
   background: #e68a18;
@@ -1066,10 +1061,6 @@ select:disabled {
   background: #8f765f;
 }
 
-.court-object[data-status='COMPLETED'] .court-object__surface {
-  background: #598b6b;
-}
-
 .court-object[data-status='UPCOMING'] .court-object__surface {
   background: #7b9b68;
 }
@@ -1120,10 +1111,6 @@ select:disabled {
 
 .court-object[data-status='PAYMENT_DUE'] .court-object__status {
   color: #a44d20;
-}
-
-.court-object[data-status='COMPLETED'] .court-object__status {
-  color: #087f5b;
 }
 
 .court-object[data-status='UPCOMING'] .court-object__status {
@@ -2000,10 +1987,6 @@ select:disabled {
   color: #a44d20;
 }
 
-.court-detail .table-status[data-status='COMPLETED'] {
-  color: #087f5b;
-}
-
 .court-detail .table-status[data-status='UPCOMING'] {
   color: #dc7c0f;
 }
@@ -2245,10 +2228,6 @@ select:disabled {
 
 .daily-bookings article[data-status='PAYMENT_DUE']>i {
   background: #b35a27;
-}
-
-.daily-bookings article[data-status='COMPLETED']>i {
-  background: #087f5b;
 }
 
 .quick-actions h3 {
@@ -3103,7 +3082,7 @@ select:disabled {
 
 .list-overview {
   display: grid;
-  grid-template-columns: repeat(9, minmax(0, 1fr));
+  grid-template-columns: repeat(8, minmax(0, 1fr));
   margin-bottom: 11px;
   border: 1px solid var(--line);
   border-radius: 9px;
@@ -3736,14 +3715,14 @@ select:disabled {
   }
 
   .list-overview {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
   }
 
-  .list-overview>div:nth-child(3n) {
+  .list-overview>div:nth-child(4n) {
     border-right: 0;
   }
 
-  .list-overview>div:nth-child(-n+6) {
+  .list-overview>div:nth-child(-n+4) {
     border-bottom: 1px solid var(--line-soft);
   }
 

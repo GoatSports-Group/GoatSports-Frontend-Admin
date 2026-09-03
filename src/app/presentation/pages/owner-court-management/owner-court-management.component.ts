@@ -70,7 +70,6 @@ type OperationalStatus =
   | 'AWAITING_CHECK_IN'
   | 'OCCUPIED'
   | 'PAYMENT_DUE'
-  | 'COMPLETED'
   | 'UPCOMING'
   | 'MAINTENANCE'
   | 'DISABLED';
@@ -139,7 +138,6 @@ export class OwnerCourtManagementComponent implements OnDestroy {
     { value: 'AWAITING_CHECK_IN', label: 'Chưa check-in' },
     { value: 'OCCUPIED', label: 'Đang sử dụng' },
     { value: 'PAYMENT_DUE', label: 'Còn công nợ' },
-    { value: 'COMPLETED', label: 'Hoàn thành' },
     { value: 'UPCOMING', label: 'Sắp có lịch' },
     { value: 'MAINTENANCE', label: 'Bảo trì' },
     { value: 'DISABLED', label: 'Tạm ngưng' }
@@ -149,7 +147,6 @@ export class OwnerCourtManagementComponent implements OnDestroy {
     { value: 'AWAITING_CHECK_IN', label: 'Chưa check-in' },
     { value: 'OCCUPIED', label: 'Đang sử dụng' },
     { value: 'PAYMENT_DUE', label: 'Còn công nợ' },
-    { value: 'COMPLETED', label: 'Hoàn thành' },
     { value: 'UPCOMING', label: 'Sắp có lịch' },
     { value: 'MAINTENANCE', label: 'Bảo trì' },
     { value: 'DISABLED', label: 'Tạm ngưng' }
@@ -282,7 +279,6 @@ export class OwnerCourtManagementComponent implements OnDestroy {
   readonly occupiedCount = computed(() => this.courts().filter(court => this.operationalStatus(court) === 'OCCUPIED').length);
   readonly awaitingCheckInCount = computed(() => this.courts().filter(court => this.operationalStatus(court) === 'AWAITING_CHECK_IN').length);
   readonly paymentDueCount = computed(() => this.courts().filter(court => this.operationalStatus(court) === 'PAYMENT_DUE').length);
-  readonly completedCount = computed(() => this.courts().filter(court => this.operationalStatus(court) === 'COMPLETED').length);
   readonly upcomingCount = computed(() => this.courts().filter(court => this.operationalStatus(court) === 'UPCOMING').length);
   readonly maintenanceCount = computed(() => this.courts().filter(court => this.operationalStatus(court) === 'MAINTENANCE').length);
   readonly courtTypeSummaries = computed<CourtTypeSummary[]>(() => {
@@ -1417,8 +1413,6 @@ export class OwnerCourtManagementComponent implements OnDestroy {
     }
     if (currentBooking) return 'AWAITING_CHECK_IN';
     if (this.nextBooking(court.venueCourtId, 120) || court.availabilityStatus === 'HELD') return 'UPCOMING';
-    const finishedBooking = this.latestFinishedCheckedInBooking(court.venueCourtId);
-    if (finishedBooking) return this.isBookingFullyPaid(finishedBooking) ? 'COMPLETED' : 'PAYMENT_DUE';
     return 'AVAILABLE';
   }
 
@@ -1428,7 +1422,6 @@ export class OwnerCourtManagementComponent implements OnDestroy {
       AWAITING_CHECK_IN: 'Chưa check-in',
       OCCUPIED: 'Đang sử dụng',
       PAYMENT_DUE: 'Còn công nợ',
-      COMPLETED: 'Hoàn thành',
       UPCOMING: 'Sắp có lịch',
       MAINTENANCE: 'Bảo trì',
       DISABLED: 'Tạm ngưng'
@@ -1508,10 +1501,9 @@ export class OwnerCourtManagementComponent implements OnDestroy {
     return booking.walkInCustomerName || booking.bookingCode;
   }
 
-  bookingTimelineStatus(booking: OwnerBooking): 'OCCUPIED' | 'AWAITING_CHECK_IN' | 'PAYMENT_DUE' | 'COMPLETED' | 'UPCOMING' | 'AVAILABLE' {
+  bookingTimelineStatus(booking: OwnerBooking): 'OCCUPIED' | 'AWAITING_CHECK_IN' | 'PAYMENT_DUE' | 'UPCOMING' | 'AVAILABLE' {
     if (booking.status === 'CHECKED_IN' || booking.status === 'COMPLETED') {
       if (!this.isBookingFullyPaid(booking)) return 'PAYMENT_DUE';
-      if (booking.status === 'COMPLETED' || this.hasBookingEnded(booking)) return 'COMPLETED';
     }
     if (this.detailCurrentBooking(booking.venueCourtId)?.bookingId === booking.bookingId) {
       return booking.status === 'CHECKED_IN' ? 'OCCUPIED' : 'AWAITING_CHECK_IN';
@@ -1530,23 +1522,6 @@ export class OwnerCourtManagementComponent implements OnDestroy {
       .filter(payment => payment.purpose === 'BOOKING_REMAINING' && payment.status === 'SUCCEEDED')
       .reduce((total, payment) => total + payment.amount, 0);
     return paidRemaining + 0.01 >= booking.remainingAmount;
-  }
-
-  private latestFinishedCheckedInBooking(courtId: string): OwnerBooking | null {
-    const selectedDate = this.selectedBookingDate();
-    const today = this.todayIso();
-    if (selectedDate > today) return null;
-    const endBoundary = selectedDate < today ? 24 * 60 : this.currentMinutes();
-    return [...this.bookingsForCourt(courtId)].reverse().find(booking =>
-      (booking.status === 'CHECKED_IN' || booking.status === 'COMPLETED')
-      && this.timeMinutes(booking.endTime) <= endBoundary
-    ) ?? null;
-  }
-
-  private hasBookingEnded(booking: OwnerBooking): boolean {
-    if (booking.playDate < this.todayIso()) return true;
-    if (booking.playDate > this.todayIso()) return false;
-    return this.timeMinutes(booking.endTime) <= this.currentMinutes();
   }
 
   bookingProgress(booking: OwnerBooking | null): number {
