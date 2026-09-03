@@ -501,16 +501,15 @@
     @if (panelMode() === 'DETAIL' && selectedCourt(); as court) {
     <aside class="workspace-panel court-detail" aria-labelledby="court-detail-title">
       <header>
-        <div>
-          <h2 id="court-detail-title">{{ court.name }}</h2><span class="table-status"
-            [attr.data-status]="operationalStatus(court)"><i></i>{{ operationalLabel(court) }}</span>
+        <div class="court-detail__heading">
+          <h2 id="court-detail-title">{{ court.name }}</h2>
+          <p>{{ sportLabel(court.sportType) }} · {{ court.surfaceType || 'Chưa cập nhật mặt sân' }}</p>
         </div>
+        <span class="table-status" [attr.data-status]="operationalStatus(court)"><i></i>{{ operationalLabel(court)
+          }}</span>
       </header>
       <section class="court-detail__identity">
-        <div class="detail-court-visual"><app-court-floor-marking [sportType]="court.sportType" /></div>
-        <div><span>{{ sportLabel(court.sportType) }} · {{ court.surfaceType || 'Chưa cập nhật mặt sân'
-            }}</span><strong>{{ formatCurrency(courtPrice(court)) }}<small>/giờ</small></strong></div>
-        <button type="button" (click)="openEdit(court)"><lucide-icon name="pencil" /> Cập nhật</button>
+        <div><span>Giá thuê</span><strong>{{ formatCurrency(courtPrice(court)) }}<small>/giờ</small></strong></div>
       </section>
       @if (courtBookingLoading()) {
       <section class="detail-booking-state" aria-live="polite"><span class="spinner"></span> Đang tải toàn bộ booking
@@ -529,21 +528,13 @@
         <p><i [style.width.%]="bookingProgress(current)"></i></p>
       </section>
       } @else {
-      <section class="booking-now booking-now--empty"><lucide-icon name="check-circle" />
-        <div><strong>Không có lượt đang diễn ra</strong><span>Theo ngày {{ bookingDateLabel() }}.</span></div>
-      </section>
+      <section class="booking-now booking-now--empty"><strong>Không có lượt đang diễn ra</strong></section>
       }
-      <section class="next-booking">
-        <span>Lịch tiếp theo</span>
-        @if (detailNextBooking(court.venueCourtId); as next) {
-        <div><strong>{{ bookingRange(next) }}</strong><span>{{ bookingCustomer(next) }}</span></div>
-        } @else { <p>Không còn lịch tiếp theo trong ngày đã chọn.</p> }
-      </section>
-      <section class="today-schedule">
-        <header><span>Lịch ngày {{ bookingDateLabel() }}</span><strong>{{
-            detailBookingsForCourt(court.venueCourtId).length }} lượt</strong></header>
+      <section class="daily-bookings">
+        <h3>Lịch theo ngày</h3>
         @for (booking of detailBookingsForCourt(court.venueCourtId); track booking.bookingId) {
-        <article [class.is-current]="detailCurrentBooking(court.venueCourtId)?.bookingId === booking.bookingId">
+        <article [attr.data-status]="bookingTimelineStatus(booking)"
+          [class.is-current]="detailCurrentBooking(court.venueCourtId)?.bookingId === booking.bookingId">
           <i></i><strong>{{ bookingRange(booking) }}</strong><span>{{ bookingCustomer(booking) }}</span>
         </article>
         } @empty { <p>Chưa có lịch đặt sân trong ngày.</p> }
@@ -562,6 +553,9 @@
           <button type="button" (click)="duplicateCourt(court)"><lucide-icon name="file-plus-2" /><span>Nhân
               bản</span></button>
           <a routerLink="/admin/schedule"><lucide-icon name="clock" /><span>Xem lịch</span></a>
+          <button type="button" class="is-danger" disabled title="API hiện chưa hỗ trợ xóa sân">
+            <lucide-icon name="trash-2" /><span>Xóa sân</span>
+          </button>
         </div>
       </section>
       <button type="button" class="court-detail__footer" (click)="openEdit(court)">

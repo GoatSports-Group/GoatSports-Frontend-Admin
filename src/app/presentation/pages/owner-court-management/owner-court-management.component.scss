@@ -143,7 +143,7 @@ select:focus-visible {
 }
 
 .workspace-shell.has-map-detail {
-  grid-template-columns: minmax(0, 1fr) 315px;
+  grid-template-columns: minmax(0, 1fr) 300px;
   column-gap: 10px;
   align-items: start;
 }
@@ -827,7 +827,7 @@ select:disabled {
   min-height: 575px;
   overflow: hidden;
   border: 1px solid #d3ddd7;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #edf1ee;
 }
 
@@ -1872,6 +1872,9 @@ select:disabled {
   position: sticky;
   z-index: 4;
   top: 0;
+  min-height: 0;
+  align-items: flex-start;
+  padding: 12px 14px 10px;
   background: rgba(255, 255, 255, .97);
   backdrop-filter: blur(8px);
 }
@@ -1924,9 +1927,42 @@ select:disabled {
   height: 17px;
 }
 
-.court-detail>header>div {
+.court-detail__heading {
   display: grid;
-  gap: 5px;
+  min-width: 0;
+  flex: 1;
+  gap: 3px;
+}
+
+.court-detail>header>.table-status {
+  flex: none;
+  margin-top: 3px;
+}
+
+.court-detail__heading p {
+  margin: 2px 0 0;
+  overflow: hidden;
+  color: #526159;
+  font-size: 11px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.court-detail .table-status[data-status='OCCUPIED'] {
+  color: #2f78c4;
+}
+
+.court-detail .table-status[data-status='UPCOMING'] {
+  color: #dc7c0f;
+}
+
+.court-detail .table-status[data-status='AVAILABLE'] {
+  color: #3e9546;
+}
+
+.court-detail .table-status[data-status='MAINTENANCE'] {
+  color: #cb4743;
 }
 
 .table-status {
@@ -1940,11 +1976,11 @@ select:disabled {
 }
 
 .court-detail__identity {
-  display: grid;
-  grid-template-columns: 62px 1fr auto;
+  display: block;
   align-items: center;
-  gap: 10px;
-  padding: 13px 15px;
+  gap: 12px;
+  min-height: 0;
+  padding: 9px 14px;
   border-bottom: 1px solid var(--line-soft);
 }
 
@@ -1957,57 +1993,42 @@ select:disabled {
   color: rgba(255, 255, 255, .8);
 }
 
-.court-detail__identity>div:nth-child(2) {
+.court-detail__identity>div {
+  display: flex;
   min-width: 0;
+  align-items: baseline;
+  gap: 10px;
 }
 
-.court-detail__identity>div:nth-child(2)>span {
-  display: block;
+.court-detail__identity>div>span {
+  display: inline;
   overflow: hidden;
-  color: #697870;
-  font-size: 12px;
+  color: #3f5048;
+  font-size: 11px;
+  font-weight: 650;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.court-detail__identity>div:nth-child(2)>strong {
-  display: block;
-  margin-top: 5px;
+.court-detail__identity>div>strong {
+  display: inline;
+  margin-top: 0;
   color: #1f2f27;
-  font-size: 16px;
+  font-size: 17px;
+  line-height: 1.25;
 }
 
-.court-detail__identity>div:nth-child(2) small {
+.court-detail__identity>div small {
   margin-left: 2px;
-  color: #7d8a83;
+  color: #59675f;
   font-size: 11px;
   font-weight: 500;
 }
 
-.court-detail__identity>button {
-  display: inline-flex;
-  min-height: 34px;
-  align-items: center;
-  gap: 5px;
-  padding: 0 8px;
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  background: #fff;
-  color: #4f6057;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.court-detail__identity>button lucide-icon {
-  width: 12px;
-  height: 12px;
-}
-
 .booking-now,
-.next-booking,
-.today-schedule,
+.daily-bookings,
 .quick-actions {
-  padding: 14px 15px;
+  padding: 14px;
   border-bottom: 1px solid var(--line-soft);
 }
 
@@ -2051,8 +2072,7 @@ select:disabled {
   cursor: pointer;
 }
 
-.booking-now header,
-.today-schedule header {
+.booking-now header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2060,22 +2080,19 @@ select:disabled {
 }
 
 .booking-now header span,
-.next-booking>span,
-.today-schedule header span,
+.daily-bookings h3,
 .quick-actions h3 {
-  color: #78867f;
+  color: #46574f;
   font-size: 12px;
   font-weight: 700;
 }
 
-.booking-now header strong,
-.today-schedule header strong {
-  color: #4d5d55;
+.booking-now header strong {
+  color: #314239;
   font-size: 12px;
 }
 
-.booking-now>div,
-.next-booking>div {
+.booking-now>div {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2083,16 +2100,14 @@ select:disabled {
   margin-top: 9px;
 }
 
-.booking-now>div strong,
-.next-booking>div strong {
+.booking-now>div strong {
   color: #26362e;
   font-size: 13px;
   font-variant-numeric: tabular-nums;
 }
 
-.booking-now>div span,
-.next-booking>div span {
-  color: #63736b;
+.booking-now>div span {
+  color: #4f6057;
   font-size: 11px;
 }
 
@@ -2112,71 +2127,65 @@ select:disabled {
 
 .booking-now--empty {
   display: flex;
+  min-height: 54px;
   align-items: center;
-  gap: 9px;
-}
-
-.booking-now--empty lucide-icon {
-  width: 18px;
-  height: 18px;
-  color: #3e9a70;
-}
-
-.booking-now--empty strong,
-.booking-now--empty span {
-  display: block;
 }
 
 .booking-now--empty strong {
-  color: #355c49;
-  font-size: 12px;
+  color: #26362e;
+  font-size: 13px;
+  line-height: 1.25;
+  white-space: nowrap;
 }
 
-.booking-now--empty span {
-  margin-top: 2px;
-  color: #7b8982;
-  font-size: 11px;
-}
-
-.next-booking>p,
-.today-schedule>p {
+.daily-bookings>p {
   margin: 8px 0 0;
-  color: #87938d;
+  color: #627169;
   font-size: 11px;
 }
 
-.today-schedule article {
+.daily-bookings h3 {
+  margin: 0 0 9px;
+}
+
+.daily-bookings article {
   display: grid;
-  grid-template-columns: 7px 75px 1fr;
-  gap: 7px;
+  grid-template-columns: 7px minmax(0, 1fr) auto;
+  gap: 6px;
   align-items: center;
-  min-height: 29px;
+  min-height: 27px;
   border-bottom: 1px solid #f0f3f1;
 }
 
-.today-schedule article>i {
+.daily-bookings article>i {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: #87a397;
 }
 
-.today-schedule article.is-current>i {
+.daily-bookings article.is-current>i {
   background: #2f78c4;
 }
 
-.today-schedule article strong {
-  color: #46564e;
+.daily-bookings article strong {
+  color: #33443b;
   font-size: 11px;
   font-variant-numeric: tabular-nums;
 }
 
-.today-schedule article span {
+.daily-bookings article span {
   overflow: hidden;
-  color: #78867f;
-  font-size: 11px;
+  color: #4f6057;
+  font-size: 12px;
+  font-weight: 650;
+  text-align: right;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.daily-bookings article[data-status='UPCOMING']>i {
+  background: #e68a18;
 }
 
 .quick-actions h3 {
@@ -2205,6 +2214,16 @@ select:disabled {
   text-align: center;
   text-decoration: none;
   cursor: pointer;
+}
+
+.quick-actions .is-danger {
+  border-color: #f0d6d3;
+  color: #dc4944;
+}
+
+.quick-actions .is-danger:disabled {
+  opacity: 1;
+  cursor: not-allowed;
 }
 
 .quick-actions a:hover,

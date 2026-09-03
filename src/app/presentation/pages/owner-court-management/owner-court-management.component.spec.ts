@@ -119,7 +119,15 @@ describe('OwnerCourtManagementComponent', () => {
     expect(fixture.nativeElement.querySelector('.facility-furniture')).toBeNull();
     expect(fixture.nativeElement.querySelector('.court-detail')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('.court-detail h2')?.textContent).toContain('Sân 01');
-    expect(fixture.nativeElement.querySelector('.court-detail > header > button')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.court-detail > header > button[aria-label="Đóng chi tiết sân"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.court-detail__identity > button')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.booking-now--empty lucide-icon')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.booking-now--empty span')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.booking-now--empty strong')?.textContent.trim()).toBe('Không có lượt đang diễn ra');
+    expect(fixture.nativeElement.querySelectorAll('.court-detail .quick-actions a, .court-detail .quick-actions button')).toHaveLength(8);
+    expect(fixture.nativeElement.querySelector('.court-detail .daily-bookings h3')?.textContent).toContain('Lịch theo ngày');
+    expect(fixture.nativeElement.querySelector('.court-detail .next-booking')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.court-detail .today-schedule')).toBeNull();
 
     fixture.componentInstance.selectCourt(savedCourt);
     fixture.detectChanges();
@@ -291,6 +299,7 @@ describe('OwnerCourtManagementComponent', () => {
       depositAmount: 0,
       remainingAmount: 100000,
       bookingCode: `BK-${page}`,
+      walkInCustomerName: `Khách ${page + 1}`,
       createdAt: '2030-05-01T00:00:00Z',
       payments: [],
       allowedTransitions: []
@@ -315,6 +324,11 @@ describe('OwnerCourtManagementComponent', () => {
       expect.objectContaining({ venueId: 'venue-1', venueCourtId: 'court-1', page: 1, size: 20 })
     ]);
     expect(component.detailBookingsForCourt('court-1')).toHaveLength(2);
+    expect(fixture.nativeElement.querySelectorAll('.daily-bookings article')).toHaveLength(2);
+    expect(fixture.nativeElement.querySelectorAll('.daily-bookings article > i')).toHaveLength(2);
+    expect(fixture.nativeElement.querySelectorAll('.daily-bookings article > b')).toHaveLength(0);
+    expect(fixture.nativeElement.querySelector('.daily-bookings')?.textContent).toContain('Khách 1');
+    expect(fixture.nativeElement.querySelector('.daily-bookings')?.textContent).toContain('Khách 2');
   });
 
   it('đổi ngày sẽ tải lại booking của cơ sở và sân đang mở theo đúng ngày', () => {

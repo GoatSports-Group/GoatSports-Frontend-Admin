@@ -128,6 +128,7 @@ async function verifyViewport(cdp, name, width, height) {
   await cdp.send('Page.navigate', { url: `http://127.0.0.1:${WEB_PORT}/admin/courts` });
   await waitFor(cdp, "document.querySelectorAll('.court-object').length === 8");
   await waitFor(cdp, "!!document.querySelector('.court-detail h2')");
+  await waitFor(cdp, "!!document.querySelector('.court-detail .daily-bookings, .court-detail .detail-booking-state--error')");
   const initial = await evaluate(cdp, `(() => ({
     route: location.pathname,
     title: document.querySelector('.page-heading h1')?.textContent?.trim(),
@@ -138,6 +139,9 @@ async function verifyViewport(cdp, name, width, height) {
     floatingMapControls: document.querySelectorAll('.map-controls').length,
     initialDetailTitle: document.querySelector('.court-detail h2')?.textContent?.trim(),
     detailCloseButtonCount: document.querySelectorAll('.court-detail > header > button').length,
+    detailUpdateButtonCount: document.querySelectorAll('.court-detail__identity > button').length,
+    emptyCurrentBookingText: document.querySelector('.booking-now--empty')?.textContent?.trim(),
+    emptyCurrentBookingIconCount: document.querySelectorAll('.booking-now--empty lucide-icon').length,
     dateFilterInline: Math.abs(document.querySelector('.booking-date-filter--toolbar').getBoundingClientRect().top - document.querySelector('.venue-select__trigger').getBoundingClientRect().top) < 2,
     dateNativeInputOpacity: getComputedStyle(document.querySelector('.booking-date-filter--toolbar input')).opacity,
     dateVisibleValue: document.querySelector('.booking-date-filter__value')?.textContent?.trim(),
@@ -206,10 +210,25 @@ async function verifyViewport(cdp, name, width, height) {
   await evaluate(cdp, "document.querySelector('.court-filter > button').click()");
   await evaluate(cdp, "document.querySelectorAll('.court-object')[1].click()");
   await waitFor(cdp, "!!document.querySelector('.court-detail')");
+  await waitFor(cdp, "!!document.querySelector('.court-detail .daily-bookings, .court-detail .detail-booking-state--error')");
   const detail = await evaluate(cdp, `(() => ({
     detailOpen: !!document.querySelector('.court-detail'),
     detailTitle: document.querySelector('.court-detail h2')?.textContent?.trim(),
     operationalStatusVisible: document.querySelector('.court-detail')?.innerText.includes('Đang sử dụng'),
+    detailStatusAtTopRight: (() => {
+      const header = document.querySelector('.court-detail > header').getBoundingClientRect();
+      const status = document.querySelector('.court-detail > header > .table-status').getBoundingClientRect();
+      return status.left > header.left + header.width / 2 && status.top < header.top + header.height / 2;
+    })(),
+    detailHeaderHeight: Math.round(document.querySelector('.court-detail > header').getBoundingClientRect().height),
+    detailPriceRowHeight: Math.round(document.querySelector('.court-detail__identity').getBoundingClientRect().height),
+    detailCloseButtonCount: document.querySelectorAll('.court-detail > header > button').length,
+    detailQuickActionCount: document.querySelectorAll('.court-detail .quick-actions a, .court-detail .quick-actions button').length,
+    detailHasCourtThumbnail: !!document.querySelector('.court-detail .detail-court-visual'),
+    detailTimelineDotCount: document.querySelectorAll('.court-detail .daily-bookings article > i').length,
+    detailTimelineLabelCount: document.querySelectorAll('.court-detail .daily-bookings article > b').length,
+    detailDailyBookingTitle: document.querySelector('.court-detail .daily-bookings h3')?.textContent?.trim(),
+    detailHasLegacyScheduleBlocks: !!document.querySelector('.court-detail .next-booking, .court-detail .today-schedule'),
     panelWithinViewport: document.querySelector('.court-detail').getBoundingClientRect().right <= innerWidth,
     panelOverflow: getComputedStyle(document.querySelector('.court-detail')).overflowY,
     stickyHeader: getComputedStyle(document.querySelector('.court-detail > header')).position,

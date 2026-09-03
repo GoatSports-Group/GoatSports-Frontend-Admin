@@ -1136,17 +1136,6 @@ export class OwnerCourtManagementComponent {
     ) ?? null;
   }
 
-  detailNextBooking(courtId: string): OwnerBooking | null {
-    const selectedDate = this.selectedBookingDate();
-    const today = this.todayIso();
-    if (selectedDate < today) return null;
-    const now = selectedDate === today ? this.currentMinutes() : -1;
-    return this.detailBookingsForCourt(courtId).find(booking =>
-      ['PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN'].includes(booking.status)
-      && this.timeMinutes(booking.startTime) > now
-    ) ?? null;
-  }
-
   bookingDateLabel(): string {
     const [year, month, day] = this.selectedBookingDate().split('-');
     return `${day}/${month}/${year}`;
@@ -1163,6 +1152,16 @@ export class OwnerCourtManagementComponent {
   bookingCustomer(booking: OwnerBooking | null): string {
     if (!booking) return '—';
     return booking.walkInCustomerName || booking.bookingCode;
+  }
+
+  bookingTimelineStatus(booking: OwnerBooking): 'OCCUPIED' | 'UPCOMING' | 'AVAILABLE' {
+    if (this.detailCurrentBooking(booking.venueCourtId)?.bookingId === booking.bookingId) return 'OCCUPIED';
+    const selectedDate = this.selectedBookingDate();
+    if (selectedDate > this.todayIso()
+      || (selectedDate === this.todayIso() && this.timeMinutes(booking.startTime) > this.currentMinutes())) {
+      return 'UPCOMING';
+    }
+    return 'AVAILABLE';
   }
 
   bookingProgress(booking: OwnerBooking | null): number {
