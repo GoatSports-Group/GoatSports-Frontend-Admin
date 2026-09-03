@@ -65,7 +65,7 @@ interface CourtTypeSummary {
 
 type WorkspaceView = 'MAP' | 'LIST' | 'PRICING';
 type PanelMode = 'NONE' | 'DETAIL' | 'FORM';
-type OperationalStatus = 'AVAILABLE' | 'OCCUPIED' | 'UPCOMING' | 'MAINTENANCE' | 'DISABLED';
+type OperationalStatus = 'AVAILABLE' | 'AWAITING_CHECK_IN' | 'OCCUPIED' | 'UPCOMING' | 'MAINTENANCE' | 'DISABLED';
 type OperationalFilter = 'ALL' | OperationalStatus;
 type MaintenanceMode = 'START' | 'END';
 
@@ -128,6 +128,7 @@ export class OwnerCourtManagementComponent implements OnDestroy {
   readonly filterOptions: ReadonlyArray<{ value: OperationalFilter; label: string }> = [
     { value: 'ALL', label: 'Tất cả trạng thái' },
     { value: 'AVAILABLE', label: 'Trống' },
+    { value: 'AWAITING_CHECK_IN', label: 'Chưa check-in' },
     { value: 'OCCUPIED', label: 'Đang sử dụng' },
     { value: 'UPCOMING', label: 'Sắp có lịch' },
     { value: 'MAINTENANCE', label: 'Bảo trì' },
@@ -135,6 +136,7 @@ export class OwnerCourtManagementComponent implements OnDestroy {
   ];
   readonly legend: ReadonlyArray<{ value: OperationalStatus; label: string }> = [
     { value: 'AVAILABLE', label: 'Trống' },
+    { value: 'AWAITING_CHECK_IN', label: 'Chưa check-in' },
     { value: 'OCCUPIED', label: 'Đang sử dụng' },
     { value: 'UPCOMING', label: 'Sắp có lịch' },
     { value: 'MAINTENANCE', label: 'Bảo trì' },
@@ -266,6 +268,7 @@ export class OwnerCourtManagementComponent implements OnDestroy {
   readonly totalCapacity = computed(() => this.courts().reduce((sum, court) => sum + court.capacity, 0));
   readonly activeCount = computed(() => this.courts().filter(court => this.operationalStatus(court) === 'AVAILABLE').length);
   readonly occupiedCount = computed(() => this.courts().filter(court => this.operationalStatus(court) === 'OCCUPIED').length);
+  readonly awaitingCheckInCount = computed(() => this.courts().filter(court => this.operationalStatus(court) === 'AWAITING_CHECK_IN').length);
   readonly upcomingCount = computed(() => this.courts().filter(court => this.operationalStatus(court) === 'UPCOMING').length);
   readonly maintenanceCount = computed(() => this.courts().filter(court => this.operationalStatus(court) === 'MAINTENANCE').length);
   readonly courtTypeSummaries = computed<CourtTypeSummary[]>(() => {
@@ -1394,7 +1397,9 @@ export class OwnerCourtManagementComponent implements OnDestroy {
   operationalStatus(court: OwnerVenueCourt): OperationalStatus {
     if (!court.active || court.availabilityStatus === 'INACTIVE') return 'DISABLED';
     if (court.availabilityStatus === 'MAINTENANCE') return 'MAINTENANCE';
-    if (this.currentBooking(court.venueCourtId) || court.availabilityStatus === 'OCCUPIED') return 'OCCUPIED';
+    const currentBooking = this.currentBooking(court.venueCourtId);
+    if (currentBooking?.status === 'CHECKED_IN') return 'OCCUPIED';
+    if (currentBooking) return 'AWAITING_CHECK_IN';
     if (this.nextBooking(court.venueCourtId, 120) || court.availabilityStatus === 'HELD') return 'UPCOMING';
     return 'AVAILABLE';
   }
@@ -1402,6 +1407,7 @@ export class OwnerCourtManagementComponent implements OnDestroy {
   operationalLabel(court: OwnerVenueCourt): string {
     const labels: Record<OperationalStatus, string> = {
       AVAILABLE: 'Trống',
+      AWAITING_CHECK_IN: 'Chưa check-in',
       OCCUPIED: 'Đang sử dụng',
       UPCOMING: 'Sắp có lịch',
       MAINTENANCE: 'Bảo trì',
@@ -1411,7 +1417,8 @@ export class OwnerCourtManagementComponent implements OnDestroy {
   }
 
   isCourtInUse(court: OwnerVenueCourt): boolean {
-    return this.operationalStatus(court) === 'OCCUPIED';
+    const status = this.operationalStatus(court);
+    return status === 'OCCUPIED' || status === 'AWAITING_CHECK_IN';
   }
 
   isCourtCheckedIn(court: OwnerVenueCourt): boolean {
@@ -1482,8 +1489,10 @@ export class OwnerCourtManagementComponent implements OnDestroy {
     return booking.walkInCustomerName || booking.bookingCode;
   }
 
-  bookingTimelineStatus(booking: OwnerBooking): 'OCCUPIED' | 'UPCOMING' | 'AVAILABLE' {
-    if (this.detailCurrentBooking(booking.venueCourtId)?.bookingId === booking.bookingId) return 'OCCUPIED';
+  bookingTimelineStatus(booking: OwnerBooking): 'OCCUPIED' | 'AWAITING_CHECK_IN' | 'UPCOMING' | 'AVAILABLE' {
+    if (this.detailCurrentBooking(booking.venueCourtId)?.bookingId === booking.bookingId) {
+      return booking.status === 'CHECKED_IN' ? 'OCCUPIED' : 'AWAITING_CHECK_IN';
+    }
     const selectedDate = this.selectedBookingDate();
     if (selectedDate > this.todayIso()
       || (selectedDate === this.todayIso() && this.timeMinutes(booking.startTime) > this.currentMinutes())) {

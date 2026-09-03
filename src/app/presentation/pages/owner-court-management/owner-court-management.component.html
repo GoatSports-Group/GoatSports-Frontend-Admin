@@ -410,6 +410,7 @@
       <section class="list-overview" aria-label="Tổng quan danh sách sân">
         <div><span>Tổng số sân</span><strong>{{ courts().length }}</strong></div>
         <div><span>Trống</span><strong>{{ activeCount() }}</strong></div>
+        <div><span>Chưa check-in</span><strong>{{ awaitingCheckInCount() }}</strong></div>
         <div><span>Đang sử dụng</span><strong>{{ occupiedCount() }}</strong></div>
         <div><span>Sắp có lịch</span><strong>{{ upcomingCount() }}</strong></div>
         <div><span>Bảo trì</span><strong>{{ maintenanceCount() }}</strong></div>

@@ -635,6 +635,11 @@ select:disabled {
   background: #57a93d;
 }
 
+[data-status='AWAITING_CHECK_IN']>i,
+.table-status[data-status='AWAITING_CHECK_IN'] i {
+  background: #d99a1d;
+}
+
 [data-status='OCCUPIED']>i,
 .table-status[data-status='OCCUPIED'] i {
   background: #2f78c4;
@@ -1043,6 +1048,10 @@ select:disabled {
   background: #587e9d;
 }
 
+.court-object[data-status='AWAITING_CHECK_IN'] .court-object__surface {
+  background: #729460;
+}
+
 .court-object[data-status='UPCOMING'] .court-object__surface {
   background: #7b9b68;
 }
@@ -1085,6 +1094,10 @@ select:disabled {
 
 .court-object[data-status='OCCUPIED'] .court-object__status {
   color: #2e75bd;
+}
+
+.court-object[data-status='AWAITING_CHECK_IN'] .court-object__status {
+  color: #b56e08;
 }
 
 .court-object[data-status='UPCOMING'] .court-object__status {
@@ -1953,6 +1966,10 @@ select:disabled {
   color: #2f78c4;
 }
 
+.court-detail .table-status[data-status='AWAITING_CHECK_IN'] {
+  color: #a86608;
+}
+
 .court-detail .table-status[data-status='UPCOMING'] {
   color: #dc7c0f;
 }
@@ -2186,6 +2203,10 @@ select:disabled {
 
 .daily-bookings article[data-status='UPCOMING']>i {
   background: #e68a18;
+}
+
+.daily-bookings article[data-status='AWAITING_CHECK_IN']>i {
+  background: #d99a1d;
 }
 
 .quick-actions h3 {
@@ -3040,7 +3061,7 @@ select:disabled {
 
 .list-overview {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   margin-bottom: 11px;
   border: 1px solid var(--line);
   border-radius: 9px;
@@ -3673,14 +3694,14 @@ select:disabled {
   }
 
   .list-overview {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
   }
 
-  .list-overview>div:nth-child(3) {
+  .list-overview>div:nth-child(4) {
     border-right: 0;
   }
 
-  .list-overview>div:nth-child(-n+3) {
+  .list-overview>div:nth-child(-n+4) {
     border-bottom: 1px solid var(--line-soft);
   }
 
