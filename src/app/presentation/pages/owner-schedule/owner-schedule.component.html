@@ -1,88 +1,218 @@
-<main class="schedule-page">
-  <header class="page-hero">
-    <div class="page-hero__copy">
-      <span class="eyebrow"><lucide-icon name="calendar" /> Vận hành sân</span>
-      <h1>Lịch và bảng giá</h1>
-      <p>Thiết lập quy tắc giá theo ngày, sau đó sinh slot có giá snapshot để người chơi đặt sân.</p>
-    </div>
-    <div class="opening-card">
-      <span>Giờ hoạt động</span>
-      <strong>{{ selectedVenue()?.openTime?.slice(0, 5) || '—' }} – {{ selectedVenue()?.closeTime?.slice(0, 5) || '—' }}</strong>
-      <small>{{ selectedVenue()?.name || 'Chưa chọn cơ sở' }}</small>
-    </div>
-  </header>
+<main class="schedule-page" [class.schedule-page--editor-open]="ruleEditorOpen()">
+  <section class="schedule-content">
+    <header class="page-heading">
+      <div>
+        <h1>Lịch và bảng giá</h1>
+        <p>Quản lý lịch hoạt động, tình trạng sân và thiết lập quy tắc giá.</p>
+      </div>
+      <div class="page-heading__actions">
+        <button type="button" class="secondary-button app-preview-button" [disabled]="!selectedCourt()">
+          <lucide-icon name="external-link" />
+          <span>Xem trên ứng dụng</span>
+        </button>
+        <button type="button" class="primary-button" (click)="openRuleEditor()"
+          [disabled]="!selectedCourt() || loadingData() || savingRule()">
+          <lucide-icon name="plus" />
+          <span>Thêm quy tắc giá</span>
+        </button>
+      </div>
+    </header>
 
-  @if (loadingContext()) {
-    <app-page-loading title="Đang tải lịch và bảng giá"
-      description="Đang đồng bộ cơ sở, sân thi đấu và phạm vi vận hành." />
-  } @else if (!venues().length) {
-    <section class="state-card state-card--empty">
-      <lucide-icon name="land-plot" />
-      <h2>Chưa có cơ sở được duyệt</h2>
-      <p>Hoàn tất hồ sơ chủ sân trước khi thiết lập lịch vận hành.</p>
-      <a routerLink="/admin/applications">Xem đơn đăng ký</a>
-    </section>
-  } @else {
-    <section class="context-bar" aria-label="Chọn phạm vi lịch">
-      <label>
-        <span>Cơ sở</span>
-        <select [value]="selectedVenueId()" (change)="selectVenue($any($event.target).value)"
-          [disabled]="loadingData() || savingRule() || generating()">
-          @for (venue of venues(); track venue.venueId) {
-            <option [value]="venue.venueId" [selected]="venue.venueId === selectedVenueId()">{{ venue.name }}</option>
-          }
-        </select>
-      </label>
-      <label>
-        <span>Sân thi đấu</span>
-        <select [value]="selectedCourtId()" (change)="selectCourt($any($event.target).value)"
-          [disabled]="loadingData() || savingRule() || generating() || !courts().length">
-          @if (!courts().length) { <option value="">Chưa có sân thi đấu</option> }
-          @for (court of courts(); track court.venueCourtId) {
-            <option [value]="court.venueCourtId" [selected]="court.venueCourtId === selectedCourtId()">{{ court.name }}</option>
-          }
-        </select>
-      </label>
-      <button type="button" class="icon-button" (click)="loadSchedule()" [disabled]="loadingData() || !selectedCourtId()"
-        aria-label="Tải lại lịch và bảng giá">
-        <lucide-icon name="rotate-ccw" />
-      </button>
-    </section>
-
-    @if (!courts().length) {
+    @if (loadingContext()) {
+      <app-page-loading title="Đang tải lịch và bảng giá"
+        description="Đang đồng bộ cơ sở, sân thi đấu và phạm vi vận hành." />
+    } @else if (!venues().length) {
       <section class="state-card state-card--empty">
-        <lucide-icon name="activity" />
-        <h2>Cơ sở chưa có sân thi đấu</h2>
-        <p>Tạo sân con trước, sau đó quay lại cấu hình giá và lịch.</p>
-        <a routerLink="/admin/courts">Quản lý sân thi đấu</a>
+        <lucide-icon name="land-plot" />
+        <h2>Chưa có cơ sở được duyệt</h2>
+        <p>Hoàn tất hồ sơ chủ sân trước khi thiết lập lịch vận hành.</p>
+        <a routerLink="/admin/applications">Xem đơn đăng ký</a>
       </section>
     } @else {
-      <nav class="schedule-tabs" aria-label="Nội dung lịch và bảng giá">
-        <button type="button" [class.active]="activeTab() === 'pricing'" (click)="activeTab.set('pricing')">
-          <lucide-icon name="receipt" /> Bảng giá <span>{{ rules().length }}</span>
-        </button>
-        <button type="button" [class.active]="activeTab() === 'calendar'" (click)="activeTab.set('calendar')">
-          <lucide-icon name="calendar" /> Lịch slot <span>{{ filteredSlots().length }}</span>
-        </button>
-      </nav>
+      <section class="context-toolbar" aria-label="Chọn phạm vi lịch">
+        <label class="context-select">
+          <span>Cơ sở</span>
+          <select [value]="selectedVenueId()" (change)="selectVenue($any($event.target).value)"
+            [disabled]="loadingData() || savingRule() || generating()">
+            @for (venue of venues(); track venue.venueId) {
+              <option [value]="venue.venueId" [selected]="venue.venueId === selectedVenueId()">{{ venue.name }}</option>
+            }
+          </select>
+        </label>
 
-      @if (loadError()) {
-        <section class="error-state" role="alert">
-          <lucide-icon name="alert-circle" />
-          <div><strong>Không thể tải dữ liệu</strong><p>{{ loadError() }}</p></div>
-          <button type="button" (click)="loadSchedule()">Thử lại</button>
+        <label class="context-select">
+          <span>Sân</span>
+          <select [value]="selectedCourtId()" (change)="selectCourt($any($event.target).value)"
+            [disabled]="loadingData() || savingRule() || generating() || !courts().length">
+            @if (!courts().length) { <option value="">Chưa có sân thi đấu</option> }
+            @for (court of courts(); track court.venueCourtId) {
+              <option [value]="court.venueCourtId" [selected]="court.venueCourtId === selectedCourtId()">{{ court.name }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="date-range-picker" aria-label="Chọn tuần hiển thị">
+          <span class="sr-only">Tuần hiển thị</span>
+          <lucide-icon name="calendar" />
+          <strong>{{ calendarRangeLabel() }}</strong>
+          <lucide-icon name="chevron-down" />
+          <input type="date" [value]="calendarWeekStart()" (change)="changeCalendarDate($event)"
+            [disabled]="loadingData() || generating()" />
+        </label>
+
+        <div class="week-navigation" aria-label="Điều hướng tuần">
+          <button type="button" (click)="previousWeek()" [disabled]="loadingData()" aria-label="Tuần trước">
+            <lucide-icon name="chevron-left" />
+          </button>
+          <button type="button" (click)="nextWeek()" [disabled]="loadingData()" aria-label="Tuần sau">
+            <lucide-icon name="chevron-right" />
+          </button>
+        </div>
+
+        <button type="button" class="today-button" (click)="goToCurrentWeek()" [disabled]="loadingData()">
+          Hôm nay
+        </button>
+      </section>
+
+      @if (!courts().length) {
+        <section class="state-card state-card--empty">
+          <lucide-icon name="activity" />
+          <h2>Cơ sở chưa có sân thi đấu</h2>
+          <p>Tạo sân con trước, sau đó quay lại cấu hình giá và lịch.</p>
+          <a routerLink="/admin/courts">Quản lý sân thi đấu</a>
         </section>
-      } @else if (loadingData()) {
-        <app-page-loading size="compact" title="Đang tải dữ liệu sân"
-          description="Đang đồng bộ quy tắc giá và các khung giờ khả dụng." />
-      } @else if (activeTab() === 'pricing') {
-        <section class="workspace-grid">
-          <div class="workspace-panel">
-            <header class="section-heading">
-              <div><span>Quy tắc giá</span><h2>{{ selectedCourt()?.name }}</h2><p>Khung giờ không được chồng lấn trong cùng ngày hiệu lực.</p></div>
-              <button type="button" class="primary-button" (click)="openRuleEditor()" [disabled]="savingRule()">
-                <lucide-icon name="plus" /> Thêm quy tắc
+      } @else {
+        <nav class="schedule-tabs" aria-label="Nội dung lịch và bảng giá">
+          <button type="button" [class.active]="activeTab() === 'calendar'" (click)="activeTab.set('calendar')">
+            Lịch &amp; tình trạng
+          </button>
+          <button type="button" [class.active]="activeTab() === 'pricing'" (click)="activeTab.set('pricing')">
+            Quy tắc giá
+          </button>
+        </nav>
+
+        @if (loadError()) {
+          <section class="error-state" role="alert">
+            <lucide-icon name="alert-circle" />
+            <div><strong>Không thể tải dữ liệu</strong><p>{{ loadError() }}</p></div>
+            <button type="button" (click)="loadSchedule()">Thử lại</button>
+          </section>
+        } @else if (loadingData()) {
+          <app-page-loading size="compact" title="Đang tải dữ liệu sân"
+            description="Đang đồng bộ quy tắc giá và các khung giờ khả dụng." />
+        } @else if (activeTab() === 'calendar') {
+          <section class="calendar-section" aria-label="Lịch hoạt động theo tuần">
+            <div class="calendar-legend" aria-label="Chú thích trạng thái">
+              <span><i class="legend-box legend-box--available"></i>Còn trống</span>
+              <span><i class="legend-dot legend-dot--booked"><lucide-icon name="check" /></i>Đã đặt</span>
+              <span><i class="legend-dot legend-dot--locked"></i>Giữ chỗ</span>
+              <span><i class="legend-box legend-box--maintenance"></i>Bảo trì</span>
+            </div>
+
+            <div class="week-calendar">
+              <div class="week-calendar__header">
+                <div class="time-heading">Giờ</div>
+                @for (day of calendarDays(); track day.date) {
+                  <div class="day-heading" [class.day-heading--today]="day.today"
+                    [class.day-heading--weekend]="day.weekend">
+                    <strong>{{ day.weekday }}</strong>
+                    <span>{{ day.dateLabel }}</span>
+                  </div>
+                }
+              </div>
+
+              <div class="week-calendar__body" [style.height.px]="calendarGridHeight()">
+                <div class="time-axis">
+                  @for (hour of calendarHours(); track hour) {
+                    <span [style.top.px]="(hour * 60 - calendarStartMinutes()) / 60 * calendarRowHeight">
+                      {{ hour.toString().padStart(2, '0') }}:00
+                    </span>
+                  }
+                </div>
+                <div class="calendar-columns">
+                  @for (day of calendarDays(); track day.date) {
+                    <div class="calendar-day" [class.calendar-day--today]="day.today">
+                      @for (slot of day.slots; track slot.timeSlotId) {
+                        <article class="calendar-slot" [attr.data-status]="slot.status"
+                          [style.top.px]="slotTop(slot)" [style.height.px]="slotHeight(slot)"
+                          [title]="slotStatusLabel(slot.status) + ' · ' + compactMoney(slot.pricePerHour) + '/giờ'">
+                          <strong>{{ timeValue(slot.startTime) }} – {{ timeValue(slot.endTime) }}</strong>
+                          <span>{{ slotStatusLabel(slot.status) }}</span>
+                          <small>{{ compactMoney(slot.pricePerHour) }}</small>
+                          @if (slot.status === 'BOOKED') {
+                            <lucide-icon class="calendar-slot__status-icon" name="check-circle" />
+                          }
+                          @if (slot.status === 'AVAILABLE' || slot.status === 'MAINTENANCE') {
+                            <span class="calendar-slot__actions">
+                              <button type="button" (click)="toggleMaintenance(slot); $event.stopPropagation()"
+                                [disabled]="!!mutatingSlotId()"
+                                [attr.aria-label]="slot.status === 'MAINTENANCE' ? 'Mở lại slot' : 'Đặt slot bảo trì'">
+                                <lucide-icon [name]="slot.status === 'MAINTENANCE' ? 'rotate-ccw' : 'shield-off'" />
+                              </button>
+                              <button type="button" class="danger" (click)="deleteSlot(slot); $event.stopPropagation()"
+                                [disabled]="!!mutatingSlotId()" aria-label="Xóa slot">
+                                <lucide-icon name="trash-2" />
+                              </button>
+                            </span>
+                          }
+                        </article>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <section class="active-rules" aria-labelledby="active-rules-title">
+              <header>
+                <div>
+                  <h2 id="active-rules-title">Quy tắc giá đang áp dụng</h2>
+                  <span>{{ rules().length }} quy tắc</span>
+                </div>
+                <button type="button" (click)="activeTab.set('pricing')">
+                  Xem tất cả quy tắc <lucide-icon name="chevron-right" />
+                </button>
+              </header>
+              @if (!summaryRules().length) {
+                <div class="active-rules__empty">Chưa có quy tắc giá cho sân này.</div>
+              } @else {
+                <div class="rule-summary-grid">
+                  @for (rule of summaryRules(); track rule.pricingRuleId) {
+                    <article>
+                      <lucide-icon [name]="ruleSummaryIcon(rule)" />
+                      <div>
+                        <strong>{{ rulePeriodLabel(rule) }}</strong>
+                        <span>{{ dayLabel(rule.dayOfWeek) }}</span>
+                        <span>{{ timeValue(rule.startTime) }} – {{ timeValue(rule.endTime) }}</span>
+                        <b>{{ compactMoney(rule.pricePerHour) }}/giờ</b>
+                      </div>
+                    </article>
+                  }
+                </div>
+              }
+            </section>
+          </section>
+        } @else {
+          <section class="pricing-workspace">
+            <form class="generation-strip" [formGroup]="generationForm" (ngSubmit)="generateSlots()">
+              <div>
+                <span>Sinh lịch từ bảng giá</span>
+                <strong>{{ selectedCourt()?.name }}</strong>
+              </div>
+              <label><span>Từ ngày</span><input type="date" formControlName="fromDate" /></label>
+              <label><span>Đến ngày</span><input type="date" formControlName="toDate" /></label>
+              <label><span>Thời lượng</span><select formControlName="slotDurationMinutes">
+                <option [value]="30">30 phút</option><option [value]="60">60 phút</option>
+                <option [value]="90">90 phút</option><option [value]="120">120 phút</option>
+              </select></label>
+              <button type="submit" class="primary-button" [disabled]="generating() || generationForm.invalid">
+                <span [class.spinner-small]="generating()"></span>{{ generating() ? 'Đang sinh…' : 'Sinh / đồng bộ slot' }}
               </button>
+            </form>
+
+            <header class="pricing-heading">
+              <div><span>Quy tắc giá</span><h2>{{ selectedCourt()?.name }}</h2></div>
+              <p>Khung giờ không được chồng lấn trong cùng ngày hiệu lực.</p>
             </header>
 
             @if (!rules().length) {
@@ -94,76 +224,92 @@
               <div class="rule-list">
                 @for (rule of rules(); track rule.pricingRuleId) {
                   <article class="rule-card">
-                    <div class="rule-card__day"><span>{{ dayLabel(rule.dayOfWeek) }}</span><strong>{{ timeValue(rule.startTime) }} – {{ timeValue(rule.endTime) }}</strong></div>
-                    <div class="rule-card__price"><small>Giá áp dụng</small><strong>{{ formatMoney(rule.pricePerHour) }}<em>/giờ</em></strong><span>Giá cơ sở {{ formatMoney(rule.basePricePerHour) }}</span></div>
-                    <div class="rule-card__dates"><small>Hiệu lực</small><span>{{ rule.effectiveFrom }} → {{ rule.effectiveTo }}</span></div>
+                    <div class="rule-card__day">
+                      <span>{{ dayLabel(rule.dayOfWeek) }}</span>
+                      <strong>{{ timeValue(rule.startTime) }} – {{ timeValue(rule.endTime) }}</strong>
+                    </div>
+                    <div class="rule-card__price">
+                      <small>Giá áp dụng</small><strong>{{ compactMoney(rule.pricePerHour) }}<em>/giờ</em></strong>
+                      <span>Giá cơ sở {{ compactMoney(rule.basePricePerHour) }}</span>
+                    </div>
+                    <div class="rule-card__dates">
+                      <small>Hiệu lực</small><span>{{ rule.effectiveFrom }} → {{ rule.effectiveTo }}</span>
+                    </div>
                     <div class="rule-card__actions">
-                      <button type="button" (click)="openRuleEditor(rule)" [disabled]="savingRule() || !!deletingRuleId()" aria-label="Sửa quy tắc giá"><lucide-icon name="pencil" /></button>
-                      <button type="button" class="danger" (click)="deleteRule(rule)" [disabled]="!!deletingRuleId()" aria-label="Xóa quy tắc giá"><lucide-icon name="trash-2" /></button>
+                      <button type="button" (click)="openRuleEditor(rule)" [disabled]="savingRule() || !!deletingRuleId()"
+                        aria-label="Sửa quy tắc giá"><lucide-icon name="pencil" /></button>
+                      <button type="button" class="danger" (click)="deleteRule(rule)" [disabled]="!!deletingRuleId()"
+                        aria-label="Xóa quy tắc giá"><lucide-icon name="trash-2" /></button>
                     </div>
                   </article>
                 }
               </div>
             }
-          </div>
-
-          @if (ruleEditorOpen()) {
-            <aside class="editor-panel" aria-labelledby="rule-editor-title">
-              <header><div><span>{{ editingRule() ? 'Chỉnh sửa' : 'Tạo mới' }}</span><h2 id="rule-editor-title">Quy tắc giá</h2></div><button type="button" (click)="closeRuleEditor()" [disabled]="savingRule()" aria-label="Đóng"><lucide-icon name="x" /></button></header>
-              <form [formGroup]="ruleForm" (ngSubmit)="saveRule()">
-                <label><span>Ngày trong tuần</span><select formControlName="dayOfWeek">@for (day of days; track day.value) { <option [value]="day.value">{{ day.label }}</option> }</select></label>
-                <div class="form-row"><label><span>Bắt đầu</span><input type="time" formControlName="startTime" /></label><label><span>Kết thúc</span><input type="time" formControlName="endTime" /></label></div>
-                <div class="form-row"><label><span>Giá cơ sở/giờ</span><input type="number" min="1" step="1000" formControlName="basePricePerHour" /></label><label><span>Giá áp dụng/giờ</span><input type="number" min="1" step="1000" formControlName="pricePerHour" /></label></div>
-                <div class="form-row"><label><span>Hiệu lực từ</span><input type="date" formControlName="effectiveFrom" /></label><label><span>Hiệu lực đến</span><input type="date" formControlName="effectiveTo" /></label></div>
-                <p class="form-note"><lucide-icon name="info" /> Giá của slot đã sinh là snapshot và không đổi khi sửa quy tắc sau này.</p>
-                <div class="form-actions"><button type="button" class="secondary-button" (click)="closeRuleEditor()" [disabled]="savingRule()">Hủy</button><button type="submit" class="primary-button" [disabled]="savingRule() || ruleForm.invalid"><span [class.spinner-small]="savingRule()"></span>{{ savingRule() ? 'Đang lưu…' : 'Lưu quy tắc' }}</button></div>
-              </form>
-            </aside>
-          }
-        </section>
-      } @else {
-        <section class="calendar-workspace">
-          <form class="generation-bar" [formGroup]="generationForm" (ngSubmit)="generateSlots()">
-            <div><span>Sinh lịch từ bảng giá</span><strong>{{ selectedCourt()?.name }}</strong></div>
-            <label><span>Từ ngày</span><input type="date" formControlName="fromDate" /></label>
-            <label><span>Đến ngày</span><input type="date" formControlName="toDate" /></label>
-            <label><span>Thời lượng</span><select formControlName="slotDurationMinutes"><option [value]="30">30 phút</option><option [value]="60">60 phút</option><option [value]="90">90 phút</option><option [value]="120">120 phút</option></select></label>
-            <label><span>Trạng thái</span><select [value]="slotStatusFilter()"
-              (change)="selectSlotStatus($any($event.target).value)">
-              <option value="ALL">Tất cả trạng thái</option>
-              <option value="AVAILABLE">Lịch trống</option>
-              <option value="LOCKED">Đang giữ</option>
-              <option value="BOOKED">Đã đặt</option>
-              <option value="MAINTENANCE">Bảo trì</option>
-            </select></label>
-            <button type="submit" class="primary-button" [disabled]="generating() || generationForm.invalid"><span [class.spinner-small]="generating()"></span>{{ generating() ? 'Đang sinh…' : 'Sinh / đồng bộ slot' }}</button>
-          </form>
-
-          @if (!slotGroups().length) {
-            <div class="inline-empty"><lucide-icon name="calendar" /><strong>{{ slotStatusFilter() === 'AVAILABLE' ? 'Không có lịch trống trong khoảng ngày này' : 'Chưa có slot trong khoảng ngày này' }}</strong><p>{{ slotStatusFilter() === 'AVAILABLE' ? 'Hãy đổi khoảng ngày hoặc chọn sân khác để xem lịch khả dụng.' : 'Đảm bảo đã có quy tắc giá hiệu lực, rồi sinh lịch.' }}</p></div>
-          } @else {
-            <div class="calendar-list">
-              @for (group of slotGroups(); track group.date) {
-                <article class="day-card">
-                  <header><div><span>{{ formatDate(group.date) }}</span><small>{{ group.slots.length }} slot</small></div><span class="day-card__available">{{ group.slots.length }} khung giờ</span></header>
-                  <div class="slot-grid">
-                    @for (slot of group.slots; track slot.timeSlotId) {
-                      <div class="slot-card" [class.slot-card--maintenance]="slot.status === 'MAINTENANCE'" [class.slot-card--locked]="slot.status === 'LOCKED' || slot.status === 'BOOKED'">
-                        <div><strong>{{ timeValue(slot.startTime) }} – {{ timeValue(slot.endTime) }}</strong><span>{{ formatMoney(slot.pricePerHour) }}/giờ</span></div>
-                        <span class="status" [attr.data-status]="slot.status">{{ slot.status === 'AVAILABLE' ? 'Khả dụng' : slot.status === 'MAINTENANCE' ? 'Bảo trì' : slot.status === 'LOCKED' ? 'Đang giữ' : 'Đã đặt' }}</span>
-                        <div class="slot-actions">
-                          <button type="button" (click)="toggleMaintenance(slot)" [disabled]="!!mutatingSlotId() || slot.status === 'LOCKED' || slot.status === 'BOOKED'" [attr.aria-label]="slot.status === 'MAINTENANCE' ? 'Mở lại slot' : 'Đặt slot bảo trì'"><lucide-icon [name]="slot.status === 'MAINTENANCE' ? 'rotate-ccw' : 'shield-off'" /></button>
-                          <button type="button" class="danger" (click)="deleteSlot(slot)" [disabled]="!!mutatingSlotId() || slot.status === 'LOCKED' || slot.status === 'BOOKED'" aria-label="Xóa slot"><lucide-icon name="trash-2" /></button>
-                        </div>
-                      </div>
-                    }
-                  </div>
-                </article>
-              }
-            </div>
-          }
-        </section>
+          </section>
+        }
       }
     }
+  </section>
+
+  @if (ruleEditorOpen() && selectedCourt()) {
+    <aside class="rule-editor" aria-labelledby="rule-editor-title">
+      <header>
+        <h2 id="rule-editor-title">{{ editingRule() ? 'Chỉnh sửa quy tắc giá' : 'Thêm quy tắc giá' }}</h2>
+        <button type="button" (click)="closeRuleEditor()" [disabled]="savingRule()" aria-label="Đóng">
+          <lucide-icon name="x" />
+        </button>
+      </header>
+
+      <form [formGroup]="ruleForm" (ngSubmit)="saveRule()">
+        <section class="editor-section">
+          <h3>Thông tin cơ bản</h3>
+          <label>
+            <span>Ngày trong tuần</span>
+            <select formControlName="dayOfWeek">
+              @for (day of days; track day.value) { <option [value]="day.value">{{ day.label }}</option> }
+            </select>
+          </label>
+        </section>
+
+        <section class="editor-section">
+          <h3>Thời gian áp dụng</h3>
+          <div class="day-toggle-list" aria-label="Ngày áp dụng">
+            @for (day of days; track day.value) {
+              <button type="button" [class.active]="ruleForm.controls.dayOfWeek.value === day.value"
+                (click)="ruleForm.controls.dayOfWeek.setValue(day.value)">
+                {{ day.label === 'Chủ Nhật' ? 'CN' : 'T' + ($index + 2) }}
+              </button>
+            }
+          </div>
+          <div class="time-range-row">
+            <label><span>Khung giờ</span><input type="time" formControlName="startTime" /></label>
+            <i>–</i>
+            <label><span>&nbsp;</span><input type="time" formControlName="endTime" /></label>
+          </div>
+        </section>
+
+        <section class="editor-section">
+          <h3>Giá</h3>
+          <label><span>Giá theo giờ (VNĐ)</span><input type="number" min="1" step="1000" formControlName="pricePerHour" /></label>
+          <label><span>Giá cơ sở (VNĐ)</span><input type="number" min="1" step="1000" formControlName="basePricePerHour" /></label>
+        </section>
+
+        <section class="editor-section">
+          <h3>Thời gian hiệu lực</h3>
+          <div class="editor-date-row">
+            <label><span>Từ ngày</span><input type="date" formControlName="effectiveFrom" /></label>
+            <label><span>Đến ngày</span><input type="date" formControlName="effectiveTo" /></label>
+          </div>
+          <p class="editor-note"><lucide-icon name="info" /> Giá của slot đã sinh là snapshot và không đổi khi sửa quy tắc sau này.</p>
+        </section>
+
+        <footer class="editor-actions">
+          <button type="submit" class="primary-button" [disabled]="savingRule() || ruleForm.invalid">
+            <span [class.spinner-small]="savingRule()"></span>{{ savingRule() ? 'Đang lưu…' : 'Lưu quy tắc' }}
+          </button>
+          <button type="button" class="secondary-button" (click)="closeRuleEditor()" [disabled]="savingRule()">Hủy</button>
+        </footer>
+      </form>
+    </aside>
   }
 </main>

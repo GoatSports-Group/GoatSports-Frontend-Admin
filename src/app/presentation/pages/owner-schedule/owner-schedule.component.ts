@@ -23,6 +23,14 @@ import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-lo
 
 interface DayOption { value: ScheduleDayOfWeek; label: string; }
 interface SlotGroup { date: string; slots: OwnerTimeSlot[]; }
+interface CalendarDay {
+  date: string;
+  weekday: string;
+  dateLabel: string;
+  weekend: boolean;
+  today: boolean;
+  slots: OwnerTimeSlot[];
+}
 
 @Component({
   selector: 'app-owner-schedule',
@@ -33,6 +41,7 @@ interface SlotGroup { date: string; slots: OwnerTimeSlot[]; }
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OwnerScheduleComponent {
+  readonly calendarRowHeight = 72;
   private readonly formBuilder = inject(FormBuilder);
   private readonly getVenues = inject(GetMyOwnerVenuesUseCase);
   private readonly manageCourts = inject(ManageOwnerVenueCourtsUseCase);
@@ -60,7 +69,7 @@ export class OwnerScheduleComponent {
   readonly slotStatusFilter = signal<'ALL' | OwnerTimeSlotStatus>(
     this.isSlotStatus(this.requestedSlotStatus) ? this.requestedSlotStatus : 'ALL'
   );
-  readonly activeTab = signal<'pricing' | 'calendar'>('pricing');
+  readonly activeTab = signal<'pricing' | 'calendar'>('calendar');
   readonly loadingContext = signal(true);
   readonly loadingData = signal(false);
   readonly loadError = signal<string | null>(null);
@@ -70,6 +79,7 @@ export class OwnerScheduleComponent {
   readonly deletingRuleId = signal<string | null>(null);
   readonly generating = signal(false);
   readonly mutatingSlotId = signal<string | null>(null);
+  readonly calendarWeekStart = signal(this.startOfWeek(new Date()));
 
   readonly selectedVenue = computed(() =>
     this.venues().find(venue => venue.venueId === this.selectedVenueId()) ?? null
@@ -88,6 +98,39 @@ export class OwnerScheduleComponent {
     }
     return [...grouped.entries()].map(([date, slots]) => ({ date, slots }));
   });
+  readonly calendarWeekEnd = computed(() => this.offsetDate(this.calendarWeekStart(), 6));
+  readonly calendarRangeLabel = computed(() =>
+    `${this.shortDate(this.calendarWeekStart(), true)} – ${this.shortDate(this.calendarWeekEnd(), true)}`
+  );
+  readonly calendarDays = computed<CalendarDay[]>(() => {
+    const today = this.today();
+    const slots = this.filteredSlots();
+    return Array.from({ length: 7 }, (_, index) => {
+      const date = this.offsetDate(this.calendarWeekStart(), index);
+      return {
+        date,
+        weekday: index === 6 ? 'Chủ nhật' : `Thứ ${index + 2}`,
+        dateLabel: this.shortDate(date),
+        weekend: index >= 5,
+        today: date === today,
+        slots: slots.filter(slot => slot.date === date)
+      };
+    });
+  });
+  readonly calendarStartMinutes = computed(() => this.hourBoundary(this.selectedVenue()?.openTime, 6, 'floor'));
+  readonly calendarEndMinutes = computed(() => {
+    const start = this.calendarStartMinutes();
+    return Math.max(start + 60, this.hourBoundary(this.selectedVenue()?.closeTime, 23, 'ceil'));
+  });
+  readonly calendarHours = computed(() => {
+    const startHour = Math.floor(this.calendarStartMinutes() / 60);
+    const endHour = Math.ceil(this.calendarEndMinutes() / 60);
+    return Array.from({ length: endHour - startHour + 1 }, (_, index) => startHour + index);
+  });
+  readonly calendarGridHeight = computed(() =>
+    Math.max(380, ((this.calendarEndMinutes() - this.calendarStartMinutes()) / 60) * this.calendarRowHeight)
+  );
+  readonly summaryRules = computed(() => this.rules().slice(0, 3));
 
   readonly ruleForm = this.formBuilder.nonNullable.group({
     dayOfWeek: this.formBuilder.nonNullable.control<ScheduleDayOfWeek>('MONDAY', Validators.required),
@@ -99,13 +142,13 @@ export class OwnerScheduleComponent {
     effectiveTo: [this.addDays(30), Validators.required]
   });
   readonly generationForm = this.formBuilder.nonNullable.group({
-    fromDate: [this.today(), Validators.required],
-    toDate: [this.addDays(6), Validators.required],
+    fromDate: [this.calendarWeekStart(), Validators.required],
+    toDate: [this.calendarWeekEnd(), Validators.required],
     slotDurationMinutes: [60, [Validators.required, Validators.min(30), Validators.max(240)]]
   });
 
   constructor() {
-    if (this.requestedTab === 'calendar') this.activeTab.set('calendar');
+    if (this.requestedTab === 'pricing') this.activeTab.set('pricing');
     this.loadContext();
   }
 
@@ -309,8 +352,48 @@ export class OwnerScheduleComponent {
 
   dayLabel(day: ScheduleDayOfWeek): string { return this.days.find(item => item.value === day)?.label ?? day; }
   formatMoney(value: number): string { return new Intl.NumberFormat('vi-VN').format(value) + ' ₫'; }
+  compactMoney(value: number): string { return new Intl.NumberFormat('vi-VN').format(value) + 'đ'; }
   formatDate(value: string): string { return new Intl.DateTimeFormat('vi-VN', { dateStyle: 'full' }).format(new Date(`${value}T00:00:00`)); }
   timeValue(value: string): string { return value.slice(0, 5); }
+
+  slotTop(slot: OwnerTimeSlot): number {
+    const offset = Math.max(0, this.timeToMinutes(slot.startTime) - this.calendarStartMinutes());
+    return (offset / 60) * this.calendarRowHeight;
+  }
+
+  slotHeight(slot: OwnerTimeSlot): number {
+    const duration = Math.max(30, this.timeToMinutes(slot.endTime) - this.timeToMinutes(slot.startTime));
+    return Math.max(34, (duration / 60) * this.calendarRowHeight - 4);
+  }
+
+  slotStatusLabel(status: OwnerTimeSlotStatus): string {
+    const labels: Record<OwnerTimeSlotStatus, string> = {
+      AVAILABLE: 'Còn trống',
+      LOCKED: 'Giữ chỗ',
+      BOOKED: 'Đã đặt',
+      MAINTENANCE: 'Bảo trì'
+    };
+    return labels[status];
+  }
+
+  rulePeriodLabel(rule: CourtPricingRule): string {
+    if (rule.dayOfWeek === 'SATURDAY' || rule.dayOfWeek === 'SUNDAY') return 'Cuối tuần & Lễ';
+    return this.timeToMinutes(rule.startTime) >= 17 * 60 ? 'Giờ cao điểm' : 'Giờ thường';
+  }
+
+  ruleSummaryIcon(rule: CourtPricingRule): string {
+    if (rule.dayOfWeek === 'SATURDAY' || rule.dayOfWeek === 'SUNDAY') return 'calendar';
+    return this.timeToMinutes(rule.startTime) >= 17 * 60 ? 'clock' : 'sun';
+  }
+
+  previousWeek(): void { this.moveWeek(-7); }
+  nextWeek(): void { this.moveWeek(7); }
+  goToCurrentWeek(): void { this.setCalendarWeek(this.startOfWeek(new Date())); }
+
+  changeCalendarDate(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    if (value) this.setCalendarWeek(this.startOfWeek(new Date(`${value}T12:00:00`)));
+  }
 
   selectSlotStatus(value: string): void {
     this.slotStatusFilter.set(this.isSlotStatus(value) ? value : 'ALL');
@@ -324,6 +407,48 @@ export class OwnerScheduleComponent {
 
   private isSlotStatus(value: string): value is OwnerTimeSlotStatus {
     return ['AVAILABLE', 'LOCKED', 'BOOKED', 'MAINTENANCE'].includes(value);
+  }
+
+  private moveWeek(days: number): void {
+    this.setCalendarWeek(this.offsetDate(this.calendarWeekStart(), days));
+  }
+
+  private setCalendarWeek(start: string): void {
+    if (this.loadingData() || this.generating()) return;
+    this.calendarWeekStart.set(start);
+    this.generationForm.patchValue({ fromDate: start, toDate: this.offsetDate(start, 6) });
+    this.loadSchedule();
+  }
+
+  private startOfWeek(date: Date): string {
+    const normalized = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const day = normalized.getDay();
+    normalized.setDate(normalized.getDate() - (day === 0 ? 6 : day - 1));
+    return this.localDate(normalized);
+  }
+
+  private offsetDate(value: string, days: number): string {
+    const date = new Date(`${value}T12:00:00`);
+    date.setDate(date.getDate() + days);
+    return this.localDate(date);
+  }
+
+  private shortDate(value: string, includeYear = false): string {
+    const date = new Date(`${value}T12:00:00`);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return includeYear ? `${day}/${month}/${date.getFullYear()}` : `${day}/${month}`;
+  }
+
+  private hourBoundary(value: string | undefined, fallbackHour: number, mode: 'floor' | 'ceil'): number {
+    if (!value) return fallbackHour * 60;
+    const minutes = this.timeToMinutes(value);
+    return (mode === 'floor' ? Math.floor(minutes / 60) : Math.ceil(minutes / 60)) * 60;
+  }
+
+  private timeToMinutes(value: string): number {
+    const [hour = 0, minute = 0] = value.split(':').map(Number);
+    return hour * 60 + minute;
   }
 
   private today(): string { return this.localDate(new Date()); }
