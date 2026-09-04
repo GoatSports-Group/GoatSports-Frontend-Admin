@@ -59,10 +59,10 @@ export class ApiInterceptor implements HttpInterceptor {
   }
 
   private isAuthenticationFailure(error: HttpErrorResponse): boolean {
-    // Gateway trả 401 khi JWT hết hạn; một số downstream security filter hiện
-    // trả 403 khi request không còn authentication context. Request đã retry
-    // được đánh dấu bằng HttpContext nên 403 phân quyền thật không tạo vòng lặp.
-    return error.status === 401 || error.status === 403;
+    // 401 means the session credential is missing or expired and can be refreshed.
+    // A 403 is a real authorization failure; refreshing it would rotate tokens
+    // unnecessarily and still cannot grant a permission the user does not have.
+    return error.status === 401;
   }
 
   private isPublicAuthRequest(request: HttpRequest<unknown>): boolean {
