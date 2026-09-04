@@ -302,16 +302,6 @@
 
       <form [formGroup]="ruleForm" (ngSubmit)="saveRule()">
         <section class="editor-section">
-          <h3>Thông tin cơ bản</h3>
-          <label>
-            <span>Ngày trong tuần</span>
-            <select formControlName="dayOfWeek">
-              @for (day of days; track day.value) { <option [value]="day.value">{{ day.label }}</option> }
-            </select>
-          </label>
-        </section>
-
-        <section class="editor-section">
           <h3>Thời gian áp dụng</h3>
           <div class="day-toggle-list" aria-label="Ngày áp dụng">
             @for (day of days; track day.value) {
