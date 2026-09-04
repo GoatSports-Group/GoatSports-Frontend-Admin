@@ -26,6 +26,7 @@ import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-lo
 
 interface StatusOption { value: '' | OwnerBookingStatus; label: string; }
 interface TimelineEntry { label: string; detail: string; time?: string; state: string; }
+type PaymentFilter = '' | 'PAID' | 'UNPAID' | 'FAILED';
 
 @Component({
   selector: 'app-owner-bookings',
@@ -60,6 +61,12 @@ export class OwnerBookingsComponent {
     { value: 'REFUNDED', label: 'Đã hoàn tiền' },
     { value: 'EXPIRED', label: 'Hết hạn' }
   ];
+  readonly paymentStatuses: readonly { value: PaymentFilter; label: string }[] = [
+    { value: '', label: 'Tất cả thanh toán' },
+    { value: 'PAID', label: 'Đã thanh toán' },
+    { value: 'UNPAID', label: 'Chưa thanh toán' },
+    { value: 'FAILED', label: 'Thanh toán thất bại' }
+  ];
   readonly venues = signal<OwnerVenueOverview[]>([]);
   readonly courts = signal<OwnerVenueCourt[]>([]);
   readonly bookings = signal<OwnerBooking[]>([]);
@@ -89,7 +96,7 @@ export class OwnerBookingsComponent {
 
   readonly filterForm = this.formBuilder.nonNullable.group({
     venueId: [''], venueCourtId: [''], status: ['' as '' | OwnerBookingStatus],
-    query: [''], fromDate: [''], toDate: ['']
+    paymentStatus: ['' as PaymentFilter], query: [''], fromDate: [''], toDate: ['']
   });
   readonly createForm = this.formBuilder.nonNullable.group({
     venueId: ['', Validators.required],
@@ -103,6 +110,10 @@ export class OwnerBookingsComponent {
     this.createForm.controls.timeSlotId.valueChanges,
     { initialValue: this.createForm.controls.timeSlotId.value }
   );
+  readonly paymentFilter = toSignal(
+    this.filterForm.controls.paymentStatus.valueChanges,
+    { initialValue: this.filterForm.controls.paymentStatus.value }
+  );
   readonly currentTimestamp = toSignal(
     timer(0, 30_000).pipe(map(() => Date.now())),
     { initialValue: Date.now() }
@@ -110,6 +121,18 @@ export class OwnerBookingsComponent {
   readonly selectedVenue = computed(() =>
     this.venues().find(venue => venue.venueId === this.filterForm.controls.venueId.value) ?? null
   );
+  readonly displayedBookings = computed(() => {
+    const paymentStatus = this.paymentFilter();
+    if (!paymentStatus) return this.bookings();
+
+    return this.bookings().filter(booking => {
+      if (paymentStatus === 'PAID') return this.isPaid(booking);
+      if (paymentStatus === 'FAILED') {
+        return booking.payments.some(payment => ['FAILED', 'EXPIRED', 'CANCELLED'].includes(payment.status));
+      }
+      return !this.isPaid(booking);
+    });
+  });
   readonly availableCreateSlots = computed(() =>
     this.createSlots().filter(slot =>
       slot.status === 'AVAILABLE' && this.slotEndTimestamp(slot) > this.currentTimestamp()
@@ -361,8 +384,42 @@ export class OwnerBookingsComponent {
 
   clearFilters(): void {
     const venueId = this.filterForm.controls.venueId.value;
-    this.filterForm.reset({ venueId, venueCourtId: '', status: '', query: '', fromDate: '', toDate: '' });
+    this.filterForm.reset({
+      venueId, venueCourtId: '', status: '', paymentStatus: '', query: '', fromDate: '', toDate: ''
+    });
     this.loadBookings(0);
+  }
+
+  exportBookings(): void {
+    const rows = this.displayedBookings();
+    if (!rows.length) return;
+
+    const csvRows = [
+      ['Mã đơn', 'Khách hàng', 'Số điện thoại', 'Cơ sở', 'Sân', 'Ngày chơi', 'Khung giờ', 'Tổng tiền', 'Thanh toán', 'Trạng thái'],
+      ...rows.map(booking => [
+        booking.bookingCode,
+        this.customerName(booking),
+        this.customerPhone(booking),
+        booking.venueName,
+        booking.courtName,
+        booking.playDate,
+        `${this.timeValue(booking.startTime)} - ${this.timeValue(booking.endTime)}`,
+        booking.totalPrice,
+        this.paymentLabel(this.paymentFor(booking, 'BOOKING_REMAINING')),
+        this.statusLabel(booking.status)
+      ])
+    ];
+    const csv = `\uFEFF${csvRows.map(row => row.map(value => this.csvCell(value)).join(',')).join('\r\n')}`;
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `don-dat-san-${this.today()}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
+  printBooking(): void {
+    window.print();
   }
 
   loadBookings(page = this.page()): void {
@@ -378,6 +435,11 @@ export class OwnerBookingsComponent {
       next: result => {
         this.bookings.set(result.items); this.total.set(result.total);
         this.page.set(result.page); this.pages.set(result.pages);
+        const currentId = this.selectedBooking()?.bookingId ?? this.requestedBookingId();
+        const preferredId = result.items.some(item => item.bookingId === currentId)
+          ? currentId
+          : result.items[0]?.bookingId;
+        if (preferredId && preferredId !== this.selectedBooking()?.bookingId) this.openDetail(preferredId);
       },
       error: error => {
         this.bookings.set([]); this.total.set(0); this.pages.set(0);
@@ -425,11 +487,26 @@ export class OwnerBookingsComponent {
   statusLabel(status: string): string {
     return this.statuses.find(item => item.value === status)?.label ?? status;
   }
+  customerName(booking: OwnerBooking): string {
+    return booking.walkInCustomerName?.trim() || `Khách #${this.shortId(booking.playerId)}`;
+  }
+  customerPhone(booking: OwnerBooking): string {
+    return booking.walkInCustomerPhone?.trim() || '—';
+  }
+  sourceLabel(source: OwnerBooking['source']): string {
+    return source === 'WALK_IN' ? 'Khách tại quầy' : source === 'DIRECT' ? 'Đặt trực tuyến' : 'Ghép trận';
+  }
+  paymentLabel(payment?: OwnerPayment): string {
+    if (!payment) return 'Chưa thanh toán';
+    if (payment.status === 'SUCCEEDED') return 'Đã thanh toán';
+    if (['FAILED', 'EXPIRED', 'CANCELLED'].includes(payment.status)) return 'Thất bại';
+    return 'Chờ thanh toán';
+  }
   paymentFor(booking: OwnerBooking, purpose: OwnerPayment['purpose']): OwnerPayment | undefined {
     return booking.payments.find(payment => payment.purpose === purpose);
   }
   formatMoney(value: number): string {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+    return `${new Intl.NumberFormat('vi-VN').format(value)}đ`;
   }
   formatDate(value: string): string {
     return new Intl.DateTimeFormat('vi-VN', { dateStyle: 'medium' }).format(new Date(`${value}T00:00:00`));
@@ -481,6 +558,10 @@ export class OwnerBookingsComponent {
       fromDate: value.fromDate || undefined, toDate: value.toDate || undefined,
       page, size: 12
     };
+  }
+
+  private csvCell(value: string | number): string {
+    return `"${String(value).replace(/"/g, '""')}"`;
   }
 
   private errorMessage(error: any, fallback: string): string {

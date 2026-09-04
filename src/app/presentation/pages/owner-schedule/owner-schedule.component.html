@@ -286,7 +286,7 @@
             <span>Chọn tất cả đang hiển thị</span>
           </label>
           }
-          <p>Đã chọn {{ selectedGenerationRuleIds().length }}/{{ applicableRules().length }} quy tắc phù hợp.</p>
+          <p>Đã chọn {{ selectedGenerationRuleIds().length }}/{{ applicableRules().length }} quy tắc còn hiệu lực trong khoảng.</p>
         </div>
       </header>
 
@@ -298,7 +298,7 @@
       } @else if (!applicableRuleGroups().length) {
       <div class="inline-empty">
         <lucide-icon name="calendar-x" /><strong>Không có quy tắc phù hợp</strong>
-        <p>Không có ngày áp dụng nào của quy tắc giá nằm trong khoảng ngày đã chọn.</p>
+        <p>Không có quy tắc giá nào có thời gian hiệu lực giao với khoảng ngày đã chọn.</p>
       </div>
       } @else {
       <div class="rule-groups">

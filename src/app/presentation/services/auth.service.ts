@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable, finalize, shareReplay, tap } from 'rxjs';
 import { User } from '@application/dto/user/user.dto';
 import { SessionStateService } from '@presentation/services/session-state.service';
 import { LogoutUseCase } from '@application/usecase/auth/logout.usecase';
@@ -18,6 +18,7 @@ export class AuthService {
   private getCurrentUserUseCase = inject(GetCurrentUserUseCase);
 
   private isLoggingOut = false;
+  private refreshRequest$: Observable<User> | null = null;
 
   public currentUser$ = this.sessionStateService.currentUser$;
   public isAuthenticated$ = this.sessionStateService.isAuthenticated$;
@@ -37,15 +38,25 @@ export class AuthService {
   }
 
   refresh(): Observable<User> {
-    return this.refreshTokenUseCase.execute().pipe(
+    if (this.refreshRequest$) return this.refreshRequest$;
+
+    let request$: Observable<User>;
+    request$ = this.refreshTokenUseCase.execute().pipe(
       tap({
         next: response => {
           const userProfile = response;
           this.sessionStateService.setCurrentUser(userProfile);
         },
         error: () => { }
-      })
+      }),
+      finalize(() => {
+        if (this.refreshRequest$ === request$) this.refreshRequest$ = null;
+      }),
+      shareReplay({ bufferSize: 1, refCount: false })
     );
+
+    this.refreshRequest$ = request$;
+    return request$;
   }
 
   getCurrentUser(): Observable<User> {

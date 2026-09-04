@@ -277,7 +277,7 @@ export class OwnerScheduleComponent {
   readonly applicableRules = computed(() => {
     const { fromDate, toDate } = this.generationRange();
     if (!fromDate || !toDate || fromDate > toDate) return [];
-    return this.sortRules(this.rules().filter(rule => this.ruleAppliesWithinRange(rule, fromDate, toDate)));
+    return this.sortRules(this.rules().filter(rule => this.ruleEffectiveRangeOverlaps(rule, fromDate, toDate)));
   });
   readonly applicableRuleGroups = computed<PricingRuleGroup[]>(() => {
     const rules = this.applicableRules();
@@ -726,11 +726,15 @@ export class OwnerScheduleComponent {
   }
 
   private ruleAppliesWithinRange(rule: CourtPricingRule, fromDate: string, toDate: string): boolean {
+    if (!this.ruleEffectiveRangeOverlaps(rule, fromDate, toDate)) return false;
+
     const overlapStart = rule.effectiveFrom > fromDate ? rule.effectiveFrom : fromDate;
     const overlapEnd = rule.effectiveTo < toDate ? rule.effectiveTo : toDate;
-    if (overlapStart > overlapEnd) return false;
-
     return this.dayOccursWithinRange(rule.dayOfWeek, overlapStart, overlapEnd);
+  }
+
+  private ruleEffectiveRangeOverlaps(rule: CourtPricingRule, fromDate: string, toDate: string): boolean {
+    return rule.effectiveFrom <= toDate && rule.effectiveTo >= fromDate;
   }
 
   private dayOccursWithinRange(day: ScheduleDayOfWeek, fromDate: string, toDate: string): boolean {
