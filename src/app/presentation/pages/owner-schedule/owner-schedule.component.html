@@ -422,10 +422,10 @@
                 formControlName="effectiveTo" /></label>
           </div>
           <div class="rule-time-notice"
-            [class.rule-time-notice--error]="ruleForm.hasError('pastEffectiveStart') || ruleForm.hasError('dayOutsideEffectiveRange')"
-            [attr.role]="ruleForm.hasError('pastEffectiveStart') || ruleForm.hasError('dayOutsideEffectiveRange') ? 'alert' : 'note'">
+            [class.rule-time-notice--error]="ruleForm.hasError('pastEffectiveStart') || ruleForm.hasError('dayOutsideEffectiveRange') || ruleForm.hasError('pricingRuleOverlap')"
+            [attr.role]="ruleForm.hasError('pastEffectiveStart') || ruleForm.hasError('dayOutsideEffectiveRange') || ruleForm.hasError('pricingRuleOverlap') ? 'alert' : 'note'">
             <lucide-icon
-              [name]="ruleForm.hasError('pastEffectiveStart') || ruleForm.hasError('dayOutsideEffectiveRange') ? 'circle-alert' : 'info'" />
+              [name]="ruleForm.hasError('pastEffectiveStart') || ruleForm.hasError('dayOutsideEffectiveRange') || ruleForm.hasError('pricingRuleOverlap') ? 'circle-alert' : 'info'" />
             <div>
               @if (ruleForm.hasError('pastEffectiveStart')) {
               <strong>Không thể lưu mốc thời gian này</strong>
@@ -433,6 +433,9 @@
               } @else if (ruleForm.hasError('dayOutsideEffectiveRange')) {
               <strong>Thứ đã chọn nằm ngoài khoảng hiệu lực</strong>
               <span>Khoảng Từ ngày – Đến ngày phải chứa ít nhất một ngày tương ứng với mỗi thứ đã chọn.</span>
+              } @else if (ruleForm.hasError('pricingRuleOverlap')) {
+              <strong>Quy tắc giá bị trùng lịch</strong>
+              <span>Đang chồng lấn với quy tắc {{ ruleOverlapMessage() }} Hãy đổi khung giờ hoặc khoảng hiệu lực.</span>
               } @else {
               <strong>Chỉ áp dụng từ thời điểm hiện tại</strong>
               <span>Nếu chọn hôm nay, giờ bắt đầu không được sớm hơn giờ hiện tại.</span>

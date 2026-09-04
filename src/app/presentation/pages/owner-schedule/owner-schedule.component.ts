@@ -33,6 +33,13 @@ import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-lo
 
 interface DayOption { value: ScheduleDayOfWeek; label: string; }
 interface PricingRuleGroup extends DayOption { rules: CourtPricingRule[]; }
+interface PricingRuleConflict {
+  dayOfWeek: ScheduleDayOfWeek;
+  startTime: string;
+  endTime: string;
+  effectiveFrom: string;
+  effectiveTo: string;
+}
 interface PricingRuleStatistic {
   key: 'minimum' | 'average' | 'maximum';
   label: string;
@@ -262,7 +269,8 @@ export class OwnerScheduleComponent {
   }, {
     validators: [
       (control: AbstractControl) => this.validateRuleStartMoment(control),
-      (control: AbstractControl) => this.validateRuleEffectiveDays(control)
+      (control: AbstractControl) => this.validateRuleEffectiveDays(control),
+      (control: AbstractControl) => this.validateRuleOverlap(control)
     ]
   });
   readonly generationForm = this.formBuilder.nonNullable.group({
@@ -566,6 +574,12 @@ export class OwnerScheduleComponent {
   }
 
   dayLabel(day: ScheduleDayOfWeek): string { return this.days.find(item => item.value === day)?.label ?? day; }
+  ruleOverlapMessage(): string {
+    const conflict = this.ruleForm.getError('pricingRuleOverlap') as PricingRuleConflict | undefined;
+    if (!conflict) return '';
+    return `${this.dayLabel(conflict.dayOfWeek)} ${this.timeValue(conflict.startTime)}–${this.timeValue(conflict.endTime)}, hiệu lực ${conflict.effectiveFrom}–${conflict.effectiveTo}.`;
+  }
+
   shortDayLabel(day: ScheduleDayOfWeek): string {
     const index = this.days.findIndex(item => item.value === day);
     return day === 'SUNDAY' ? 'CN' : index >= 0 ? `T${index + 2}` : day;
@@ -877,6 +891,42 @@ export class OwnerScheduleComponent {
     const invalidDays = this.selectedRuleDays()
       .filter(day => !this.dayOccursWithinRange(day, effectiveFrom, effectiveTo));
     return invalidDays.length ? { dayOutsideEffectiveRange: invalidDays } : null;
+  }
+
+  private validateRuleOverlap(control: AbstractControl): ValidationErrors | null {
+    const value = control.value as {
+      startTime?: string;
+      endTime?: string;
+      effectiveFrom?: string;
+      effectiveTo?: string;
+    } | null;
+    const startTime = value?.startTime;
+    const endTime = value?.endTime;
+    const effectiveFrom = value?.effectiveFrom;
+    const effectiveTo = value?.effectiveTo;
+    if (!startTime || !endTime || !effectiveFrom || !effectiveTo
+      || startTime >= endTime || effectiveFrom > effectiveTo) return null;
+
+    const editingRuleId = this.editingRule()?.pricingRuleId;
+    const candidateStart = this.timeValue(startTime);
+    const candidateEnd = this.timeValue(endTime);
+    const conflict = this.rules().find(rule =>
+      rule.pricingRuleId !== editingRuleId
+      && this.selectedRuleDays().includes(rule.dayOfWeek)
+      && effectiveFrom <= rule.effectiveTo
+      && effectiveTo >= rule.effectiveFrom
+      && candidateStart < this.timeValue(rule.endTime)
+      && candidateEnd > this.timeValue(rule.startTime));
+
+    return conflict ? {
+      pricingRuleOverlap: {
+        dayOfWeek: conflict.dayOfWeek,
+        startTime: conflict.startTime,
+        endTime: conflict.endTime,
+        effectiveFrom: conflict.effectiveFrom,
+        effectiveTo: conflict.effectiveTo
+      } satisfies PricingRuleConflict
+    } : null;
   }
 
   private startOfWeek(date: Date): string {
