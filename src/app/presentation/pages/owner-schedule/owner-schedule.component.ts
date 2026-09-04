@@ -2,9 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
-  ElementRef,
   HostListener,
-  ViewChild,
   computed,
   inject,
   signal
@@ -43,6 +41,13 @@ interface CalendarDay {
   today: boolean;
   slots: OwnerTimeSlot[];
 }
+interface CalendarPickerDay {
+  date: string;
+  day: number;
+  inCurrentMonth: boolean;
+  inSelectedWeek: boolean;
+  today: boolean;
+}
 
 type CalendarSlotVisualStatus =
   | 'AVAILABLE'
@@ -63,8 +68,6 @@ type CalendarSlotVisualStatus =
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OwnerScheduleComponent {
-  @ViewChild('calendarDateInput') private calendarDateInput?: ElementRef<HTMLInputElement>;
-
   readonly calendarRowHeight = 72;
   private readonly formBuilder = inject(FormBuilder);
   private readonly getVenues = inject(GetMyOwnerVenuesUseCase);
@@ -106,6 +109,8 @@ export class OwnerScheduleComponent {
   readonly generating = signal(false);
   readonly mutatingSlotId = signal<string | null>(null);
   readonly calendarWeekStart = signal(this.startOfWeek(new Date()));
+  readonly calendarPickerOpen = signal(false);
+  readonly calendarPickerMonth = signal(this.monthStart(this.calendarWeekStart()));
 
   readonly selectedVenue = computed(() =>
     this.venues().find(venue => venue.venueId === this.selectedVenueId()) ?? null
@@ -128,6 +133,34 @@ export class OwnerScheduleComponent {
   readonly calendarRangeLabel = computed(() =>
     `${this.shortDate(this.calendarWeekStart(), true)} – ${this.shortDate(this.calendarWeekEnd(), true)}`
   );
+  readonly calendarPickerMonthLabel = computed(() => {
+    const label = new Intl.DateTimeFormat('vi-VN', { month: 'long', year: 'numeric' })
+      .format(new Date(`${this.calendarPickerMonth()}T12:00:00`));
+    return label.charAt(0).toUpperCase() + label.slice(1);
+  });
+  readonly calendarPickerDays = computed<CalendarPickerDay[]>(() => {
+    const monthStart = new Date(`${this.calendarPickerMonth()}T12:00:00`);
+    const mondayOffset = (monthStart.getDay() + 6) % 7;
+    const gridStart = new Date(monthStart);
+    gridStart.setDate(gridStart.getDate() - mondayOffset);
+    const month = monthStart.getMonth();
+    const selectedStart = this.calendarWeekStart();
+    const selectedEnd = this.calendarWeekEnd();
+    const today = this.today();
+
+    return Array.from({ length: 42 }, (_, index) => {
+      const value = new Date(gridStart);
+      value.setDate(gridStart.getDate() + index);
+      const date = this.localDate(value);
+      return {
+        date,
+        day: value.getDate(),
+        inCurrentMonth: value.getMonth() === month,
+        inSelectedWeek: date >= selectedStart && date <= selectedEnd,
+        today: date === today
+      };
+    });
+  });
   readonly calendarDays = computed<CalendarDay[]>(() => {
     const today = this.today();
     const slots = this.filteredSlots();
@@ -288,7 +321,13 @@ export class OwnerScheduleComponent {
 
   @HostListener('document:keydown.escape')
   closeRuleEditorWithEscape(): void {
+    this.calendarPickerOpen.set(false);
     if (this.ruleEditorOpen()) this.closeRuleEditor();
+  }
+
+  @HostListener('document:click')
+  closeCalendarPickerOnOutsideClick(): void {
+    this.calendarPickerOpen.set(false);
   }
 
   saveRule(): void {
@@ -458,24 +497,30 @@ export class OwnerScheduleComponent {
   nextWeek(): void { this.moveWeek(7); }
   goToCurrentWeek(): void { this.setCalendarWeek(this.startOfWeek(new Date())); }
 
-  changeCalendarDate(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
-    if (value) this.setCalendarWeek(this.startOfWeek(new Date(`${value}T12:00:00`)));
-  }
-
   openCalendarDatePicker(event: Event): void {
     event.preventDefault();
+    event.stopPropagation();
     if (this.loadingData() || this.generating()) return;
-    const input = this.calendarDateInput?.nativeElement;
-    if (!input) return;
+    const opening = !this.calendarPickerOpen();
+    if (opening) this.calendarPickerMonth.set(this.monthStart(this.calendarWeekStart()));
+    this.calendarPickerOpen.set(opening);
+  }
 
-    input.focus({ preventScroll: true });
-    try {
-      if (typeof input.showPicker === 'function') input.showPicker();
-      else input.click();
-    } catch {
-      input.click();
-    }
+  moveCalendarPickerMonth(offset: number, event: Event): void {
+    event.stopPropagation();
+    const current = new Date(`${this.calendarPickerMonth()}T12:00:00`);
+    current.setMonth(current.getMonth() + offset, 1);
+    this.calendarPickerMonth.set(this.localDate(current));
+  }
+
+  selectCalendarPickerDate(date: string, event: Event): void {
+    event.stopPropagation();
+    this.calendarPickerOpen.set(false);
+    this.setCalendarWeek(this.startOfWeek(new Date(`${date}T12:00:00`)));
+  }
+
+  selectCurrentCalendarWeek(event: Event): void {
+    this.selectCalendarPickerDate(this.today(), event);
   }
 
   selectSlotStatus(value: string): void {
@@ -544,6 +589,11 @@ export class OwnerScheduleComponent {
     const day = normalized.getDay();
     normalized.setDate(normalized.getDate() - (day === 0 ? 6 : day - 1));
     return this.localDate(normalized);
+  }
+
+  private monthStart(value: string): string {
+    const date = new Date(`${value}T12:00:00`);
+    return this.localDate(new Date(date.getFullYear(), date.getMonth(), 1));
   }
 
   private offsetDate(value: string, days: number): string {

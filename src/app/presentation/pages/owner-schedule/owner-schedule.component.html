@@ -49,15 +49,44 @@
       </label>
 
       <div class="date-range-picker" role="button" tabindex="0" aria-label="Chọn tuần hiển thị"
-        [class.is-disabled]="loadingData() || generating()" (click)="openCalendarDatePicker($event)"
+        [class.is-disabled]="loadingData() || generating()" [class.is-open]="calendarPickerOpen()"
+        [attr.aria-expanded]="calendarPickerOpen()" (click)="openCalendarDatePicker($event)"
         (keydown.enter)="openCalendarDatePicker($event)" (keydown.space)="openCalendarDatePicker($event)">
         <span class="sr-only">Tuần hiển thị</span>
         <lucide-icon name="calendar" />
         <strong>{{ calendarRangeLabel() }}</strong>
-        <lucide-icon name="chevron-down" />
-        <input #calendarDateInput type="date" tabindex="-1" [value]="calendarWeekStart()"
-          (click)="$event.stopPropagation()" (change)="changeCalendarDate($event)"
-          [disabled]="loadingData() || generating()" />
+        <lucide-icon [name]="calendarPickerOpen() ? 'chevron-up' : 'chevron-down'" />
+
+        @if (calendarPickerOpen()) {
+        <section class="calendar-picker-popover" role="dialog" aria-label="Chọn ngày trong tuần"
+          (click)="$event.stopPropagation()">
+          <header>
+            <button type="button" (click)="moveCalendarPickerMonth(-1, $event)" aria-label="Tháng trước">
+              <lucide-icon name="chevron-left" />
+            </button>
+            <strong>{{ calendarPickerMonthLabel() }}</strong>
+            <button type="button" (click)="moveCalendarPickerMonth(1, $event)" aria-label="Tháng sau">
+              <lucide-icon name="chevron-right" />
+            </button>
+          </header>
+          <div class="calendar-picker-weekdays" aria-hidden="true">
+            <span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span>
+          </div>
+          <div class="calendar-picker-days">
+            @for (day of calendarPickerDays(); track day.date) {
+            <button type="button" [class.is-outside]="!day.inCurrentMonth"
+              [class.is-selected-week]="day.inSelectedWeek" [class.is-today]="day.today"
+              [attr.aria-label]="day.date" (click)="selectCalendarPickerDate(day.date, $event)">
+              {{ day.day }}
+            </button>
+            }
+          </div>
+          <footer>
+            <span>Chọn một ngày để xem cả tuần</span>
+            <button type="button" (click)="selectCurrentCalendarWeek($event)">Hôm nay</button>
+          </footer>
+        </section>
+        }
       </div>
 
       <div class="week-navigation" aria-label="Điều hướng tuần">
@@ -84,7 +113,7 @@
     } @else {
     <nav class="schedule-tabs" aria-label="Nội dung lịch và bảng giá">
       <button type="button" [class.active]="activeTab() === 'calendar'" (click)="activeTab.set('calendar')">
-        Lịch &amp; tình trạng
+        Lịch sân
       </button>
       <button type="button" [class.active]="activeTab() === 'pricing'" (click)="activeTab.set('pricing')">
         Quy tắc giá
