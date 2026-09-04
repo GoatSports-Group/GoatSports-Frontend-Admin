@@ -74,6 +74,7 @@ type OperationalStatus =
   | 'MAINTENANCE'
   | 'DISABLED';
 type OperationalFilter = 'ALL' | OperationalStatus;
+type BookingTimelineStatus = 'OCCUPIED' | 'AWAITING_CHECK_IN' | 'PAYMENT_DUE' | 'UPCOMING' | 'COMPLETED';
 type MaintenanceMode = 'START' | 'END';
 
 interface PointerOperationBase {
@@ -142,12 +143,13 @@ export class OwnerCourtManagementComponent implements OnDestroy {
     { value: 'MAINTENANCE', label: 'Bảo trì' },
     { value: 'DISABLED', label: 'Tạm ngưng' }
   ];
-  readonly legend: ReadonlyArray<{ value: OperationalStatus; label: string }> = [
+  readonly legend: ReadonlyArray<{ value: OperationalStatus | BookingTimelineStatus; label: string }> = [
     { value: 'AVAILABLE', label: 'Trống' },
     { value: 'AWAITING_CHECK_IN', label: 'Chưa check-in' },
     { value: 'OCCUPIED', label: 'Đang sử dụng' },
     { value: 'PAYMENT_DUE', label: 'Còn công nợ' },
     { value: 'UPCOMING', label: 'Sắp có lịch' },
+    { value: 'COMPLETED', label: 'Hoàn thành' },
     { value: 'MAINTENANCE', label: 'Bảo trì' },
     { value: 'DISABLED', label: 'Tạm ngưng' }
   ];
@@ -1501,19 +1503,20 @@ export class OwnerCourtManagementComponent implements OnDestroy {
     return booking.walkInCustomerName || booking.bookingCode;
   }
 
-  bookingTimelineStatus(booking: OwnerBooking): 'OCCUPIED' | 'AWAITING_CHECK_IN' | 'PAYMENT_DUE' | 'UPCOMING' | 'AVAILABLE' {
-    if (booking.status === 'CHECKED_IN' || booking.status === 'COMPLETED') {
+  bookingTimelineStatus(booking: OwnerBooking): BookingTimelineStatus {
+    if (booking.status === 'COMPLETED') {
+      return this.isBookingFullyPaid(booking) ? 'COMPLETED' : 'PAYMENT_DUE';
+    }
+
+    if (booking.status === 'CHECKED_IN') {
       if (!this.isBookingFullyPaid(booking)) return 'PAYMENT_DUE';
+      return this.bookingHasEnded(booking) ? 'COMPLETED' : 'OCCUPIED';
     }
-    if (this.detailCurrentBooking(booking.venueCourtId)?.bookingId === booking.bookingId) {
-      return booking.status === 'CHECKED_IN' ? 'OCCUPIED' : 'AWAITING_CHECK_IN';
-    }
+
     const selectedDate = this.selectedBookingDate();
-    if (selectedDate > this.todayIso()
-      || (selectedDate === this.todayIso() && this.timeMinutes(booking.startTime) > this.currentMinutes())) {
-      return 'UPCOMING';
-    }
-    return 'AVAILABLE';
+    const startsInFuture = selectedDate > this.todayIso()
+      || (selectedDate === this.todayIso() && this.timeMinutes(booking.startTime) > this.currentMinutes());
+    return startsInFuture ? 'UPCOMING' : 'AWAITING_CHECK_IN';
   }
 
   isBookingFullyPaid(booking: OwnerBooking): boolean {
@@ -1522,6 +1525,13 @@ export class OwnerCourtManagementComponent implements OnDestroy {
       .filter(payment => payment.purpose === 'BOOKING_REMAINING' && payment.status === 'SUCCEEDED')
       .reduce((total, payment) => total + payment.amount, 0);
     return paidRemaining + 0.01 >= booking.remainingAmount;
+  }
+
+  private bookingHasEnded(booking: OwnerBooking): boolean {
+    const selectedDate = this.selectedBookingDate();
+    const today = this.todayIso();
+    return selectedDate < today
+      || (selectedDate === today && this.timeMinutes(booking.endTime) <= this.currentMinutes());
   }
 
   bookingProgress(booking: OwnerBooking | null): number {

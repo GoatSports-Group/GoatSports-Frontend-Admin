@@ -526,7 +526,9 @@
         @for (booking of detailBookingsForCourt(court.venueCourtId); track booking.bookingId) {
         <article [attr.data-status]="bookingTimelineStatus(booking)"
           [class.is-current]="detailCurrentBooking(court.venueCourtId)?.bookingId === booking.bookingId">
-          <i></i><strong>{{ bookingRange(booking) }}</strong><span>{{ bookingCustomer(booking) }}</span>
+          <i></i>
+          <strong>{{ bookingRange(booking) }}</strong>
+          <span>{{ bookingCustomer(booking) }}</span>
         </article>
         } @empty { <p>Chưa có lịch đặt sân trong ngày.</p> }
       </section>

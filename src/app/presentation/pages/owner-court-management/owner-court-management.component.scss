@@ -621,6 +621,11 @@ select:disabled {
   background: #e68a18;
 }
 
+[data-status='COMPLETED']>i,
+.table-status[data-status='COMPLETED'] i {
+  background: #07825b;
+}
+
 [data-status='MAINTENANCE']>i,
 .table-status[data-status='MAINTENANCE'] i {
   background: #db443e;
@@ -2150,7 +2155,7 @@ select:disabled {
 
 .daily-bookings article {
   display: grid;
-  grid-template-columns: 7px minmax(0, 1fr) auto;
+  grid-template-columns: 7px minmax(72px, auto) minmax(0, 1fr);
   gap: 6px;
   align-items: center;
   min-height: 27px;
@@ -2184,17 +2189,29 @@ select:disabled {
   white-space: nowrap;
 }
 
+.daily-bookings article[data-status='COMPLETED']>i {
+  background: #07825b;
+}
+
+.daily-bookings article[data-status='OCCUPIED']>i {
+  background: #2f78c4;
+}
+
+
 .daily-bookings article[data-status='UPCOMING']>i {
   background: #e68a18;
 }
+
 
 .daily-bookings article[data-status='AWAITING_CHECK_IN']>i {
   background: #d99a1d;
 }
 
+
 .daily-bookings article[data-status='PAYMENT_DUE']>i {
   background: #b35a27;
 }
+
 
 .quick-actions h3 {
   margin: 0 0 9px;
