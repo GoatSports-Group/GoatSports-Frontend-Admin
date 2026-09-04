@@ -365,17 +365,18 @@ export class OwnerScheduleComponent {
   loadSchedule(): void {
     const courtId = this.selectedCourtId();
     if (!courtId) return;
-    const range = this.generationForm.getRawValue();
+    const fromDate = this.calendarWeekStart();
+    const toDate = this.calendarWeekEnd();
     this.loadingData.set(true);
     this.loadError.set(null);
     forkJoin({
       rules: this.manageSchedule.listRules(courtId),
-      slots: this.manageSchedule.listSlots(courtId, range.fromDate, range.toDate),
+      slots: this.manageSchedule.listSlots(courtId, fromDate, toDate),
       bookings: this.loadAllBookings({
         venueId: this.selectedVenueId(),
         venueCourtId: courtId,
-        fromDate: range.fromDate,
-        toDate: range.toDate
+        fromDate,
+        toDate
       }).pipe(catchError(() => of([] as OwnerBooking[])))
     }).pipe(
       take(1), takeUntilDestroyed(this.destroyRef), finalize(() => this.loadingData.set(false))
@@ -526,8 +527,8 @@ export class OwnerScheduleComponent {
       take(1), takeUntilDestroyed(this.destroyRef),
       finalize(() => { this.generating.set(false); this.generationForm.enable({ emitEvent: false }); })
     ).subscribe({
-      next: slots => {
-        this.slots.set(slots);
+      next: () => {
+        this.loadSchedule();
         this.notify.success('Lịch khả dụng đã được đồng bộ từ bảng giá.');
       },
       error: error => this.notify.error(this.errorMessage(error, 'Không thể sinh lịch.'))
