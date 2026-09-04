@@ -84,7 +84,7 @@ describe('OwnerScheduleComponent', () => {
     component.openRuleEditor();
     component.ruleForm.patchValue({
       dayOfWeek: 'MONDAY', startTime: '08:00', endTime: '10:00',
-      basePricePerHour: 150000, pricePerHour: 180000,
+      pricePerHour: 180000,
       effectiveFrom: '2026-08-30', effectiveTo: '2026-12-31'
     });
 

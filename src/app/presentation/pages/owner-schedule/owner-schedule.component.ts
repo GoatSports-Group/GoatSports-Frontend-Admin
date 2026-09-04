@@ -8,7 +8,7 @@ import {
   signal
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { EMPTY, Observable, catchError, expand, finalize, forkJoin, of, reduce, switchMap, take } from 'rxjs';
 import { OwnerBooking, OwnerBookingFilter } from '@application/dto/owner-booking/owner-booking.dto';
@@ -196,8 +196,11 @@ export class OwnerScheduleComponent {
     dayOfWeek: this.formBuilder.nonNullable.control<ScheduleDayOfWeek>('MONDAY', Validators.required),
     startTime: ['06:00', Validators.required],
     endTime: ['07:00', Validators.required],
-    basePricePerHour: [100000, [Validators.required, Validators.min(1)]],
-    pricePerHour: [100000, [Validators.required, Validators.min(1)]],
+    pricePerHour: [100000, [
+      Validators.required,
+      Validators.min(1),
+      (control: AbstractControl) => this.validateVenuePrice(control)
+    ]],
     effectiveFrom: [this.today(), Validators.required],
     effectiveTo: [this.addDays(30), Validators.required]
   });
@@ -309,11 +312,11 @@ export class OwnerScheduleComponent {
     this.selectedRuleDays.set([rule?.dayOfWeek ?? 'MONDAY']);
     this.ruleForm.reset(rule ? {
       dayOfWeek: rule.dayOfWeek, startTime: this.timeValue(rule.startTime),
-      endTime: this.timeValue(rule.endTime), basePricePerHour: rule.basePricePerHour,
-      pricePerHour: rule.pricePerHour, effectiveFrom: rule.effectiveFrom, effectiveTo: rule.effectiveTo
+      endTime: this.timeValue(rule.endTime), pricePerHour: rule.pricePerHour,
+      effectiveFrom: rule.effectiveFrom, effectiveTo: rule.effectiveTo
     } : {
       dayOfWeek: 'MONDAY', startTime: this.selectedVenue()?.openTime?.slice(0, 5) ?? '06:00',
-      endTime: '07:00', basePricePerHour: 100000, pricePerHour: 100000,
+      endTime: '07:00', pricePerHour: this.defaultVenuePrice(),
       effectiveFrom: this.today(), effectiveTo: this.addDays(30)
     });
     this.ruleEditorOpen.set(true);
@@ -348,6 +351,7 @@ export class OwnerScheduleComponent {
 
   saveRule(): void {
     if (this.savingRule()) return;
+    this.ruleForm.controls.pricePerHour.updateValueAndValidity({ emitEvent: false });
     this.ruleForm.markAllAsTouched();
     const courtId = this.selectedCourtId();
     const value = this.ruleForm.getRawValue();
@@ -362,7 +366,11 @@ export class OwnerScheduleComponent {
       ? editing.dayOfWeek : selectedDays[0];
     const orderedDays = [primaryDay, ...selectedDays.filter(day => day !== primaryDay)];
     const operations: Observable<CourtPricingRule>[] = orderedDays.map((day, index) => {
-      const request: CourtPricingRuleUpsert = { ...value, dayOfWeek: day };
+      const request: CourtPricingRuleUpsert = {
+        ...value,
+        dayOfWeek: day,
+        basePricePerHour: value.pricePerHour
+      };
       return editing && index === 0
         ? this.manageSchedule.updateRule(courtId, editing.pricingRuleId, request)
         : this.manageSchedule.createRule(courtId, request);
@@ -462,6 +470,9 @@ export class OwnerScheduleComponent {
   compactMoney(value: number): string { return new Intl.NumberFormat('vi-VN').format(value) + 'đ'; }
   formatDate(value: string): string { return new Intl.DateTimeFormat('vi-VN', { dateStyle: 'full' }).format(new Date(`${value}T00:00:00`)); }
   timeValue(value: string): string { return value.slice(0, 5); }
+
+  venueMinPrice(): number | null { return this.selectedVenue()?.minPrice ?? null; }
+  venueMaxPrice(): number | null { return this.selectedVenue()?.maxPrice ?? null; }
 
   slotTop(slot: OwnerTimeSlot): number {
     const offset = Math.max(0, this.timeToMinutes(slot.startTime) - this.calendarStartMinutes());
@@ -606,6 +617,23 @@ export class OwnerScheduleComponent {
       .filter(payment => payment.purpose === 'BOOKING_REMAINING' && payment.status === 'SUCCEEDED')
       .reduce((total, payment) => total + payment.amount, 0);
     return paidRemaining + 0.01 >= booking.remainingAmount;
+  }
+
+  private defaultVenuePrice(): number {
+    const minPrice = this.venueMinPrice();
+    return minPrice !== null && minPrice > 0 ? minPrice : 100000;
+  }
+
+  private validateVenuePrice(control: AbstractControl): ValidationErrors | null {
+    const price = Number(control.value);
+    const minPrice = this.venueMinPrice();
+    const maxPrice = this.venueMaxPrice();
+    if (minPrice === null || maxPrice === null || minPrice > maxPrice) {
+      return { venuePriceRangeUnavailable: true };
+    }
+    return price >= minPrice && price <= maxPrice
+      ? null
+      : { venuePriceRange: { min: minPrice, max: maxPrice } };
   }
 
   private startOfWeek(date: Date): string {

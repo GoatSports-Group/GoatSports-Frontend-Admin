@@ -268,7 +268,6 @@
           </div>
           <div class="rule-card__price">
             <small>Giá áp dụng</small><strong>{{ compactMoney(rule.pricePerHour) }}<em>/giờ</em></strong>
-            <span>Giá cơ sở {{ compactMoney(rule.basePricePerHour) }}</span>
           </div>
           <div class="rule-card__dates">
             <small>Hiệu lực</small><span>{{ rule.effectiveFrom }} → {{ rule.effectiveTo }}</span>
@@ -319,12 +318,24 @@
           </div>
         </section>
 
-        <section class="editor-section editor-section--price">
+        <section class="editor-section">
           <h3>Giá</h3>
-          <label><span>Giá theo giờ (VNĐ)</span><input type="number" min="1" step="1000"
-              formControlName="pricePerHour" /></label>
-          <label><span>Giá cơ sở (VNĐ)</span><input type="number" min="1" step="1000"
-              formControlName="basePricePerHour" /></label>
+          <label>
+            <span>Giá theo giờ (VNĐ)</span>
+            <input type="number" [attr.min]="venueMinPrice()" [attr.max]="venueMaxPrice()" step="1000"
+              formControlName="pricePerHour" />
+            @if (venueMinPrice() !== null && venueMaxPrice() !== null) {
+            <small class="field-hint">Khoảng giá cơ sở: {{ compactMoney(venueMinPrice()!) }} –
+              {{ compactMoney(venueMaxPrice()!) }}</small>
+            }
+            @if (ruleForm.controls.pricePerHour.touched && ruleForm.controls.pricePerHour.hasError('venuePriceRange')) {
+            <small class="field-error">Giá phải nằm trong khoảng giá của cơ sở.</small>
+            }
+            @if (ruleForm.controls.pricePerHour.touched
+              && ruleForm.controls.pricePerHour.hasError('venuePriceRangeUnavailable')) {
+            <small class="field-error">Cơ sở chưa thiết lập khoảng giá hợp lệ.</small>
+            }
+          </label>
         </section>
 
         <section class="editor-section">
