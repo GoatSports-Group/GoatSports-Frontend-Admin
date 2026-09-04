@@ -89,6 +89,7 @@ export class OwnerCheckInComponent implements OnDestroy {
     this.courts().find(court => court.venueCourtId === this.selectedCourtId()) ?? null
   );
   readonly availableSlots = computed(() => this.slots().filter(slot => slot.status === 'AVAILABLE'));
+  readonly availableSlotPreview = computed(() => this.availableSlots().slice(0, 4));
   readonly lookupForm = this.formBuilder.nonNullable.group({
     value: ['', [Validators.required, Validators.maxLength(500)]]
   });
@@ -107,6 +108,7 @@ export class OwnerCheckInComponent implements OnDestroy {
 
   setTab(tab: WorkspaceTab): void {
     this.activeTab.set(tab);
+    this.actionError.set(null);
     if (tab !== 'check-in') this.stopScanner();
     if (tab === 'history') this.loadHistory();
   }

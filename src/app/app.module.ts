@@ -146,7 +146,13 @@ import {
   LucideCalendarX,
   LucideChartNoAxesColumnIncreasing,
   LucideListFilter,
-  LucideCalendarDays
+  LucideCalendarDays,
+  LucideRefreshCw,
+  LucidePrinter,
+  LucideTicketCheck,
+  LucideListChecks,
+  LucideContactRound,
+  LucideScanQrCode
 } from '@lucide/angular';
 
 @NgModule({
@@ -292,7 +298,13 @@ import {
       LucideCalendarX,
       LucideChartNoAxesColumnIncreasing,
       LucideListFilter,
-      LucideCalendarDays
+      LucideCalendarDays,
+      LucideRefreshCw,
+      LucidePrinter,
+      LucideTicketCheck,
+      LucideListChecks,
+      LucideContactRound,
+      LucideScanQrCode
     )
   ],
   bootstrap: [AppComponent]

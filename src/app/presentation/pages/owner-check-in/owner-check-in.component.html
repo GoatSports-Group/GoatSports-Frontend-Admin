@@ -1,6 +1,6 @@
 <main class="checkin-page">
   <header class="hero">
-    <div>
+    <div class="hero-copy">
       <p class="eyebrow"><app-lucide-icon name="shield-check" [size]="16" /> Vận hành tại quầy</p>
       <h1>Check-in khách</h1>
       <p>Đối soát booking, khách hàng, khung giờ và trạng thái thanh toán trước khi bàn giao sân.</p>
@@ -29,9 +29,6 @@
     <button type="button" [class.active]="activeTab() === 'check-in'" (click)="setTab('check-in')">
       <app-lucide-icon name="user-check" [size]="18" /> Đối soát
     </button>
-    <button type="button" [class.active]="activeTab() === 'walk-in'" (click)="setTab('walk-in')">
-      <app-lucide-icon name="user-plus" [size]="18" /> Khách Walk-in
-    </button>
     <button type="button" [class.active]="activeTab() === 'history'" (click)="setTab('history')">
       <app-lucide-icon name="clock" [size]="18" /> Lịch sử
     </button>
@@ -53,17 +50,14 @@
       <p>Hoàn thiện cơ sở và sân thi đấu trước khi tiếp nhận khách.</p>
     </section>
   } @else {
-    @if (actionError()) {
-      <div class="inline-error" role="alert">
-        <app-lucide-icon name="alert-circle" [size]="18" /> {{ actionError() }}
-      </div>
-    }
-
     @if (activeTab() === 'check-in') {
       <section class="workspace-grid">
         <article class="panel lookup-panel">
           <div class="panel-heading">
-            <div><p class="step">Bước 1</p><h2>Tra cứu vé đặt sân</h2></div>
+            <div>
+              <h2>Tra cứu vé đặt sân</h2>
+              <p class="section-copy">Quét mã QR hoặc nhập Booking Code trên vé của khách.</p>
+            </div>
             <span class="scope-badge">{{ selectedCourt()?.name }}</span>
           </div>
 
@@ -85,10 +79,22 @@
                 <div class="scan-guide" aria-hidden="true"></div>
                 <button type="button" class="secondary" (click)="stopScanner()">Dừng camera</button>
               } @else {
-                <app-lucide-icon name="camera" [size]="34" />
-                <p>Camera chỉ đọc QR; chữ ký và thời hạn luôn được backend xác thực.</p>
-                <button type="button" class="secondary" (click)="startScanner()">Mở camera</button>
+                <span class="scanner-icon"><app-lucide-icon name="camera" [size]="36" /></span>
+                <strong>Đưa mã QR vào giữa khung hình</strong>
+                <p>Camera chỉ dùng để quét mã vé và không lưu hình ảnh của khách.</p>
+                <button type="button" class="secondary scanner-button" (click)="startScanner()">
+                  <app-lucide-icon name="camera" [size]="18" /> Mở camera
+                </button>
               }
+            </div>
+            <div class="lookup-divider"><span>Hoặc nhập mã vé</span></div>
+          } @else {
+            <div class="manual-lookup-guide">
+              <span class="manual-icon"><app-lucide-icon name="ticket-check" [size]="28" /></span>
+              <div>
+                <strong>Nhập Booking Code trên vé điện tử</strong>
+                <p>Mã thường gồm chữ và số, không phân biệt chữ hoa hay chữ thường.</p>
+              </div>
             </div>
           }
 
@@ -106,7 +112,86 @@
             </button>
           </form>
           <p class="helper">Không quét được QR? Chuyển sang Booking Code hiển thị dưới vé điện tử.</p>
+          @if (actionError()) {
+            <div class="inline-error" role="alert">
+              <app-lucide-icon name="alert-circle" [size]="18" />
+              <span>{{ actionError() }}</span>
+            </div>
+          }
         </article>
+
+        <aside class="panel operations-panel" aria-label="Hỗ trợ quy trình check-in">
+          <section class="operations-section flow-section">
+            <div class="section-heading">
+              <div>
+                <h2>Quy trình đối soát</h2>
+                <p>Hoàn tất 4 bước trước khi bàn giao sân.</p>
+              </div>
+              <app-lucide-icon name="list-checks" [size]="22" />
+            </div>
+            <ol class="process-list">
+              <li>
+                <span class="process-index">1</span>
+                <span class="process-icon"><app-lucide-icon name="scan-qr-code" [size]="20" /></span>
+                <div><strong>Quét mã vé</strong><p>Quét QR hoặc nhập Booking Code để tra cứu.</p></div>
+              </li>
+              <li>
+                <span class="process-index">2</span>
+                <span class="process-icon"><app-lucide-icon name="calendar-check" [size]="20" /></span>
+                <div><strong>Kiểm tra đúng sân và khung giờ</strong><p>Đối chiếu ngày chơi, sân và thời lượng.</p></div>
+              </li>
+              <li>
+                <span class="process-index">3</span>
+                <span class="process-icon"><app-lucide-icon name="contact-round" [size]="20" /></span>
+                <div><strong>Đối chiếu khách và thanh toán</strong><p>Xác nhận thông tin khách và khoản còn lại.</p></div>
+              </li>
+              <li>
+                <span class="process-index">4</span>
+                <span class="process-icon"><app-lucide-icon name="shield-check" [size]="20" /></span>
+                <div><strong>Xác nhận check-in</strong><p>Ghi nhận nhận sân sau khi thông tin hợp lệ.</p></div>
+              </li>
+            </ol>
+          </section>
+
+          <section class="operations-section schedule-section">
+            <div class="section-heading">
+              <div>
+                <h2>Khung giờ khả dụng hôm nay</h2>
+                <p>{{ selectedCourt()?.name }} · {{ availableSlots().length }} khung giờ</p>
+              </div>
+              <span class="today-badge">Hôm nay</span>
+            </div>
+
+            @if (loadingCourt()) {
+              <div class="slot-skeleton" aria-label="Đang tải khung giờ">
+                <span></span><span></span><span></span>
+              </div>
+            } @else if (!availableSlotPreview().length) {
+              <div class="schedule-empty">
+                <app-lucide-icon name="calendar-x" [size]="24" />
+                <div><strong>Không còn khung giờ trống</strong><p>Hãy chọn sân khác để tiếp tục tiếp nhận khách.</p></div>
+              </div>
+            } @else {
+              <div class="slot-list">
+                @for (slot of availableSlotPreview(); track slot.timeSlotId) {
+                  <div class="slot-row">
+                    <span class="status-dot"></span>
+                    <strong>{{ time(slot.startTime) }} – {{ time(slot.endTime) }}</strong>
+                    <span>{{ money(slot.pricePerHour) }}/giờ</span>
+                  </div>
+                }
+              </div>
+              @if (availableSlots().length > availableSlotPreview().length) {
+                <p class="more-slots">Còn {{ availableSlots().length - availableSlotPreview().length }} khung giờ khác trong hôm nay.</p>
+              }
+            }
+          </section>
+
+          <div class="operations-note">
+            <app-lucide-icon name="info" [size]="18" />
+            <span>Vé online và khách Walk-in sử dụng cùng một quy trình xác thực.</span>
+          </div>
+        </aside>
 
         @if (reconciliation()) {
         <div class="reconciliation-backdrop" (click)="closeReconciliation()">
@@ -186,46 +271,6 @@
         </article>
         </div>
         }
-      </section>
-    }
-
-    @if (activeTab() === 'walk-in') {
-      <section class="panel walkin-panel">
-        <div class="panel-heading">
-          <div>
-            <p class="step">Khách tại quầy</p>
-            <h2>Tạo booking Walk-in</h2>
-            <p class="section-copy">Chọn khung giờ còn trống. Booking được xác nhận và phát hành QR ngay; có thể thanh toán trước hoặc sau khi sử dụng sân.</p>
-          </div>
-          <span class="scope-badge">{{ selectedCourt()?.name }}</span>
-        </div>
-
-        <form class="walkin-form" [formGroup]="walkInForm" (ngSubmit)="createWalkIn()">
-          <label class="full">
-            <span>Khung giờ</span>
-            <select formControlName="timeSlotId">
-              <option value="">Chọn khung giờ khả dụng</option>
-              @for (slot of availableSlots(); track slot.timeSlotId) {
-                <option [value]="slot.timeSlotId">
-                  {{ time(slot.startTime) }} – {{ time(slot.endTime) }} · {{ money(slot.pricePerHour) }}/giờ
-                </option>
-              }
-            </select>
-          </label>
-          <label>
-            <span>Tên khách hàng</span>
-            <input formControlName="customerName" placeholder="Nhập tên khách Walk-in" autocomplete="name" />
-          </label>
-          <label>
-            <span>Số điện thoại</span>
-            <input formControlName="customerPhone" placeholder="Nhập số điện thoại" autocomplete="tel" />
-          </label>
-          <button type="submit" class="primary full" [disabled]="creatingWalkIn() || !availableSlots().length">
-            @if (creatingWalkIn()) { <app-lucide-icon name="loader-2" class="spin" [size]="18" /> }
-            @else { <app-lucide-icon name="user-plus" [size]="18" /> }
-            {{ creatingWalkIn() ? 'Đang tạo booking…' : 'Tạo booking Walk-in' }}
-          </button>
-        </form>
       </section>
     }
 
