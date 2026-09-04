@@ -38,13 +38,12 @@ input:focus-visible {
   width: 100%;
   min-height: calc(100vh - 76px);
   grid-template-columns: minmax(0, 1fr);
-  padding: 22px 26px 32px;
+  padding: 0;
   background: #f4f7f5;
 }
 
 .schedule-page--editor-open {
-  grid-template-columns: minmax(0, 1fr) 380px;
-  padding-right: 0;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .schedule-content {
@@ -52,7 +51,7 @@ input:focus-visible {
 }
 
 .schedule-page--editor-open .schedule-content {
-  padding-right: 18px;
+  padding-right: 0;
 }
 
 .page-heading {
@@ -151,7 +150,7 @@ input:focus-visible {
   gap: 6px;
 }
 
-.context-select > span {
+.context-select>span {
   color: #58675f;
   font-size: 13px;
   font-weight: 650;
@@ -485,14 +484,14 @@ input:focus-visible {
   white-space: nowrap;
 }
 
-.calendar-slot > span,
-.calendar-slot > small {
+.calendar-slot>span,
+.calendar-slot>small {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.calendar-slot > small {
+.calendar-slot>small {
   font-size: 11px;
 }
 
@@ -565,7 +564,7 @@ input:focus-visible {
   background: #fff;
 }
 
-.active-rules > header {
+.active-rules>header {
   display: flex;
   min-height: 54px;
   align-items: center;
@@ -575,7 +574,7 @@ input:focus-visible {
   border-bottom: 1px solid #e8eeeb;
 }
 
-.active-rules > header > div {
+.active-rules>header>div {
   display: flex;
   align-items: center;
   gap: 9px;
@@ -635,17 +634,17 @@ input:focus-visible {
   border-right: 0;
 }
 
-.rule-summary-grid article > lucide-icon {
+.rule-summary-grid article>lucide-icon {
   width: 23px;
   height: 23px;
   color: #be8a17;
 }
 
-.rule-summary-grid article:nth-child(2) > lucide-icon {
+.rule-summary-grid article:nth-child(2)>lucide-icon {
   color: #4073a6;
 }
 
-.rule-summary-grid article:nth-child(3) > lucide-icon {
+.rule-summary-grid article:nth-child(3)>lucide-icon {
   color: #c44e36;
 }
 
@@ -697,15 +696,15 @@ input:focus-visible {
   background: #f8fbf9;
 }
 
-.generation-strip > div,
+.generation-strip>div,
 .generation-strip label,
-.pricing-heading > div {
+.pricing-heading>div {
   display: grid;
   min-width: 0;
   gap: 5px;
 }
 
-.generation-strip > div span,
+.generation-strip>div span,
 .pricing-heading span {
   color: #08764a;
   font-size: 12px;
@@ -714,11 +713,11 @@ input:focus-visible {
   text-transform: uppercase;
 }
 
-.generation-strip > div strong {
+.generation-strip>div strong {
   font-size: 15px;
 }
 
-.generation-strip label > span {
+.generation-strip label>span {
   color: #5d6b64;
   font-size: 12px;
   font-weight: 650;
@@ -833,22 +832,38 @@ input:focus-visible {
   height: 14px;
 }
 
-.rule-editor {
-  position: sticky;
-  top: 0;
-  display: flex;
-  height: calc(100vh - 76px);
-  min-height: 650px;
-  flex-direction: column;
-  align-self: start;
-  margin-top: -22px;
-  overflow: hidden auto;
-  border-left: 1px solid #dce4e0;
-  background: #fff;
-  box-shadow: -8px 0 22px rgba(25, 52, 40, .05);
+.rule-editor-backdrop {
+  position: fixed;
+  z-index: 120;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  overflow: hidden;
+  background: rgba(17, 29, 24, .48);
+  backdrop-filter: blur(2px);
+  animation: modal-backdrop-in .16s ease-out;
 }
 
-.rule-editor > header {
+.rule-editor {
+  position: relative;
+  display: flex;
+  width: min(680px, 100%);
+  max-height: min(820px, calc(100vh - 48px));
+  flex-direction: column;
+  overflow: hidden auto;
+  overscroll-behavior: contain;
+  border: 1px solid #d5dfda;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(10, 28, 20, .24);
+  animation: modal-content-in .18s ease-out;
+}
+
+.rule-editor>header {
+  position: sticky;
+  z-index: 3;
+  top: 0;
   display: flex;
   min-height: 66px;
   align-items: center;
@@ -856,6 +871,7 @@ input:focus-visible {
   gap: 12px;
   padding: 0 20px;
   border-bottom: 1px solid #e5ebe8;
+  background: #fff;
 }
 
 .rule-editor h2 {
@@ -864,7 +880,7 @@ input:focus-visible {
   font-size: 18px;
 }
 
-.rule-editor > header button {
+.rule-editor>header button {
   display: grid;
   width: 32px;
   height: 32px;
@@ -876,14 +892,14 @@ input:focus-visible {
   color: #4e5d56;
 }
 
-.rule-editor > header lucide-icon {
+.rule-editor>header lucide-icon {
   width: 16px;
   height: 16px;
 }
 
 .rule-editor form {
   display: flex;
-  min-height: calc(100% - 66px);
+  min-height: 0;
   flex-direction: column;
 }
 
@@ -906,10 +922,18 @@ input:focus-visible {
   gap: 6px;
 }
 
-.editor-section label > span {
+.editor-section label>span {
   color: #69766f;
   font-size: 12px;
   font-weight: 600;
+}
+
+.editor-section--price {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.editor-section--price h3 {
+  grid-column: 1 / -1;
 }
 
 .day-toggle-list {
@@ -978,13 +1002,20 @@ input:focus-visible {
 }
 
 .editor-actions {
+  position: sticky;
+  z-index: 2;
+  bottom: 0;
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr 1.25fr;
   gap: 7px;
   margin-top: auto;
   padding: 16px 20px;
   border-top: 1px solid #e5ebe8;
   background: #fff;
+}
+
+.editor-actions .secondary-button {
+  order: -1;
 }
 
 .state-card,
@@ -1000,9 +1031,9 @@ input:focus-visible {
   text-align: center;
 }
 
-.schedule-tabs + .state-card,
-.schedule-tabs + .error-state,
-.schedule-tabs + app-page-loading {
+.schedule-tabs+.state-card,
+.schedule-tabs+.error-state,
+.schedule-tabs+app-page-loading {
   margin-top: 18px;
 }
 
@@ -1040,7 +1071,7 @@ input:focus-visible {
   text-align: left;
 }
 
-.error-state > lucide-icon {
+.error-state>lucide-icon {
   width: 22px;
   height: 22px;
   color: #d63f3f;
@@ -1078,14 +1109,23 @@ input:focus-visible {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes modal-backdrop-in {
+  from { opacity: 0; }
+}
+
+@keyframes modal-content-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(.985);
+  }
 }
 
 @media (max-width: 1180px) {
-  .schedule-page--editor-open {
-    grid-template-columns: minmax(0, 1fr) 300px;
-  }
-
   .context-toolbar {
     grid-template-columns: repeat(2, minmax(150px, 1fr)) minmax(205px, 1fr) 70px 68px;
   }
@@ -1094,12 +1134,10 @@ input:focus-visible {
     justify-content: flex-start;
   }
 
-  .rule-editor {
-    font-size: 12px;
-  }
 }
 
 @media (max-width: 960px) {
+
   .schedule-page,
   .schedule-page--editor-open {
     grid-template-columns: minmax(0, 1fr);
@@ -1110,16 +1148,13 @@ input:focus-visible {
     padding-right: 0;
   }
 
+  .rule-editor-backdrop {
+    padding: 16px;
+  }
+
   .rule-editor {
-    position: fixed;
-    z-index: 80;
-    top: 76px;
-    right: 0;
-    bottom: 0;
-    width: min(360px, 92vw);
-    height: auto;
-    min-height: 0;
-    margin: 0;
+    width: min(640px, 100%);
+    max-height: calc(100vh - 32px);
   }
 
   .context-toolbar {
@@ -1134,7 +1169,7 @@ input:focus-visible {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .generation-strip > div,
+  .generation-strip>div,
   .generation-strip .primary-button {
     grid-column: 1 / -1;
   }
@@ -1142,7 +1177,7 @@ input:focus-visible {
 
 @media (max-width: 640px) {
   .schedule-page {
-    padding: 16px 12px 28px;
+    padding: 0;
   }
 
   .page-heading {
@@ -1161,12 +1196,17 @@ input:focus-visible {
 
   .context-toolbar,
   .generation-strip,
-  .editor-date-row {
+  .editor-date-row,
+  .editor-section--price {
     grid-template-columns: 1fr;
   }
 
+  .editor-section--price h3 {
+    grid-column: auto;
+  }
+
   .date-range-picker,
-  .generation-strip > div,
+  .generation-strip>div,
   .generation-strip .primary-button {
     grid-column: auto;
   }
@@ -1209,6 +1249,7 @@ input:focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {

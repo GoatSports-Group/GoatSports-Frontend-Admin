@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, HostListener, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -246,6 +246,11 @@ export class OwnerScheduleComponent {
   }
 
   closeRuleEditor(): void { if (!this.savingRule()) this.ruleEditorOpen.set(false); }
+
+  @HostListener('document:keydown.escape')
+  closeRuleEditorWithEscape(): void {
+    if (this.ruleEditorOpen()) this.closeRuleEditor();
+  }
 
   saveRule(): void {
     if (this.savingRule()) return;
