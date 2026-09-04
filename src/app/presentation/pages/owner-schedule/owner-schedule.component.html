@@ -241,7 +241,8 @@
             <option [value]="90">90 phút</option>
             <option [value]="120">120 phút</option>
           </select></label>
-        <button type="submit" class="primary-button" [disabled]="generating() || generationForm.invalid">
+        <button type="submit" class="primary-button"
+          [disabled]="generating() || generationForm.invalid || !selectedGenerationRuleIds().length">
           <span [class.spinner-small]="generating()"></span>{{ generating() ? 'Đang sinh…' : 'Sinh / đồng bộ slot' }}
         </button>
       </form>
@@ -250,7 +251,17 @@
         <div><span>Quy tắc giá</span>
           <h2>{{ selectedCourt()?.name }}</h2>
         </div>
-        <p>Khung giờ không được chồng lấn trong cùng ngày hiệu lực.</p>
+        <div class="pricing-heading__tools">
+          @if (applicableRules().length) {
+          <label class="rule-select-all">
+            <input type="checkbox" [checked]="allApplicableRulesSelected()"
+              [indeterminate]="someApplicableRulesSelected()"
+              (change)="toggleAllApplicableRules($any($event.target).checked)" />
+            <span>Chọn tất cả đang hiển thị</span>
+          </label>
+          }
+          <p>Đã chọn {{ selectedGenerationRuleIds().length }}/{{ applicableRules().length }} quy tắc phù hợp.</p>
+        </div>
       </header>
 
       @if (!rules().length) {
@@ -258,27 +269,59 @@
         <lucide-icon name="receipt" /><strong>Chưa có quy tắc giá</strong>
         <p>Thêm giá theo ngày để có thể sinh lịch nhận đặt sân.</p>
       </div>
+      } @else if (!applicableRuleGroups().length) {
+      <div class="inline-empty">
+        <lucide-icon name="calendar-x" /><strong>Không có quy tắc phù hợp</strong>
+        <p>Không có ngày áp dụng nào của quy tắc giá nằm trong khoảng ngày đã chọn.</p>
+      </div>
       } @else {
-      <div class="rule-list">
-        @for (rule of rules(); track rule.pricingRuleId) {
-        <article class="rule-card">
-          <div class="rule-card__day">
-            <span>{{ dayLabel(rule.dayOfWeek) }}</span>
-            <strong>{{ timeValue(rule.startTime) }} – {{ timeValue(rule.endTime) }}</strong>
+      <div class="rule-groups">
+        @for (group of applicableRuleGroups(); track group.value) {
+        <section class="rule-group">
+          <header class="rule-group__header">
+            <label (click)="$event.stopPropagation()">
+              <input type="checkbox" [checked]="isRuleGroupSelected(group)"
+                [indeterminate]="isRuleGroupPartiallySelected(group)"
+                (change)="toggleRuleGroup(group, $any($event.target).checked)" />
+            </label>
+            <button type="button" class="rule-group__toggle"
+              [attr.aria-expanded]="!isRuleGroupCollapsed(group.value)"
+              [attr.aria-label]="(isRuleGroupCollapsed(group.value) ? 'Mở rộng ' : 'Thu gọn ') + group.label"
+              (click)="toggleRuleGroupCollapsed(group.value)">
+              <strong>{{ group.label }}</strong>
+              <span>{{ group.rules.length }} quy tắc</span>
+              <lucide-icon name="chevron-down" [class.collapsed]="isRuleGroupCollapsed(group.value)" />
+            </button>
+          </header>
+          <div class="rule-group__content" [class.rule-group__content--collapsed]="isRuleGroupCollapsed(group.value)">
+            <div class="rule-list">
+              @for (rule of group.rules; track rule.pricingRuleId) {
+              <article class="rule-card" [class.rule-card--selected]="isGenerationRuleSelected(rule.pricingRuleId)">
+                <label class="rule-card__select" [attr.aria-label]="'Chọn quy tắc ' + dayLabel(rule.dayOfWeek)">
+                  <input type="checkbox" [checked]="isGenerationRuleSelected(rule.pricingRuleId)"
+                    (change)="toggleGenerationRule(rule.pricingRuleId, $any($event.target).checked)" />
+                </label>
+                <div class="rule-card__day">
+                  <small>Khung giờ</small>
+                  <strong>{{ timeValue(rule.startTime) }} – {{ timeValue(rule.endTime) }}</strong>
+                </div>
+                <div class="rule-card__price">
+                  <small>Giá áp dụng</small><strong>{{ compactMoney(rule.pricePerHour) }}<em>/giờ</em></strong>
+                </div>
+                <div class="rule-card__dates">
+                  <small>Hiệu lực</small><span>{{ rule.effectiveFrom }} → {{ rule.effectiveTo }}</span>
+                </div>
+                <div class="rule-card__actions">
+                  <button type="button" (click)="openRuleEditor(rule)" [disabled]="savingRule() || !!deletingRuleId()"
+                    aria-label="Sửa quy tắc giá"><lucide-icon name="pencil" /></button>
+                  <button type="button" class="danger" (click)="deleteRule(rule)" [disabled]="!!deletingRuleId()"
+                    aria-label="Xóa quy tắc giá"><lucide-icon name="trash-2" /></button>
+                </div>
+              </article>
+              }
+            </div>
           </div>
-          <div class="rule-card__price">
-            <small>Giá áp dụng</small><strong>{{ compactMoney(rule.pricePerHour) }}<em>/giờ</em></strong>
-          </div>
-          <div class="rule-card__dates">
-            <small>Hiệu lực</small><span>{{ rule.effectiveFrom }} → {{ rule.effectiveTo }}</span>
-          </div>
-          <div class="rule-card__actions">
-            <button type="button" (click)="openRuleEditor(rule)" [disabled]="savingRule() || !!deletingRuleId()"
-              aria-label="Sửa quy tắc giá"><lucide-icon name="pencil" /></button>
-            <button type="button" class="danger" (click)="deleteRule(rule)" [disabled]="!!deletingRuleId()"
-              aria-label="Xóa quy tắc giá"><lucide-icon name="trash-2" /></button>
-          </div>
-        </article>
+        </section>
         }
       </div>
       }
@@ -341,8 +384,23 @@
         <section class="editor-section">
           <h3>Thời gian hiệu lực</h3>
           <div class="editor-date-row">
-            <label><span>Từ ngày</span><input type="date" formControlName="effectiveFrom" /></label>
-            <label><span>Đến ngày</span><input type="date" formControlName="effectiveTo" /></label>
+            <label><span>Từ ngày</span><input type="date" [attr.min]="ruleEffectiveFromMin()"
+                formControlName="effectiveFrom" /></label>
+            <label><span>Đến ngày</span><input type="date" [attr.min]="ruleForm.controls.effectiveFrom.value"
+                formControlName="effectiveTo" /></label>
+          </div>
+          <div class="rule-time-notice" [class.rule-time-notice--error]="ruleForm.hasError('pastEffectiveStart')"
+            [attr.role]="ruleForm.hasError('pastEffectiveStart') ? 'alert' : 'note'">
+            <lucide-icon [name]="ruleForm.hasError('pastEffectiveStart') ? 'circle-alert' : 'info'" />
+            <div>
+              @if (ruleForm.hasError('pastEffectiveStart')) {
+              <strong>Không thể lưu mốc thời gian này</strong>
+              <span>Ngày hoặc giờ bắt đầu đã qua. Hãy chọn thời điểm hiện tại hoặc tương lai.</span>
+              } @else {
+              <strong>Chỉ áp dụng từ thời điểm hiện tại</strong>
+              <span>Nếu chọn hôm nay, giờ bắt đầu không được sớm hơn giờ hiện tại.</span>
+              }
+            </div>
           </div>
         </section>
 

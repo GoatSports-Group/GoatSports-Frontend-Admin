@@ -32,6 +32,7 @@ import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-ic
 import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-loading.component';
 
 interface DayOption { value: ScheduleDayOfWeek; label: string; }
+interface PricingRuleGroup extends DayOption { rules: CourtPricingRule[]; }
 interface SlotGroup { date: string; slots: OwnerTimeSlot[]; }
 interface CalendarDay {
   date: string;
@@ -105,6 +106,8 @@ export class OwnerScheduleComponent {
   readonly ruleEditorOpen = signal(false);
   readonly editingRule = signal<CourtPricingRule | null>(null);
   readonly selectedRuleDays = signal<ScheduleDayOfWeek[]>(['MONDAY']);
+  readonly selectedGenerationRuleIds = signal<string[]>([]);
+  readonly collapsedRuleGroups = signal<ScheduleDayOfWeek[]>([]);
   readonly savingRule = signal(false);
   readonly deletingRuleId = signal<string | null>(null);
   readonly generating = signal(false);
@@ -203,15 +206,37 @@ export class OwnerScheduleComponent {
     ]],
     effectiveFrom: [this.today(), Validators.required],
     effectiveTo: [this.addDays(30), Validators.required]
+  }, {
+    validators: [(control: AbstractControl) => this.validateRuleStartMoment(control)]
   });
   readonly generationForm = this.formBuilder.nonNullable.group({
     fromDate: [this.calendarWeekStart(), Validators.required],
     toDate: [this.calendarWeekEnd(), Validators.required],
     slotDurationMinutes: [60, [Validators.required, Validators.min(30), Validators.max(240)]]
   });
+  readonly generationRange = signal({
+    fromDate: this.generationForm.controls.fromDate.value,
+    toDate: this.generationForm.controls.toDate.value
+  });
+  readonly applicableRules = computed(() => {
+    const { fromDate, toDate } = this.generationRange();
+    if (!fromDate || !toDate || fromDate > toDate) return [];
+    return this.sortRules(this.rules().filter(rule => this.ruleAppliesWithinRange(rule, fromDate, toDate)));
+  });
+  readonly applicableRuleGroups = computed<PricingRuleGroup[]>(() => {
+    const rules = this.applicableRules();
+    return this.days
+      .map(day => ({ ...day, rules: rules.filter(rule => rule.dayOfWeek === day.value) }))
+      .filter(group => group.rules.length > 0);
+  });
 
   constructor() {
     if (this.requestedTab === 'pricing') this.activeTab.set('pricing');
+    this.generationForm.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      const { fromDate, toDate } = this.generationForm.getRawValue();
+      this.generationRange.set({ fromDate, toDate });
+      this.pruneGenerationRuleSelection();
+    });
     this.loadContext();
   }
 
@@ -246,6 +271,7 @@ export class OwnerScheduleComponent {
     if (this.loadingData() || this.savingRule() || this.generating()) return;
     this.selectedVenueId.set(venueId);
     this.selectedCourtId.set('');
+    this.selectedGenerationRuleIds.set([]);
     this.rules.set([]);
     this.slots.set([]);
     this.bookings.set([]);
@@ -264,6 +290,7 @@ export class OwnerScheduleComponent {
   selectCourt(courtId: string): void {
     if (this.loadingData() || this.savingRule() || this.generating()) return;
     this.selectedCourtId.set(courtId);
+    this.selectedGenerationRuleIds.set([]);
     this.ruleEditorOpen.set(false);
     if (!courtId) {
       this.rules.set([]);
@@ -319,6 +346,7 @@ export class OwnerScheduleComponent {
       endTime: '07:00', pricePerHour: this.defaultVenuePrice(),
       effectiveFrom: this.today(), effectiveTo: this.addDays(30)
     });
+    this.ruleForm.updateValueAndValidity({ emitEvent: false });
     this.ruleEditorOpen.set(true);
   }
 
@@ -347,6 +375,7 @@ export class OwnerScheduleComponent {
       : this.days.map(item => item.value).filter(item => [...selected, day].includes(item));
     this.selectedRuleDays.set(next);
     this.ruleForm.controls.dayOfWeek.setValue(next[0]);
+    this.ruleForm.updateValueAndValidity({ emitEvent: false });
   }
 
   saveRule(): void {
@@ -405,6 +434,7 @@ export class OwnerScheduleComponent {
     ).subscribe({
       next: () => {
         this.rules.update(items => items.filter(item => item.pricingRuleId !== rule.pricingRuleId));
+        this.selectedGenerationRuleIds.update(ids => ids.filter(id => id !== rule.pricingRuleId));
         this.notify.success('Đã xóa quy tắc giá.');
       },
       error: error => this.notify.error(this.errorMessage(error, 'Không thể xóa quy tắc giá.'))
@@ -415,10 +445,17 @@ export class OwnerScheduleComponent {
     if (this.generating()) return;
     this.generationForm.markAllAsTouched();
     const courtId = this.selectedCourtId();
-    const request = this.generationForm.getRawValue();
+    const request = {
+      ...this.generationForm.getRawValue(),
+      pricingRuleIds: this.selectedGenerationRuleIds()
+    };
     if (!courtId || this.generationForm.invalid) return;
     if (request.fromDate > request.toDate) {
       this.notify.error('Khoảng ngày sinh lịch chưa hợp lệ.');
+      return;
+    }
+    if (!request.pricingRuleIds.length) {
+      this.notify.error('Hãy chọn ít nhất một quy tắc giá để sinh lịch.');
       return;
     }
     this.generating.set(true);
@@ -473,10 +510,63 @@ export class OwnerScheduleComponent {
 
   venueMinPrice(): number | null { return this.selectedVenue()?.minPrice ?? null; }
   venueMaxPrice(): number | null { return this.selectedVenue()?.maxPrice ?? null; }
+  ruleEffectiveFromMin(): string {
+    const existingStart = this.editingRule()?.effectiveFrom;
+    const today = this.today();
+    return existingStart && existingStart < today ? existingStart : today;
+  }
 
   slotTop(slot: OwnerTimeSlot): number {
     const offset = Math.max(0, this.timeToMinutes(slot.startTime) - this.calendarStartMinutes());
     return (offset / 60) * this.calendarRowHeight;
+  }
+
+  isGenerationRuleSelected(ruleId: string): boolean {
+    return this.selectedGenerationRuleIds().includes(ruleId);
+  }
+
+  toggleGenerationRule(ruleId: string, checked: boolean): void {
+    this.selectedGenerationRuleIds.update(ids => checked
+      ? ids.includes(ruleId) ? ids : [...ids, ruleId]
+      : ids.filter(id => id !== ruleId));
+  }
+
+  isRuleGroupSelected(group: PricingRuleGroup): boolean {
+    return group.rules.every(rule => this.isGenerationRuleSelected(rule.pricingRuleId));
+  }
+
+  isRuleGroupPartiallySelected(group: PricingRuleGroup): boolean {
+    const selectedCount = group.rules.filter(rule => this.isGenerationRuleSelected(rule.pricingRuleId)).length;
+    return selectedCount > 0 && selectedCount < group.rules.length;
+  }
+
+  toggleRuleGroup(group: PricingRuleGroup, checked: boolean): void {
+    this.setRulesSelected(group.rules, checked);
+  }
+
+  isRuleGroupCollapsed(day: ScheduleDayOfWeek): boolean {
+    return this.collapsedRuleGroups().includes(day);
+  }
+
+  toggleRuleGroupCollapsed(day: ScheduleDayOfWeek): void {
+    this.collapsedRuleGroups.update(days => days.includes(day)
+      ? days.filter(item => item !== day)
+      : [...days, day]);
+  }
+
+  allApplicableRulesSelected(): boolean {
+    const rules = this.applicableRules();
+    return rules.length > 0 && rules.every(rule => this.isGenerationRuleSelected(rule.pricingRuleId));
+  }
+
+  someApplicableRulesSelected(): boolean {
+    const rules = this.applicableRules();
+    const selectedCount = rules.filter(rule => this.isGenerationRuleSelected(rule.pricingRuleId)).length;
+    return selectedCount > 0 && selectedCount < rules.length;
+  }
+
+  toggleAllApplicableRules(checked: boolean): void {
+    this.setRulesSelected(this.applicableRules(), checked);
   }
 
   slotHeight(slot: OwnerTimeSlot): number {
@@ -568,6 +658,33 @@ export class OwnerScheduleComponent {
       || a.startTime.localeCompare(b.startTime));
   }
 
+  private setRulesSelected(rules: CourtPricingRule[], checked: boolean): void {
+    const ruleIds = new Set(rules.map(rule => rule.pricingRuleId));
+    this.selectedGenerationRuleIds.update(ids => checked
+      ? [...new Set([...ids, ...ruleIds])]
+      : ids.filter(id => !ruleIds.has(id)));
+  }
+
+  private pruneGenerationRuleSelection(): void {
+    const applicableIds = new Set(this.applicableRules().map(rule => rule.pricingRuleId));
+    this.selectedGenerationRuleIds.update(ids => ids.filter(id => applicableIds.has(id)));
+  }
+
+  private ruleAppliesWithinRange(rule: CourtPricingRule, fromDate: string, toDate: string): boolean {
+    const overlapStart = rule.effectiveFrom > fromDate ? rule.effectiveFrom : fromDate;
+    const overlapEnd = rule.effectiveTo < toDate ? rule.effectiveTo : toDate;
+    if (overlapStart > overlapEnd) return false;
+
+    const firstDate = new Date(`${overlapStart}T12:00:00`);
+    const weekdayIndex: Record<ScheduleDayOfWeek, number> = {
+      SUNDAY: 0, MONDAY: 1, TUESDAY: 2, WEDNESDAY: 3,
+      THURSDAY: 4, FRIDAY: 5, SATURDAY: 6
+    };
+    const daysUntilRule = (weekdayIndex[rule.dayOfWeek] - firstDate.getDay() + 7) % 7;
+    firstDate.setDate(firstDate.getDate() + daysUntilRule);
+    return this.localDate(firstDate) <= overlapEnd;
+  }
+
   private isSlotStatus(value: string): value is OwnerTimeSlotStatus {
     return ['AVAILABLE', 'LOCKED', 'BOOKED', 'MAINTENANCE'].includes(value);
   }
@@ -634,6 +751,36 @@ export class OwnerScheduleComponent {
     return price >= minPrice && price <= maxPrice
       ? null
       : { venuePriceRange: { min: minPrice, max: maxPrice } };
+  }
+
+  private validateRuleStartMoment(control: AbstractControl): ValidationErrors | null {
+    const value = control.value as {
+      dayOfWeek?: ScheduleDayOfWeek;
+      startTime?: string;
+      effectiveFrom?: string;
+    } | null;
+    const effectiveFrom = value?.effectiveFrom;
+    const startTime = value?.startTime;
+    if (!effectiveFrom || !startTime) return null;
+
+    const selectedDays = this.selectedRuleDays();
+    const editing = this.editingRule();
+    const unchangedHistoricalStart = !!editing
+      && selectedDays.length === 1
+      && selectedDays[0] === editing.dayOfWeek
+      && effectiveFrom === editing.effectiveFrom
+      && this.timeValue(startTime) === this.timeValue(editing.startTime);
+    if (unchangedHistoricalStart) return null;
+
+    const today = this.today();
+    if (effectiveFrom < today) return { pastEffectiveStart: true };
+    if (effectiveFrom > today) return null;
+
+    const currentDay = this.days[(new Date().getDay() + 6) % 7]?.value;
+    const currentTime = new Date().toTimeString().slice(0, 5);
+    return currentDay && selectedDays.includes(currentDay) && this.timeValue(startTime) < currentTime
+      ? { pastEffectiveStart: true }
+      : null;
   }
 
   private startOfWeek(date: Date): string {

@@ -39,5 +39,6 @@ export interface OwnerTimeSlot {
 export interface GenerateTimeSlotsRequest {
   fromDate: string;
   toDate: string;
+  pricingRuleIds: string[];
   slotDurationMinutes: number;
 }

@@ -142,7 +142,8 @@ import {
   LucideCalendarCheck,
   LucideBarChart3,
   LucideCar,
-  LucideUserPlus
+  LucideUserPlus,
+  LucideCalendarX
 } from '@lucide/angular';
 
 @NgModule({
@@ -284,7 +285,8 @@ import {
       LucideCalendarCheck,
       LucideBarChart3,
       LucideCar,
-      LucideUserPlus
+      LucideUserPlus,
+      LucideCalendarX
     )
   ],
   bootstrap: [AppComponent]
