@@ -200,25 +200,51 @@
       <section class="active-rules" aria-labelledby="active-rules-title">
         <header>
           <div>
-            <h2 id="active-rules-title">Quy tắc giá đang áp dụng</h2>
-            <span>{{ rules().length }} quy tắc</span>
+            <h2 id="active-rules-title">Quy tắc giá áp dụng trong tuần</h2>
+            @if (activePricingRules().length) {
+            <button type="button" class="active-rules__count" [attr.aria-expanded]="activeRuleDetailsOpen()"
+              (click)="toggleActiveRuleDetails()">
+              {{ activePricingRules().length }} quy tắc áp dụng
+              <lucide-icon name="chevron-down" [class.expanded]="activeRuleDetailsOpen()" />
+            </button>
+            <span [attr.title]="activePricingCoverageDays() + ' trong 7 ngày đã có quy tắc giá áp dụng'">
+              Có giá: {{ activePricingCoverageLabel() }}
+            </span>
+            }
           </div>
           <button type="button" (click)="activeTab.set('pricing')">
             Xem tất cả quy tắc <lucide-icon name="chevron-right" />
           </button>
         </header>
-        @if (!summaryRules().length) {
-        <div class="active-rules__empty">Chưa có quy tắc giá cho sân này.</div>
+        @if (activeRuleDetailsOpen() && activePricingRuleGroups().length) {
+        <div class="active-rule-details">
+          @for (group of activePricingRuleGroups(); track group.value) {
+          <section>
+            <strong>{{ group.label }}</strong>
+            <div>
+              @for (rule of group.rules; track rule.pricingRuleId) {
+              <article>
+                <b>{{ timeValue(rule.startTime) }} – {{ timeValue(rule.endTime) }}</b>
+                <span>{{ compactMoney(rule.pricePerHour) }}/giờ</span>
+                <small>Hiệu lực {{ rule.effectiveFrom }} → {{ rule.effectiveTo }}</small>
+              </article>
+              }
+            </div>
+          </section>
+          }
+        </div>
+        }
+        @if (!pricingRuleStatistics().length) {
+        <div class="active-rules__empty">Chưa có quy tắc giá nào áp dụng trong tuần đang xem.</div>
         } @else {
         <div class="rule-summary-grid">
-          @for (rule of summaryRules(); track rule.pricingRuleId) {
-          <article>
-            <lucide-icon [name]="ruleSummaryIcon(rule)" />
+          @for (statistic of pricingRuleStatistics(); track statistic.key) {
+          <article [class]="'rule-statistic rule-statistic--' + statistic.key">
+            <lucide-icon [name]="statistic.icon" />
             <div>
-              <strong>{{ rulePeriodLabel(rule) }}</strong>
-              <span>{{ dayLabel(rule.dayOfWeek) }}</span>
-              <span>{{ timeValue(rule.startTime) }} – {{ timeValue(rule.endTime) }}</span>
-              <b>{{ compactMoney(rule.pricePerHour) }}/giờ</b>
+              <strong>{{ statistic.label }}</strong>
+              <span>{{ statistic.detail }}</span>
+              <b>{{ compactMoney(statistic.value) }}/giờ</b>
             </div>
           </article>
           }
@@ -389,13 +415,18 @@
             <label><span>Đến ngày</span><input type="date" [attr.min]="ruleForm.controls.effectiveFrom.value"
                 formControlName="effectiveTo" /></label>
           </div>
-          <div class="rule-time-notice" [class.rule-time-notice--error]="ruleForm.hasError('pastEffectiveStart')"
-            [attr.role]="ruleForm.hasError('pastEffectiveStart') ? 'alert' : 'note'">
-            <lucide-icon [name]="ruleForm.hasError('pastEffectiveStart') ? 'circle-alert' : 'info'" />
+          <div class="rule-time-notice"
+            [class.rule-time-notice--error]="ruleForm.hasError('pastEffectiveStart') || ruleForm.hasError('dayOutsideEffectiveRange')"
+            [attr.role]="ruleForm.hasError('pastEffectiveStart') || ruleForm.hasError('dayOutsideEffectiveRange') ? 'alert' : 'note'">
+            <lucide-icon
+              [name]="ruleForm.hasError('pastEffectiveStart') || ruleForm.hasError('dayOutsideEffectiveRange') ? 'circle-alert' : 'info'" />
             <div>
               @if (ruleForm.hasError('pastEffectiveStart')) {
               <strong>Không thể lưu mốc thời gian này</strong>
               <span>Ngày hoặc giờ bắt đầu đã qua. Hãy chọn thời điểm hiện tại hoặc tương lai.</span>
+              } @else if (ruleForm.hasError('dayOutsideEffectiveRange')) {
+              <strong>Thứ đã chọn nằm ngoài khoảng hiệu lực</strong>
+              <span>Khoảng Từ ngày – Đến ngày phải chứa ít nhất một ngày tương ứng với mỗi thứ đã chọn.</span>
               } @else {
               <strong>Chỉ áp dụng từ thời điểm hiện tại</strong>
               <span>Nếu chọn hôm nay, giờ bắt đầu không được sớm hơn giờ hiện tại.</span>

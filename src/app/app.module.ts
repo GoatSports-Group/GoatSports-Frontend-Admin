@@ -143,7 +143,8 @@ import {
   LucideBarChart3,
   LucideCar,
   LucideUserPlus,
-  LucideCalendarX
+  LucideCalendarX,
+  LucideChartNoAxesColumnIncreasing
 } from '@lucide/angular';
 
 @NgModule({
@@ -286,7 +287,8 @@ import {
       LucideBarChart3,
       LucideCar,
       LucideUserPlus,
-      LucideCalendarX
+      LucideCalendarX,
+      LucideChartNoAxesColumnIncreasing
     )
   ],
   bootstrap: [AppComponent]

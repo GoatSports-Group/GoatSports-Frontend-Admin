@@ -754,9 +754,84 @@ input:focus-visible {
   font-weight: 650;
 }
 
+.active-rules header button.active-rules__count {
+  min-height: 28px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 999px;
+  background: #edf7f2;
+  color: #34775a;
+  font-size: 11px;
+}
+
+.active-rules__count lucide-icon {
+  transition: transform .18s ease;
+}
+
+.active-rules__count lucide-icon.expanded {
+  transform: rotate(180deg);
+}
+
 .active-rules header lucide-icon {
   width: 14px;
   height: 14px;
+}
+
+.active-rule-details {
+  display: grid;
+  max-height: 260px;
+  gap: 0;
+  overflow: auto;
+  border-bottom: 1px solid #e3ebe7;
+  background: #f8fbf9;
+}
+
+.active-rule-details>section {
+  display: grid;
+  grid-template-columns: 125px minmax(0, 1fr);
+  gap: 14px;
+  padding: 11px 18px;
+  border-bottom: 1px solid #e8eeeb;
+}
+
+.active-rule-details>section:last-child {
+  border-bottom: 0;
+}
+
+.active-rule-details>section>strong {
+  color: #08764a;
+  font-size: 12px;
+}
+
+.active-rule-details>section>div {
+  display: grid;
+  gap: 7px;
+}
+
+.active-rule-details article {
+  display: grid;
+  grid-template-columns: minmax(115px, .6fr) minmax(105px, .45fr) minmax(220px, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+
+.active-rule-details b,
+.active-rule-details span,
+.active-rule-details small {
+  font-size: 12px;
+}
+
+.active-rule-details b {
+  color: #26372f;
+}
+
+.active-rule-details span {
+  color: #08764a;
+  font-weight: 750;
+}
+
+.active-rule-details small {
+  color: #66766e;
 }
 
 .rule-summary-grid {
@@ -1614,6 +1689,22 @@ input:focus-visible {
 
   .rule-summary-grid article:last-child {
     border-bottom: 0;
+  }
+
+  .active-rules>header,
+  .active-rules>header>div {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .active-rules>header {
+    padding-block: 12px;
+  }
+
+  .active-rule-details>section,
+  .active-rule-details article {
+    grid-template-columns: 1fr;
+    gap: 5px;
   }
 
   .rule-card {

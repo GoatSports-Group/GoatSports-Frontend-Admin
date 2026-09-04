@@ -33,6 +33,13 @@ import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-lo
 
 interface DayOption { value: ScheduleDayOfWeek; label: string; }
 interface PricingRuleGroup extends DayOption { rules: CourtPricingRule[]; }
+interface PricingRuleStatistic {
+  key: 'minimum' | 'average' | 'maximum';
+  label: string;
+  detail: string;
+  value: number;
+  icon: string;
+}
 interface SlotGroup { date: string; slots: OwnerTimeSlot[]; }
 interface CalendarDay {
   date: string;
@@ -114,6 +121,7 @@ export class OwnerScheduleComponent {
   readonly mutatingSlotId = signal<string | null>(null);
   readonly calendarWeekStart = signal(this.startOfWeek(new Date()));
   readonly calendarPickerOpen = signal(false);
+  readonly activeRuleDetailsOpen = signal(false);
   readonly calendarPickerMonth = signal(this.monthStart(this.calendarWeekStart()));
 
   readonly selectedVenue = computed(() =>
@@ -193,7 +201,52 @@ export class OwnerScheduleComponent {
   readonly calendarGridHeight = computed(() =>
     Math.max(380, ((this.calendarEndMinutes() - this.calendarStartMinutes()) / 60) * this.calendarRowHeight)
   );
-  readonly summaryRules = computed(() => this.rules().slice(0, 3));
+  readonly activePricingRules = computed(() => {
+    const fromDate = this.calendarWeekStart();
+    const toDate = this.calendarWeekEnd();
+    return this.sortRules(this.rules().filter(rule => this.ruleAppliesWithinRange(rule, fromDate, toDate)));
+  });
+  readonly activePricingCoverageDays = computed(() =>
+    new Set(this.activePricingRules().map(rule => rule.dayOfWeek)).size
+  );
+  readonly activePricingRuleGroups = computed<PricingRuleGroup[]>(() => {
+    const rules = this.sortRules(this.activePricingRules());
+    return this.days
+      .map(day => ({ ...day, rules: rules.filter(rule => rule.dayOfWeek === day.value) }))
+      .filter(group => group.rules.length > 0);
+  });
+  readonly activePricingCoverageLabel = computed(() => this.activePricingRuleGroups()
+    .map(group => this.shortDayLabel(group.value))
+    .join(', '));
+  readonly pricingRuleStatistics = computed<PricingRuleStatistic[]>(() => {
+    const rules = this.activePricingRules();
+    if (!rules.length) return [];
+
+    const prices = rules.map(rule => rule.pricePerHour);
+    const totalConfiguredMinutes = rules.reduce((total, rule) =>
+      total + Math.max(0, this.timeToMinutes(rule.endTime) - this.timeToMinutes(rule.startTime)), 0);
+    const weightedPrice = totalConfiguredMinutes > 0
+      ? rules.reduce((total, rule) => {
+        const duration = Math.max(0, this.timeToMinutes(rule.endTime) - this.timeToMinutes(rule.startTime));
+        return total + rule.pricePerHour * duration;
+      }, 0) / totalConfiguredMinutes
+      : prices.reduce((total, price) => total + price, 0) / prices.length;
+
+    return [
+      {
+        key: 'minimum', label: 'Giá thấp nhất', value: Math.min(...prices),
+        detail: 'Mức giá dễ tiếp cận nhất', icon: 'trending-down'
+      },
+      {
+        key: 'average', label: 'Giá trung bình', value: Math.round(weightedPrice),
+        detail: 'Bình quân theo giờ cấu hình', icon: 'chart-no-axes-column-increasing'
+      },
+      {
+        key: 'maximum', label: 'Giá cao nhất', value: Math.max(...prices),
+        detail: 'Mức giá cao nhất đang dùng', icon: 'trending-up'
+      }
+    ];
+  });
 
   readonly ruleForm = this.formBuilder.nonNullable.group({
     dayOfWeek: this.formBuilder.nonNullable.control<ScheduleDayOfWeek>('MONDAY', Validators.required),
@@ -207,7 +260,10 @@ export class OwnerScheduleComponent {
     effectiveFrom: [this.today(), Validators.required],
     effectiveTo: [this.addDays(30), Validators.required]
   }, {
-    validators: [(control: AbstractControl) => this.validateRuleStartMoment(control)]
+    validators: [
+      (control: AbstractControl) => this.validateRuleStartMoment(control),
+      (control: AbstractControl) => this.validateRuleEffectiveDays(control)
+    ]
   });
   readonly generationForm = this.formBuilder.nonNullable.group({
     fromDate: [this.calendarWeekStart(), Validators.required],
@@ -503,6 +559,10 @@ export class OwnerScheduleComponent {
   }
 
   dayLabel(day: ScheduleDayOfWeek): string { return this.days.find(item => item.value === day)?.label ?? day; }
+  shortDayLabel(day: ScheduleDayOfWeek): string {
+    const index = this.days.findIndex(item => item.value === day);
+    return day === 'SUNDAY' ? 'CN' : index >= 0 ? `T${index + 2}` : day;
+  }
   formatMoney(value: number): string { return new Intl.NumberFormat('vi-VN').format(value) + ' ₫'; }
   compactMoney(value: number): string { return new Intl.NumberFormat('vi-VN').format(value) + 'đ'; }
   formatDate(value: string): string { return new Intl.DateTimeFormat('vi-VN', { dateStyle: 'full' }).format(new Date(`${value}T00:00:00`)); }
@@ -552,6 +612,11 @@ export class OwnerScheduleComponent {
     this.collapsedRuleGroups.update(days => days.includes(day)
       ? days.filter(item => item !== day)
       : [...days, day]);
+  }
+
+  toggleActiveRuleDetails(): void {
+    if (!this.activePricingRules().length) return;
+    this.activeRuleDetailsOpen.update(open => !open);
   }
 
   allApplicableRulesSelected(): boolean {
@@ -606,16 +671,6 @@ export class OwnerScheduleComponent {
       DISABLED: 'Tạm ngưng'
     };
     return labels[this.slotVisualStatus(slot)];
-  }
-
-  rulePeriodLabel(rule: CourtPricingRule): string {
-    if (rule.dayOfWeek === 'SATURDAY' || rule.dayOfWeek === 'SUNDAY') return 'Cuối tuần & Lễ';
-    return this.timeToMinutes(rule.startTime) >= 17 * 60 ? 'Giờ cao điểm' : 'Giờ thường';
-  }
-
-  ruleSummaryIcon(rule: CourtPricingRule): string {
-    if (rule.dayOfWeek === 'SATURDAY' || rule.dayOfWeek === 'SUNDAY') return 'calendar';
-    return this.timeToMinutes(rule.startTime) >= 17 * 60 ? 'clock' : 'sun';
   }
 
   previousWeek(): void { this.moveWeek(-7); }
@@ -675,14 +730,19 @@ export class OwnerScheduleComponent {
     const overlapEnd = rule.effectiveTo < toDate ? rule.effectiveTo : toDate;
     if (overlapStart > overlapEnd) return false;
 
-    const firstDate = new Date(`${overlapStart}T12:00:00`);
+    return this.dayOccursWithinRange(rule.dayOfWeek, overlapStart, overlapEnd);
+  }
+
+  private dayOccursWithinRange(day: ScheduleDayOfWeek, fromDate: string, toDate: string): boolean {
+    if (fromDate > toDate) return false;
+    const firstDate = new Date(`${fromDate}T12:00:00`);
     const weekdayIndex: Record<ScheduleDayOfWeek, number> = {
       SUNDAY: 0, MONDAY: 1, TUESDAY: 2, WEDNESDAY: 3,
       THURSDAY: 4, FRIDAY: 5, SATURDAY: 6
     };
-    const daysUntilRule = (weekdayIndex[rule.dayOfWeek] - firstDate.getDay() + 7) % 7;
+    const daysUntilRule = (weekdayIndex[day] - firstDate.getDay() + 7) % 7;
     firstDate.setDate(firstDate.getDate() + daysUntilRule);
-    return this.localDate(firstDate) <= overlapEnd;
+    return this.localDate(firstDate) <= toDate;
   }
 
   private isSlotStatus(value: string): value is OwnerTimeSlotStatus {
@@ -781,6 +841,16 @@ export class OwnerScheduleComponent {
     return currentDay && selectedDays.includes(currentDay) && this.timeValue(startTime) < currentTime
       ? { pastEffectiveStart: true }
       : null;
+  }
+
+  private validateRuleEffectiveDays(control: AbstractControl): ValidationErrors | null {
+    const value = control.value as { effectiveFrom?: string; effectiveTo?: string } | null;
+    const effectiveFrom = value?.effectiveFrom;
+    const effectiveTo = value?.effectiveTo;
+    if (!effectiveFrom || !effectiveTo || effectiveFrom > effectiveTo) return null;
+    const invalidDays = this.selectedRuleDays()
+      .filter(day => !this.dayOccursWithinRange(day, effectiveFrom, effectiveTo));
+    return invalidDays.length ? { dayOutsideEffectiveRange: invalidDays } : null;
   }
 
   private startOfWeek(date: Date): string {
