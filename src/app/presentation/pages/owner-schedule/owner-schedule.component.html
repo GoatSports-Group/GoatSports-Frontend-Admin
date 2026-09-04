@@ -305,8 +305,9 @@
           <h3>Thời gian áp dụng</h3>
           <div class="day-toggle-list" aria-label="Ngày áp dụng">
             @for (day of days; track day.value) {
-            <button type="button" [class.active]="ruleForm.controls.dayOfWeek.value === day.value"
-              (click)="ruleForm.controls.dayOfWeek.setValue(day.value)">
+            <button type="button" [class.active]="isRuleDaySelected(day.value)"
+              [attr.aria-pressed]="isRuleDaySelected(day.value)" [disabled]="savingRule()"
+              (click)="toggleRuleDay(day.value)">
               {{ day.label === 'Chủ Nhật' ? 'CN' : 'T' + ($index + 2) }}
             </button>
             }

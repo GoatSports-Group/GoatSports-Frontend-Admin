@@ -104,6 +104,7 @@ export class OwnerScheduleComponent {
   readonly loadError = signal<string | null>(null);
   readonly ruleEditorOpen = signal(false);
   readonly editingRule = signal<CourtPricingRule | null>(null);
+  readonly selectedRuleDays = signal<ScheduleDayOfWeek[]>(['MONDAY']);
   readonly savingRule = signal(false);
   readonly deletingRuleId = signal<string | null>(null);
   readonly generating = signal(false);
@@ -305,6 +306,7 @@ export class OwnerScheduleComponent {
   openRuleEditor(rule?: CourtPricingRule): void {
     if (this.savingRule()) return;
     this.editingRule.set(rule ?? null);
+    this.selectedRuleDays.set([rule?.dayOfWeek ?? 'MONDAY']);
     this.ruleForm.reset(rule ? {
       dayOfWeek: rule.dayOfWeek, startTime: this.timeValue(rule.startTime),
       endTime: this.timeValue(rule.endTime), basePricePerHour: rule.basePricePerHour,
@@ -330,6 +332,20 @@ export class OwnerScheduleComponent {
     this.calendarPickerOpen.set(false);
   }
 
+  isRuleDaySelected(day: ScheduleDayOfWeek): boolean {
+    return this.selectedRuleDays().includes(day);
+  }
+
+  toggleRuleDay(day: ScheduleDayOfWeek): void {
+    if (this.savingRule()) return;
+    const selected = this.selectedRuleDays();
+    const next = selected.includes(day)
+      ? selected.length > 1 ? selected.filter(item => item !== day) : selected
+      : this.days.map(item => item.value).filter(item => [...selected, day].includes(item));
+    this.selectedRuleDays.set(next);
+    this.ruleForm.controls.dayOfWeek.setValue(next[0]);
+  }
+
   saveRule(): void {
     if (this.savingRule()) return;
     this.ruleForm.markAllAsTouched();
@@ -341,24 +357,32 @@ export class OwnerScheduleComponent {
       return;
     }
     const editing = this.editingRule();
-    const request: CourtPricingRuleUpsert = value;
-    const operation = editing
-      ? this.manageSchedule.updateRule(courtId, editing.pricingRuleId, request)
-      : this.manageSchedule.createRule(courtId, request);
+    const selectedDays = this.selectedRuleDays();
+    const primaryDay = editing && selectedDays.includes(editing.dayOfWeek)
+      ? editing.dayOfWeek : selectedDays[0];
+    const orderedDays = [primaryDay, ...selectedDays.filter(day => day !== primaryDay)];
+    const operations: Observable<CourtPricingRule>[] = orderedDays.map((day, index) => {
+      const request: CourtPricingRuleUpsert = { ...value, dayOfWeek: day };
+      return editing && index === 0
+        ? this.manageSchedule.updateRule(courtId, editing.pricingRuleId, request)
+        : this.manageSchedule.createRule(courtId, request);
+    });
     this.savingRule.set(true);
     this.ruleForm.disable({ emitEvent: false });
-    operation.pipe(
+    forkJoin(operations).pipe(
       take(1), takeUntilDestroyed(this.destroyRef),
       finalize(() => { this.savingRule.set(false); this.ruleForm.enable({ emitEvent: false }); })
     ).subscribe({
-      next: saved => {
-        this.rules.update(items => this.sortRules(
-          items.some(item => item.pricingRuleId === saved.pricingRuleId)
-            ? items.map(item => item.pricingRuleId === saved.pricingRuleId ? saved : item)
-            : [...items, saved]
-        ));
+      next: savedRules => {
+        this.rules.update(items => this.sortRules([
+          ...items.filter(item => item.pricingRuleId !== editing?.pricingRuleId),
+          ...savedRules
+        ]));
         this.ruleEditorOpen.set(false);
-        this.notify.success(editing ? 'Đã cập nhật quy tắc giá.' : 'Đã tạo quy tắc giá.');
+        const dayCount = savedRules.length;
+        this.notify.success(editing
+          ? `Đã cập nhật quy tắc giá cho ${dayCount} ngày.`
+          : `Đã tạo quy tắc giá cho ${dayCount} ngày.`);
       },
       error: error => this.notify.error(this.errorMessage(error, 'Không thể lưu quy tắc giá.'))
     });
