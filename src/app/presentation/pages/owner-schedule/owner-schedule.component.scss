@@ -1048,6 +1048,20 @@ input:focus-visible {
   opacity: 1;
 }
 
+.rule-select-all input:disabled,
+.rule-group__header input:disabled,
+.rule-card__select input:disabled {
+  border-color: #d7dfdb;
+  background: #eef2f0;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.rule-group__header label:has(input:disabled),
+.rule-card__select:has(input:disabled) {
+  cursor: not-allowed;
+}
+
 .rule-select-all input:indeterminate::after,
 .rule-group__header input:indeterminate::after,
 .rule-card__select input:indeterminate::after {
@@ -1156,6 +1170,16 @@ input:focus-visible {
   box-shadow: inset 3px 0 #0a9662;
 }
 
+.rule-card--ineligible {
+  background: #fafbfa;
+}
+
+.rule-card--ineligible .rule-card__day,
+.rule-card--ineligible .rule-card__price,
+.rule-card--ineligible .rule-card__dates {
+  opacity: .68;
+}
+
 .rule-card__select {
   justify-content: center;
 }
@@ -1199,6 +1223,13 @@ input:focus-visible {
 .rule-card__dates span {
   color: #43554c;
   font-size: 13px;
+}
+
+.rule-card__dates em {
+  color: #a16207;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 650;
 }
 
 .rule-card__actions {

@@ -278,15 +278,15 @@
           <h2>{{ selectedCourt()?.name }}</h2>
         </div>
         <div class="pricing-heading__tools">
-          @if (applicableRules().length) {
+          @if (generationEligibleRules().length) {
           <label class="rule-select-all">
             <input type="checkbox" [checked]="allApplicableRulesSelected()"
               [indeterminate]="someApplicableRulesSelected()"
               (change)="toggleAllApplicableRules($any($event.target).checked)" />
-            <span>Chọn tất cả đang hiển thị</span>
+            <span>Chọn tất cả có thể sinh</span>
           </label>
           }
-          <p>Đã chọn {{ selectedGenerationRuleIds().length }}/{{ applicableRules().length }} quy tắc còn hiệu lực trong khoảng.</p>
+          <p>Đã chọn {{ selectedGenerationRuleIds().length }}/{{ generationEligibleRules().length }} quy tắc áp dụng đúng ngày trong khoảng.</p>
         </div>
       </header>
 
@@ -308,6 +308,7 @@
             <label (click)="$event.stopPropagation()">
               <input type="checkbox" [checked]="isRuleGroupSelected(group)"
                 [indeterminate]="isRuleGroupPartiallySelected(group)"
+                [disabled]="!eligibleRuleCount(group)"
                 (change)="toggleRuleGroup(group, $any($event.target).checked)" />
             </label>
             <button type="button" class="rule-group__toggle"
@@ -315,16 +316,18 @@
               [attr.aria-label]="(isRuleGroupCollapsed(group.value) ? 'Mở rộng ' : 'Thu gọn ') + group.label"
               (click)="toggleRuleGroupCollapsed(group.value)">
               <strong>{{ group.label }}</strong>
-              <span>{{ group.rules.length }} quy tắc</span>
+              <span>{{ group.rules.length }} quy tắc{{ eligibleRuleCount(group) === group.rules.length ? '' : ' · ' + eligibleRuleCount(group) + ' có thể sinh' }}</span>
               <lucide-icon name="chevron-down" [class.collapsed]="isRuleGroupCollapsed(group.value)" />
             </button>
           </header>
           <div class="rule-group__content" [class.rule-group__content--collapsed]="isRuleGroupCollapsed(group.value)">
             <div class="rule-list">
               @for (rule of group.rules; track rule.pricingRuleId) {
-              <article class="rule-card" [class.rule-card--selected]="isGenerationRuleSelected(rule.pricingRuleId)">
+              <article class="rule-card" [class.rule-card--selected]="isGenerationRuleSelected(rule.pricingRuleId)"
+                [class.rule-card--ineligible]="!isGenerationRuleEligible(rule)">
                 <label class="rule-card__select" [attr.aria-label]="'Chọn quy tắc ' + dayLabel(rule.dayOfWeek)">
                   <input type="checkbox" [checked]="isGenerationRuleSelected(rule.pricingRuleId)"
+                    [disabled]="!isGenerationRuleEligible(rule)"
                     (change)="toggleGenerationRule(rule.pricingRuleId, $any($event.target).checked)" />
                 </label>
                 <div class="rule-card__day">
@@ -336,6 +339,9 @@
                 </div>
                 <div class="rule-card__dates">
                   <small>Hiệu lực</small><span>{{ rule.effectiveFrom }} → {{ rule.effectiveTo }}</span>
+                  @if (!isGenerationRuleEligible(rule)) {
+                  <em>Không có {{ dayLabel(rule.dayOfWeek) }} trong khoảng ngày đã chọn</em>
+                  }
                 </div>
                 <div class="rule-card__actions">
                   <button type="button" (click)="openRuleEditor(rule)" [disabled]="savingRule() || !!deletingRuleId()"

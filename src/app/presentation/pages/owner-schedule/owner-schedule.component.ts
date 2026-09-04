@@ -279,6 +279,11 @@ export class OwnerScheduleComponent {
     if (!fromDate || !toDate || fromDate > toDate) return [];
     return this.sortRules(this.rules().filter(rule => this.ruleEffectiveRangeOverlaps(rule, fromDate, toDate)));
   });
+  readonly generationEligibleRules = computed(() => {
+    const { fromDate, toDate } = this.generationRange();
+    if (!fromDate || !toDate || fromDate > toDate) return [];
+    return this.applicableRules().filter(rule => this.ruleAppliesWithinRange(rule, fromDate, toDate));
+  });
   readonly applicableRuleGroups = computed<PricingRuleGroup[]>(() => {
     const rules = this.applicableRules();
     return this.days
@@ -501,9 +506,10 @@ export class OwnerScheduleComponent {
     if (this.generating()) return;
     this.generationForm.markAllAsTouched();
     const courtId = this.selectedCourtId();
+    const eligibleIds = new Set(this.generationEligibleRules().map(rule => rule.pricingRuleId));
     const request = {
       ...this.generationForm.getRawValue(),
-      pricingRuleIds: this.selectedGenerationRuleIds()
+      pricingRuleIds: this.selectedGenerationRuleIds().filter(ruleId => eligibleIds.has(ruleId))
     };
     if (!courtId || this.generationForm.invalid) return;
     if (request.fromDate > request.toDate) {
@@ -586,22 +592,37 @@ export class OwnerScheduleComponent {
   }
 
   toggleGenerationRule(ruleId: string, checked: boolean): void {
+    const rule = this.applicableRules().find(item => item.pricingRuleId === ruleId);
+    if (!rule || !this.isGenerationRuleEligible(rule)) return;
     this.selectedGenerationRuleIds.update(ids => checked
       ? ids.includes(ruleId) ? ids : [...ids, ruleId]
       : ids.filter(id => id !== ruleId));
   }
 
+  isGenerationRuleEligible(rule: CourtPricingRule): boolean {
+    const { fromDate, toDate } = this.generationRange();
+    return !!fromDate && !!toDate && fromDate <= toDate
+      && this.ruleAppliesWithinRange(rule, fromDate, toDate);
+  }
+
+  eligibleRuleCount(group: PricingRuleGroup): number {
+    return group.rules.filter(rule => this.isGenerationRuleEligible(rule)).length;
+  }
+
   isRuleGroupSelected(group: PricingRuleGroup): boolean {
-    return group.rules.every(rule => this.isGenerationRuleSelected(rule.pricingRuleId));
+    const eligibleRules = group.rules.filter(rule => this.isGenerationRuleEligible(rule));
+    return eligibleRules.length > 0
+      && eligibleRules.every(rule => this.isGenerationRuleSelected(rule.pricingRuleId));
   }
 
   isRuleGroupPartiallySelected(group: PricingRuleGroup): boolean {
-    const selectedCount = group.rules.filter(rule => this.isGenerationRuleSelected(rule.pricingRuleId)).length;
-    return selectedCount > 0 && selectedCount < group.rules.length;
+    const eligibleRules = group.rules.filter(rule => this.isGenerationRuleEligible(rule));
+    const selectedCount = eligibleRules.filter(rule => this.isGenerationRuleSelected(rule.pricingRuleId)).length;
+    return selectedCount > 0 && selectedCount < eligibleRules.length;
   }
 
   toggleRuleGroup(group: PricingRuleGroup, checked: boolean): void {
-    this.setRulesSelected(group.rules, checked);
+    this.setRulesSelected(group.rules.filter(rule => this.isGenerationRuleEligible(rule)), checked);
   }
 
   isRuleGroupCollapsed(day: ScheduleDayOfWeek): boolean {
@@ -620,18 +641,18 @@ export class OwnerScheduleComponent {
   }
 
   allApplicableRulesSelected(): boolean {
-    const rules = this.applicableRules();
+    const rules = this.generationEligibleRules();
     return rules.length > 0 && rules.every(rule => this.isGenerationRuleSelected(rule.pricingRuleId));
   }
 
   someApplicableRulesSelected(): boolean {
-    const rules = this.applicableRules();
+    const rules = this.generationEligibleRules();
     const selectedCount = rules.filter(rule => this.isGenerationRuleSelected(rule.pricingRuleId)).length;
     return selectedCount > 0 && selectedCount < rules.length;
   }
 
   toggleAllApplicableRules(checked: boolean): void {
-    this.setRulesSelected(this.applicableRules(), checked);
+    this.setRulesSelected(this.generationEligibleRules(), checked);
   }
 
   slotHeight(slot: OwnerTimeSlot): number {
@@ -721,7 +742,7 @@ export class OwnerScheduleComponent {
   }
 
   private pruneGenerationRuleSelection(): void {
-    const applicableIds = new Set(this.applicableRules().map(rule => rule.pricingRuleId));
+    const applicableIds = new Set(this.generationEligibleRules().map(rule => rule.pricingRuleId));
     this.selectedGenerationRuleIds.update(ids => ids.filter(id => applicableIds.has(id)));
   }
 

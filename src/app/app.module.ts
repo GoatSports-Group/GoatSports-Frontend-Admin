@@ -144,7 +144,9 @@ import {
   LucideCar,
   LucideUserPlus,
   LucideCalendarX,
-  LucideChartNoAxesColumnIncreasing
+  LucideChartNoAxesColumnIncreasing,
+  LucideListFilter,
+  LucideCalendarDays
 } from '@lucide/angular';
 
 @NgModule({
@@ -288,7 +290,9 @@ import {
       LucideCar,
       LucideUserPlus,
       LucideCalendarX,
-      LucideChartNoAxesColumnIncreasing
+      LucideChartNoAxesColumnIncreasing,
+      LucideListFilter,
+      LucideCalendarDays
     )
   ],
   bootstrap: [AppComponent]
