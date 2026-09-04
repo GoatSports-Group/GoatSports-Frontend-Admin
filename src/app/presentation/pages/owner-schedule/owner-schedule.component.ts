@@ -412,9 +412,7 @@ export class OwnerScheduleComponent {
 
   slotVisualStatus(slot: OwnerTimeSlot): CalendarSlotVisualStatus {
     const court = this.selectedCourt();
-    if (court?.active === false || court?.availabilityStatus === 'INACTIVE') return 'DISABLED';
     if (slot.status === 'MAINTENANCE') return 'MAINTENANCE';
-    if (slot.status === 'AVAILABLE') return 'AVAILABLE';
 
     const booking = this.bookingForSlot(slot);
     if (booking?.status === 'COMPLETED') {
@@ -424,9 +422,12 @@ export class OwnerScheduleComponent {
       if (!this.isBookingFullyPaid(booking)) return 'PAYMENT_DUE';
       return this.isSlotEnded(slot) ? 'COMPLETED' : 'OCCUPIED';
     }
-    if (booking && this.isSlotInProgress(slot)) return 'AWAITING_CHECK_IN';
-    if (slot.status === 'BOOKED' && this.isSlotInProgress(slot)) return 'AWAITING_CHECK_IN';
-    return 'UPCOMING';
+    if (booking && ['PENDING_PAYMENT', 'CONFIRMED'].includes(booking.status)) {
+      return this.isSlotFuture(slot) ? 'UPCOMING' : 'AWAITING_CHECK_IN';
+    }
+
+    if (court?.active === false || court?.availabilityStatus === 'INACTIVE') return 'DISABLED';
+    return 'AVAILABLE';
   }
 
   slotStatusLabel(slot: OwnerTimeSlot): string {
@@ -522,15 +523,12 @@ export class OwnerScheduleComponent {
     ) ?? null;
   }
 
-  private isSlotInProgress(slot: OwnerTimeSlot): boolean {
-    const now = new Date();
-    const start = new Date(`${slot.date}T${this.timeValue(slot.startTime)}:00`);
-    const end = new Date(`${slot.date}T${this.timeValue(slot.endTime)}:00`);
-    return start <= now && now < end;
-  }
-
   private isSlotEnded(slot: OwnerTimeSlot): boolean {
     return new Date(`${slot.date}T${this.timeValue(slot.endTime)}:00`) <= new Date();
+  }
+
+  private isSlotFuture(slot: OwnerTimeSlot): boolean {
+    return new Date(`${slot.date}T${this.timeValue(slot.startTime)}:00`) > new Date();
   }
 
   private isBookingFullyPaid(booking: OwnerBooking): boolean {
