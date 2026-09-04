@@ -48,14 +48,17 @@
         </select>
       </label>
 
-      <label class="date-range-picker" aria-label="Chọn tuần hiển thị">
+      <div class="date-range-picker" role="button" tabindex="0" aria-label="Chọn tuần hiển thị"
+        [class.is-disabled]="loadingData() || generating()" (click)="openCalendarDatePicker($event)"
+        (keydown.enter)="openCalendarDatePicker($event)" (keydown.space)="openCalendarDatePicker($event)">
         <span class="sr-only">Tuần hiển thị</span>
         <lucide-icon name="calendar" />
         <strong>{{ calendarRangeLabel() }}</strong>
         <lucide-icon name="chevron-down" />
-        <input type="date" [value]="calendarWeekStart()" (change)="changeCalendarDate($event)"
+        <input #calendarDateInput type="date" tabindex="-1" [value]="calendarWeekStart()"
+          (click)="$event.stopPropagation()" (change)="changeCalendarDate($event)"
           [disabled]="loadingData() || generating()" />
-      </label>
+      </div>
 
       <div class="week-navigation" aria-label="Điều hướng tuần">
         <button type="button" (click)="previousWeek()" [disabled]="loadingData()" aria-label="Tuần trước">
@@ -102,10 +105,14 @@
     } @else if (activeTab() === 'calendar') {
     <section class="calendar-section" aria-label="Lịch hoạt động theo tuần">
       <div class="calendar-legend" aria-label="Chú thích trạng thái">
-        <span><i class="legend-box legend-box--available"></i>Còn trống</span>
-        <span><i class="legend-dot legend-dot--booked"><lucide-icon name="check" /></i>Đã đặt</span>
-        <span><i class="legend-dot legend-dot--locked"></i>Giữ chỗ</span>
-        <span><i class="legend-box legend-box--maintenance"></i>Bảo trì</span>
+        <span><i data-status="AVAILABLE"></i>Trống</span>
+        <span><i data-status="AWAITING_CHECK_IN"></i>Chưa check-in</span>
+        <span><i data-status="OCCUPIED"></i>Đang sử dụng</span>
+        <span><i data-status="PAYMENT_DUE"></i>Còn công nợ</span>
+        <span><i data-status="UPCOMING"></i>Sắp có lịch</span>
+        <span><i data-status="COMPLETED"></i>Hoàn thành</span>
+        <span><i data-status="MAINTENANCE"></i>Bảo trì</span>
+        <span><i data-status="DISABLED"></i>Tạm ngưng</span>
       </div>
 
       <div class="week-calendar">
@@ -131,13 +138,13 @@
             @for (day of calendarDays(); track day.date) {
             <div class="calendar-day" [class.calendar-day--today]="day.today">
               @for (slot of day.slots; track slot.timeSlotId) {
-              <article class="calendar-slot" [attr.data-status]="slot.status" [style.top.px]="slotTop(slot)"
+              <article class="calendar-slot" [attr.data-status]="slotVisualStatus(slot)" [style.top.px]="slotTop(slot)"
                 [style.height.px]="slotHeight(slot)"
-                [title]="slotStatusLabel(slot.status) + ' · ' + compactMoney(slot.pricePerHour) + '/giờ'">
+                [title]="slotStatusLabel(slot) + ' · ' + compactMoney(slot.pricePerHour) + '/giờ'">
                 <strong>{{ timeValue(slot.startTime) }} – {{ timeValue(slot.endTime) }}</strong>
-                <span>{{ slotStatusLabel(slot.status) }}</span>
+                <span>{{ slotStatusLabel(slot) }}</span>
                 <small>{{ compactMoney(slot.pricePerHour) }}</small>
-                @if (slot.status === 'BOOKED') {
+                @if (slotVisualStatus(slot) === 'OCCUPIED' || slotVisualStatus(slot) === 'COMPLETED') {
                 <lucide-icon class="calendar-slot__status-icon" name="check-circle" />
                 }
                 @if (slot.status === 'AVAILABLE' || slot.status === 'MAINTENANCE') {

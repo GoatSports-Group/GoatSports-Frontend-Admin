@@ -185,6 +185,22 @@ input:focus-visible {
   border-radius: 9px;
   background: #fff;
   color: #34463e;
+  cursor: pointer;
+}
+
+.date-range-picker:hover:not(.is-disabled) {
+  border-color: #8fb7a6;
+  background: #fbfefc;
+}
+
+.date-range-picker:focus-visible {
+  outline: 2px solid rgba(4, 120, 87, .28);
+  outline-offset: 2px;
+}
+
+.date-range-picker.is-disabled {
+  cursor: not-allowed;
+  opacity: .55;
 }
 
 .date-range-picker strong {
@@ -202,10 +218,9 @@ input:focus-visible {
 
 .date-range-picker input {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  cursor: pointer;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
   opacity: 0;
 }
 
@@ -310,43 +325,22 @@ input:focus-visible {
   gap: 6px;
 }
 
-.legend-box,
-.legend-dot {
-  display: grid;
-  width: 15px;
-  height: 15px;
+.calendar-legend i {
+  width: 7px;
+  height: 7px;
   flex: none;
-  place-items: center;
-}
-
-.legend-box--available {
-  border: 1px solid #b9dfcf;
-  background: #e1f5eb;
-}
-
-.legend-dot {
   border-radius: 50%;
+  background: #8f9893;
 }
 
-.legend-dot--booked {
-  background: #69c9a4;
-  color: #fff;
-}
-
-.legend-dot--booked lucide-icon {
-  width: 10px;
-  height: 10px;
-}
-
-.legend-dot--locked {
-  border: 2px solid #ffad33;
-  background: #fff;
-}
-
-.legend-box--maintenance {
-  border: 1px solid #d4dbd7;
-  background: repeating-linear-gradient(135deg, #fff 0 2px, #e7ebe9 2px 4px);
-}
+.calendar-legend i[data-status='AVAILABLE'] { background: #57a93d; }
+.calendar-legend i[data-status='AWAITING_CHECK_IN'] { background: #d99a1d; }
+.calendar-legend i[data-status='OCCUPIED'] { background: #2f78c4; }
+.calendar-legend i[data-status='PAYMENT_DUE'] { background: #b35a27; }
+.calendar-legend i[data-status='UPCOMING'] { background: #e68a18; }
+.calendar-legend i[data-status='COMPLETED'] { background: #08764a; }
+.calendar-legend i[data-status='MAINTENANCE'] { background: #db443e; }
+.calendar-legend i[data-status='DISABLED'] { background: #8f9893; }
 
 .week-calendar {
   min-width: 0;
@@ -495,22 +489,51 @@ input:focus-visible {
   font-size: 11px;
 }
 
-.calendar-slot[data-status='BOOKED'] {
-  border-color: #afd9c8;
-  background: #d7eee3;
+.calendar-slot[data-status='AWAITING_CHECK_IN'] {
+  border-color: #e8c56d;
+  background: #fff7df;
+  color: #715314;
 }
 
-.calendar-slot[data-status='LOCKED'] {
-  border-color: #f3a72c;
-  border-style: dashed;
-  background: #fffaf0;
-  color: #775117;
+.calendar-slot[data-status='OCCUPIED'] {
+  border-color: #8ab7e8;
+  background: #e8f2ff;
+  color: #245e99;
+}
+
+.calendar-slot[data-status='PAYMENT_DUE'] {
+  border-color: #d9a17d;
+  background: #fbeee7;
+  color: #89451f;
+}
+
+.calendar-slot[data-status='UPCOMING'] {
+  border-color: #efb15c;
+  background: #fff2df;
+  color: #9b590d;
+}
+
+.calendar-slot[data-status='COMPLETED'] {
+  border-color: #075c3c;
+  background: #08764a;
+  color: #fff;
+}
+
+.calendar-slot[data-status='COMPLETED'] > span,
+.calendar-slot[data-status='COMPLETED'] > small {
+  color: rgba(255, 255, 255, .9);
 }
 
 .calendar-slot[data-status='MAINTENANCE'] {
-  border-color: #d2d9d5;
-  background: repeating-linear-gradient(135deg, #fafbfa 0 4px, #e8ecea 4px 8px);
-  color: #59665f;
+  border-color: #ec9a96;
+  background: repeating-linear-gradient(135deg, #fff1f1 0 4px, #ffe5e5 4px 8px);
+  color: #a8322e;
+}
+
+.calendar-slot[data-status='DISABLED'] {
+  border-color: #c5cbc8;
+  background: #f0f2f1;
+  color: #69726d;
 }
 
 .calendar-slot__status-icon {
@@ -519,7 +542,11 @@ input:focus-visible {
   bottom: 5px;
   width: 15px;
   height: 15px;
-  color: #08764a;
+  color: #2f78c4;
+}
+
+.calendar-slot[data-status='COMPLETED'] .calendar-slot__status-icon {
+  color: #fff;
 }
 
 .calendar-slot__actions {

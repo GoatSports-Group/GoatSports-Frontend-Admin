@@ -1,8 +1,19 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, HostListener, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  HostListener,
+  ViewChild,
+  computed,
+  inject,
+  signal
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { finalize, forkJoin, of, switchMap, take } from 'rxjs';
+import { EMPTY, Observable, catchError, expand, finalize, forkJoin, of, reduce, switchMap, take } from 'rxjs';
+import { OwnerBooking, OwnerBookingFilter } from '@application/dto/owner-booking/owner-booking.dto';
 import {
   CourtPricingRule,
   CourtPricingRuleUpsert,
@@ -15,6 +26,7 @@ import {
   OwnerVenueOverview
 } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { ManageOwnerScheduleUseCase } from '@application/usecase/owner-schedule/manage-owner-schedule.usecase';
+import { ManageOwnerBookingsUseCase } from '@application/usecase/owner-booking/manage-owner-bookings.usecase';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
 import { ManageOwnerVenueCourtsUseCase } from '@application/usecase/venue-owner-dashboard/manage-owner-venue-courts.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
@@ -32,6 +44,16 @@ interface CalendarDay {
   slots: OwnerTimeSlot[];
 }
 
+type CalendarSlotVisualStatus =
+  | 'AVAILABLE'
+  | 'AWAITING_CHECK_IN'
+  | 'OCCUPIED'
+  | 'PAYMENT_DUE'
+  | 'UPCOMING'
+  | 'COMPLETED'
+  | 'MAINTENANCE'
+  | 'DISABLED';
+
 @Component({
   selector: 'app-owner-schedule',
   standalone: true,
@@ -41,11 +63,14 @@ interface CalendarDay {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OwnerScheduleComponent {
+  @ViewChild('calendarDateInput') private calendarDateInput?: ElementRef<HTMLInputElement>;
+
   readonly calendarRowHeight = 72;
   private readonly formBuilder = inject(FormBuilder);
   private readonly getVenues = inject(GetMyOwnerVenuesUseCase);
   private readonly manageCourts = inject(ManageOwnerVenueCourtsUseCase);
   private readonly manageSchedule = inject(ManageOwnerScheduleUseCase);
+  private readonly manageBookings = inject(ManageOwnerBookingsUseCase);
   private readonly notify = inject(NotifyService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
@@ -66,6 +91,7 @@ export class OwnerScheduleComponent {
   readonly selectedCourtId = signal('');
   readonly rules = signal<CourtPricingRule[]>([]);
   readonly slots = signal<OwnerTimeSlot[]>([]);
+  readonly bookings = signal<OwnerBooking[]>([]);
   readonly slotStatusFilter = signal<'ALL' | OwnerTimeSlotStatus>(
     this.isSlotStatus(this.requestedSlotStatus) ? this.requestedSlotStatus : 'ALL'
   );
@@ -185,6 +211,7 @@ export class OwnerScheduleComponent {
     this.selectedCourtId.set('');
     this.rules.set([]);
     this.slots.set([]);
+    this.bookings.set([]);
     this.loadingContext.set(true);
     this.manageCourts.list(venueId).pipe(
       take(1), takeUntilDestroyed(this.destroyRef), finalize(() => this.loadingContext.set(false))
@@ -204,6 +231,7 @@ export class OwnerScheduleComponent {
     if (!courtId) {
       this.rules.set([]);
       this.slots.set([]);
+      this.bookings.set([]);
       return;
     }
     this.loadSchedule();
@@ -217,14 +245,25 @@ export class OwnerScheduleComponent {
     this.loadError.set(null);
     forkJoin({
       rules: this.manageSchedule.listRules(courtId),
-      slots: this.manageSchedule.listSlots(courtId, range.fromDate, range.toDate)
+      slots: this.manageSchedule.listSlots(courtId, range.fromDate, range.toDate),
+      bookings: this.loadAllBookings({
+        venueId: this.selectedVenueId(),
+        venueCourtId: courtId,
+        fromDate: range.fromDate,
+        toDate: range.toDate
+      }).pipe(catchError(() => of([] as OwnerBooking[])))
     }).pipe(
       take(1), takeUntilDestroyed(this.destroyRef), finalize(() => this.loadingData.set(false))
     ).subscribe({
-      next: result => { this.rules.set(result.rules); this.slots.set(result.slots); },
+      next: result => {
+        this.rules.set(result.rules);
+        this.slots.set(result.slots);
+        this.bookings.set(result.bookings);
+      },
       error: error => {
         this.rules.set([]);
         this.slots.set([]);
+        this.bookings.set([]);
         this.loadError.set(this.errorMessage(error, 'Không thể tải lịch và bảng giá.'));
       }
     });
@@ -371,14 +410,37 @@ export class OwnerScheduleComponent {
     return Math.max(34, (duration / 60) * this.calendarRowHeight - 4);
   }
 
-  slotStatusLabel(status: OwnerTimeSlotStatus): string {
-    const labels: Record<OwnerTimeSlotStatus, string> = {
-      AVAILABLE: 'Còn trống',
-      LOCKED: 'Giữ chỗ',
-      BOOKED: 'Đã đặt',
-      MAINTENANCE: 'Bảo trì'
+  slotVisualStatus(slot: OwnerTimeSlot): CalendarSlotVisualStatus {
+    const court = this.selectedCourt();
+    if (court?.active === false || court?.availabilityStatus === 'INACTIVE') return 'DISABLED';
+    if (slot.status === 'MAINTENANCE') return 'MAINTENANCE';
+    if (slot.status === 'AVAILABLE') return 'AVAILABLE';
+
+    const booking = this.bookingForSlot(slot);
+    if (booking?.status === 'COMPLETED') {
+      return this.isBookingFullyPaid(booking) ? 'COMPLETED' : 'PAYMENT_DUE';
+    }
+    if (booking?.status === 'CHECKED_IN') {
+      if (!this.isBookingFullyPaid(booking)) return 'PAYMENT_DUE';
+      return this.isSlotEnded(slot) ? 'COMPLETED' : 'OCCUPIED';
+    }
+    if (booking && this.isSlotInProgress(slot)) return 'AWAITING_CHECK_IN';
+    if (slot.status === 'BOOKED' && this.isSlotInProgress(slot)) return 'AWAITING_CHECK_IN';
+    return 'UPCOMING';
+  }
+
+  slotStatusLabel(slot: OwnerTimeSlot): string {
+    const labels: Record<CalendarSlotVisualStatus, string> = {
+      AVAILABLE: 'Trống',
+      AWAITING_CHECK_IN: 'Chưa check-in',
+      OCCUPIED: 'Đang sử dụng',
+      PAYMENT_DUE: 'Còn công nợ',
+      UPCOMING: 'Sắp có lịch',
+      COMPLETED: 'Hoàn thành',
+      MAINTENANCE: 'Bảo trì',
+      DISABLED: 'Tạm ngưng'
     };
-    return labels[status];
+    return labels[this.slotVisualStatus(slot)];
   }
 
   rulePeriodLabel(rule: CourtPricingRule): string {
@@ -398,6 +460,21 @@ export class OwnerScheduleComponent {
   changeCalendarDate(event: Event): void {
     const value = (event.target as HTMLInputElement).value;
     if (value) this.setCalendarWeek(this.startOfWeek(new Date(`${value}T12:00:00`)));
+  }
+
+  openCalendarDatePicker(event: Event): void {
+    event.preventDefault();
+    if (this.loadingData() || this.generating()) return;
+    const input = this.calendarDateInput?.nativeElement;
+    if (!input) return;
+
+    input.focus({ preventScroll: true });
+    try {
+      if (typeof input.showPicker === 'function') input.showPicker();
+      else input.click();
+    } catch {
+      input.click();
+    }
   }
 
   selectSlotStatus(value: string): void {
@@ -423,6 +500,45 @@ export class OwnerScheduleComponent {
     this.calendarWeekStart.set(start);
     this.generationForm.patchValue({ fromDate: start, toDate: this.offsetDate(start, 6) });
     this.loadSchedule();
+  }
+
+  private loadAllBookings(filter: Omit<OwnerBookingFilter, 'page' | 'size'>): Observable<OwnerBooking[]> {
+    const pageSize = 20;
+    return this.manageBookings.list({ ...filter, page: 0, size: pageSize }).pipe(
+      expand(page => page.page + 1 < page.pages
+        ? this.manageBookings.list({ ...filter, page: page.page + 1, size: pageSize })
+        : EMPTY),
+      reduce((items, page) => [...items, ...page.items], [] as OwnerBooking[])
+    );
+  }
+
+  private bookingForSlot(slot: OwnerTimeSlot): OwnerBooking | null {
+    return this.bookings().find(booking =>
+      booking.venueCourtId === slot.venueCourtId
+      && booking.playDate === slot.date
+      && this.timeValue(booking.startTime) === this.timeValue(slot.startTime)
+      && this.timeValue(booking.endTime) === this.timeValue(slot.endTime)
+      && !['CANCELLED', 'EXPIRED', 'REFUNDED'].includes(booking.status)
+    ) ?? null;
+  }
+
+  private isSlotInProgress(slot: OwnerTimeSlot): boolean {
+    const now = new Date();
+    const start = new Date(`${slot.date}T${this.timeValue(slot.startTime)}:00`);
+    const end = new Date(`${slot.date}T${this.timeValue(slot.endTime)}:00`);
+    return start <= now && now < end;
+  }
+
+  private isSlotEnded(slot: OwnerTimeSlot): boolean {
+    return new Date(`${slot.date}T${this.timeValue(slot.endTime)}:00`) <= new Date();
+  }
+
+  private isBookingFullyPaid(booking: OwnerBooking): boolean {
+    if (booking.remainingAmount <= 0 || !!booking.remainingPaymentId) return true;
+    const paidRemaining = booking.payments
+      .filter(payment => payment.purpose === 'BOOKING_REMAINING' && payment.status === 'SUCCEEDED')
+      .reduce((total, payment) => total + payment.amount, 0);
+    return paidRemaining + 0.01 >= booking.remainingAmount;
   }
 
   private startOfWeek(date: Date): string {
