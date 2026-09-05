@@ -502,8 +502,6 @@
             </option>
             }
           </select>
-          @if (!slotsLoading() && !availableCreateSlots().length) { <small>Ngày này không còn khung giờ khả dụng chưa
-            kết thúc.</small> }
         </label>
         <label>
           <span>Tên khách</span>
@@ -519,6 +517,16 @@
         <div><span>Loại đơn</span><strong>Khách vãng lai</strong></div>
         <div><span>Tạm tính</span><strong>{{ formatMoney(slotTotal(selectedCreateSlot())) }}</strong></div>
       </aside>
+
+      @if (createError() || createValidationMessages().length) {
+      <section class="create-form-errors" role="alert" aria-live="polite">
+        <lucide-icon name="alert-circle" />
+        <div>
+          @if (createError()) { <p>{{ createError() }}</p> }
+          @for (message of createValidationMessages(); track message) { <p>{{ message }}</p> }
+        </div>
+      </section>
+      }
 
       <footer class="modal-footer">
         <button type="button" class="secondary-button" (click)="closeCreateBooking()"

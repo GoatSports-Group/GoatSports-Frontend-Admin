@@ -936,11 +936,6 @@ button:disabled {
   box-shadow: 0 0 0 3px rgba(16, 185, 129, .12);
 }
 
-.form-grid small {
-  color: #b45309;
-  font-size: 12px;
-}
-
 .order-summary {
   margin-top: 20px;
   padding: 16px 18px;
@@ -966,6 +961,38 @@ button:disabled {
   color: #64748b;
   font-size: 12px;
   line-height: 1.55;
+}
+
+.create-form-errors {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid #fed7aa;
+  border-radius: 12px;
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.create-form-errors lucide-icon {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+}
+
+.create-form-errors>div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.create-form-errors p {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.45;
 }
 
 .modal-footer {

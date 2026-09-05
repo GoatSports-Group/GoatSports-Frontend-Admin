@@ -102,6 +102,7 @@ export class OwnerBookingsComponent {
   readonly createSlots = signal<OwnerTimeSlot[]>([]);
   readonly createLoading = signal(false);
   readonly slotsLoading = signal(false);
+  readonly createError = signal<string | null>(null);
   readonly paymentBooking = signal<OwnerBooking | null>(null);
   readonly paymentLoading = signal<OwnerBookingPaymentMethod | null>(null);
   readonly checkoutQr = signal<string | null>(null);
@@ -237,6 +238,7 @@ export class OwnerBookingsComponent {
         : courts[0]?.venueCourtId ?? '';
     this.createCourts.set(courts);
     this.createSlots.set([]);
+    this.createError.set(null);
     this.createForm.reset({
       venueId,
       venueCourtId: selectedCourtId,
@@ -256,6 +258,7 @@ export class OwnerBookingsComponent {
 
   selectCreateVenue(venueId: string): void {
     if (this.createLoading()) return;
+    this.createError.set(null);
     this.createForm.patchValue({ venueId, venueCourtId: '', timeSlotId: '' });
     this.createCourts.set([]);
     this.createSlots.set([]);
@@ -268,7 +271,7 @@ export class OwnerBookingsComponent {
         this.createForm.controls.venueCourtId.setValue(courts[0]?.venueCourtId ?? '');
         this.loadCreateSlots();
       },
-      error: error => this.notify.error(this.errorMessage(error, 'Không thể tải sân thi đấu.'))
+      error: error => this.createError.set(this.errorMessage(error, 'Không thể tải sân thi đấu.'))
     });
   }
 
@@ -277,23 +280,56 @@ export class OwnerBookingsComponent {
     const date = this.createForm.controls.playDate.value;
     this.createForm.controls.timeSlotId.setValue('');
     this.createSlots.set([]);
+    this.createError.set(null);
     if (!courtId || !date) return;
     this.slotsLoading.set(true);
     this.manageSchedule.listSlots(courtId, date, date).pipe(
       take(1), takeUntilDestroyed(this.destroyRef), finalize(() => this.slotsLoading.set(false))
     ).subscribe({
       next: slots => this.createSlots.set(slots),
-      error: error => this.notify.error(this.errorMessage(error, 'Không thể tải khung giờ khả dụng.'))
+      error: error => this.createError.set(this.errorMessage(error, 'Không thể tải khung giờ khả dụng.'))
     });
   }
 
+  createValidationMessages(): string[] {
+    const controls = this.createForm.controls;
+    const messages: string[] = [];
+
+    if (!this.createError()) {
+      if (!this.slotsLoading() && controls.venueId.value && !controls.venueCourtId.value) {
+        messages.push('Cơ sở này chưa có sân thi đấu để tạo đơn.');
+      } else if (!this.slotsLoading() && controls.venueCourtId.value && controls.playDate.value
+        && !this.availableCreateSlots().length) {
+        messages.push('Ngày này không còn khung giờ khả dụng chưa kết thúc.');
+      } else if (controls.timeSlotId.invalid && controls.timeSlotId.touched) {
+        messages.push('Vui lòng chọn một khung giờ còn trống.');
+      }
+    }
+
+    if (controls.playDate.invalid && controls.playDate.touched) {
+      messages.push('Vui lòng chọn ngày chơi.');
+    }
+    if (controls.customerName.touched && controls.customerName.hasError('required')) {
+      messages.push('Vui lòng nhập tên khách.');
+    } else if (controls.customerName.touched && controls.customerName.hasError('minlength')) {
+      messages.push('Tên khách phải có ít nhất 2 ký tự.');
+    }
+    if (controls.customerPhone.touched && controls.customerPhone.hasError('required')) {
+      messages.push('Vui lòng nhập số điện thoại.');
+    } else if (controls.customerPhone.touched && controls.customerPhone.hasError('pattern')) {
+      messages.push('Số điện thoại không đúng định dạng.');
+    }
+    return messages;
+  }
+
   createWalkInBooking(): void {
+    this.createError.set(null);
     if (this.createLoading() || this.createForm.invalid || !this.selectedCreateSlot()) {
       this.createForm.markAllAsTouched();
       if (this.createForm.controls.timeSlotId.value && !this.selectedCreateSlot()) {
         this.createForm.controls.timeSlotId.setValue('');
-        this.notify.error('Khung giờ đã kết thúc hoặc không còn khả dụng. Vui lòng chọn khung giờ khác.');
         this.loadCreateSlots();
+        this.createError.set('Khung giờ đã kết thúc hoặc không còn khả dụng. Vui lòng chọn khung giờ khác.');
       }
       return;
     }
@@ -313,7 +349,7 @@ export class OwnerBookingsComponent {
         this.loadBookings(0);
         this.openPayment(booking);
       },
-      error: error => this.notify.error(this.errorMessage(error, 'Không thể tạo đơn tại quầy.'))
+      error: error => this.createError.set(this.errorMessage(error, 'Không thể tạo đơn tại quầy.'))
     });
   }
 
