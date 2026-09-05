@@ -11,12 +11,12 @@
   </header>
 
   @if (contextLoading()) {
-  <app-page-loading title="Đang tải đơn đặt sân" description="Đang đồng bộ cơ sở, sân thi đấu và phạm vi booking." />
+  <app-page-loading title="Đang tải đơn đặt sân" description="Đang đồng bộ cơ sở, sân thi đấu và phạm vi đơn đặt sân." />
   } @else if (!venues().length) {
   <section class="state-card state-card--empty">
     <lucide-icon name="land-plot" />
     <h2>Chưa có cơ sở được duyệt</h2>
-    <p>Booking sẽ xuất hiện sau khi hồ sơ chủ sân được duyệt và cơ sở được tạo.</p>
+    <p>Đơn đặt sân sẽ xuất hiện sau khi hồ sơ chủ sân được duyệt và cơ sở được tạo.</p>
   </section>
   } @else {
   <form class="filter-panel" [formGroup]="filterForm" (ngSubmit)="applyFilters()">
@@ -50,9 +50,13 @@
         <span class="search-input"><lucide-icon name="search" /><input formControlName="query" maxlength="100"
             placeholder="Tìm theo mã đơn, tên khách hàng, SĐT" /></span>
       </label>
-      <button type="button" class="secondary-button" (click)="exportBookings()"
-        [disabled]="loading() || !displayedBookings().length">
+      <button type="button" class="secondary-button" (click)="openReportPreview()"
+        [disabled]="loading() || reportPreviewLoading() || exporting() || !displayedBookings().length">
+        @if (reportPreviewLoading()) {
+        <span class="spinner-small"></span> Đang tạo bản xem trước…
+        } @else {
         <lucide-icon name="download" /> Xuất Excel
+        }
       </button>
       <button type="button" class="secondary-button" (click)="clearFilters()" [disabled]="loading()">
         <lucide-icon name="refresh-cw" /> Làm mới
@@ -274,6 +278,63 @@
   }
 </main>
 
+@if (reportPreviewOpen()) {
+<div class="modal-backdrop report-preview-backdrop" (click)="closeReportPreview()">
+  <section class="report-preview-modal" role="dialog" aria-modal="true" aria-labelledby="report-preview-title"
+    (click)="$event.stopPropagation()">
+    <header class="modal-header report-preview-header">
+      <div class="report-preview-heading">
+        <span class="report-preview-icon"><lucide-icon name="file-spreadsheet" /></span>
+        <div>
+          <span class="eyebrow">BÁO CÁO GOAT SPORTS</span>
+          <h2 id="report-preview-title">Xem trước báo cáo đơn đặt sân</h2>
+          <p>Kiểm tra bố cục và dữ liệu trước khi xuất tệp Excel.</p>
+        </div>
+      </div>
+      <button type="button" class="icon-button" (click)="closeReportPreview()" [disabled]="exporting()"
+        aria-label="Đóng bản xem trước">
+        <lucide-icon name="x" />
+      </button>
+    </header>
+
+    <div class="report-preview-stage">
+      @if (reportPreviewLoading()) {
+      <div class="report-preview-state">
+        <span class="spinner"></span>
+        <strong>Đang dựng bản xem trước…</strong>
+      </div>
+      } @else if (reportPreviewError()) {
+      <div class="report-preview-state report-preview-state--error" role="alert">
+        <lucide-icon name="file-warning" />
+        <strong>Không thể tạo bản xem trước</strong>
+        <p>{{ reportPreviewError() }}</p>
+        <button type="button" class="secondary-button" (click)="openReportPreview()">
+          <lucide-icon name="refresh-cw" /> Thử lại
+        </button>
+      </div>
+      } @else if (reportPreviewUrl()) {
+      <iframe [src]="reportPreviewUrl()" title="Bản xem trước báo cáo đơn đặt sân"></iframe>
+      }
+    </div>
+
+    <footer class="report-preview-footer">
+      <div>
+        <button type="button" class="secondary-button" (click)="closeReportPreview()"
+          [disabled]="exporting()">Đóng</button>
+        <button type="button" class="primary-button" (click)="exportBookings()"
+          [disabled]="reportPreviewLoading() || !!reportPreviewError() || !reportPreviewUrl() || exporting()">
+          @if (exporting()) {
+          <span class="spinner-small"></span> Đang xuất…
+          } @else {
+          <lucide-icon name="download" /> Xuất Excel
+          }
+        </button>
+      </div>
+    </footer>
+  </section>
+</div>
+}
+
 @if (createOpen()) {
 <div class="modal-backdrop" (click)="closeCreateBooking()">
   <section class="booking-modal" role="dialog" aria-modal="true" aria-labelledby="create-booking-title"
@@ -370,12 +431,12 @@
       @if (!booking.qrCode) {
       <span class="ticket-qr-missing"><lucide-icon name="qr-code" /></span>
       } @else if (bookingTicketQr()) {
-      <img [src]="bookingTicketQr()" [alt]="'Mã QR check-in ' + booking.bookingCode" />
+      <img [src]="bookingTicketQr()" [alt]="'Mã QR nhận sân ' + booking.bookingCode" />
       } @else {
       <span class="ticket-qr-loading"><span class="spinner-small"></span></span>
       }
       <div>
-        <span class="eyebrow">MÃ QR CHECK-IN</span>
+        <span class="eyebrow">MÃ QR NHẬN SÂN</span>
         <strong>{{ booking.bookingCode }}</strong>
         <p>{{ booking.qrCode
           ? 'Đưa mã này cho nhân viên quét khi nhận sân.'
@@ -391,7 +452,7 @@
     <div class="payment-success">
       <lucide-icon name="circle-check-big" />
       <h3>Thanh toán thành công</h3>
-      <p>Đơn đã được xác nhận và sẵn sàng check-in khi đến giờ.</p>
+      <p>Đơn đã được xác nhận và sẵn sàng nhận sân khi đến giờ.</p>
       <button type="button" class="primary-button" (click)="closePayment()">Hoàn tất</button>
     </div>
     } @else if (checkoutQr()) {

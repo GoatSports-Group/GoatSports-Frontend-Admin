@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, injec
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Subject, catchError, filter, finalize, map, of, switchMap, take, takeUntil, timer } from 'rxjs';
 import { toDataURL } from 'qrcode';
 import {
@@ -9,7 +10,8 @@ import {
   OwnerBookingFilter,
   OwnerBookingStatus,
   OwnerPayment,
-  OwnerBookingPaymentMethod
+  OwnerBookingPaymentMethod,
+  OwnerBookingReportFilter
 } from '@application/dto/owner-booking/owner-booking.dto';
 import { OwnerTimeSlot } from '@application/dto/owner-schedule/owner-schedule.dto';
 import {
@@ -45,6 +47,7 @@ export class OwnerBookingsComponent {
   private readonly notify = inject(NotifyService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
+  private readonly sanitizer = inject(DomSanitizer);
   private readonly requestedVenueId = this.route.snapshot.queryParamMap.get('venueId') ?? '';
   private readonly requestedCourtId = this.route.snapshot.queryParamMap.get('venueCourtId') ?? '';
   private readonly requestedAction = this.route.snapshot.queryParamMap.get('action') ?? '';
@@ -54,7 +57,7 @@ export class OwnerBookingsComponent {
     { value: '', label: 'Tất cả trạng thái' },
     { value: 'PENDING_PAYMENT', label: 'Chờ thanh toán' },
     { value: 'CONFIRMED', label: 'Đã xác nhận' },
-    { value: 'CHECKED_IN', label: 'Đã check-in' },
+    { value: 'CHECKED_IN', label: 'Đã nhận sân' },
     { value: 'COMPLETED', label: 'Hoàn tất' },
     { value: 'CANCELLED', label: 'Đã hủy' },
     { value: 'REFUND_PENDING', label: 'Chờ hoàn tiền' },
@@ -81,6 +84,11 @@ export class OwnerBookingsComponent {
   readonly detailLoading = signal(false);
   readonly detailError = signal<string | null>(null);
   readonly completingId = signal<string | null>(null);
+  readonly exporting = signal(false);
+  readonly reportPreviewOpen = signal(false);
+  readonly reportPreviewLoading = signal(false);
+  readonly reportPreviewError = signal<string | null>(null);
+  readonly reportPreviewUrl = signal<SafeResourceUrl | null>(null);
   readonly createOpen = signal(false);
   readonly createCourts = signal<OwnerVenueCourt[]>([]);
   readonly createSlots = signal<OwnerTimeSlot[]>([]);
@@ -93,6 +101,9 @@ export class OwnerBookingsComponent {
   readonly bookingTicketQr = signal<string | null>(null);
   readonly paymentCompleted = signal(false);
   private readonly stopPaymentPolling = new Subject<void>();
+  private readonly stopReportPreview = new Subject<void>();
+  private reportPreviewObjectUrl: string | null = null;
+  private activeReportFilter: OwnerBookingReportFilter | null = null;
 
   readonly filterForm = this.formBuilder.nonNullable.group({
     venueId: [''], venueCourtId: [''], status: ['' as '' | OwnerBookingStatus],
@@ -147,7 +158,10 @@ export class OwnerBookingsComponent {
     return this.availableCreateSlots().find(slot => slot.timeSlotId === slotId) ?? null;
   });
 
-  constructor() { this.loadContext(); }
+  constructor() {
+    this.destroyRef.onDestroy(() => this.releaseReportPreviewUrl());
+    this.loadContext();
+  }
 
   loadContext(): void {
     this.contextLoading.set(true);
@@ -275,11 +289,11 @@ export class OwnerBookingsComponent {
     ).subscribe({
       next: booking => {
         this.createOpen.set(false);
-        this.notify.success('Đã tạo đơn walk-in. Hãy chọn cách thanh toán.');
+        this.notify.success('Đã tạo đơn tại quầy. Hãy chọn cách thanh toán.');
         this.loadBookings(0);
         this.openPayment(booking);
       },
-      error: error => this.notify.error(this.errorMessage(error, 'Không thể tạo đơn walk-in.'))
+      error: error => this.notify.error(this.errorMessage(error, 'Không thể tạo đơn tại quầy.'))
     });
   }
 
@@ -308,7 +322,7 @@ export class OwnerBookingsComponent {
         .then(image => {
           if (this.paymentBooking()?.bookingId === booking.bookingId) this.bookingTicketQr.set(image);
         })
-        .catch(() => this.notify.error('Không thể hiển thị mã QR check-in.'));
+        .catch(() => this.notify.error('Không thể hiển thị mã QR nhận sân.'));
     }
   }
 
@@ -336,7 +350,7 @@ export class OwnerBookingsComponent {
           return;
         }
         if (!result.qrCodeContent) {
-          this.notify.error('Payment-service không trả ảnh thanh toán payOS.');
+          this.notify.error('Dịch vụ thanh toán không trả ảnh thanh toán payOS.');
           return;
         }
         this.checkoutQr.set(result.qrCodeContent);
@@ -380,7 +394,7 @@ export class OwnerBookingsComponent {
   applyFilters(): void {
     const value = this.filterForm.getRawValue();
     if (value.fromDate && value.toDate && value.fromDate > value.toDate) {
-      this.notify.error('Khoảng ngày booking chưa hợp lệ.');
+      this.notify.error('Khoảng ngày đặt sân chưa hợp lệ.');
       return;
     }
     this.loadBookings(0);
@@ -394,32 +408,96 @@ export class OwnerBookingsComponent {
     this.loadBookings(0);
   }
 
-  exportBookings(): void {
-    const rows = this.displayedBookings();
-    if (!rows.length) return;
+  openReportPreview(): void {
+    if (this.reportPreviewLoading() || this.exporting()) return;
+    const reportFilter = this.currentReportFilter();
+    if (!reportFilter) return;
 
-    const csvRows = [
-      ['Mã đơn', 'Khách hàng', 'Số điện thoại', 'Cơ sở', 'Sân', 'Ngày chơi', 'Khung giờ', 'Tổng tiền', 'Thanh toán', 'Trạng thái'],
-      ...rows.map(booking => [
-        booking.bookingCode,
-        this.customerName(booking),
-        this.customerPhone(booking),
-        booking.venueName,
-        booking.courtName,
-        booking.playDate,
-        `${this.timeValue(booking.startTime)} - ${this.timeValue(booking.endTime)}`,
-        booking.totalPrice,
-        this.paymentLabel(this.paymentFor(booking, 'BOOKING_REMAINING')),
-        this.statusLabel(booking.status)
-      ])
-    ];
-    const csv = `\uFEFF${csvRows.map(row => row.map(value => this.csvCell(value)).join(',')).join('\r\n')}`;
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `don-dat-san-${this.today()}.csv`;
-    anchor.click();
-    URL.revokeObjectURL(url);
+    this.stopReportPreview.next();
+    this.releaseReportPreviewUrl();
+    this.activeReportFilter = reportFilter;
+    this.reportPreviewOpen.set(true);
+    this.reportPreviewLoading.set(true);
+    this.reportPreviewError.set(null);
+    this.manageBookings.previewReport(reportFilter).pipe(
+      take(1),
+      takeUntil(this.stopReportPreview),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.reportPreviewLoading.set(false))
+    ).subscribe({
+      next: file => {
+        if (!file.size) {
+          this.reportPreviewError.set('Dịch vụ báo cáo không trả dữ liệu xem trước.');
+          return;
+        }
+        this.reportPreviewObjectUrl = URL.createObjectURL(file);
+        this.reportPreviewUrl.set(
+          this.sanitizer.bypassSecurityTrustResourceUrl(this.reportPreviewObjectUrl)
+        );
+      },
+      error: error => this.reportPreviewError.set(
+        this.errorMessage(error, 'Không thể tạo bản xem trước báo cáo.')
+      )
+    });
+  }
+
+  closeReportPreview(): void {
+    if (this.exporting()) return;
+    this.stopReportPreview.next();
+    this.releaseReportPreviewUrl();
+    this.reportPreviewError.set(null);
+    this.reportPreviewOpen.set(false);
+    this.activeReportFilter = null;
+  }
+
+  exportBookings(): void {
+    if (this.exporting() || !this.activeReportFilter) return;
+    this.exporting.set(true);
+    this.manageBookings.exportReport(this.activeReportFilter).pipe(
+      take(1),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.exporting.set(false))
+    ).subscribe({
+      next: file => {
+        if (!file.size) {
+          this.notify.error('Dịch vụ báo cáo không trả dữ liệu Excel.');
+          return;
+        }
+        const url = URL.createObjectURL(file);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = `bao-cao-don-dat-san-${this.today()}.xlsx`;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        URL.revokeObjectURL(url);
+        this.notify.success('Đã xuất báo cáo đơn đặt sân.');
+      },
+      error: error => this.notify.error(this.errorMessage(error, 'Không thể xuất báo cáo Excel.'))
+    });
+  }
+
+  private currentReportFilter(): OwnerBookingReportFilter | null {
+    const value = this.filterForm.getRawValue();
+    if (value.fromDate && value.toDate && value.fromDate > value.toDate) {
+      this.notify.error('Khoảng ngày đặt sân chưa hợp lệ.');
+      return null;
+    }
+    return {
+      venueId: value.venueId || undefined,
+      venueCourtId: value.venueCourtId || undefined,
+      status: value.status || undefined,
+      paymentStatus: value.paymentStatus || undefined,
+      query: value.query.trim() || undefined,
+      fromDate: value.fromDate || undefined,
+      toDate: value.toDate || undefined
+    };
+  }
+
+  private releaseReportPreviewUrl(): void {
+    if (this.reportPreviewObjectUrl) URL.revokeObjectURL(this.reportPreviewObjectUrl);
+    this.reportPreviewObjectUrl = null;
+    this.reportPreviewUrl.set(null);
   }
 
   printBooking(): void {
@@ -451,7 +529,7 @@ export class OwnerBookingsComponent {
       error: error => {
         this.bookings.set([]); this.total.set(0); this.pages.set(0);
         this.clearDetailSelection();
-        this.loadError.set(this.errorMessage(error, 'Không thể tải danh sách booking.'));
+        this.loadError.set(this.errorMessage(error, 'Không thể tải danh sách đơn đặt sân.'));
       }
     });
   }
@@ -473,7 +551,7 @@ export class OwnerBookingsComponent {
       },
       error: error => {
         if (this.requestedBookingId() === bookingId) {
-          this.detailError.set(this.errorMessage(error, 'Không thể tải chi tiết booking.'));
+          this.detailError.set(this.errorMessage(error, 'Không thể tải chi tiết đơn đặt sân.'));
         }
       }
     });
@@ -506,7 +584,7 @@ export class OwnerBookingsComponent {
 
   completeBooking(booking: OwnerBooking): void {
     if (this.completingId() || !booking.allowedTransitions.includes('COMPLETED')) return;
-    if (!window.confirm(`Xác nhận booking ${booking.bookingCode} đã hoàn tất sau giờ chơi?`)) return;
+    if (!window.confirm(`Xác nhận đơn ${booking.bookingCode} đã hoàn tất sau giờ chơi?`)) return;
     this.completingId.set(booking.bookingId);
     this.manageBookings.updateStatus(booking.bookingId, 'COMPLETED').pipe(
       take(1), takeUntilDestroyed(this.destroyRef), finalize(() => this.completingId.set(null))
@@ -514,9 +592,9 @@ export class OwnerBookingsComponent {
       next: updated => {
         this.bookings.update(items => items.map(item => item.bookingId === updated.bookingId ? updated : item));
         this.selectedBooking.set(updated);
-        this.notify.success('Booking đã được đánh dấu hoàn tất.');
+        this.notify.success('Đơn đặt sân đã được đánh dấu hoàn tất.');
       },
-      error: error => this.notify.error(this.errorMessage(error, 'Không thể hoàn tất booking.'))
+      error: error => this.notify.error(this.errorMessage(error, 'Không thể hoàn tất đơn đặt sân.'))
     });
   }
 
@@ -551,7 +629,7 @@ export class OwnerBookingsComponent {
     return value ? new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)) : '—';
   }
   timeValue(value: string): string { return value.slice(0, 5); }
-  shortId(value?: string): string { return value ? value.slice(0, 8).toUpperCase() : 'WALK-IN'; }
+  shortId(value?: string): string { return value ? value.slice(0, 8).toUpperCase() : 'KHÁCH LẺ'; }
   slotTotal(slot: OwnerTimeSlot | null): number {
     if (!slot) return 0;
     const [startHour, startMinute] = slot.startTime.split(':').map(Number);
@@ -571,7 +649,7 @@ export class OwnerBookingsComponent {
 
   timeline(booking: OwnerBooking): TimelineEntry[] {
     const entries: TimelineEntry[] = [{
-      label: 'Đã tạo booking', detail: booking.source, time: booking.createdAt, state: 'CREATED'
+      label: 'Đã tạo đơn đặt sân', detail: this.sourceLabel(booking.source), time: booking.createdAt, state: 'CREATED'
     }];
     for (const payment of booking.payments) {
       entries.push({
@@ -580,7 +658,7 @@ export class OwnerBookingsComponent {
       });
     }
     entries.push({
-      label: 'Trạng thái booking', detail: this.statusLabel(booking.status),
+      label: 'Trạng thái đơn', detail: this.statusLabel(booking.status),
       time: booking.updatedAt, state: booking.status
     });
     return entries;
@@ -594,10 +672,6 @@ export class OwnerBookingsComponent {
       fromDate: value.fromDate || undefined, toDate: value.toDate || undefined,
       page, size: 12
     };
-  }
-
-  private csvCell(value: string | number): string {
-    return `"${String(value).replace(/"/g, '""')}"`;
   }
 
   private errorMessage(error: any, fallback: string): string {

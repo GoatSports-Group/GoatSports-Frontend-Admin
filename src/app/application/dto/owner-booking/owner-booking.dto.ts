@@ -74,6 +74,18 @@ export interface OwnerBookingFilter {
   size: number;
 }
 
+export type OwnerBookingPaymentFilter = '' | 'PAID' | 'UNPAID' | 'FAILED';
+
+export interface OwnerBookingReportFilter {
+  venueId?: string;
+  venueCourtId?: string;
+  status?: OwnerBookingStatus;
+  paymentStatus?: OwnerBookingPaymentFilter;
+  query?: string;
+  fromDate?: string;
+  toDate?: string;
+}
+
 export interface OwnerBookingPage {
   items: OwnerBooking[];
   page: number;

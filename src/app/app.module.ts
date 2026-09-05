@@ -152,7 +152,9 @@ import {
   LucideTicketCheck,
   LucideListChecks,
   LucideContactRound,
-  LucideScanQrCode
+  LucideScanQrCode,
+  LucideFileSpreadsheet,
+  LucideFileWarning
 } from '@lucide/angular';
 
 @NgModule({
@@ -304,7 +306,9 @@ import {
       LucideTicketCheck,
       LucideListChecks,
       LucideContactRound,
-      LucideScanQrCode
+      LucideScanQrCode,
+      LucideFileSpreadsheet,
+      LucideFileWarning
     )
   ],
   bootstrap: [AppComponent]

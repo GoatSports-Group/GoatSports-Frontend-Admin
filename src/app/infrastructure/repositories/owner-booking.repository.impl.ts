@@ -7,7 +7,8 @@ import {
   OwnerBookingStatus,
   CreateOwnerWalkInBooking,
   OwnerBookingPaymentMethod,
-  OwnerBookingPaymentResult
+  OwnerBookingPaymentResult,
+  OwnerBookingReportFilter
 } from '@application/dto/owner-booking/owner-booking.dto';
 import { OwnerBookingRepository } from '@application/ports/persistence/owner-booking.repository';
 import { OwnerBookingApi } from '@infrastructure/api/owner-booking.api';
@@ -42,6 +43,14 @@ export class OwnerBookingRepositoryImpl implements OwnerBookingRepository {
     bookingId: string, method: OwnerBookingPaymentMethod
   ): Observable<OwnerBookingPaymentResult> {
     return this.api.createPayment(bookingId, method).pipe(map(response => response.data));
+  }
+
+  exportReport(filter: OwnerBookingReportFilter): Observable<Blob> {
+    return this.api.exportReport(filter);
+  }
+
+  previewReport(filter: OwnerBookingReportFilter): Observable<Blob> {
+    return this.api.previewReport(filter);
   }
 
 }

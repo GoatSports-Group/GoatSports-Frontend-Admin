@@ -2169,3 +2169,211 @@ button:disabled {
     overflow: visible;
   }
 }
+
+/* Jasper report preview */
+.report-preview-backdrop {
+  padding: 20px;
+  overflow: hidden;
+  background: rgba(6, 32, 25, .68);
+}
+
+.report-preview-modal {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(1180px, 100%);
+  height: min(900px, calc(100vh - 40px));
+  overflow: hidden;
+  border: 1px solid #bfd8cf;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 30px 90px rgba(3, 31, 23, .34);
+}
+
+.report-preview-header {
+  align-items: center;
+  padding: 18px 22px;
+  border-bottom-color: #cde2da;
+  background: linear-gradient(135deg, #f0faf6 0%, #fff 58%, #fffaf0 100%);
+}
+
+.report-preview-heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.report-preview-icon {
+  display: grid;
+  flex: 0 0 48px;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .48);
+  border-radius: 15px;
+  background: linear-gradient(145deg, #0b9277 0%, #087f68 48%, #05614f 100%);
+  color: #fff;
+  box-shadow: 0 7px 18px rgba(5, 97, 79, .2), inset 0 0 0 1px rgba(255, 255, 255, .1);
+}
+
+.report-preview-icon lucide-icon {
+  width: 22px;
+  height: 22px;
+  line-height: 0;
+}
+
+.report-preview-header .eyebrow {
+  color: #98701b;
+}
+
+.report-preview-header h2 {
+  margin: 3px 0 2px;
+  color: #123a2e;
+  font-size: 21px;
+}
+
+.report-preview-header p {
+  font-size: 13px;
+}
+
+.report-preview-stage {
+  min-height: 0;
+  padding: 16px;
+  background:
+    linear-gradient(rgba(255, 255, 255, .55), rgba(255, 255, 255, .55)),
+    repeating-linear-gradient(135deg, #dae7e2 0, #dae7e2 1px, transparent 1px, transparent 12px),
+    #e8f0ed;
+}
+
+.report-preview-stage iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 1px solid #c8d8d2;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 12px 34px rgba(15, 45, 35, .13);
+}
+
+.report-preview-state {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 10px;
+  height: 100%;
+  min-height: 360px;
+  padding: 32px;
+  border: 1px solid #cfdfd9;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .92);
+  color: #193f33;
+  text-align: center;
+}
+
+.report-preview-state p {
+  max-width: 520px;
+  margin: 0;
+  color: #65758b;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.report-preview-state--error>lucide-icon {
+  width: 34px;
+  height: 34px;
+  color: #b45309;
+}
+
+.report-preview-state--error .secondary-button {
+  margin-top: 6px;
+}
+
+.report-preview-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 18px;
+  padding: 14px 20px;
+  border-top: 1px solid #d9e5e1;
+  background: #fff;
+}
+
+.report-preview-footer>p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: #52675f;
+  font-size: 13px;
+}
+
+.report-preview-footer>p lucide-icon {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  color: #087f68;
+}
+
+.report-preview-footer>div {
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.report-preview-footer button {
+  min-width: 118px;
+  min-height: 46px;
+}
+
+@media (max-width: 760px) {
+  .report-preview-backdrop {
+    padding: 10px;
+  }
+
+  .report-preview-modal {
+    height: calc(100vh - 20px);
+    border-radius: 17px;
+  }
+
+  .report-preview-header {
+    padding: 15px;
+  }
+
+  .report-preview-heading {
+    align-items: flex-start;
+  }
+
+  .report-preview-icon {
+    flex-basis: 44px;
+    width: 44px;
+    height: 44px;
+  }
+
+  .report-preview-header h2 {
+    font-size: 18px;
+  }
+
+  .report-preview-header p {
+    display: none;
+  }
+
+  .report-preview-stage {
+    padding: 8px;
+  }
+
+  .report-preview-footer {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 12px;
+  }
+
+  .report-preview-footer>div,
+  .report-preview-footer button {
+    width: 100%;
+  }
+
+  .report-preview-footer>div {
+    margin-left: 0;
+  }
+}

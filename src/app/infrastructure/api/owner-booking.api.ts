@@ -8,7 +8,8 @@ import {
   OwnerBookingStatus,
   CreateOwnerWalkInBooking,
   OwnerBookingPaymentMethod,
-  OwnerBookingPaymentResult
+  OwnerBookingPaymentResult,
+  OwnerBookingReportFilter
 } from '@application/dto/owner-booking/owner-booking.dto';
 import { environment } from '@environments/environment';
 
@@ -16,6 +17,7 @@ import { environment } from '@environments/environment';
 export class OwnerBookingApi {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/venue-service/api/v1/owner/bookings`;
+  private readonly reportBaseUrl = `${environment.apiUrl}/report-service/api/v1/reports`;
 
   getBookings(filter: OwnerBookingFilter): Observable<BaseResponse<BaseListResponse<OwnerBooking>>> {
     let params = new HttpParams().set('page', filter.page).set('size', filter.size);
@@ -51,6 +53,30 @@ export class OwnerBookingApi {
     return this.http.post<BaseResponse<OwnerBookingPaymentResult>>(
       `${this.baseUrl}/${bookingId}/payments`, { method }
     );
+  }
+
+  exportReport(filter: OwnerBookingReportFilter): Observable<Blob> {
+    const params = this.reportParams(filter).set('format', 'xlsx');
+    return this.http.get(`${this.reportBaseUrl}/export/owner-bookings`, { params, responseType: 'blob' });
+  }
+
+  previewReport(filter: OwnerBookingReportFilter): Observable<Blob> {
+    return this.http.get(`${this.reportBaseUrl}/preview/owner-bookings`, {
+      params: this.reportParams(filter),
+      responseType: 'blob'
+    });
+  }
+
+  private reportParams(filter: OwnerBookingReportFilter): HttpParams {
+    let params = new HttpParams();
+    if (filter.venueId) params = params.set('venueId', filter.venueId);
+    if (filter.venueCourtId) params = params.set('venueCourtId', filter.venueCourtId);
+    if (filter.status) params = params.set('status', filter.status);
+    if (filter.paymentStatus) params = params.set('paymentStatus', filter.paymentStatus);
+    if (filter.query) params = params.set('query', filter.query);
+    if (filter.fromDate) params = params.set('fromDate', filter.fromDate);
+    if (filter.toDate) params = params.set('toDate', filter.toDate);
+    return params;
   }
 
 }

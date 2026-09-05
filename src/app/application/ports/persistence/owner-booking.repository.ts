@@ -7,7 +7,8 @@ import {
   OwnerBookingStatus,
   CreateOwnerWalkInBooking,
   OwnerBookingPaymentMethod,
-  OwnerBookingPaymentResult
+  OwnerBookingPaymentResult,
+  OwnerBookingReportFilter
 } from '@application/dto/owner-booking/owner-booking.dto';
 
 export interface OwnerBookingRepository {
@@ -18,6 +19,8 @@ export interface OwnerBookingRepository {
   createPayment(
     bookingId: string, method: OwnerBookingPaymentMethod
   ): Observable<OwnerBookingPaymentResult>;
+  exportReport(filter: OwnerBookingReportFilter): Observable<Blob>;
+  previewReport(filter: OwnerBookingReportFilter): Observable<Blob>;
 }
 
 export const OWNER_BOOKING_REPOSITORY_TOKEN = new InjectionToken<OwnerBookingRepository>(
