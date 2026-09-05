@@ -548,6 +548,98 @@ button:disabled {
   font-size: 14px;
 }
 
+.today-booking-list {
+  display: grid;
+  margin-top: 15px;
+  overflow: hidden;
+  border: 1px solid #e0e8e5;
+  border-radius: 11px;
+}
+
+.today-booking-row {
+  display: grid;
+  grid-template-columns: minmax(108px, .8fr) minmax(130px, 1fr) minmax(94px, auto) 18px;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 62px;
+  padding: 9px 13px;
+  border: 0;
+  border-bottom: 1px solid #e9efed;
+  background: #fff;
+  color: var(--ink);
+  text-align: left;
+  transition: background .18s ease;
+}
+
+.today-booking-row:hover {
+  background: #f5fbf8;
+}
+
+.today-booking-row:last-child {
+  border-bottom: 0;
+}
+
+.today-booking-time,
+.today-booking-main {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.today-booking-time strong,
+.today-booking-main strong,
+.today-booking-time span,
+.today-booking-main span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.today-booking-time strong,
+.today-booking-main strong {
+  color: #20332d;
+  font-size: 13px;
+}
+
+.today-booking-time span,
+.today-booking-main span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.today-booking-status {
+  justify-self: end;
+  border-radius: 999px;
+  background: #e8f7f1;
+  padding: 5px 9px;
+  color: #08785d;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.today-booking-status[data-status='PENDING_PAYMENT'] {
+  background: #fff4d8;
+  color: #9a5b00;
+}
+
+.today-booking-status[data-status='CANCELLED'],
+.today-booking-status[data-status='EXPIRED'] {
+  background: #fff0f1;
+  color: #c52a3b;
+}
+
+.today-booking-status[data-status='REFUND_PENDING'],
+.today-booking-status[data-status='REFUNDED'] {
+  background: #eef2ff;
+  color: #4759a8;
+}
+
+.today-booking-row>app-lucide-icon {
+  color: #80978e;
+}
+
 .status-dot {
   width: 7px;
   height: 7px;
@@ -593,6 +685,12 @@ button:disabled {
 .schedule-empty--error strong,
 .schedule-empty--error p {
   color: #b42318;
+}
+
+.compact-retry {
+  flex: 0 0 auto;
+  min-height: 44px;
+  margin-left: auto;
 }
 
 .slot-skeleton {
@@ -804,7 +902,7 @@ button:disabled {
 
 .history-row {
   display: grid;
-  grid-template-columns: 42px 1.2fr 1fr 1fr auto 20px;
+  grid-template-columns: 42px minmax(190px, 1.25fr) minmax(170px, 1fr) minmax(160px, .9fr) minmax(120px, .45fr) 20px;
   align-items: center;
   gap: 14px;
   width: 100%;
@@ -827,7 +925,15 @@ button:disabled {
 
 .history-row>div {
   display: grid;
+  min-width: 0;
   gap: 3px;
+}
+
+.history-row>div strong,
+.history-row>div span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .history-list span {
@@ -1230,6 +1336,14 @@ button:disabled {
   .process-icon {
     display: none;
   }
+
+  .today-booking-row {
+    grid-template-columns: minmax(100px, .8fr) minmax(120px, 1fr) 18px;
+  }
+
+  .today-booking-status {
+    display: none;
+  }
 }
 
 @media (max-width: 900px) {
@@ -1251,13 +1365,22 @@ button:disabled {
   }
 
   .history-row {
-    grid-template-columns: 40px 1fr 1fr 20px;
+    grid-template-columns: 40px minmax(0, 1fr) minmax(0, 1fr) 20px;
   }
 
-  .history-row> :nth-child(4),
-  .history-list .amount {
-    grid-column: 2 / -1;
+  .history-row> :nth-child(4) {
+    grid-column: 2;
     text-align: left;
+  }
+
+  .history-list .amount {
+    grid-column: 3;
+    text-align: right;
+  }
+
+  .history-chevron {
+    grid-column: 4;
+    grid-row: 1 / span 2;
   }
 }
 
@@ -1323,6 +1446,19 @@ button:disabled {
     grid-column: 2;
   }
 
+  .today-booking-row {
+    grid-template-columns: minmax(0, 1fr) 18px;
+  }
+
+  .today-booking-main {
+    grid-column: 1;
+  }
+
+  .today-booking-row>app-lucide-icon {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+
   .booking-summary {
     flex-direction: column;
   }
@@ -1345,11 +1481,21 @@ button:disabled {
   }
 
   .history-row {
-    grid-template-columns: 40px 1fr 20px;
+    grid-template-columns: 40px minmax(0, 1fr) 20px;
   }
 
   .history-row>div {
     grid-column: 2;
+  }
+
+  .history-list .amount {
+    grid-column: 2;
+    text-align: left;
+  }
+
+  .history-chevron {
+    grid-column: 3;
+    grid-row: 1 / span 4;
   }
 
   .booking-detail-backdrop {

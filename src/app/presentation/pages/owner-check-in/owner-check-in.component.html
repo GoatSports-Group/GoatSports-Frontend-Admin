@@ -145,54 +145,51 @@
       <section class="operations-section schedule-section">
         <div class="section-heading">
           <div>
-            <h2>Khung giờ khả dụng hôm nay</h2>
-            @if (resolvedScope(); as scope) {
-            <p>{{ scope.venueName }} · {{ scope.courtName }} · {{ availableSlots().length }} khung giờ</p>
-            } @else {
-            <p>Tra cứu vé để hệ thống tự động xác định sân.</p>
-            }
+            <h2>Đơn đặt sân hôm nay</h2>
+            <p>Theo dõi {{ todayBookings().length }} đơn trên toàn bộ cơ sở.</p>
           </div>
           <span class="today-badge">Hôm nay</span>
         </div>
 
-        @if (!resolvedScope()) {
-        <div class="schedule-empty">
-          <app-lucide-icon name="calendar-check" [size]="24" />
-          <div><strong>Chưa xác định sân</strong>
-            <p>Quét mã QR hoặc nhập mã đặt sân để xem lịch đúng sân.</p>
-          </div>
-        </div>
-        } @else if (loadingCourt()) {
-        <div class="slot-skeleton" aria-label="Đang tải khung giờ">
+        @if (todayBookingsLoading()) {
+        <div class="slot-skeleton" aria-label="Đang tải đơn đặt sân hôm nay">
           <span></span><span></span><span></span>
         </div>
-        } @else if (scheduleError()) {
+        } @else if (todayBookingsError()) {
         <div class="schedule-empty schedule-empty--error" role="alert">
           <app-lucide-icon name="alert-circle" [size]="24" />
-          <div><strong>Chưa tải được lịch sân</strong>
-            <p>{{ scheduleError() }}</p>
+          <div><strong>Chưa tải được đơn đặt sân</strong>
+            <p>{{ todayBookingsError() }}</p>
           </div>
+          <button type="button" class="secondary compact-retry" (click)="loadTodayBookings()">Thử lại</button>
         </div>
-        } @else if (!availableSlotPreview().length) {
+        } @else if (!todayBookingPreview().length) {
         <div class="schedule-empty">
           <app-lucide-icon name="calendar-x" [size]="24" />
-          <div><strong>Không còn khung giờ trống</strong>
-            <p>Sân vừa tra cứu không còn khung giờ trống hôm nay.</p>
+          <div><strong>Chưa có đơn đặt sân hôm nay</strong>
+            <p>Các đơn phát sinh trong ngày sẽ hiển thị tại đây.</p>
           </div>
         </div>
         } @else {
-        <div class="slot-list">
-          @for (slot of availableSlotPreview(); track slot.timeSlotId) {
-          <div class="slot-row">
-            <span class="status-dot"></span>
-            <strong>{{ time(slot.startTime) }} – {{ time(slot.endTime) }}</strong>
-            <span>{{ money(slot.pricePerHour) }}/giờ</span>
-          </div>
+        <div class="today-booking-list">
+          @for (booking of todayBookingPreview(); track booking.bookingId) {
+          <button type="button" class="today-booking-row" (click)="openHistoryDetail(booking.bookingId)">
+            <div class="today-booking-time">
+              <strong>{{ time(booking.startTime) }} – {{ time(booking.endTime) }}</strong>
+              <span>{{ booking.courtName }}</span>
+            </div>
+            <div class="today-booking-main">
+              <strong>{{ booking.bookingCode }}</strong>
+              <span>{{ customerName(booking) }}</span>
+            </div>
+            <span class="today-booking-status" [attr.data-status]="booking.status">{{ statusLabel(booking.status)
+              }}</span>
+            <app-lucide-icon name="chevron-right" [size]="17" />
+          </button>
           }
         </div>
-        @if (availableSlots().length > availableSlotPreview().length) {
-        <p class="more-slots">Còn {{ availableSlots().length - availableSlotPreview().length }} khung giờ khác trong hôm
-          nay.</p>
+        @if (todayBookings().length > todayBookingPreview().length) {
+        <p class="more-slots">Còn {{ todayBookings().length - todayBookingPreview().length }} đơn khác trong hôm nay.</p>
         }
         }
       </section>

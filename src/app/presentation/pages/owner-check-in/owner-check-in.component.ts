@@ -12,7 +12,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { finalize, take } from 'rxjs';
+import { EMPTY, Observable, expand, finalize, reduce, take } from 'rxjs';
 import { BrowserQRCodeReader, IScannerControls } from '@zxing/browser';
 import { toDataURL } from 'qrcode';
 import { OwnerBooking, OwnerPayment } from '@application/dto/owner-booking/owner-booking.dto';
@@ -71,6 +71,7 @@ export class OwnerCheckInComponent implements OnDestroy {
   readonly venues = signal<OwnerVenueOverview[]>([]);
   readonly slots = signal<OwnerTimeSlot[]>([]);
   readonly history = signal<OwnerCheckInResult[]>([]);
+  readonly todayBookings = signal<OwnerBooking[]>([]);
   readonly selectedVenueId = signal('');
   readonly selectedCourtId = signal('');
   readonly resolvedScope = signal<ResolvedCheckInScope | null>(null);
@@ -84,6 +85,7 @@ export class OwnerCheckInComponent implements OnDestroy {
   readonly loadingContext = signal(true);
   readonly loadingCourt = signal(false);
   readonly historyLoading = signal(false);
+  readonly todayBookingsLoading = signal(false);
   readonly lookingUp = signal(false);
   readonly confirming = signal(false);
   readonly creatingWalkIn = signal(false);
@@ -91,6 +93,7 @@ export class OwnerCheckInComponent implements OnDestroy {
   readonly loadError = signal<string | null>(null);
   readonly scheduleError = signal<string | null>(null);
   readonly historyError = signal<string | null>(null);
+  readonly todayBookingsError = signal<string | null>(null);
   readonly actionError = signal<string | null>(null);
   readonly detailBooking = signal<OwnerBooking | null>(null);
   readonly detailBookingQr = signal<string | null>(null);
@@ -100,6 +103,7 @@ export class OwnerCheckInComponent implements OnDestroy {
 
   readonly availableSlots = computed(() => this.slots().filter(slot => slot.status === 'AVAILABLE'));
   readonly availableSlotPreview = computed(() => this.availableSlots().slice(0, 4));
+  readonly todayBookingPreview = computed(() => this.todayBookings().slice(0, 5));
   readonly lookupForm = this.formBuilder.nonNullable.group({
     value: ['', [Validators.required, Validators.maxLength(500)]]
   });
@@ -141,6 +145,7 @@ export class OwnerCheckInComponent implements OnDestroy {
     ).subscribe({
       next: venues => {
         this.venues.set(venues);
+        this.loadTodayBookings();
         if (this.requestedMode === 'qr' && !this.scannerAutoStarted) {
           this.scannerAutoStarted = true;
           setTimeout(() => void this.startScanner());
@@ -213,6 +218,7 @@ export class OwnerCheckInComponent implements OnDestroy {
         this.reconciliation.set(checkedIn);
         this.notify.success('Nhận sân thành công.');
         this.loadCourtData();
+        this.loadTodayBookings();
         this.loadHistory(0);
       },
       error: error => this.actionError.set(this.errorMessage(error, 'Không thể xác nhận nhận sân.'))
@@ -240,6 +246,7 @@ export class OwnerCheckInComponent implements OnDestroy {
         this.walkInForm.reset({ timeSlotId: '', customerName: '', customerPhone: '' });
         this.notify.success(`Đã tạo đơn ${result.booking.bookingCode} và phát hành mã QR nhận sân.`);
         this.loadCourtData();
+        this.loadTodayBookings();
       },
       error: error => this.actionError.set(this.errorMessage(error, 'Không thể xếp lịch cho khách tại quầy.'))
     });
@@ -254,6 +261,26 @@ export class OwnerCheckInComponent implements OnDestroy {
     ).subscribe({
       next: result => this.applyHistory(result),
       error: error => this.historyError.set(this.errorMessage(error, 'Không thể tải lịch sử nhận sân.'))
+    });
+  }
+
+  loadTodayBookings(): void {
+    const date = this.today();
+    this.todayBookingsLoading.set(true);
+    this.todayBookingsError.set(null);
+    this.loadAllTodayBookings(date).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.todayBookingsLoading.set(false))
+    ).subscribe({
+      next: bookings => this.todayBookings.set([...bookings].sort((left, right) =>
+        left.startTime.localeCompare(right.startTime)
+          || left.courtName.localeCompare(right.courtName, 'vi')
+          || left.bookingCode.localeCompare(right.bookingCode)
+      )),
+      error: error => {
+        this.todayBookings.set([]);
+        this.todayBookingsError.set(this.errorMessage(error, 'Không thể tải đơn đặt sân hôm nay.'));
+      }
     });
   }
 
@@ -461,6 +488,17 @@ export class OwnerCheckInComponent implements OnDestroy {
       page: this.historyPage(),
       size: 10
     };
+  }
+
+  private loadAllTodayBookings(date: string): Observable<OwnerBooking[]> {
+    const pageSize = 20;
+    const filter = { fromDate: date, toDate: date, page: 0, size: pageSize };
+    return this.manageBookings.list(filter).pipe(
+      expand(page => page.page + 1 < page.pages
+        ? this.manageBookings.list({ ...filter, page: page.page + 1 })
+        : EMPTY),
+      reduce((bookings, page) => [...bookings, ...page.items], [] as OwnerBooking[])
+    );
   }
 
   private applyResolvedScope(booking: OwnerBooking): void {
