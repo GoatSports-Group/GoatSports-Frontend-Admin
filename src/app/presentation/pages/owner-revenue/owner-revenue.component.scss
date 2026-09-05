@@ -213,6 +213,20 @@ select:focus {
   min-width: 128px;
 }
 
+.filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-actions button {
+  white-space: nowrap;
+}
+
+.refresh-button {
+  min-width: 118px;
+}
+
 .filter-note,
 .filter-error {
   display: flex;
@@ -880,8 +894,12 @@ select:focus {
   }
 
   .filter-controls label:first-child,
-  .apply-button {
+  .filter-actions {
     grid-column: 1 / -1;
+  }
+
+  .filter-actions button {
+    flex: 1 1 0;
   }
 
   .metric-strip {
@@ -946,8 +964,13 @@ select:focus {
 
   .filter-controls label:first-child,
   .filter-controls label,
-  .apply-button {
+  .filter-actions {
     grid-column: 1;
+  }
+
+  .filter-actions {
+    display: grid;
+    grid-template-columns: 1fr;
   }
 
   .filter-note,
