@@ -28,8 +28,9 @@ import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-lo
 import { PaginationComponent } from '@shared/components/ui/pagination/pagination.component';
 
 interface StatusOption { value: '' | OwnerBookingStatus; label: string; }
-interface TimelineEntry { label: string; detail: string; time?: string; state: string; }
 type PaymentFilter = '' | 'PAID' | 'UNPAID' | 'FAILED';
+type PaymentDisplayState = 'FULLY_PAID' | 'PARTIALLY_PAID' | 'PENDING' | 'FAILED' | 'UNPAID';
+type ResolvedPaymentMethod = 'CASH' | 'PAYOS';
 
 @Component({
   selector: 'app-owner-bookings',
@@ -101,6 +102,7 @@ export class OwnerBookingsComponent {
   readonly checkoutQr = signal<string | null>(null);
   readonly checkoutUrl = signal<string | null>(null);
   readonly bookingTicketQr = signal<string | null>(null);
+  readonly detailBookingQr = signal<string | null>(null);
   readonly paymentCompleted = signal(false);
   private readonly stopPaymentPolling = new Subject<void>();
   private readonly stopReportPreview = new Subject<void>();
@@ -148,7 +150,12 @@ export class OwnerBookingsComponent {
   });
   private readonly displayedBookingSelectionEffect = effect(() => {
     const displayedBookings = this.displayedBookings();
-    untracked(() => this.syncDetailSelection(displayedBookings));
+    untracked(() => {
+      const currentBookingId = this.selectedBooking()?.bookingId ?? this.requestedBookingId();
+      if (currentBookingId && !displayedBookings.some(booking => booking.bookingId === currentBookingId)) {
+        this.clearDetailSelection();
+      }
+    });
   });
   readonly availableCreateSlots = computed(() =>
     this.createSlots().filter(slot =>
@@ -382,12 +389,16 @@ export class OwnerBookingsComponent {
   private finishPayment(bookingId: string): void {
     this.paymentCompleted.set(true);
     this.manageBookings.detail(bookingId).pipe(take(1), takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: booking => this.paymentBooking.set(booking)
+      next: booking => {
+        this.paymentBooking.set(booking);
+        if (this.selectedBooking()?.bookingId === bookingId) this.selectedBooking.set(booking);
+      }
     });
     this.loadBookings(this.page());
   }
 
-  private isPaid(booking: OwnerBooking): boolean {
+  isPaid(booking: OwnerBooking): boolean {
+    if (booking.remainingAmount <= 0) return true;
     return !!booking.remainingPaymentId || booking.payments.some(payment =>
       payment.purpose === 'BOOKING_REMAINING' && payment.status === 'SUCCEEDED'
     );
@@ -521,11 +532,9 @@ export class OwnerBookingsComponent {
       next: result => {
         this.bookings.set(result.items); this.total.set(result.total);
         this.page.set(result.page); this.pages.set(result.pages);
-        const firstDisplayedBookingId = this.displayedBookings()[0]?.bookingId;
-        if (!firstDisplayedBookingId) {
+        const currentBookingId = this.selectedBooking()?.bookingId ?? this.requestedBookingId();
+        if (currentBookingId && !this.displayedBookings().some(booking => booking.bookingId === currentBookingId)) {
           this.clearDetailSelection();
-        } else if (firstDisplayedBookingId !== this.selectedBooking()?.bookingId) {
-          this.openDetail(firstDisplayedBookingId);
         }
       },
       error: error => {
@@ -537,7 +546,9 @@ export class OwnerBookingsComponent {
   }
 
   openDetail(bookingId: string): void {
+    if (this.detailLoading() && this.requestedBookingId() === bookingId) return;
     this.selectedBooking.set(null);
+    this.detailBookingQr.set(null);
     this.requestedBookingId.set(bookingId);
     this.detailError.set(null);
     this.detailLoading.set(true);
@@ -549,7 +560,15 @@ export class OwnerBookingsComponent {
       })
     ).subscribe({
       next: booking => {
-        if (this.requestedBookingId() === bookingId) this.selectedBooking.set(booking);
+        if (this.requestedBookingId() !== bookingId) return;
+        this.selectedBooking.set(booking);
+        if (booking.qrCode) {
+          void toDataURL(booking.qrCode, { width: 180, margin: 1, errorCorrectionLevel: 'M' })
+            .then(image => {
+              if (this.requestedBookingId() === bookingId) this.detailBookingQr.set(image);
+            })
+            .catch(() => this.notify.error('Không thể hiển thị mã QR nhận sân.'));
+        }
       },
       error: error => {
         if (this.requestedBookingId() === bookingId) {
@@ -570,18 +589,7 @@ export class OwnerBookingsComponent {
     this.requestedBookingId.set(null);
     this.detailError.set(null);
     this.detailLoading.set(false);
-  }
-
-  private syncDetailSelection(displayedBookings: OwnerBooking[]): void {
-    if (!displayedBookings.length) {
-      this.clearDetailSelection();
-      return;
-    }
-
-    const currentBookingId = this.selectedBooking()?.bookingId ?? this.requestedBookingId();
-    if (!currentBookingId || !displayedBookings.some(booking => booking.bookingId === currentBookingId)) {
-      this.openDetail(displayedBookings[0].bookingId);
-    }
+    this.detailBookingQr.set(null);
   }
 
   completeBooking(booking: OwnerBooking): void {
@@ -618,8 +626,99 @@ export class OwnerBookingsComponent {
     if (['FAILED', 'EXPIRED', 'CANCELLED'].includes(payment.status)) return 'Thất bại';
     return 'Chờ thanh toán';
   }
-  paymentFor(booking: OwnerBooking, purpose: OwnerPayment['purpose']): OwnerPayment | undefined {
-    return booking.payments.find(payment => payment.purpose === purpose);
+  paymentState(booking: OwnerBooking): PaymentDisplayState {
+    if (this.isPaid(booking)) return 'FULLY_PAID';
+    if (this.paidAmount(booking) > 0) return 'PARTIALLY_PAID';
+    if (booking.payments.some(payment => ['CREATED', 'PENDING'].includes(payment.status))) return 'PENDING';
+    if (booking.payments.some(payment => ['FAILED', 'EXPIRED', 'CANCELLED'].includes(payment.status))) return 'FAILED';
+    return 'UNPAID';
+  }
+  paymentStateLabel(booking: OwnerBooking): string {
+    return {
+      FULLY_PAID: 'Đã thanh toán đủ',
+      PARTIALLY_PAID: 'Chưa thanh toán đủ',
+      PENDING: 'Đang chờ thanh toán',
+      FAILED: 'Thanh toán chưa thành công',
+      UNPAID: 'Chưa thanh toán'
+    }[this.paymentState(booking)];
+  }
+  paidAmount(booking: OwnerBooking): number {
+    const succeeded = booking.payments.filter(payment => payment.status === 'SUCCEEDED');
+    let paid = succeeded.reduce((total, payment) => total + Math.max(0, payment.amount || 0), 0);
+    const succeededIds = new Set(succeeded.map(payment => payment.paymentId));
+    if (booking.depositPaymentId && !succeededIds.has(booking.depositPaymentId)) {
+      paid += Math.max(0, booking.depositAmount || 0);
+    }
+    if (booking.remainingPaymentId && !succeededIds.has(booking.remainingPaymentId)) {
+      paid += Math.max(0, booking.remainingAmount || 0);
+    }
+    return Math.min(Math.max(0, booking.totalPrice || 0), paid);
+  }
+  outstandingAmount(booking: OwnerBooking): number {
+    if (this.isPaid(booking)) return 0;
+    return Math.max(0, booking.totalPrice - this.paidAmount(booking));
+  }
+  paymentProgress(booking: OwnerBooking): number {
+    if (booking.totalPrice <= 0) return 100;
+    return Math.min(100, Math.round(this.paidAmount(booking) / booking.totalPrice * 100));
+  }
+  paymentMethodLabel(payment: OwnerPayment): string {
+    const method = this.resolvedPaymentMethod(payment);
+    if (method === 'CASH') return 'Tiền mặt';
+    if (method === 'PAYOS') return 'Ví điện tử (PayOS)';
+    return '—';
+  }
+  resolvedPaymentMethod(payment: OwnerPayment): ResolvedPaymentMethod | null {
+    if (payment.method === 'CASH' || payment.providerTransactionId?.toUpperCase().startsWith('CASH-')) {
+      return 'CASH';
+    }
+    if (payment.method === 'BANK_TRANSFER' || payment.provider === 'PAYOS' || payment.providerTransactionId) {
+      return 'PAYOS';
+    }
+    return null;
+  }
+  bookingPaymentMethodLabel(booking: OwnerBooking): string {
+    const payment = booking.payments
+      .filter(item => item.status === 'SUCCEEDED')
+      .sort((left, right) =>
+        new Date(right.paidAt || right.createdAt).getTime() - new Date(left.paidAt || left.createdAt).getTime()
+      )[0];
+    return payment && this.resolvedPaymentMethod(payment) ? this.paymentMethodLabel(payment) : '—';
+  }
+  displayPayment(booking: OwnerBooking): OwnerPayment | undefined {
+    const payments = [...booking.payments].sort((left, right) =>
+      new Date(right.paidAt || right.createdAt).getTime() - new Date(left.paidAt || left.createdAt).getTime()
+    );
+    return payments.find(payment => this.resolvedPaymentMethod(payment)) ?? payments[0];
+  }
+  serviceFee(): number { return 0; }
+  discountAmount(): number { return 0; }
+  finalAmount(booking: OwnerBooking): number {
+    return Math.max(0, booking.totalPrice + this.serviceFee() - this.discountAmount());
+  }
+  paymentPurposeLabel(payment: OwnerPayment): string {
+    return payment.purpose === 'BOOKING_DEPOSIT' ? 'Tiền cọc' : 'Thanh toán còn lại';
+  }
+  paymentTimelineLabel(payment: OwnerPayment): string {
+    const label = payment.purpose === 'BOOKING_DEPOSIT' ? 'Thanh toán tiền cọc' : 'Thanh toán còn lại';
+    return payment.status === 'SUCCEEDED' ? label : `${label} – ${this.paymentLabel(payment)}`;
+  }
+  isWalkIn(booking: OwnerBooking): boolean {
+    return booking.source === 'WALK_IN';
+  }
+  sourceIcon(source: OwnerBooking['source']): string {
+    return source === 'WALK_IN' ? 'store' : source === 'DIRECT' ? 'globe' : 'user-plus';
+  }
+  bookingHasEnded(booking: OwnerBooking): boolean {
+    return this.bookingEndTimestamp(booking) <= Date.now();
+  }
+  autoCompletionMessage(booking: OwnerBooking): string {
+    if (booking.status === 'COMPLETED') return 'Đơn đã được hệ thống hoàn tất.';
+    if (!this.isPaid(booking)) return 'Đơn sẽ tự động hoàn tất sau khi đã nhận sân, thanh toán đủ và hết giờ sử dụng.';
+    if (!this.bookingHasEnded(booking)) {
+      return `Đã thanh toán đủ. Đơn sẽ tự động hoàn tất sau ${this.timeValue(booking.endTime)}.`;
+    }
+    return 'Đã đủ điều kiện. Hệ thống sẽ tự động hoàn tất đơn trong lần quét gần nhất.';
   }
   formatMoney(value: number): string {
     return `${new Intl.NumberFormat('vi-VN').format(value)}đ`;
@@ -629,6 +728,20 @@ export class OwnerBookingsComponent {
   }
   formatDateTime(value?: string): string {
     return value ? new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)) : '—';
+  }
+  formatTimelineDateTime(value?: string): string {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '—';
+    const pad = (part: number) => part.toString().padStart(2, '0');
+    return `${pad(date.getHours())}:${pad(date.getMinutes())} ${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`;
+  }
+  formatPaymentDateTime(value?: string): string {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '—';
+    const pad = (part: number) => part.toString().padStart(2, '0');
+    return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} - ${pad(date.getHours())}:${pad(date.getMinutes())}`;
   }
   timeValue(value: string): string { return value.slice(0, 5); }
   shortId(value?: string): string { return value ? value.slice(0, 8).toUpperCase() : 'KHÁCH LẺ'; }
@@ -649,21 +762,10 @@ export class OwnerBookingsComponent {
     return new Date(year, month - 1, day, hour, minute, second).getTime();
   }
 
-  timeline(booking: OwnerBooking): TimelineEntry[] {
-    const entries: TimelineEntry[] = [{
-      label: 'Đã tạo đơn đặt sân', detail: this.sourceLabel(booking.source), time: booking.createdAt, state: 'CREATED'
-    }];
-    for (const payment of booking.payments) {
-      entries.push({
-        label: payment.purpose === 'BOOKING_DEPOSIT' ? 'Thanh toán tiền cọc' : 'Thanh toán còn lại',
-        detail: payment.status, time: payment.paidAt ?? payment.createdAt, state: payment.status
-      });
-    }
-    entries.push({
-      label: 'Trạng thái đơn', detail: this.statusLabel(booking.status),
-      time: booking.updatedAt, state: booking.status
-    });
-    return entries;
+  private bookingEndTimestamp(booking: OwnerBooking): number {
+    const [year, month, day] = booking.playDate.split('-').map(Number);
+    const [hour, minute, second = 0] = booking.endTime.split(':').map(Number);
+    return new Date(year, month - 1, day, hour, minute, second).getTime();
   }
 
   private filter(page: number): OwnerBookingFilter {

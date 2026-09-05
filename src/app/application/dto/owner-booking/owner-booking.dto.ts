@@ -29,6 +29,9 @@ export interface OwnerPayment {
   amount: number;
   currency: string;
   status: string;
+  provider?: 'PAYOS' | 'MANUAL';
+  method?: 'BANK_TRANSFER' | 'CASH';
+  providerTransactionId?: string;
   paidAt?: string;
   expiresAt?: string;
   createdAt: string;
