@@ -2615,6 +2615,10 @@ button:disabled {
   z-index: 1160;
 }
 
+.payment-backdrop {
+  z-index: 1140;
+}
+
 .invoice-preview-modal {
   width: min(920px, 100%);
 }

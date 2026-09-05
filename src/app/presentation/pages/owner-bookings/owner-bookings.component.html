@@ -543,7 +543,7 @@
 }
 
 @if (paymentBooking(); as booking) {
-<div class="modal-backdrop" (click)="closePayment()">
+<div class="modal-backdrop payment-backdrop" (click)="closePayment()">
   <section class="payment-modal" role="dialog" aria-modal="true" aria-labelledby="payment-title"
     (click)="$event.stopPropagation()">
     <header class="modal-header">
