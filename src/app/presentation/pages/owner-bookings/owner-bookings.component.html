@@ -11,7 +11,8 @@
   </header>
 
   @if (contextLoading()) {
-  <app-page-loading title="Đang tải đơn đặt sân" description="Đang đồng bộ cơ sở, sân thi đấu và phạm vi đơn đặt sân." />
+  <app-page-loading title="Đang tải đơn đặt sân"
+    description="Đang đồng bộ cơ sở, sân thi đấu và phạm vi đơn đặt sân." />
   } @else if (!venues().length) {
   <section class="state-card state-card--empty">
     <lucide-icon name="land-plot" />
@@ -94,8 +95,8 @@
             <span role="columnheader">Sân</span>
             <span role="columnheader">Ngày giờ</span>
             <span role="columnheader">Tổng tiền</span>
-            <span role="columnheader">TT thanh toán</span>
-            <span role="columnheader">TT đơn</span>
+            <span role="columnheader">Thanh toán</span>
+            <span role="columnheader">Trạng thái đơn</span>
             <span aria-hidden="true"></span>
           </div>
           @for (booking of displayedBookings(); track booking.bookingId) {
@@ -136,18 +137,8 @@
           }
         </section>
       </div>
-      <footer class="booking-list-footer">
-        <span>Hiển thị {{ displayedBookings().length }} trong tổng số {{ total() }} đơn</span>
-        @if (pages() > 1) {
-        <nav class="pagination" aria-label="Phân trang đơn đặt sân">
-          <button type="button" (click)="loadBookings(page() - 1)" [disabled]="page() === 0 || loading()"
-            aria-label="Trang trước"><lucide-icon name="chevron-left" /></button>
-          <span>{{ page() + 1 }}</span>
-          <button type="button" (click)="loadBookings(page() + 1)" [disabled]="page() + 1 >= pages() || loading()"
-            aria-label="Trang sau"><lucide-icon name="chevron-right" /></button>
-        </nav>
-        }
-      </footer>
+      <app-pagination class="booking-list-pagination" [pageIndex]="page()" [pageSize]="pageSize"
+        [totalItems]="total()" (pageChange)="loadBookings($event)" />
       }
     </div>
 

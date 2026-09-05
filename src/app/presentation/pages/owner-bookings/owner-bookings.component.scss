@@ -1829,29 +1829,9 @@ button:disabled {
   height: 17px;
 }
 
-.booking-list-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  min-height: 60px;
+.booking-list-pagination {
+  display: block;
   margin-top: auto;
-  padding: 10px 16px;
-  border-top: 1px solid var(--booking-border);
-  color: var(--booking-muted);
-  font-size: 13px;
-}
-
-.booking-list-footer .pagination {
-  gap: 8px;
-  margin: 0;
-  font-size: 13px;
-}
-
-.booking-list-footer .pagination button {
-  width: 34px;
-  min-height: 34px;
-  border-radius: 8px;
 }
 
 .detail-panel {
@@ -2122,11 +2102,6 @@ button:disabled {
   .booking-workspace,
   .booking-list-panel {
     min-height: 520px;
-  }
-
-  .booking-list-footer {
-    align-items: flex-start;
-    flex-direction: column;
   }
 
   .detail-panel__footer {

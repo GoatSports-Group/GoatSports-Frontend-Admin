@@ -25,6 +25,7 @@ import { ManageOwnerVenueCourtsUseCase } from '@application/usecase/venue-owner-
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-loading.component';
+import { PaginationComponent } from '@shared/components/ui/pagination/pagination.component';
 
 interface StatusOption { value: '' | OwnerBookingStatus; label: string; }
 interface TimelineEntry { label: string; detail: string; time?: string; state: string; }
@@ -33,12 +34,13 @@ type PaymentFilter = '' | 'PAID' | 'UNPAID' | 'FAILED';
 @Component({
   selector: 'app-owner-bookings',
   standalone: true,
-  imports: [ReactiveFormsModule, LucideIconComponent, PageLoadingComponent],
+  imports: [ReactiveFormsModule, LucideIconComponent, PageLoadingComponent, PaginationComponent],
   templateUrl: './owner-bookings.component.html',
   styleUrl: './owner-bookings.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OwnerBookingsComponent {
+  readonly pageSize = 12;
   private readonly formBuilder = inject(FormBuilder);
   private readonly getVenues = inject(GetMyOwnerVenuesUseCase);
   private readonly manageCourts = inject(ManageOwnerVenueCourtsUseCase);
@@ -670,7 +672,7 @@ export class OwnerBookingsComponent {
       venueId: value.venueId || undefined, venueCourtId: value.venueCourtId || undefined,
       status: value.status || undefined, query: value.query.trim() || undefined,
       fromDate: value.fromDate || undefined, toDate: value.toDate || undefined,
-      page, size: 12
+      page, size: this.pageSize
     };
   }
 
