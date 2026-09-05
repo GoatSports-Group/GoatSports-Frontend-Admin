@@ -11,8 +11,7 @@
   </header>
 
   @if (contextLoading()) {
-  <app-page-loading title="Đang tải đơn đặt sân"
-    description="Đang đồng bộ cơ sở, sân thi đấu và phạm vi booking." />
+  <app-page-loading title="Đang tải đơn đặt sân" description="Đang đồng bộ cơ sở, sân thi đấu và phạm vi booking." />
   } @else if (!venues().length) {
   <section class="state-card state-card--empty">
     <lucide-icon name="land-plot" />
@@ -61,12 +60,15 @@
     </div>
   </form>
 
-  <section class="booking-workspace" [class.booking-workspace--with-detail]="detailLoading() || detailError() || selectedBooking()">
+  <section class="booking-workspace"
+    [class.booking-workspace--with-detail]="detailLoading() || detailError() || selectedBooking()">
     <div class="booking-list-panel">
       @if (loadError()) {
       <section class="error-state" role="alert">
         <lucide-icon name="alert-circle" />
-        <div><strong>Không thể tải danh sách đặt sân</strong><p>{{ loadError() }}</p></div>
+        <div><strong>Không thể tải danh sách đặt sân</strong>
+          <p>{{ loadError() }}</p>
+        </div>
         <button type="button" (click)="loadBookings()">Thử lại</button>
       </section>
       } @else if (loading()) {
@@ -121,8 +123,9 @@
               }
             </div>
             <span class="status-badge" [attr.data-status]="booking.status">{{ statusLabel(booking.status) }}</span>
-            <button type="button" class="row-detail-button" (click)="$event.stopPropagation(); openDetail(booking.bookingId)"
-              [disabled]="detailLoading()" [attr.aria-label]="'Xem đơn ' + booking.bookingCode">
+            <button type="button" class="row-detail-button"
+              (click)="$event.stopPropagation(); openDetail(booking.bookingId)" [disabled]="detailLoading()"
+              [attr.aria-label]="'Xem đơn ' + booking.bookingCode">
               <lucide-icon name="chevron-right" />
             </button>
           </article>
@@ -156,7 +159,8 @@
       <div class="detail-state"><span class="spinner"></span><strong>Đang tải chi tiết đơn…</strong></div>
       } @else if (detailError()) {
       <div class="detail-state detail-state--error" role="alert">
-        <lucide-icon name="alert-circle" /><strong>Không thể tải chi tiết</strong><p>{{ detailError() }}</p>
+        <lucide-icon name="alert-circle" /><strong>Không thể tải chi tiết</strong>
+        <p>{{ detailError() }}</p>
         <button type="button" (click)="retryDetail(requestedBookingId()!)">Thử lại</button>
       </div>
       } @else if (selectedBooking(); as booking) {
@@ -167,28 +171,64 @@
           <p><lucide-icon name="calendar-days" /> Tạo lúc {{ formatDateTime(booking.createdAt) }}</p>
         </section>
         <section class="detail-section">
-          <header><lucide-icon name="user-round" /><h3>Thông tin khách hàng</h3></header>
+          <header><lucide-icon name="user-round" />
+            <h3>Thông tin khách hàng</h3>
+          </header>
           <dl class="detail-list">
-            <div><dt>Khách hàng</dt><dd>{{ customerName(booking) }}</dd></div>
-            <div><dt>SĐT</dt><dd>{{ customerPhone(booking) }}</dd></div>
-            <div><dt>Loại khách</dt><dd>{{ sourceLabel(booking.source) }}</dd></div>
+            <div>
+              <dt>Khách hàng</dt>
+              <dd>{{ customerName(booking) }}</dd>
+            </div>
+            <div>
+              <dt>SĐT</dt>
+              <dd>{{ customerPhone(booking) }}</dd>
+            </div>
+            <div>
+              <dt>Loại khách</dt>
+              <dd>{{ sourceLabel(booking.source) }}</dd>
+            </div>
           </dl>
         </section>
         <section class="detail-section">
-          <header><lucide-icon name="calendar-days" /><h3>Thông tin đặt sân</h3></header>
+          <header><lucide-icon name="calendar-days" />
+            <h3>Thông tin đặt sân</h3>
+          </header>
           <dl class="detail-list">
-            <div><dt>Sân</dt><dd>{{ booking.courtName }}</dd></div>
-            <div><dt>Cơ sở</dt><dd>{{ booking.venueName }}</dd></div>
-            <div><dt>Ngày</dt><dd>{{ formatDate(booking.playDate) }}</dd></div>
-            <div><dt>Giờ</dt><dd>{{ timeValue(booking.startTime) }} – {{ timeValue(booking.endTime) }}</dd></div>
+            <div>
+              <dt>Sân</dt>
+              <dd>{{ booking.courtName }}</dd>
+            </div>
+            <div>
+              <dt>Cơ sở</dt>
+              <dd>{{ booking.venueName }}</dd>
+            </div>
+            <div>
+              <dt>Ngày</dt>
+              <dd>{{ formatDate(booking.playDate) }}</dd>
+            </div>
+            <div>
+              <dt>Giờ</dt>
+              <dd>{{ timeValue(booking.startTime) }} – {{ timeValue(booking.endTime) }}</dd>
+            </div>
           </dl>
         </section>
         <section class="detail-section">
-          <header><lucide-icon name="credit-card" /><h3>Thanh toán</h3></header>
+          <header><lucide-icon name="credit-card" />
+            <h3>Thanh toán</h3>
+          </header>
           <dl class="money-breakdown">
-            <div><dt>Tổng tiền</dt><dd>{{ formatMoney(booking.totalPrice) }}</dd></div>
-            <div><dt>Tiền cọc</dt><dd>{{ formatMoney(booking.depositAmount) }}</dd></div>
-            <div><dt>Còn lại</dt><dd class="money-highlight">{{ formatMoney(booking.remainingAmount) }}</dd></div>
+            <div>
+              <dt>Tổng tiền</dt>
+              <dd>{{ formatMoney(booking.totalPrice) }}</dd>
+            </div>
+            <div>
+              <dt>Tiền cọc</dt>
+              <dd>{{ formatMoney(booking.depositAmount) }}</dd>
+            </div>
+            <div>
+              <dt>Còn lại</dt>
+              <dd class="money-highlight">{{ formatMoney(booking.remainingAmount) }}</dd>
+            </div>
           </dl>
           @if (paymentFor(booking, 'BOOKING_REMAINING'); as payment) {
           <div class="detail-payment-status">
@@ -198,10 +238,16 @@
           }
         </section>
         <section class="detail-section detail-section--timeline">
-          <header><lucide-icon name="history" /><h3>Lịch sử đơn</h3></header>
+          <header><lucide-icon name="history" />
+            <h3>Lịch sử đơn</h3>
+          </header>
           <ol class="timeline">
             @for (entry of timeline(booking); track $index) {
-            <li><span></span><div><strong>{{ entry.label }}</strong><p>{{ entry.detail }}</p><small>{{ formatDateTime(entry.time) }}</small></div></li>
+            <li><span></span>
+              <div><strong>{{ entry.label }}</strong>
+                <p>{{ entry.detail }}</p><small>{{ formatDateTime(entry.time) }}</small>
+              </div>
+            </li>
             }
           </ol>
         </section>
@@ -229,156 +275,171 @@
 </main>
 
 @if (createOpen()) {
-  <div class="modal-backdrop" (click)="closeCreateBooking()">
-    <section class="booking-modal" role="dialog" aria-modal="true" aria-labelledby="create-booking-title" (click)="$event.stopPropagation()">
-      <header class="modal-header">
-        <div>
-          <span class="eyebrow">Khách tại quầy</span>
-          <h2 id="create-booking-title">Tạo đơn walk-in mới</h2>
-          <p>Chọn sân và khung giờ còn trống, sau đó thu tiền ngay trên đơn.</p>
-        </div>
-        <button type="button" class="icon-button" (click)="closeCreateBooking()" [disabled]="createLoading()" aria-label="Đóng">
-          <lucide-icon name="x" />
+<div class="modal-backdrop" (click)="closeCreateBooking()">
+  <section class="booking-modal" role="dialog" aria-modal="true" aria-labelledby="create-booking-title"
+    (click)="$event.stopPropagation()">
+    <header class="modal-header">
+      <div>
+        <span class="eyebrow">Khách tại quầy</span>
+        <h2 id="create-booking-title">Tạo đơn vãng lai</h2>
+        <p>Chọn sân và khung giờ còn trống, sau đó thu tiền ngay trên đơn.</p>
+      </div>
+      <button type="button" class="icon-button" (click)="closeCreateBooking()" [disabled]="createLoading()"
+        aria-label="Đóng">
+        <lucide-icon name="x" />
+      </button>
+    </header>
+
+    <form class="create-form" [formGroup]="createForm" (ngSubmit)="createWalkInBooking()">
+      <div class="form-grid">
+        <label>
+          <span>Cơ sở</span>
+          <select formControlName="venueId" (change)="selectCreateVenue($any($event.target).value)">
+            @for (venue of venues(); track venue.venueId) { <option [value]="venue.venueId">{{ venue.name }}</option> }
+          </select>
+        </label>
+        <label>
+          <span>Sân thi đấu</span>
+          <select formControlName="venueCourtId" (change)="loadCreateSlots()" [disabled]="slotsLoading()">
+            @for (court of createCourts(); track court.venueCourtId) { <option [value]="court.venueCourtId">{{
+              court.name }}</option> }
+          </select>
+        </label>
+        <label>
+          <span>Ngày chơi</span>
+          <input type="date" formControlName="playDate" [min]="today()" (change)="loadCreateSlots()" />
+        </label>
+        <label>
+          <span>Khung giờ còn trống</span>
+          <select formControlName="timeSlotId" [disabled]="slotsLoading() || !availableCreateSlots().length">
+            <option value="">{{ slotsLoading() ? 'Đang tải khung giờ…' : 'Chọn khung giờ' }}</option>
+            @for (slot of availableCreateSlots(); track slot.timeSlotId) {
+            <option [value]="slot.timeSlotId">
+              {{ timeValue(slot.startTime) }} – {{ timeValue(slot.endTime) }} · {{ formatMoney(slotTotal(slot)) }}
+            </option>
+            }
+          </select>
+          @if (!slotsLoading() && !availableCreateSlots().length) { <small>Ngày này không còn khung giờ khả dụng chưa
+            kết thúc.</small> }
+        </label>
+        <label>
+          <span>Tên khách</span>
+          <input formControlName="customerName" maxlength="120" placeholder="Nguyễn Văn A" />
+        </label>
+        <label>
+          <span>Số điện thoại</span>
+          <input formControlName="customerPhone" inputmode="tel" maxlength="20" placeholder="0901234567" />
+        </label>
+      </div>
+
+      <aside class="order-summary">
+        <div><span>Loại đơn</span><strong>Khách vãng lai</strong></div>
+        <div><span>Tạm tính</span><strong>{{ formatMoney(slotTotal(selectedCreateSlot())) }}</strong></div>
+      </aside>
+
+      <footer class="modal-footer">
+        <button type="button" class="secondary-button" (click)="closeCreateBooking()"
+          [disabled]="createLoading()">Hủy</button>
+        <button type="submit" class="primary-button"
+          [disabled]="createLoading() || slotsLoading() || createForm.invalid || !selectedCreateSlot()">
+          @if (createLoading()) { <span class="spinner-small"></span> Đang tạo… } @else { <lucide-icon
+            name="file-plus-2" /> Tạo đơn }
         </button>
-      </header>
-
-      <form class="create-form" [formGroup]="createForm" (ngSubmit)="createWalkInBooking()">
-        <div class="form-grid">
-          <label>
-            <span>Cơ sở</span>
-            <select formControlName="venueId" (change)="selectCreateVenue($any($event.target).value)">
-              @for (venue of venues(); track venue.venueId) { <option [value]="venue.venueId">{{ venue.name }}</option> }
-            </select>
-          </label>
-          <label>
-            <span>Sân thi đấu</span>
-            <select formControlName="venueCourtId" (change)="loadCreateSlots()" [disabled]="slotsLoading()">
-              @for (court of createCourts(); track court.venueCourtId) { <option [value]="court.venueCourtId">{{ court.name }}</option> }
-            </select>
-          </label>
-          <label>
-            <span>Ngày chơi</span>
-            <input type="date" formControlName="playDate" [min]="today()" (change)="loadCreateSlots()" />
-          </label>
-          <label>
-            <span>Khung giờ còn trống</span>
-            <select formControlName="timeSlotId" [disabled]="slotsLoading() || !availableCreateSlots().length">
-              <option value="">{{ slotsLoading() ? 'Đang tải khung giờ…' : 'Chọn khung giờ' }}</option>
-              @for (slot of availableCreateSlots(); track slot.timeSlotId) {
-                <option [value]="slot.timeSlotId">
-                  {{ timeValue(slot.startTime) }} – {{ timeValue(slot.endTime) }} · {{ formatMoney(slotTotal(slot)) }}
-                </option>
-              }
-            </select>
-            @if (!slotsLoading() && !availableCreateSlots().length) { <small>Ngày này không còn khung giờ khả dụng chưa kết thúc.</small> }
-          </label>
-          <label>
-            <span>Tên khách</span>
-            <input formControlName="customerName" maxlength="120" placeholder="Nguyễn Văn A" />
-          </label>
-          <label>
-            <span>Số điện thoại</span>
-            <input formControlName="customerPhone" inputmode="tel" maxlength="20" placeholder="0901234567" />
-          </label>
-        </div>
-
-        <aside class="order-summary">
-          <div><span>Loại đơn</span><strong>WALK_IN</strong></div>
-          <div><span>Tạm tính</span><strong>{{ formatMoney(slotTotal(selectedCreateSlot())) }}</strong></div>
-          <p>Số tiền được tính từ giá của slot. Frontend không thể sửa số tiền thanh toán.</p>
-        </aside>
-
-        <footer class="modal-footer">
-          <button type="button" class="secondary-button" (click)="closeCreateBooking()" [disabled]="createLoading()">Hủy</button>
-          <button type="submit" class="primary-button" [disabled]="createLoading() || slotsLoading() || createForm.invalid || !selectedCreateSlot()">
-            @if (createLoading()) { <span class="spinner-small"></span> Đang tạo… } @else { <lucide-icon name="file-plus-2" /> Tạo booking }
-          </button>
-        </footer>
-      </form>
-    </section>
-  </div>
+      </footer>
+    </form>
+  </section>
+</div>
 }
 
 @if (paymentBooking(); as booking) {
-  <div class="modal-backdrop" (click)="closePayment()">
-    <section class="payment-modal" role="dialog" aria-modal="true" aria-labelledby="payment-title" (click)="$event.stopPropagation()">
-      <header class="modal-header">
-        <div>
-          <span class="eyebrow">{{ booking.bookingCode }}</span>
-          <h2 id="payment-title">Vé nhận sân & thanh toán</h2>
-          <p>{{ booking.courtName }} · {{ formatDate(booking.playDate) }} · {{ timeValue(booking.startTime) }}–{{ timeValue(booking.endTime) }}</p>
-        </div>
-        <button type="button" class="icon-button" (click)="closePayment()" [disabled]="!!paymentLoading()" aria-label="Đóng"><lucide-icon name="x" /></button>
-      </header>
-
-      <div class="booking-ticket">
-        @if (!booking.qrCode) {
-          <span class="ticket-qr-missing"><lucide-icon name="qr-code" /></span>
-        } @else if (bookingTicketQr()) {
-          <img [src]="bookingTicketQr()" [alt]="'Mã QR check-in ' + booking.bookingCode" />
-        } @else {
-          <span class="ticket-qr-loading"><span class="spinner-small"></span></span>
-        }
-        <div>
-          <span class="eyebrow">MÃ QR CHECK-IN</span>
-          <strong>{{ booking.bookingCode }}</strong>
-          <p>{{ booking.qrCode
-            ? 'Đưa mã này cho nhân viên quét khi nhận sân. QR độc lập với khoản tiền còn lại.'
-            : 'Booking cũ chưa có QR; nhân viên có thể tra cứu bằng Booking Code.' }}</p>
-        </div>
+<div class="modal-backdrop" (click)="closePayment()">
+  <section class="payment-modal" role="dialog" aria-modal="true" aria-labelledby="payment-title"
+    (click)="$event.stopPropagation()">
+    <header class="modal-header">
+      <div>
+        <span class="eyebrow">{{ booking.bookingCode }}</span>
+        <h2 id="payment-title">Vé nhận sân & thanh toán</h2>
+        <p>{{ booking.courtName }} · {{ formatDate(booking.playDate) }} · {{ timeValue(booking.startTime) }}–{{
+          timeValue(booking.endTime) }}</p>
       </div>
+      <button type="button" class="icon-button" (click)="closePayment()" [disabled]="!!paymentLoading()"
+        aria-label="Đóng"><lucide-icon name="x" /></button>
+    </header>
 
-      <div class="payment-total"><span>Khách cần thanh toán</span><strong>{{ formatMoney(booking.remainingAmount) }}</strong></div>
-      <p class="pay-later-note">Có thể thanh toán ngay hoặc đóng cửa sổ này để thu tiền sau khi khách sử dụng sân.</p>
-
-      @if (paymentCompleted()) {
-        <div class="payment-success">
-          <lucide-icon name="circle-check-big" />
-          <h3>Thanh toán thành công</h3>
-          <p>Đơn đã được xác nhận và sẵn sàng check-in khi đến giờ.</p>
-          <button type="button" class="primary-button" (click)="closePayment()">Hoàn tất</button>
-        </div>
-      } @else if (checkoutQr()) {
-        <div class="payos-checkout">
-          <div class="qr-frame">
-            <img [src]="checkoutQr()" alt="Mã QR thanh toán payOS" />
-          </div>
-          <div>
-            <span class="payos-label">THANH TOÁN PAYOS</span>
-            <h3>Quét bằng ứng dụng ngân hàng</h3>
-            <p>QR đã điền sẵn số tiền và nội dung. Hệ thống đang chờ webhook payOS và sẽ tự xác nhận ngay khi ngân hàng ghi nhận chuyển khoản.</p>
-            <div class="payos-waiting"><span class="spinner-small"></span> Đang chờ thanh toán…</div>
-            @if (checkoutUrl()) {
-              <a class="payos-button" [href]="checkoutUrl()" target="_blank" rel="noopener noreferrer">
-                <lucide-icon name="external-link" /> Mở trang thanh toán payOS
-              </a>
-            }
-          </div>
-        </div>
+    <div class="booking-ticket">
+      @if (!booking.qrCode) {
+      <span class="ticket-qr-missing"><lucide-icon name="qr-code" /></span>
+      } @else if (bookingTicketQr()) {
+      <img [src]="bookingTicketQr()" [alt]="'Mã QR check-in ' + booking.bookingCode" />
       } @else {
-        <div class="payment-methods">
-          @if (!hasPendingOnlinePayment(booking)) {
-            <button type="button" (click)="collectPayment('CASH')" [disabled]="!!paymentLoading()">
-              <span class="method-icon method-icon--cash"><lucide-icon name="banknote" /></span>
-              <span><strong>Thu tiền mặt</strong><small>Ghi nhận đã nhận đủ tiền tại quầy</small></span>
-              @if (paymentLoading() === 'CASH') { <span class="spinner"></span> } @else { <lucide-icon name="chevron-right" /> }
-            </button>
-          } @else {
-            <div class="pending-payment-note">
-              <lucide-icon name="shield-alert" />
-              <span><strong>Đang có giao dịch payOS chờ thanh toán</strong><small>Tiếp tục giao dịch hiện tại để tránh tạo khoản thu trùng.</small></span>
-            </div>
-          }
-          <button type="button" (click)="collectPayment('PAYOS')" [disabled]="!!paymentLoading()">
-            <span class="method-icon method-icon--payos"><lucide-icon name="qr-code" /></span>
-            <span>
-              <strong>{{ hasPendingOnlinePayment(booking) ? 'Hiện lại mã payOS' : 'Chuyển khoản payOS' }}</strong>
-              <small>{{ hasPendingOnlinePayment(booking) ? 'Mở lại mã thanh toán đã tạo trước đó' : 'Tự xác nhận sau khi chuyển khoản thành công' }}</small>
-            </span>
-            @if (paymentLoading() === 'PAYOS') { <span class="spinner"></span> } @else { <lucide-icon name="chevron-right" /> }
-          </button>
-        </div>
+      <span class="ticket-qr-loading"><span class="spinner-small"></span></span>
       }
-    </section>
-  </div>
+      <div>
+        <span class="eyebrow">MÃ QR CHECK-IN</span>
+        <strong>{{ booking.bookingCode }}</strong>
+        <p>{{ booking.qrCode
+          ? 'Đưa mã này cho nhân viên quét khi nhận sân.'
+          : 'Đơn cũ chưa có QR, nhân viên có thể tra cứu bằng mã đơn.' }}</p>
+      </div>
+    </div>
+
+    <div class="payment-total"><span>Khách cần thanh toán</span><strong>{{ formatMoney(booking.remainingAmount)
+        }}</strong></div>
+    <p class="pay-later-note">Có thể thanh toán ngay hoặc đóng cửa sổ này để thu tiền sau khi khách sử dụng sân.</p>
+
+    @if (paymentCompleted()) {
+    <div class="payment-success">
+      <lucide-icon name="circle-check-big" />
+      <h3>Thanh toán thành công</h3>
+      <p>Đơn đã được xác nhận và sẵn sàng check-in khi đến giờ.</p>
+      <button type="button" class="primary-button" (click)="closePayment()">Hoàn tất</button>
+    </div>
+    } @else if (checkoutQr()) {
+    <div class="payos-checkout">
+      <div class="qr-frame">
+        <img [src]="checkoutQr()" alt="Mã QR thanh toán payOS" />
+      </div>
+      <div>
+        <span class="payos-label">THANH TOÁN PAYOS</span>
+        <h3>Quét bằng ứng dụng ngân hàng</h3>
+        <p>QR đã điền sẵn số tiền và nội dung. Hệ thống sẽ tự xác nhận ngay khi ngân hàng ghi
+          nhận chuyển khoản.</p>
+        <div class="payos-waiting"><span class="spinner-small"></span> Đang chờ thanh toán…</div>
+        @if (checkoutUrl()) {
+        <a class="payos-button" [href]="checkoutUrl()" target="_blank" rel="noopener noreferrer">
+          <lucide-icon name="external-link" /> Mở trang thanh toán payOS
+        </a>
+        }
+      </div>
+    </div>
+    } @else {
+    <div class="payment-methods">
+      @if (!hasPendingOnlinePayment(booking)) {
+      <button type="button" (click)="collectPayment('CASH')" [disabled]="!!paymentLoading()">
+        <span class="method-icon method-icon--cash"><lucide-icon name="banknote" /></span>
+        <span><strong>Thu tiền mặt</strong><small>Ghi nhận đã nhận đủ tiền tại quầy</small></span>
+        @if (paymentLoading() === 'CASH') { <span class="spinner"></span> } @else { <lucide-icon name="chevron-right" />
+        }
+      </button>
+      } @else {
+      <div class="pending-payment-note">
+        <lucide-icon name="shield-alert" />
+        <span><strong>Đang có giao dịch payOS chờ thanh toán</strong><small>Tiếp tục giao dịch hiện tại để tránh tạo
+            khoản thu trùng.</small></span>
+      </div>
+      }
+      <button type="button" (click)="collectPayment('PAYOS')" [disabled]="!!paymentLoading()">
+        <span class="method-icon method-icon--payos"><lucide-icon name="qr-code" /></span>
+        <span>
+          <strong>{{ hasPendingOnlinePayment(booking) ? 'Hiện lại mã payOS' : 'Chuyển khoản payOS' }}</strong>
+          <small>{{ hasPendingOnlinePayment(booking) ? 'Mở lại mã thanh toán đã tạo trước đó' : 'Tự xác nhận sau khi
+            chuyển khoản thành công' }}</small>
+        </span>
+        @if (paymentLoading() === 'PAYOS') { <span class="spinner"></span> } @else { <lucide-icon
+          name="chevron-right" /> }
+      </button>
+    </div>
+    }
+  </section>
+</div>
 }
