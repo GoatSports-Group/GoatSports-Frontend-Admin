@@ -1,13 +1,12 @@
 <main class="checkin-page">
   <header class="hero">
     <div class="hero-copy">
-      <p class="eyebrow"><app-lucide-icon name="shield-check" [size]="16" /> Vận hành tại quầy</p>
-      <h1>Check-in khách</h1>
-      <p>Quét QR hoặc nhập Booking Code để tự động xác định cơ sở, sân thi đấu và thông tin nhận sân.</p>
+      <h1>Nhận sân cho khách</h1>
+      <p>Quét QR hoặc nhập mã trên vé để tự động xác định cơ sở, sân thi đấu và thông tin nhận sân.</p>
     </div>
   </header>
 
-  <nav class="tabs" aria-label="Không gian check-in">
+  <nav class="tabs" aria-label="Không gian nhận sân">
     <button type="button" [class.active]="activeTab() === 'check-in'" (click)="setTab('check-in')">
       <app-lucide-icon name="user-check" [size]="18" /> Đối soát
     </button>
@@ -17,292 +16,519 @@
   </nav>
 
   @if (loadingContext()) {
-    <app-page-loading title="Đang tải dữ liệu check-in"
-      description="Đang đồng bộ cơ sở, sân và lịch vận hành trong hôm nay." />
+  <app-page-loading title="Đang tải dữ liệu nhận sân"
+    description="Đang đồng bộ cơ sở, sân và lịch vận hành trong hôm nay." />
   } @else if (loadError()) {
-    <section class="state-card error-state" role="alert">
-      <app-lucide-icon name="alert-circle" [size]="24" />
-      <div><h2>Chưa tải được dữ liệu vận hành</h2><p>{{ loadError() }}</p></div>
-      <button type="button" class="secondary" (click)="loadContext()">Thử lại</button>
-    </section>
+  <section class="state-card error-state" role="alert">
+    <app-lucide-icon name="alert-circle" [size]="24" />
+    <div>
+      <h2>Chưa tải được dữ liệu vận hành</h2>
+      <p>{{ loadError() }}</p>
+    </div>
+    <button type="button" class="secondary" (click)="loadContext()">Thử lại</button>
+  </section>
   } @else if (!venues().length) {
-    <section class="state-card empty-state">
-      <app-lucide-icon name="land-plot" [size]="28" />
-      <h2>Chưa có sân để check-in</h2>
-      <p>Hoàn thiện cơ sở và sân thi đấu trước khi tiếp nhận khách.</p>
-    </section>
+  <section class="state-card empty-state">
+    <app-lucide-icon name="land-plot" [size]="28" />
+    <h2>Chưa có sân để nhận khách</h2>
+    <p>Hoàn thiện cơ sở và sân thi đấu trước khi tiếp nhận khách.</p>
+  </section>
   } @else {
-    @if (activeTab() === 'check-in') {
-      <section class="workspace-grid">
-        <article class="panel lookup-panel">
-          <div class="panel-heading">
-            <div>
-              <h2>Tra cứu vé đặt sân</h2>
-              <p class="section-copy">Quét mã QR hoặc nhập Booking Code trên vé của khách.</p>
-            </div>
-            <span class="scope-badge">
-              {{ resolvedScope()?.courtName || 'Tự động xác định sân' }}
-            </span>
-          </div>
-
-          <div class="mode-toggle" role="group" aria-label="Phương thức tra cứu">
-            <button type="button" [class.active]="lookupMode() === 'bookingCode'"
-                    (click)="setLookupMode('bookingCode')">
-              <app-lucide-icon name="hash" [size]="18" /> Booking Code
-            </button>
-            <button type="button" [class.active]="lookupMode() === 'qrCode'"
-                    (click)="setLookupMode('qrCode')">
-              <app-lucide-icon name="camera" [size]="18" /> Mã QR
-            </button>
-          </div>
-
-          @if (lookupMode() === 'qrCode') {
-            <div class="scanner-shell" [class.active]="scannerActive()">
-              @if (scannerActive()) {
-                <video #scannerVideo muted playsinline aria-label="Khung camera quét QR"></video>
-                <div class="scan-guide" aria-hidden="true"></div>
-                <button type="button" class="secondary" (click)="stopScanner()">Dừng camera</button>
-              } @else {
-                <span class="scanner-icon"><app-lucide-icon name="camera" [size]="36" /></span>
-                <strong>Đưa mã QR vào giữa khung hình</strong>
-                <p>Camera chỉ dùng để quét mã vé và không lưu hình ảnh của khách.</p>
-                <button type="button" class="secondary scanner-button" (click)="startScanner()">
-                  <app-lucide-icon name="camera" [size]="18" /> Mở camera
-                </button>
-              }
-            </div>
-            <div class="lookup-divider"><span>Hoặc nhập mã vé</span></div>
-          } @else {
-            <div class="manual-lookup-guide">
-              <span class="manual-icon"><app-lucide-icon name="ticket-check" [size]="28" /></span>
-              <div>
-                <strong>Nhập Booking Code trên vé điện tử</strong>
-                <p>Mã thường gồm chữ và số, không phân biệt chữ hoa hay chữ thường.</p>
-              </div>
-            </div>
-          }
-
-          <form [formGroup]="lookupForm" (ngSubmit)="lookup()" class="lookup-form">
-            <label>
-              <span>{{ lookupMode() === 'qrCode' ? 'QR payload' : 'Booking Code' }}</span>
-              <input formControlName="value"
-                     [placeholder]="lookupMode() === 'qrCode' ? 'Dán payload GSQR.v1…' : 'Ví dụ GS12AB34'"
-                     autocomplete="off" />
-            </label>
-            <button type="submit" class="primary" [disabled]="lookingUp() || lookupForm.invalid">
-              @if (lookingUp()) { <app-lucide-icon name="loader-2" class="spin" [size]="18" /> }
-              @else { <app-lucide-icon name="search" [size]="18" /> }
-              {{ lookingUp() ? 'Đang đối soát…' : 'Tra cứu' }}
-            </button>
-          </form>
-          <p class="helper">Không quét được QR? Chuyển sang Booking Code hiển thị dưới vé điện tử.</p>
-          @if (actionError()) {
-            <div class="inline-error" role="alert">
-              <app-lucide-icon name="alert-circle" [size]="18" />
-              <span>{{ actionError() }}</span>
-            </div>
-          }
-        </article>
-
-        <aside class="panel operations-panel" aria-label="Hỗ trợ quy trình check-in">
-          <section class="operations-section flow-section">
-            <div class="section-heading">
-              <div>
-                <h2>Quy trình đối soát</h2>
-                <p>Hoàn tất 4 bước trước khi bàn giao sân.</p>
-              </div>
-              <app-lucide-icon name="list-checks" [size]="22" />
-            </div>
-            <ol class="process-list">
-              <li>
-                <span class="process-index">1</span>
-                <span class="process-icon"><app-lucide-icon name="scan-qr-code" [size]="20" /></span>
-                <div><strong>Quét mã vé</strong><p>Quét QR hoặc nhập Booking Code để tra cứu.</p></div>
-              </li>
-              <li>
-                <span class="process-index">2</span>
-                <span class="process-icon"><app-lucide-icon name="calendar-check" [size]="20" /></span>
-                <div><strong>Kiểm tra đúng sân và khung giờ</strong><p>Đối chiếu ngày chơi, sân và thời lượng.</p></div>
-              </li>
-              <li>
-                <span class="process-index">3</span>
-                <span class="process-icon"><app-lucide-icon name="contact-round" [size]="20" /></span>
-                <div><strong>Đối chiếu khách và thanh toán</strong><p>Xác nhận thông tin khách và khoản còn lại.</p></div>
-              </li>
-              <li>
-                <span class="process-index">4</span>
-                <span class="process-icon"><app-lucide-icon name="shield-check" [size]="20" /></span>
-                <div><strong>Xác nhận check-in</strong><p>Ghi nhận nhận sân sau khi thông tin hợp lệ.</p></div>
-              </li>
-            </ol>
-          </section>
-
-          <section class="operations-section schedule-section">
-            <div class="section-heading">
-              <div>
-                <h2>Khung giờ khả dụng hôm nay</h2>
-                @if (resolvedScope(); as scope) {
-                  <p>{{ scope.venueName }} · {{ scope.courtName }} · {{ availableSlots().length }} khung giờ</p>
-                } @else {
-                  <p>Tra cứu vé để hệ thống tự động xác định sân.</p>
-                }
-              </div>
-              <span class="today-badge">Hôm nay</span>
-            </div>
-
-            @if (!resolvedScope()) {
-              <div class="schedule-empty">
-                <app-lucide-icon name="calendar-check" [size]="24" />
-                <div><strong>Chưa xác định sân</strong><p>Quét QR hoặc nhập Booking Code để xem lịch đúng sân.</p></div>
-              </div>
-            } @else if (loadingCourt()) {
-              <div class="slot-skeleton" aria-label="Đang tải khung giờ">
-                <span></span><span></span><span></span>
-              </div>
-            } @else if (scheduleError()) {
-              <div class="schedule-empty schedule-empty--error" role="alert">
-                <app-lucide-icon name="alert-circle" [size]="24" />
-                <div><strong>Chưa tải được lịch sân</strong><p>{{ scheduleError() }}</p></div>
-              </div>
-            } @else if (!availableSlotPreview().length) {
-              <div class="schedule-empty">
-                <app-lucide-icon name="calendar-x" [size]="24" />
-                <div><strong>Không còn khung giờ trống</strong><p>Sân vừa tra cứu không còn khung giờ trống hôm nay.</p></div>
-              </div>
-            } @else {
-              <div class="slot-list">
-                @for (slot of availableSlotPreview(); track slot.timeSlotId) {
-                  <div class="slot-row">
-                    <span class="status-dot"></span>
-                    <strong>{{ time(slot.startTime) }} – {{ time(slot.endTime) }}</strong>
-                    <span>{{ money(slot.pricePerHour) }}/giờ</span>
-                  </div>
-                }
-              </div>
-              @if (availableSlots().length > availableSlotPreview().length) {
-                <p class="more-slots">Còn {{ availableSlots().length - availableSlotPreview().length }} khung giờ khác trong hôm nay.</p>
-              }
-            }
-          </section>
-
-          <div class="operations-note">
-            <app-lucide-icon name="info" [size]="18" />
-            <span>Mỗi mã vé tự xác định đúng cơ sở và sân thuộc phạm vi quản lý của bạn.</span>
-          </div>
-        </aside>
-
-        @if (reconciliation()) {
-        <div class="reconciliation-backdrop" (click)="closeReconciliation()">
-        <article class="panel reconciliation-panel" role="dialog" aria-modal="true"
-                 aria-labelledby="reconciliation-title" (click)="$event.stopPropagation()">
-          <div class="panel-heading">
-            <div><p class="step">Đối chiếu booking</p><h2 id="reconciliation-title">Thông tin nhận sân</h2></div>
-            <button type="button" class="dialog-close" aria-label="Đóng thông tin booking"
-                    (click)="closeReconciliation()">
-              <app-lucide-icon name="x" [size]="21" />
-            </button>
-          </div>
-          @if (!reconciliation()) {
-            <div class="empty-reconciliation">
-              <app-lucide-icon name="receipt" [size]="30" />
-              <p>Thông tin booking và payment thật sẽ xuất hiện sau khi tra cứu hợp lệ.</p>
-            </div>
-          } @else {
-            @let result = reconciliation()!;
-            <div class="booking-summary">
-              <div>
-                <span class="status" [class.success]="!!result.checkIn">
-                  {{ result.checkIn ? 'Đã check-in' : 'Hợp lệ để nhận sân' }}
-                </span>
-                <h3>{{ result.booking.bookingCode }}</h3>
-                <p>{{ result.booking.walkInCustomerName || ('Player ' + (result.booking.playerId || '—')) }}</p>
-              </div>
-              <div class="slot-summary">
-                <strong>{{ result.booking.courtName }}</strong>
-                <span>{{ result.booking.venueName }}</span>
-                <span>{{ result.booking.playDate }}</span>
-                <span>{{ time(result.booking.startTime) }} – {{ time(result.booking.endTime) }}</span>
-              </div>
-            </div>
-
-            <dl class="money-grid">
-              <div><dt>Tổng tiền</dt><dd>{{ money(result.booking.totalPrice) }}</dd></div>
-              <div><dt>Tiền cọc</dt><dd>{{ money(result.booking.depositAmount) }}</dd></div>
-              <div><dt>Còn chưa thanh toán</dt><dd>{{ money(result.outstandingAmount) }}</dd></div>
-            </dl>
-
-            <div class="payments">
-              <h3><app-lucide-icon name="credit-card" [size]="18" /> Payment source of truth</h3>
-              @if (!result.booking.payments.length) {
-                <p class="muted">Booking chưa phát sinh giao dịch thanh toán và vẫn có thể check-in.</p>
-              }
-              @for (payment of result.booking.payments; track payment.paymentId) {
-                <div class="payment-row">
-                  <span>{{ payment.purpose === 'BOOKING_DEPOSIT' ? 'Tiền cọc' : 'Tiền còn lại' }}</span>
-                  <strong>{{ money(payment.amount) }}</strong>
-                  <em [class.succeeded]="payment.status === 'SUCCEEDED'">{{ payment.status }}</em>
-                </div>
-              }
-            </div>
-
-            @if (result.checkIn) {
-              <div class="success-box" aria-live="polite">
-                <app-lucide-icon name="circle-check" [size]="24" />
-                <div><strong>Check-in thành công</strong><span>{{ result.checkIn.method }} · {{ result.checkIn.checkedInAt }}</span></div>
-              </div>
-            } @else {
-              @if (result.outstandingAmount > 0) {
-                <div class="walkin-payment-note">
-                  <app-lucide-icon name="banknote" [size]="21" />
-                  <div>
-                    <strong>Còn {{ money(result.outstandingAmount) }} chưa thanh toán</strong>
-                    <span>Booking vẫn có thể check-in. Khoản tiền này có thể thu ngay hoặc sau khi khách sử dụng sân.</span>
-                  </div>
-                </div>
-              }
-              <button type="button" class="primary confirm-button" [disabled]="confirming()" (click)="confirm()">
-                @if (confirming()) { <app-lucide-icon name="loader-2" class="spin" [size]="19" /> }
-                @else { <app-lucide-icon name="circle-check" [size]="19" /> }
-                {{ confirming() ? 'Đang xử lý…' : 'Xác nhận check-in' }}
-              </button>
-            }
-          }
-        </article>
+  @if (activeTab() === 'check-in') {
+  <section class="workspace-grid">
+    <article class="panel lookup-panel">
+      <div class="panel-heading">
+        <div>
+          <h2>Tra cứu vé đặt sân</h2>
+          <p class="section-copy">Quét mã QR hoặc nhập mã đặt sân trên vé của khách.</p>
         </div>
-        }
-      </section>
-    }
+        <span class="scope-badge">
+          {{ resolvedScope()?.courtName || 'Tự động xác định sân' }}
+        </span>
+      </div>
 
-    @if (activeTab() === 'history') {
-      <section class="panel history-panel">
-        <div class="panel-heading">
-          <div><p class="step">Theo dõi vận hành</p><h2>Lịch sử check-in</h2></div>
-          <label class="date-filter"><span>Ngày</span><input type="date" [value]="historyDate()"
-            (change)="historyDate.set($any($event.target).value); loadHistory(0)" /></label>
-        </div>
-        @if (loadingCourt()) {
-          <div class="loading-lines"><span class="skeleton wide"></span><span class="skeleton"></span></div>
-        } @else if (!history().length) {
-          <div class="empty-reconciliation"><app-lucide-icon name="clock" [size]="28" /><p>Chưa có check-in trong ngày đã chọn.</p></div>
+      <div class="mode-toggle" role="group" aria-label="Phương thức tra cứu">
+        <button type="button" [class.active]="lookupMode() === 'bookingCode'" (click)="setLookupMode('bookingCode')">
+          <app-lucide-icon name="hash" [size]="18" /> Mã đặt sân
+        </button>
+        <button type="button" [class.active]="lookupMode() === 'qrCode'" (click)="setLookupMode('qrCode')">
+          <app-lucide-icon name="camera" [size]="18" /> Mã QR
+        </button>
+      </div>
+
+      @if (lookupMode() === 'qrCode') {
+      <div class="scanner-shell" [class.active]="scannerActive()">
+        @if (scannerActive()) {
+        <video #scannerVideo muted playsinline aria-label="Khung hình quét mã QR"></video>
+        <div class="scan-guide" aria-hidden="true"></div>
+        <button type="button" class="secondary" (click)="stopScanner()">Dừng máy quay</button>
         } @else {
-          <div class="history-list">
-            @for (item of history(); track item.checkIn?.checkInId) {
-              <article>
-                <span class="history-icon"><app-lucide-icon name="circle-check" [size]="19" /></span>
-                <div><strong>{{ item.booking.bookingCode }}</strong><span>{{ item.booking.walkInCustomerName || item.booking.playerId }}</span></div>
-                <div><strong>{{ item.booking.courtName }}</strong><span>{{ time(item.booking.startTime) }}–{{ time(item.booking.endTime) }}</span></div>
-                <div><strong>{{ item.checkIn?.method }}</strong><span>{{ item.checkIn?.checkedInAt }}</span></div>
-                <div class="amount"><strong>{{ money(item.checkIn?.remainingAmountCollected || 0) }}</strong><span>đã đối soát</span></div>
-              </article>
+        <span class="scanner-icon"><app-lucide-icon name="camera" [size]="36" /></span>
+        <strong>Đưa mã QR vào giữa khung hình</strong>
+        <p>Máy quay chỉ dùng để quét mã vé và không lưu hình ảnh của khách.</p>
+        <button type="button" class="secondary scanner-button" (click)="startScanner()">
+          <app-lucide-icon name="camera" [size]="18" /> Mở máy quay
+        </button>
+        }
+      </div>
+      } @else {
+      <div class="manual-lookup-guide">
+        <span class="manual-icon"><app-lucide-icon name="ticket-check" [size]="28" /></span>
+        <div>
+          <strong>Nhập mã đặt sân trên vé điện tử</strong>
+          <p>Mã thường gồm chữ và số, không phân biệt chữ hoa hay chữ thường.</p>
+        </div>
+      </div>
+
+      <form [formGroup]="lookupForm" (ngSubmit)="lookup()" class="lookup-form">
+        <label>
+          <span>Mã đặt sân</span>
+          <input formControlName="value" placeholder="Ví dụ GS12AB34" autocomplete="off" />
+        </label>
+        <button type="submit" class="primary" [disabled]="lookingUp() || lookupForm.invalid">
+          @if (lookingUp()) { <app-lucide-icon name="loader-2" class="spin" [size]="18" /> }
+          @else { <app-lucide-icon name="search" [size]="18" /> }
+          {{ lookingUp() ? 'Đang đối soát…' : 'Tra cứu' }}
+        </button>
+      </form>
+      <p class="helper">Không quét được mã QR? Chuyển sang mã đặt sân hiển thị dưới vé điện tử.</p>
+      }
+      @if (actionError()) {
+      <div class="inline-error" role="alert">
+        <app-lucide-icon name="alert-circle" [size]="18" />
+        <span>{{ actionError() }}</span>
+      </div>
+      }
+    </article>
+
+    <aside class="panel operations-panel" aria-label="Hỗ trợ quy trình nhận sân">
+      <section class="operations-section flow-section">
+        <div class="section-heading">
+          <div>
+            <h2>Quy trình đối soát</h2>
+            <p>Hoàn tất 4 bước trước khi bàn giao sân.</p>
+          </div>
+          <app-lucide-icon name="list-checks" [size]="22" />
+        </div>
+        <ol class="process-list">
+          <li>
+            <span class="process-index">1</span>
+            <span class="process-icon"><app-lucide-icon name="scan-qr-code" [size]="20" /></span>
+            <div><strong>Quét mã vé</strong>
+              <p>Quét mã QR hoặc nhập mã đặt sân để tra cứu.</p>
+            </div>
+          </li>
+          <li>
+            <span class="process-index">2</span>
+            <span class="process-icon"><app-lucide-icon name="calendar-check" [size]="20" /></span>
+            <div><strong>Kiểm tra đúng sân và khung giờ</strong>
+              <p>Đối chiếu ngày chơi, sân và thời lượng.</p>
+            </div>
+          </li>
+          <li>
+            <span class="process-index">3</span>
+            <span class="process-icon"><app-lucide-icon name="contact-round" [size]="20" /></span>
+            <div><strong>Đối chiếu khách và thanh toán</strong>
+              <p>Xác nhận thông tin khách và khoản còn lại.</p>
+            </div>
+          </li>
+          <li>
+            <span class="process-index">4</span>
+            <span class="process-icon"><app-lucide-icon name="shield-check" [size]="20" /></span>
+            <div><strong>Xác nhận nhận sân</strong>
+              <p>Ghi nhận nhận sân sau khi thông tin hợp lệ.</p>
+            </div>
+          </li>
+        </ol>
+      </section>
+
+      <section class="operations-section schedule-section">
+        <div class="section-heading">
+          <div>
+            <h2>Khung giờ khả dụng hôm nay</h2>
+            @if (resolvedScope(); as scope) {
+            <p>{{ scope.venueName }} · {{ scope.courtName }} · {{ availableSlots().length }} khung giờ</p>
+            } @else {
+            <p>Tra cứu vé để hệ thống tự động xác định sân.</p>
             }
           </div>
-          <div class="pagination">
-            <button type="button" class="secondary" [disabled]="historyPage() === 0" (click)="loadHistory(historyPage() - 1)">Trang trước</button>
-            <span>Trang {{ historyPage() + 1 }} / {{ historyPages() || 1 }}</span>
-            <button type="button" class="secondary" [disabled]="historyPage() + 1 >= historyPages()" (click)="loadHistory(historyPage() + 1)">Trang sau</button>
+          <span class="today-badge">Hôm nay</span>
+        </div>
+
+        @if (!resolvedScope()) {
+        <div class="schedule-empty">
+          <app-lucide-icon name="calendar-check" [size]="24" />
+          <div><strong>Chưa xác định sân</strong>
+            <p>Quét mã QR hoặc nhập mã đặt sân để xem lịch đúng sân.</p>
           </div>
+        </div>
+        } @else if (loadingCourt()) {
+        <div class="slot-skeleton" aria-label="Đang tải khung giờ">
+          <span></span><span></span><span></span>
+        </div>
+        } @else if (scheduleError()) {
+        <div class="schedule-empty schedule-empty--error" role="alert">
+          <app-lucide-icon name="alert-circle" [size]="24" />
+          <div><strong>Chưa tải được lịch sân</strong>
+            <p>{{ scheduleError() }}</p>
+          </div>
+        </div>
+        } @else if (!availableSlotPreview().length) {
+        <div class="schedule-empty">
+          <app-lucide-icon name="calendar-x" [size]="24" />
+          <div><strong>Không còn khung giờ trống</strong>
+            <p>Sân vừa tra cứu không còn khung giờ trống hôm nay.</p>
+          </div>
+        </div>
+        } @else {
+        <div class="slot-list">
+          @for (slot of availableSlotPreview(); track slot.timeSlotId) {
+          <div class="slot-row">
+            <span class="status-dot"></span>
+            <strong>{{ time(slot.startTime) }} – {{ time(slot.endTime) }}</strong>
+            <span>{{ money(slot.pricePerHour) }}/giờ</span>
+          </div>
+          }
+        </div>
+        @if (availableSlots().length > availableSlotPreview().length) {
+        <p class="more-slots">Còn {{ availableSlots().length - availableSlotPreview().length }} khung giờ khác trong hôm
+          nay.</p>
+        }
         }
       </section>
+
+      <div class="operations-note">
+        <app-lucide-icon name="info" [size]="18" />
+        <span>Mỗi mã vé tự xác định đúng cơ sở và sân thuộc phạm vi quản lý của bạn.</span>
+      </div>
+    </aside>
+
+    @if (reconciliation()) {
+    <div class="reconciliation-backdrop" (click)="closeReconciliation()">
+      <article class="panel reconciliation-panel" role="dialog" aria-modal="true" aria-labelledby="reconciliation-title"
+        (click)="$event.stopPropagation()">
+        <div class="panel-heading">
+          <div>
+            <p class="step">Đối chiếu đơn đặt sân</p>
+            <h2 id="reconciliation-title">Thông tin nhận sân</h2>
+          </div>
+          <button type="button" class="dialog-close" aria-label="Đóng thông tin đơn đặt sân"
+            (click)="closeReconciliation()">
+            <app-lucide-icon name="x" [size]="21" />
+          </button>
+        </div>
+        @if (!reconciliation()) {
+        <div class="empty-reconciliation">
+          <app-lucide-icon name="receipt" [size]="30" />
+          <p>Thông tin đơn đặt sân và thanh toán sẽ xuất hiện sau khi tra cứu hợp lệ.</p>
+        </div>
+        } @else {
+        @let result = reconciliation()!;
+        <div class="booking-summary">
+          <div>
+            <span class="status" [class.success]="!!result.checkIn">
+              {{ result.checkIn ? 'Đã nhận sân' : result.checkInEligible === false ? 'Chưa thể nhận sân' : 'Đủ điều kiện
+              nhận sân' }}
+            </span>
+            <h3>{{ result.booking.bookingCode }}</h3>
+            <p>{{ customerName(result.booking) }}</p>
+          </div>
+          <div class="slot-summary">
+            <strong>{{ result.booking.courtName }}</strong>
+            <span>{{ result.booking.venueName }}</span>
+            <span>{{ result.booking.playDate }}</span>
+            <span>{{ time(result.booking.startTime) }} – {{ time(result.booking.endTime) }}</span>
+          </div>
+        </div>
+
+        <dl class="money-grid">
+          <div>
+            <dt>Tổng tiền</dt>
+            <dd>{{ money(result.booking.totalPrice) }}</dd>
+          </div>
+          <div>
+            <dt>Tiền cọc</dt>
+            <dd>{{ money(result.booking.depositAmount) }}</dd>
+          </div>
+          <div>
+            <dt>Còn chưa thanh toán</dt>
+            <dd>{{ money(result.outstandingAmount) }}</dd>
+          </div>
+        </dl>
+
+        <div class="payments">
+          <h3><app-lucide-icon name="credit-card" [size]="18" /> Thông tin thanh toán</h3>
+          @if (!result.booking.payments.length) {
+          <p class="muted">Đơn đặt sân chưa phát sinh giao dịch thanh toán và vẫn có thể nhận sân.</p>
+          }
+          @for (payment of result.booking.payments; track payment.paymentId) {
+          <div class="payment-row">
+            <span>{{ payment.purpose === 'BOOKING_DEPOSIT' ? 'Tiền cọc' : 'Tiền còn lại' }}</span>
+            <strong>{{ money(payment.amount) }}</strong>
+            <em [class.succeeded]="payment.status === 'SUCCEEDED'">{{ paymentStatusLabel(payment.status) }}</em>
+          </div>
+          }
+        </div>
+
+        @if (result.checkIn) {
+        <div class="success-box" aria-live="polite">
+          <app-lucide-icon name="circle-check" [size]="24" />
+          <div><strong>Nhận sân thành công</strong><span>{{ checkInMethodLabel(result.checkIn.method) }} · {{
+              formatDateTime(result.checkIn.checkedInAt) }}</span></div>
+        </div>
+        } @else {
+        @if (result.checkInEligible === false && result.checkInMessage) {
+        <div class="eligibility-warning" role="status">
+          <app-lucide-icon name="info" [size]="21" />
+          <div>
+            <strong>Chưa thể xác nhận nhận sân </strong>
+            <span>{{ result.checkInMessage }}</span>
+          </div>
+        </div>
+        }
+        @if (result.outstandingAmount > 0) {
+        <div class="walkin-payment-note">
+          <app-lucide-icon name="banknote" [size]="21" />
+          <div>
+            <strong>Còn {{ money(result.outstandingAmount) }} chưa thanh toán</strong>
+            <span>Đơn đặt sân vẫn có thể nhận sân. Khoản tiền này có thể thu ngay hoặc sau khi khách sử dụng sân.</span>
+          </div>
+        </div>
+        }
+        <button type="button" class="primary confirm-button"
+          [disabled]="confirming() || result.checkInEligible === false" (click)="confirm()">
+          @if (confirming()) { <app-lucide-icon name="loader-2" class="spin" [size]="19" /> }
+          @else { <app-lucide-icon name="circle-check" [size]="19" /> }
+          {{ confirming() ? 'Đang xử lý…' : 'Xác nhận nhận sân' }}
+        </button>
+        }
+        }
+      </article>
+    </div>
     }
+  </section>
+  }
+
+  @if (activeTab() === 'history') {
+  <section class="panel history-panel">
+    <div class="panel-heading">
+      <div>
+        <p class="step">Theo dõi vận hành</p>
+        <h2>Lịch sử nhận sân</h2>
+      </div>
+      <label class="date-filter"><span>Ngày</span><input type="date" [value]="historyDate()"
+          (change)="historyDate.set($any($event.target).value); loadHistory(0)" /></label>
+    </div>
+    @if (historyLoading()) {
+    <div class="loading-lines"><span class="skeleton wide"></span><span class="skeleton"></span></div>
+    } @else if (historyError()) {
+    <div class="empty-reconciliation history-error" role="alert">
+      <app-lucide-icon name="alert-circle" [size]="28" />
+      <p>{{ historyError() }}</p>
+      <button type="button" class="secondary" (click)="loadHistory()">Thử lại</button>
+    </div>
+    } @else if (!history().length) {
+    <div class="empty-reconciliation"><app-lucide-icon name="clock" [size]="28" />
+      <p>Chưa có lượt nhận sân trong ngày đã chọn.</p>
+    </div>
+    } @else {
+    <div class="history-list">
+      @for (item of history(); track item.checkIn?.checkInId) {
+      <button type="button" class="history-row" (click)="openHistoryDetail(item.booking.bookingId)">
+        <span class="history-icon"><app-lucide-icon name="circle-check" [size]="19" /></span>
+        <div><strong>{{ item.booking.bookingCode }}</strong><span>{{ item.booking.walkInCustomerName ||
+            item.booking.playerId }}</span></div>
+        <div><strong>{{ item.booking.courtName }}</strong><span>{{ time(item.booking.startTime) }}–{{
+            time(item.booking.endTime) }}</span></div>
+        <div><strong>{{ checkInMethodLabel(item.checkIn?.method) }}</strong><span>{{
+            formatDateTime(item.checkIn?.checkedInAt) }}</span></div>
+        <div class="amount"><strong>{{ money(item.checkIn?.remainingAmountCollected || 0) }}</strong><span>đã đối
+            soát</span></div>
+        <app-lucide-icon class="history-chevron" name="chevron-right" [size]="18" />
+      </button>
+      }
+    </div>
+    <app-pagination [pageIndex]="historyPage()" [pageSize]="historyPageSize" [totalItems]="historyTotal()"
+      (pageChange)="loadHistory($event)" />
+    }
+  </section>
+  }
   }
 </main>
+
+@if (detailLoading() || detailError() || detailBooking()) {
+<div class="booking-detail-backdrop" (click)="closeHistoryDetail()">
+  <aside class="booking-detail-modal" role="dialog" aria-modal="true" aria-labelledby="history-booking-detail-title"
+    (click)="$event.stopPropagation()">
+    <header class="detail-modal-header">
+      <h2 id="history-booking-detail-title">Chi tiết đơn đặt sân</h2>
+      <button type="button" (click)="closeHistoryDetail()" aria-label="Đóng">
+        <app-lucide-icon name="x" [size]="21" />
+      </button>
+    </header>
+
+    @if (detailLoading()) {
+    <div class="detail-state"><app-lucide-icon name="loader-2" class="spin" [size]="24" /><strong>Đang tải chi tiết
+        đơn…</strong></div>
+    } @else if (detailError()) {
+    <div class="detail-state detail-state--error" role="alert">
+      <app-lucide-icon name="alert-circle" [size]="24" />
+      <strong>Không thể tải chi tiết</strong>
+      <p>{{ detailError() }}</p>
+      <button type="button" class="secondary" (click)="retryHistoryDetail()">Thử lại</button>
+    </div>
+    } @else if (detailBooking(); as booking) {
+    <div class="detail-modal-body">
+      <section class="detail-overview">
+        <div>
+          <div class="detail-badges">
+            <span class="detail-status" [attr.data-status]="booking.status">{{ statusLabel(booking.status) }}</span>
+            <span class="detail-source"><app-lucide-icon [name]="sourceIcon(booking.source)" [size]="14" />{{
+              sourceLabel(booking.source) }}</span>
+          </div>
+          <h3>{{ booking.bookingCode }}</h3>
+          <p><app-lucide-icon name="calendar-days" [size]="15" /> Tạo lúc {{ formatDateTime(booking.createdAt) }}</p>
+        </div>
+        <div class="detail-qr-card" [attr.aria-label]="'Mã QR nhận sân ' + booking.bookingCode">
+          @if (!booking.qrCode) {
+          <app-lucide-icon name="qr-code" [size]="36" />
+          } @else if (detailBookingQr()) {
+          <img [src]="detailBookingQr()" [alt]="'Mã QR nhận sân ' + booking.bookingCode" />
+          } @else {
+          <app-lucide-icon name="loader-2" class="spin" [size]="24" />
+          }
+        </div>
+      </section>
+
+      <section class="detail-section">
+        <header><app-lucide-icon name="user-round" [size]="18" />
+          <h3>Thông tin khách hàng</h3>
+        </header>
+        <dl class="detail-list">
+          <div>
+            <dt>Khách hàng</dt>
+            <dd>{{ customerName(booking) }}</dd>
+          </div>
+          <div>
+            <dt>Số điện thoại</dt>
+            <dd>{{ customerPhone(booking) }}</dd>
+          </div>
+          <div>
+            <dt>Loại khách</dt>
+            <dd>{{ sourceLabel(booking.source) }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="detail-section">
+        <header><app-lucide-icon name="calendar-days" [size]="18" />
+          <h3>Thông tin đặt sân</h3>
+        </header>
+        <dl class="detail-list">
+          <div>
+            <dt>Sân</dt>
+            <dd>{{ booking.courtName }}</dd>
+          </div>
+          <div>
+            <dt>Cơ sở</dt>
+            <dd>{{ booking.venueName }}</dd>
+          </div>
+          <div>
+            <dt>Ngày</dt>
+            <dd>{{ formatDate(booking.playDate) }}</dd>
+          </div>
+          <div>
+            <dt>Giờ</dt>
+            <dd>{{ time(booking.startTime) }} – {{ time(booking.endTime) }}</dd>
+          </div>
+          <div>
+            <dt>Kênh đặt sân</dt>
+            <dd>{{ sourceLabel(booking.source) }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="detail-section">
+        <header><app-lucide-icon name="credit-card" [size]="18" />
+          <h3>Thanh toán</h3>
+        </header>
+        <dl class="detail-list payment-receipt">
+          <div>
+            <dt>Tổng tiền</dt>
+            <dd>{{ money(booking.totalPrice) }}</dd>
+          </div>
+          <div>
+            <dt>Phí dịch vụ</dt>
+            <dd>{{ money(0) }}</dd>
+          </div>
+          <div>
+            <dt>Giảm giá</dt>
+            <dd>{{ money(0) }}</dd>
+          </div>
+          <div class="payment-total">
+            <dt>Thành tiền</dt>
+            <dd>{{ money(booking.totalPrice) }}</dd>
+          </div>
+          @if (displayPayment(booking); as payment) {
+          <div>
+            <dt>Phương thức</dt>
+            <dd>{{ paymentMethodLabel(payment) }}</dd>
+          </div>
+          <div>
+            <dt>Mã giao dịch</dt>
+            <dd class="transaction-code">{{ payment.providerTransactionId || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Trạng thái thanh toán</dt>
+            <dd><span class="payment-state">{{ paymentStateLabel(booking) }}</span></dd>
+          </div>
+          <div>
+            <dt>Thời gian thanh toán</dt>
+            <dd>{{ paymentDateTime(payment) }}</dd>
+          </div>
+          } @else {
+          <div>
+            <dt>Phương thức</dt>
+            <dd>—</dd>
+          </div>
+          <div>
+            <dt>Mã giao dịch</dt>
+            <dd>—</dd>
+          </div>
+          <div>
+            <dt>Trạng thái thanh toán</dt>
+            <dd><span class="payment-state">{{ paymentStateLabel(booking) }}</span></dd>
+          </div>
+          <div>
+            <dt>Thời gian thanh toán</dt>
+            <dd>—</dd>
+          </div>
+          }
+        </dl>
+      </section>
+
+      <section class="detail-section detail-history">
+        <header><app-lucide-icon name="history" [size]="18" />
+          <h3>Lịch sử đơn</h3>
+        </header>
+        <ol class="detail-timeline">
+          <li><span></span>
+            <div><time>{{ formatTimelineDateTime(booking.createdAt) }}</time><strong>Tạo đơn đặt sân</strong></div>
+          </li>
+          @for (payment of booking.payments; track payment.paymentId) {
+          <li><span></span>
+            <div><time>{{ formatTimelineDateTime(payment.paidAt || payment.createdAt) }}</time><strong>{{
+                paymentTimelineLabel(payment) }}</strong></div>
+          </li>
+          }
+          <li><span></span>
+            <div><time>{{ formatTimelineDateTime(booking.updatedAt || booking.createdAt) }}</time><strong>{{
+                statusLabel(booking.status) }}</strong></div>
+          </li>
+        </ol>
+      </section>
+    </div>
+    }
+  </aside>
+</div>
+}

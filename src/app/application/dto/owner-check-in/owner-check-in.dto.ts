@@ -16,6 +16,8 @@ export interface OwnerCheckInResult {
   booking: OwnerBooking;
   checkIn?: OwnerCheckInRecord;
   outstandingAmount: number;
+  checkInEligible?: boolean;
+  checkInMessage?: string;
 }
 
 export interface OwnerCheckInLookup {

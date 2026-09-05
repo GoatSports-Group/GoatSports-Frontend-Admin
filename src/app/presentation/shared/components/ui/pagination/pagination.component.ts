@@ -70,11 +70,11 @@ export class PaginationComponent implements OnChanges {
 
   getShowingText(): string {
     if (this.totalItems === 0) {
-      return 'Xem 0 - 0 trong 0 kết quả';
+      return 'Hiển thị 0 - 0 trong tổng số 0 kết quả';
     }
     const start = this.pageIndex * this.pageSize + 1;
     const end = Math.min((this.pageIndex + 1) * this.pageSize, this.totalItems);
-    return `Xem ${start} - ${end} trong ${this.totalItems} kết quả`;
+    return `Hiển thị ${start} - ${end} trong tổng số ${this.totalItems} kết quả`;
   }
 
   goToPage(pageIndex: number): void {

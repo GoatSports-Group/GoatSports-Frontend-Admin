@@ -26,7 +26,6 @@
   align-items: end;
   gap: 32px;
   padding: 0 0 28px;
-  border-bottom: 1px solid var(--line);
 }
 
 .hero-copy {
@@ -137,7 +136,13 @@ select:focus {
   display: grid;
   grid-template-columns: minmax(0, 7fr) minmax(360px, 5fr);
   gap: 20px;
-  align-items: start;
+  align-items: stretch;
+}
+
+.lookup-panel,
+.operations-panel {
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .panel,
@@ -742,7 +747,8 @@ button:disabled {
 }
 
 .walkin-payment-note,
-.success-box {
+.success-box,
+.eligibility-warning {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -750,6 +756,17 @@ button:disabled {
   padding: 15px;
   background: #ecfdf5;
   color: #065f46;
+}
+
+.eligibility-warning {
+  margin: 18px 0;
+  border: 1px solid #f5d48a;
+  background: #fff9e8;
+  color: #8a5a00;
+}
+
+.eligibility-warning span {
+  color: #765f2e;
 }
 
 .walkin-payment-note {
@@ -785,21 +802,30 @@ button:disabled {
   border-radius: 12px;
 }
 
-.history-list article {
+.history-row {
   display: grid;
-  grid-template-columns: 42px 1.2fr 1fr 1fr auto;
+  grid-template-columns: 42px 1.2fr 1fr 1fr auto 20px;
   align-items: center;
   gap: 14px;
+  width: 100%;
   min-height: 72px;
   padding: 11px 14px;
   border-bottom: 1px solid #edf1f4;
+  background: #fff;
+  color: var(--ink);
+  text-align: left;
+  transition: background .18s ease;
 }
 
-.history-list article:last-child {
+.history-row:hover {
+  background: #f5fbf8;
+}
+
+.history-row:last-child {
   border-bottom: 0;
 }
 
-.history-list article>div {
+.history-row>div {
   display: grid;
   gap: 3px;
 }
@@ -823,12 +849,8 @@ button:disabled {
   text-align: right;
 }
 
-.pagination {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 18px;
+.history-chevron {
+  color: #8aa097;
 }
 
 .date-filter {
@@ -869,6 +891,300 @@ button:disabled {
 .loading-lines {
   display: grid;
   gap: 12px;
+}
+
+.booking-detail-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1240;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: 16px;
+  background: rgba(8, 38, 30, .58);
+  backdrop-filter: blur(4px);
+}
+
+.booking-detail-modal {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: min(520px, 100%);
+  height: min(820px, calc(100vh - 32px));
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid #c9ddd6;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 28px 80px rgba(3, 35, 26, .3);
+}
+
+.detail-modal-header {
+  display: flex;
+  min-height: 62px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px 0 20px;
+  border-bottom: 1px solid #dce7e3;
+}
+
+.detail-modal-header h2 {
+  margin: 0;
+  color: #14261f;
+  font-size: 18px;
+  font-weight: 850;
+}
+
+.detail-modal-header button {
+  display: grid;
+  width: 40px;
+  min-height: 40px;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: #51645d;
+}
+
+.detail-modal-header button:hover {
+  border-color: #d7e4df;
+  background: #f4f8f6;
+}
+
+.detail-modal-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.detail-state {
+  display: grid;
+  min-height: 300px;
+  place-items: center;
+  align-content: center;
+  gap: 12px;
+  padding: 24px;
+  color: #53675f;
+  text-align: center;
+}
+
+.detail-state p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.detail-state--error {
+  color: #b42318;
+}
+
+.detail-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 112px;
+  align-items: start;
+  gap: 18px;
+  padding: 20px;
+  background: linear-gradient(110deg, #f5fbf8, #fffaf1);
+}
+
+.detail-overview h3 {
+  margin: 12px 0 5px;
+  color: #073f31;
+  font-size: 21px;
+  font-weight: 900;
+}
+
+.detail-overview p {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: #687a73;
+  font-size: 12.5px;
+}
+
+.detail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.detail-status,
+.detail-source,
+.payment-state {
+  display: inline-flex;
+  min-height: 25px;
+  align-items: center;
+  gap: 5px;
+  border-radius: 7px;
+  padding: 4px 8px;
+  background: #dcfce7;
+  color: #08714f;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.detail-source {
+  background: #fff1ca;
+  color: #8a5a00;
+}
+
+.detail-status[data-status='CANCELLED'],
+.detail-status[data-status='EXPIRED'],
+.detail-status[data-status='REFUNDED'] {
+  background: #fee2e2;
+  color: #b42318;
+}
+
+.detail-qr-card {
+  display: grid;
+  width: 112px;
+  height: 112px;
+  box-sizing: border-box;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid #bcd8ce;
+  border-radius: 12px;
+  background: #fff;
+  padding: 6px;
+  color: #7b8f87;
+  box-shadow: 0 8px 20px rgba(22, 77, 59, .08);
+}
+
+.detail-qr-card img {
+  width: 98px;
+  height: 98px;
+  border-radius: 8px;
+}
+
+.detail-section {
+  padding: 18px 20px;
+  border-top: 1px solid #dce7e3;
+}
+
+.detail-section>header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 11px;
+  color: #24473b;
+}
+
+.detail-section h3 {
+  margin: 0;
+  color: #173f33;
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.detail-list {
+  display: grid;
+  margin: 0;
+}
+
+.detail-list div {
+  display: flex;
+  min-height: 32px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 6px 0;
+}
+
+.detail-list dt {
+  color: #5d7068;
+  font-size: 12.5px;
+}
+
+.detail-list dd {
+  max-width: 68%;
+  margin: 0;
+  color: #18372d;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.payment-total {
+  margin: 3px 0 7px;
+  border-top: 1px solid #e2eae7;
+  border-bottom: 1px solid #e2eae7;
+}
+
+.payment-total dt {
+  color: #243a32;
+  font-weight: 850;
+}
+
+.payment-total dd {
+  color: #087354;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.transaction-code {
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.detail-history {
+  border-bottom: 0;
+}
+
+.detail-timeline {
+  display: grid;
+  margin: 0;
+  padding: 2px 0 0;
+  list-style: none;
+}
+
+.detail-timeline li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  gap: 8px;
+  padding-bottom: 15px;
+}
+
+.detail-timeline li>span {
+  z-index: 1;
+  width: 8px;
+  height: 8px;
+  margin-top: 5px;
+  border: 2px solid #059b76;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.detail-timeline li:not(:last-child)::after {
+  position: absolute;
+  top: 14px;
+  bottom: -1px;
+  left: 4px;
+  width: 1px;
+  background: #a9dfcc;
+  content: '';
+}
+
+.detail-timeline li>div {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.detail-timeline time {
+  flex: 0 0 auto;
+  color: #49665c;
+  font-size: 12.5px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+.detail-timeline strong {
+  min-width: 0;
+  color: #18372d;
+  font-size: 13px;
+  font-weight: 850;
 }
 
 .skeleton {
@@ -934,11 +1250,11 @@ button:disabled {
     display: grid;
   }
 
-  .history-list article {
-    grid-template-columns: 40px 1fr 1fr;
+  .history-row {
+    grid-template-columns: 40px 1fr 1fr 20px;
   }
 
-  .history-list article> :nth-child(4),
+  .history-row> :nth-child(4),
   .history-list .amount {
     grid-column: 2 / -1;
     text-align: left;
@@ -1028,17 +1344,41 @@ button:disabled {
     border-bottom: 0;
   }
 
-  .history-list article {
-    grid-template-columns: 40px 1fr;
+  .history-row {
+    grid-template-columns: 40px 1fr 20px;
   }
 
-  .history-list article>div {
+  .history-row>div {
     grid-column: 2;
   }
 
-  .pagination {
-    justify-content: space-between;
-    flex-wrap: wrap;
+  .booking-detail-backdrop {
+    padding: 8px;
+  }
+
+  .booking-detail-modal {
+    height: calc(100vh - 16px);
+    border-radius: 14px;
+  }
+
+  .detail-overview {
+    grid-template-columns: minmax(0, 1fr) 100px;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .detail-qr-card {
+    width: 100px;
+    height: 100px;
+  }
+
+  .detail-qr-card img {
+    width: 86px;
+    height: 86px;
+  }
+
+  .detail-section {
+    padding-inline: 16px;
   }
 }
 
