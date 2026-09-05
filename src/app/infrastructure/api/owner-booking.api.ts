@@ -67,6 +67,18 @@ export class OwnerBookingApi {
     });
   }
 
+  previewInvoice(bookingId: string): Observable<Blob> {
+    return this.http.get(`${this.reportBaseUrl}/preview/owner-bookings/${bookingId}/invoice`, {
+      responseType: 'blob'
+    });
+  }
+
+  downloadInvoice(bookingId: string): Observable<Blob> {
+    return this.http.get(`${this.reportBaseUrl}/export/owner-bookings/${bookingId}/invoice`, {
+      responseType: 'blob'
+    });
+  }
+
   private reportParams(filter: OwnerBookingReportFilter): HttpParams {
     let params = new HttpParams();
     if (filter.venueId) params = params.set('venueId', filter.venueId);

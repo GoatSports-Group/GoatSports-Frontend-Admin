@@ -92,6 +92,11 @@ export class OwnerBookingsComponent {
   readonly reportPreviewLoading = signal(false);
   readonly reportPreviewError = signal<string | null>(null);
   readonly reportPreviewUrl = signal<SafeResourceUrl | null>(null);
+  readonly invoicePreviewOpen = signal(false);
+  readonly invoicePreviewLoading = signal(false);
+  readonly invoiceDownloading = signal(false);
+  readonly invoicePreviewError = signal<string | null>(null);
+  readonly invoicePreviewUrl = signal<SafeResourceUrl | null>(null);
   readonly createOpen = signal(false);
   readonly createCourts = signal<OwnerVenueCourt[]>([]);
   readonly createSlots = signal<OwnerTimeSlot[]>([]);
@@ -106,8 +111,11 @@ export class OwnerBookingsComponent {
   readonly paymentCompleted = signal(false);
   private readonly stopPaymentPolling = new Subject<void>();
   private readonly stopReportPreview = new Subject<void>();
+  private readonly stopInvoicePreview = new Subject<void>();
   private reportPreviewObjectUrl: string | null = null;
+  private invoicePreviewObjectUrl: string | null = null;
   private activeReportFilter: OwnerBookingReportFilter | null = null;
+  private activeInvoiceBooking: OwnerBooking | null = null;
 
   readonly filterForm = this.formBuilder.nonNullable.group({
     venueId: [''], venueCourtId: [''], status: ['' as '' | OwnerBookingStatus],
@@ -168,7 +176,10 @@ export class OwnerBookingsComponent {
   });
 
   constructor() {
-    this.destroyRef.onDestroy(() => this.releaseReportPreviewUrl());
+    this.destroyRef.onDestroy(() => {
+      this.releaseReportPreviewUrl();
+      this.releaseInvoicePreviewUrl();
+    });
     this.loadContext();
   }
 
@@ -513,8 +524,77 @@ export class OwnerBookingsComponent {
     this.reportPreviewUrl.set(null);
   }
 
-  printBooking(): void {
-    window.print();
+  openInvoicePreview(booking: OwnerBooking): void {
+    if (this.invoicePreviewLoading() || this.invoiceDownloading()) return;
+    this.stopInvoicePreview.next();
+    this.releaseInvoicePreviewUrl();
+    this.activeInvoiceBooking = booking;
+    this.invoicePreviewOpen.set(true);
+    this.invoicePreviewLoading.set(true);
+    this.invoicePreviewError.set(null);
+    this.manageBookings.previewInvoice(booking.bookingId).pipe(
+      take(1),
+      takeUntil(this.stopInvoicePreview),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.invoicePreviewLoading.set(false))
+    ).subscribe({
+      next: file => {
+        if (!file.size) {
+          this.invoicePreviewError.set('Dịch vụ báo cáo không trả dữ liệu hóa đơn PDF.');
+          return;
+        }
+        this.invoicePreviewObjectUrl = URL.createObjectURL(file);
+        this.invoicePreviewUrl.set(
+          this.sanitizer.bypassSecurityTrustResourceUrl(this.invoicePreviewObjectUrl)
+        );
+      },
+      error: error => this.invoicePreviewError.set(
+        this.errorMessage(error, 'Không thể tạo bản xem trước hóa đơn.')
+      )
+    });
+  }
+
+  closeInvoicePreview(): void {
+    if (this.invoiceDownloading()) return;
+    this.stopInvoicePreview.next();
+    this.releaseInvoicePreviewUrl();
+    this.invoicePreviewError.set(null);
+    this.invoicePreviewOpen.set(false);
+    this.activeInvoiceBooking = null;
+  }
+
+  downloadInvoice(): void {
+    const booking = this.activeInvoiceBooking;
+    if (!booking || this.invoiceDownloading()) return;
+    this.invoiceDownloading.set(true);
+    this.manageBookings.downloadInvoice(booking.bookingId).pipe(
+      take(1),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.invoiceDownloading.set(false))
+    ).subscribe({
+      next: file => {
+        if (!file.size) {
+          this.notify.error('Dịch vụ báo cáo không trả dữ liệu hóa đơn PDF.');
+          return;
+        }
+        const url = URL.createObjectURL(file);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = `hoa-don-${booking.bookingCode}.pdf`;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        URL.revokeObjectURL(url);
+        this.notify.success('Đã tải hóa đơn PDF.');
+      },
+      error: error => this.notify.error(this.errorMessage(error, 'Không thể tải hóa đơn PDF.'))
+    });
+  }
+
+  private releaseInvoicePreviewUrl(): void {
+    if (this.invoicePreviewObjectUrl) URL.revokeObjectURL(this.invoicePreviewObjectUrl);
+    this.invoicePreviewObjectUrl = null;
+    this.invoicePreviewUrl.set(null);
   }
 
   loadBookings(page = this.page()): void {

@@ -2584,6 +2584,23 @@ button:disabled {
   box-shadow: 0 30px 90px rgba(3, 31, 23, .34);
 }
 
+.invoice-preview-backdrop {
+  z-index: 1160;
+}
+
+.invoice-preview-modal {
+  width: min(920px, 100%);
+}
+
+.invoice-preview-icon {
+  background: linear-gradient(145deg, #b98920 0%, #9a7018 55%, #76520e 100%);
+  box-shadow: 0 7px 18px rgba(154, 112, 24, .24), inset 0 0 0 1px rgba(255, 255, 255, .14);
+}
+
+.invoice-preview-stage iframe {
+  background: #525659;
+}
+
 .report-preview-header {
   align-items: center;
   padding: 18px 22px;

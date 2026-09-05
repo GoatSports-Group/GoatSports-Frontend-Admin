@@ -51,4 +51,12 @@ export class ManageOwnerBookingsUseCase {
     return this.repository.previewReport(filter);
   }
 
+  previewInvoice(bookingId: string): Observable<Blob> {
+    return this.repository.previewInvoice(bookingId);
+  }
+
+  downloadInvoice(bookingId: string): Observable<Blob> {
+    return this.repository.downloadInvoice(bookingId);
+  }
+
 }

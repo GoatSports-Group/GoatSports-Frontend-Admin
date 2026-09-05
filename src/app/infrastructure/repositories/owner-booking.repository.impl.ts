@@ -53,4 +53,12 @@ export class OwnerBookingRepositoryImpl implements OwnerBookingRepository {
     return this.api.previewReport(filter);
   }
 
+  previewInvoice(bookingId: string): Observable<Blob> {
+    return this.api.previewInvoice(bookingId);
+  }
+
+  downloadInvoice(bookingId: string): Observable<Blob> {
+    return this.api.downloadInvoice(bookingId);
+  }
+
 }

@@ -21,6 +21,8 @@ export interface OwnerBookingRepository {
   ): Observable<OwnerBookingPaymentResult>;
   exportReport(filter: OwnerBookingReportFilter): Observable<Blob>;
   previewReport(filter: OwnerBookingReportFilter): Observable<Blob>;
+  previewInvoice(bookingId: string): Observable<Blob>;
+  downloadInvoice(bookingId: string): Observable<Blob>;
 }
 
 export const OWNER_BOOKING_REPOSITORY_TOKEN = new InjectionToken<OwnerBookingRepository>(
