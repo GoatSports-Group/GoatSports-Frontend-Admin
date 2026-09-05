@@ -154,7 +154,12 @@ import {
   LucideContactRound,
   LucideScanQrCode,
   LucideFileSpreadsheet,
-  LucideFileWarning
+  LucideFileWarning,
+  LucideArrowLeftRight,
+  LucideChartLine,
+  LucideTrophy,
+  LucideCalendarRange,
+  LucideBadgeCheck
 } from '@lucide/angular';
 
 @NgModule({
@@ -308,7 +313,12 @@ import {
       LucideContactRound,
       LucideScanQrCode,
       LucideFileSpreadsheet,
-      LucideFileWarning
+      LucideFileWarning,
+      LucideArrowLeftRight,
+      LucideChartLine,
+      LucideTrophy,
+      LucideCalendarRange,
+      LucideBadgeCheck
     )
   ],
   bootstrap: [AppComponent]
