@@ -12,17 +12,14 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { finalize, forkJoin, of, switchMap, take } from 'rxjs';
+import { finalize, take } from 'rxjs';
+import { OwnerBooking } from '@application/dto/owner-booking/owner-booking.dto';
 import { CheckInMethod, OwnerCheckInResult } from '@application/dto/owner-check-in/owner-check-in.dto';
 import { OwnerTimeSlot } from '@application/dto/owner-schedule/owner-schedule.dto';
-import {
-  OwnerVenueCourt,
-  OwnerVenueOverview
-} from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
+import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { ManageOwnerCheckInUseCase } from '@application/usecase/owner-check-in/manage-owner-check-in.usecase';
 import { ManageOwnerScheduleUseCase } from '@application/usecase/owner-schedule/manage-owner-schedule.usecase';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
-import { ManageOwnerVenueCourtsUseCase } from '@application/usecase/venue-owner-dashboard/manage-owner-venue-courts.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-loading.component';
@@ -33,6 +30,12 @@ type LookupMode = 'bookingCode' | 'qrCode';
 interface BarcodeResult { rawValue: string; }
 interface BarcodeDetectorLike { detect(source: CanvasImageSource): Promise<BarcodeResult[]>; }
 interface BarcodeDetectorConstructor { new(options: { formats: string[] }): BarcodeDetectorLike; }
+interface ResolvedCheckInScope {
+  venueId: string;
+  venueCourtId: string;
+  venueName: string;
+  courtName: string;
+}
 
 @Component({
   selector: 'app-owner-check-in',
@@ -47,14 +50,11 @@ export class OwnerCheckInComponent implements OnDestroy {
 
   private readonly formBuilder = inject(FormBuilder);
   private readonly getVenues = inject(GetMyOwnerVenuesUseCase);
-  private readonly manageCourts = inject(ManageOwnerVenueCourtsUseCase);
   private readonly manageSchedule = inject(ManageOwnerScheduleUseCase);
   private readonly manageCheckIn = inject(ManageOwnerCheckInUseCase);
   private readonly notify = inject(NotifyService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
-  private readonly requestedVenueId = this.route.snapshot.queryParamMap.get('venueId') ?? '';
-  private readonly requestedCourtId = this.route.snapshot.queryParamMap.get('venueCourtId') ?? '';
   private readonly requestedMode = this.route.snapshot.queryParamMap.get('mode') ?? '';
   private mediaStream?: MediaStream;
   private scannerFrame?: number;
@@ -63,11 +63,11 @@ export class OwnerCheckInComponent implements OnDestroy {
   readonly activeTab = signal<WorkspaceTab>('check-in');
   readonly lookupMode = signal<LookupMode>('bookingCode');
   readonly venues = signal<OwnerVenueOverview[]>([]);
-  readonly courts = signal<OwnerVenueCourt[]>([]);
   readonly slots = signal<OwnerTimeSlot[]>([]);
   readonly history = signal<OwnerCheckInResult[]>([]);
   readonly selectedVenueId = signal('');
   readonly selectedCourtId = signal('');
+  readonly resolvedScope = signal<ResolvedCheckInScope | null>(null);
   readonly historyDate = signal(this.today());
   readonly historyPage = signal(0);
   readonly historyPages = signal(0);
@@ -80,14 +80,9 @@ export class OwnerCheckInComponent implements OnDestroy {
   readonly creatingWalkIn = signal(false);
   readonly scannerActive = signal(false);
   readonly loadError = signal<string | null>(null);
+  readonly scheduleError = signal<string | null>(null);
   readonly actionError = signal<string | null>(null);
 
-  readonly selectedVenue = computed(() =>
-    this.venues().find(venue => venue.venueId === this.selectedVenueId()) ?? null
-  );
-  readonly selectedCourt = computed(() =>
-    this.courts().find(court => court.venueCourtId === this.selectedCourtId()) ?? null
-  );
   readonly availableSlots = computed(() => this.slots().filter(slot => slot.status === 'AVAILABLE'));
   readonly availableSlotPreview = computed(() => this.availableSlots().slice(0, 4));
   readonly lookupForm = this.formBuilder.nonNullable.group({
@@ -117,7 +112,7 @@ export class OwnerCheckInComponent implements OnDestroy {
     this.stopScanner();
     this.lookupMode.set(mode);
     this.lookupForm.reset({ value: '' });
-    this.reconciliation.set(null);
+    this.clearResolvedLookup();
     this.actionError.set(null);
   }
 
@@ -126,78 +121,33 @@ export class OwnerCheckInComponent implements OnDestroy {
     this.loadError.set(null);
     this.getVenues.execute().pipe(
       take(1),
-      switchMap(venues => {
-        this.venues.set(venues);
-        const venueId = venues.some(venue => venue.venueId === this.requestedVenueId)
-          ? this.requestedVenueId
-          : venues[0]?.venueId ?? '';
-        this.selectedVenueId.set(venueId);
-        return venueId ? this.manageCourts.list(venueId) : of([] as OwnerVenueCourt[]);
-      }),
       takeUntilDestroyed(this.destroyRef),
       finalize(() => this.loadingContext.set(false))
     ).subscribe({
-      next: courts => {
-        this.courts.set(courts);
-        const courtId = courts.some(court => court.venueCourtId === this.requestedCourtId)
-          ? this.requestedCourtId
-          : courts[0]?.venueCourtId ?? '';
-        this.selectedCourtId.set(courtId);
-        this.loadCourtData();
+      next: venues => {
+        this.venues.set(venues);
+        if (this.requestedMode === 'qr' && !this.scannerAutoStarted) {
+          this.scannerAutoStarted = true;
+          setTimeout(() => void this.startScanner());
+        }
       },
-      error: error => this.loadError.set(this.errorMessage(error, 'Không thể tải cơ sở và sân thi đấu.'))
+      error: error => this.loadError.set(this.errorMessage(error, 'Không thể tải phạm vi cơ sở của bạn.'))
     });
-  }
-
-  selectVenue(venueId: string): void {
-    if (this.busy()) return;
-    this.selectedVenueId.set(venueId);
-    this.selectedCourtId.set('');
-    this.slots.set([]);
-    this.loadingCourt.set(true);
-    this.manageCourts.list(venueId).pipe(
-      take(1), takeUntilDestroyed(this.destroyRef), finalize(() => this.loadingCourt.set(false))
-    ).subscribe({
-      next: courts => {
-        this.courts.set(courts);
-        this.selectedCourtId.set(courts[0]?.venueCourtId ?? '');
-        this.loadCourtData();
-      },
-      error: error => this.loadError.set(this.errorMessage(error, 'Không thể tải sân thi đấu.'))
-    });
-  }
-
-  selectCourt(courtId: string): void {
-    if (this.busy()) return;
-    this.selectedCourtId.set(courtId);
-    this.walkInForm.controls.timeSlotId.setValue('');
-    this.loadCourtData();
   }
 
   loadCourtData(): void {
     const courtId = this.selectedCourtId();
     if (!courtId) {
       this.slots.set([]);
-      this.history.set([]);
       return;
     }
     this.loadingCourt.set(true);
-    this.loadError.set(null);
-    forkJoin({
-      slots: this.manageSchedule.listSlots(courtId, this.today(), this.today()),
-      history: this.manageCheckIn.history(this.historyFilter())
-    }).pipe(
+    this.scheduleError.set(null);
+    this.manageSchedule.listSlots(courtId, this.today(), this.today()).pipe(
       take(1), takeUntilDestroyed(this.destroyRef), finalize(() => this.loadingCourt.set(false))
     ).subscribe({
-      next: result => {
-        this.slots.set(result.slots);
-        this.applyHistory(result.history);
-        if (this.requestedMode === 'qr' && !this.scannerAutoStarted) {
-          this.scannerAutoStarted = true;
-          setTimeout(() => void this.startScanner());
-        }
-      },
-      error: error => this.loadError.set(this.errorMessage(error, 'Không thể tải dữ liệu check-in.'))
+      next: slots => this.slots.set(slots),
+      error: error => this.scheduleError.set(this.errorMessage(error, 'Không thể tải lịch của sân vừa tra cứu.'))
     });
   }
 
@@ -208,20 +158,16 @@ export class OwnerCheckInComponent implements OnDestroy {
     }
     const value = this.lookupForm.getRawValue().value.trim();
     const request = this.lookupMode() === 'qrCode' ? { qrCode: value } : { bookingCode: value };
+    this.clearResolvedLookup();
     this.lookingUp.set(true);
     this.actionError.set(null);
     this.manageCheckIn.lookup(request).pipe(
       take(1), takeUntilDestroyed(this.destroyRef), finalize(() => this.lookingUp.set(false))
     ).subscribe({
       next: result => {
-        if (this.selectedCourtId() && result.booking.venueCourtId !== this.selectedCourtId()) {
-          this.stopScanner();
-          this.reconciliation.set(null);
-          this.actionError.set('Booking trong mã QR không thuộc sân đang check-in.');
-          return;
-        }
         this.reconciliation.set(result);
         this.reconciliationMethod.set(this.lookupMode() === 'qrCode' ? 'QR_CODE' : 'BOOKING_CODE');
+        this.applyResolvedScope(result.booking);
         this.stopScanner();
       },
       error: error => {
@@ -284,7 +230,6 @@ export class OwnerCheckInComponent implements OnDestroy {
   }
 
   loadHistory(page = this.historyPage()): void {
-    if (!this.selectedCourtId()) return;
     this.historyPage.set(page);
     this.loadingCourt.set(true);
     this.manageCheckIn.history(this.historyFilter()).pipe(
@@ -354,12 +299,32 @@ export class OwnerCheckInComponent implements OnDestroy {
 
   private historyFilter() {
     return {
-      venueId: this.selectedVenueId() || undefined,
-      venueCourtId: this.selectedCourtId() || undefined,
       date: this.historyDate() || undefined,
       page: this.historyPage(),
       size: 10
     };
+  }
+
+  private applyResolvedScope(booking: OwnerBooking): void {
+    this.selectedVenueId.set(booking.venueId);
+    this.selectedCourtId.set(booking.venueCourtId);
+    this.resolvedScope.set({
+      venueId: booking.venueId,
+      venueCourtId: booking.venueCourtId,
+      venueName: booking.venueName,
+      courtName: booking.courtName
+    });
+    this.walkInForm.controls.timeSlotId.setValue('');
+    this.loadCourtData();
+  }
+
+  private clearResolvedLookup(): void {
+    this.reconciliation.set(null);
+    this.resolvedScope.set(null);
+    this.selectedVenueId.set('');
+    this.selectedCourtId.set('');
+    this.slots.set([]);
+    this.scheduleError.set(null);
   }
 
   private applyHistory(result: { items: OwnerCheckInResult[]; page: number; pages: number }): void {

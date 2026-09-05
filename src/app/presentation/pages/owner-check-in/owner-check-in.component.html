@@ -3,25 +3,7 @@
     <div class="hero-copy">
       <p class="eyebrow"><app-lucide-icon name="shield-check" [size]="16" /> Vận hành tại quầy</p>
       <h1>Check-in khách</h1>
-      <p>Đối soát booking, khách hàng, khung giờ và trạng thái thanh toán trước khi bàn giao sân.</p>
-    </div>
-    <div class="context-selectors" aria-label="Phạm vi cơ sở và sân">
-      <label>
-        <span>Cơ sở</span>
-        <select [value]="selectedVenueId()" (change)="selectVenue($any($event.target).value)">
-          @for (venue of venues(); track venue.venueId) {
-            <option [value]="venue.venueId">{{ venue.name }}</option>
-          }
-        </select>
-      </label>
-      <label>
-        <span>Sân thi đấu</span>
-        <select [value]="selectedCourtId()" (change)="selectCourt($any($event.target).value)">
-          @for (court of courts(); track court.venueCourtId) {
-            <option [value]="court.venueCourtId">{{ court.name }}</option>
-          }
-        </select>
-      </label>
+      <p>Quét QR hoặc nhập Booking Code để tự động xác định cơ sở, sân thi đấu và thông tin nhận sân.</p>
     </div>
   </header>
 
@@ -43,7 +25,7 @@
       <div><h2>Chưa tải được dữ liệu vận hành</h2><p>{{ loadError() }}</p></div>
       <button type="button" class="secondary" (click)="loadContext()">Thử lại</button>
     </section>
-  } @else if (!venues().length || !courts().length) {
+  } @else if (!venues().length) {
     <section class="state-card empty-state">
       <app-lucide-icon name="land-plot" [size]="28" />
       <h2>Chưa có sân để check-in</h2>
@@ -58,7 +40,9 @@
               <h2>Tra cứu vé đặt sân</h2>
               <p class="section-copy">Quét mã QR hoặc nhập Booking Code trên vé của khách.</p>
             </div>
-            <span class="scope-badge">{{ selectedCourt()?.name }}</span>
+            <span class="scope-badge">
+              {{ resolvedScope()?.courtName || 'Tự động xác định sân' }}
+            </span>
           </div>
 
           <div class="mode-toggle" role="group" aria-label="Phương thức tra cứu">
@@ -157,19 +141,33 @@
             <div class="section-heading">
               <div>
                 <h2>Khung giờ khả dụng hôm nay</h2>
-                <p>{{ selectedCourt()?.name }} · {{ availableSlots().length }} khung giờ</p>
+                @if (resolvedScope(); as scope) {
+                  <p>{{ scope.venueName }} · {{ scope.courtName }} · {{ availableSlots().length }} khung giờ</p>
+                } @else {
+                  <p>Tra cứu vé để hệ thống tự động xác định sân.</p>
+                }
               </div>
               <span class="today-badge">Hôm nay</span>
             </div>
 
-            @if (loadingCourt()) {
+            @if (!resolvedScope()) {
+              <div class="schedule-empty">
+                <app-lucide-icon name="calendar-check" [size]="24" />
+                <div><strong>Chưa xác định sân</strong><p>Quét QR hoặc nhập Booking Code để xem lịch đúng sân.</p></div>
+              </div>
+            } @else if (loadingCourt()) {
               <div class="slot-skeleton" aria-label="Đang tải khung giờ">
                 <span></span><span></span><span></span>
+              </div>
+            } @else if (scheduleError()) {
+              <div class="schedule-empty schedule-empty--error" role="alert">
+                <app-lucide-icon name="alert-circle" [size]="24" />
+                <div><strong>Chưa tải được lịch sân</strong><p>{{ scheduleError() }}</p></div>
               </div>
             } @else if (!availableSlotPreview().length) {
               <div class="schedule-empty">
                 <app-lucide-icon name="calendar-x" [size]="24" />
-                <div><strong>Không còn khung giờ trống</strong><p>Hãy chọn sân khác để tiếp tục tiếp nhận khách.</p></div>
+                <div><strong>Không còn khung giờ trống</strong><p>Sân vừa tra cứu không còn khung giờ trống hôm nay.</p></div>
               </div>
             } @else {
               <div class="slot-list">
@@ -189,7 +187,7 @@
 
           <div class="operations-note">
             <app-lucide-icon name="info" [size]="18" />
-            <span>Vé online và khách Walk-in sử dụng cùng một quy trình xác thực.</span>
+            <span>Mỗi mã vé tự xác định đúng cơ sở và sân thuộc phạm vi quản lý của bạn.</span>
           </div>
         </aside>
 
@@ -221,6 +219,7 @@
               </div>
               <div class="slot-summary">
                 <strong>{{ result.booking.courtName }}</strong>
+                <span>{{ result.booking.venueName }}</span>
                 <span>{{ result.booking.playDate }}</span>
                 <span>{{ time(result.booking.startTime) }} – {{ time(result.booking.endTime) }}</span>
               </div>
@@ -277,14 +276,14 @@
     @if (activeTab() === 'history') {
       <section class="panel history-panel">
         <div class="panel-heading">
-          <div><p class="step">Audit check-in</p><h2>Lịch sử theo sân</h2></div>
+          <div><p class="step">Theo dõi vận hành</p><h2>Lịch sử check-in</h2></div>
           <label class="date-filter"><span>Ngày</span><input type="date" [value]="historyDate()"
             (change)="historyDate.set($any($event.target).value); loadHistory(0)" /></label>
         </div>
         @if (loadingCourt()) {
           <div class="loading-lines"><span class="skeleton wide"></span><span class="skeleton"></span></div>
         } @else if (!history().length) {
-          <div class="empty-reconciliation"><app-lucide-icon name="clock" [size]="28" /><p>Chưa có check-in trong phạm vi đã chọn.</p></div>
+          <div class="empty-reconciliation"><app-lucide-icon name="clock" [size]="28" /><p>Chưa có check-in trong ngày đã chọn.</p></div>
         } @else {
           <div class="history-list">
             @for (item of history(); track item.checkIn?.checkInId) {
