@@ -267,7 +267,7 @@ select:focus {
   justify-content: center;
   border-right: 1px solid rgba(255, 255, 255, .18);
   background: var(--green-dark);
-  padding: 22px 24px;
+  padding: 16px 22px;
   color: #fff;
 }
 
@@ -295,15 +295,15 @@ select:focus {
 .revenue-highlight>strong {
   position: relative;
   z-index: 1;
-  margin-top: 10px;
-  font-size: clamp(28px, 3vw, 40px);
+  margin-top: 6px;
+  font-size: clamp(28px, 3vw, 38px);
   font-variant-numeric: tabular-nums;
   letter-spacing: -.04em;
   overflow-wrap: anywhere;
 }
 
 .revenue-highlight>p {
-  margin: 7px 0 15px;
+  margin: 4px 0 10px;
   color: #c4e2d8;
   font-size: 12px;
 }
@@ -316,7 +316,7 @@ select:focus {
   border: 1px solid rgba(255, 255, 255, .2);
   border-radius: 8px;
   background: rgba(255, 255, 255, .09);
-  padding: 6px 9px;
+  padding: 4px 8px;
   color: #fff;
   font-size: 12px;
   font-weight: 760;
@@ -331,9 +331,9 @@ select:focus {
   display: grid;
   grid-template-columns: 38px minmax(0, 1fr);
   align-content: center;
-  gap: 10px 12px;
-  min-height: 166px;
-  padding: 20px;
+  gap: 7px 11px;
+  min-height: 146px;
+  padding: 15px 18px;
   border-right: 1px solid var(--line);
 }
 
@@ -916,7 +916,7 @@ select:focus {
   }
 
   .metric-secondary article {
-    min-height: 152px;
+    min-height: 136px;
     border-right: 1px solid var(--line);
     border-bottom: 0;
   }
