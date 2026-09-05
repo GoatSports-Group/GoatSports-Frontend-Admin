@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -132,6 +132,10 @@ export class OwnerBookingsComponent {
       }
       return !this.isPaid(booking);
     });
+  });
+  private readonly displayedBookingSelectionEffect = effect(() => {
+    const displayedBookings = this.displayedBookings();
+    untracked(() => this.syncDetailSelection(displayedBookings));
   });
   readonly availableCreateSlots = computed(() =>
     this.createSlots().filter(slot =>
@@ -425,7 +429,9 @@ export class OwnerBookingsComponent {
   loadBookings(page = this.page()): void {
     const venueId = this.filterForm.controls.venueId.value;
     if (!venueId) {
-      this.bookings.set([]); this.total.set(0); this.pages.set(0); return;
+      this.bookings.set([]); this.total.set(0); this.pages.set(0);
+      this.clearDetailSelection();
+      return;
     }
     this.loading.set(true);
     this.loadError.set(null);
@@ -435,37 +441,67 @@ export class OwnerBookingsComponent {
       next: result => {
         this.bookings.set(result.items); this.total.set(result.total);
         this.page.set(result.page); this.pages.set(result.pages);
-        const currentId = this.selectedBooking()?.bookingId ?? this.requestedBookingId();
-        const preferredId = result.items.some(item => item.bookingId === currentId)
-          ? currentId
-          : result.items[0]?.bookingId;
-        if (preferredId && preferredId !== this.selectedBooking()?.bookingId) this.openDetail(preferredId);
+        const firstDisplayedBookingId = this.displayedBookings()[0]?.bookingId;
+        if (!firstDisplayedBookingId) {
+          this.clearDetailSelection();
+        } else if (firstDisplayedBookingId !== this.selectedBooking()?.bookingId) {
+          this.openDetail(firstDisplayedBookingId);
+        }
       },
       error: error => {
         this.bookings.set([]); this.total.set(0); this.pages.set(0);
+        this.clearDetailSelection();
         this.loadError.set(this.errorMessage(error, 'Không thể tải danh sách booking.'));
       }
     });
   }
 
   openDetail(bookingId: string): void {
-    if (this.detailLoading()) return;
     this.selectedBooking.set(null);
     this.requestedBookingId.set(bookingId);
     this.detailError.set(null);
     this.detailLoading.set(true);
     this.manageBookings.detail(bookingId).pipe(
-      take(1), takeUntilDestroyed(this.destroyRef), finalize(() => this.detailLoading.set(false))
+      take(1),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => {
+        if (this.requestedBookingId() === bookingId) this.detailLoading.set(false);
+      })
     ).subscribe({
-      next: booking => this.selectedBooking.set(booking),
-      error: error => this.detailError.set(this.errorMessage(error, 'Không thể tải chi tiết booking.'))
+      next: booking => {
+        if (this.requestedBookingId() === bookingId) this.selectedBooking.set(booking);
+      },
+      error: error => {
+        if (this.requestedBookingId() === bookingId) {
+          this.detailError.set(this.errorMessage(error, 'Không thể tải chi tiết booking.'));
+        }
+      }
     });
   }
 
   retryDetail(bookingId: string): void { this.openDetail(bookingId); }
   closeDetail(): void {
     if (this.completingId()) return;
-    this.selectedBooking.set(null); this.requestedBookingId.set(null); this.detailError.set(null);
+    this.clearDetailSelection();
+  }
+
+  private clearDetailSelection(): void {
+    this.selectedBooking.set(null);
+    this.requestedBookingId.set(null);
+    this.detailError.set(null);
+    this.detailLoading.set(false);
+  }
+
+  private syncDetailSelection(displayedBookings: OwnerBooking[]): void {
+    if (!displayedBookings.length) {
+      this.clearDetailSelection();
+      return;
+    }
+
+    const currentBookingId = this.selectedBooking()?.bookingId ?? this.requestedBookingId();
+    if (!currentBookingId || !displayedBookings.some(booking => booking.bookingId === currentBookingId)) {
+      this.openDetail(displayedBookings[0].bookingId);
+    }
   }
 
   completeBooking(booking: OwnerBooking): void {
