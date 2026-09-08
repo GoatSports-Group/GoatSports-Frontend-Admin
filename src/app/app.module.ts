@@ -159,7 +159,8 @@ import {
   LucideChartLine,
   LucideTrophy,
   LucideCalendarRange,
-  LucideBadgeCheck
+  LucideBadgeCheck,
+  LucideFileChartColumn
 } from '@lucide/angular';
 
 @NgModule({
@@ -318,7 +319,8 @@ import {
       LucideChartLine,
       LucideTrophy,
       LucideCalendarRange,
-      LucideBadgeCheck
+      LucideBadgeCheck,
+      LucideFileChartColumn
     )
   ],
   bootstrap: [AppComponent]

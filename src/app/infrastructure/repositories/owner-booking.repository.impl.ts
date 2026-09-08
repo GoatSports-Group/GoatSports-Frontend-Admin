@@ -8,7 +8,8 @@ import {
   CreateOwnerWalkInBooking,
   OwnerBookingPaymentMethod,
   OwnerBookingPaymentResult,
-  OwnerBookingReportFilter
+  OwnerBookingReportFilter,
+  OwnerBookingCancellation
 } from '@application/dto/owner-booking/owner-booking.dto';
 import { OwnerBookingRepository } from '@application/ports/persistence/owner-booking.repository';
 import { OwnerBookingApi } from '@infrastructure/api/owner-booking.api';
@@ -43,6 +44,20 @@ export class OwnerBookingRepositoryImpl implements OwnerBookingRepository {
     bookingId: string, method: OwnerBookingPaymentMethod
   ): Observable<OwnerBookingPaymentResult> {
     return this.api.createPayment(bookingId, method).pipe(map(response => response.data));
+  }
+
+  processCancellation(
+    cancellationId: string, approved: boolean, processNote?: string
+  ): Observable<OwnerBookingCancellation> {
+    return this.api.processCancellation(cancellationId, approved, processNote)
+      .pipe(map(response => response.data));
+  }
+
+  completeManualRefund(
+    cancellationId: string, providerRefundId: string
+  ): Observable<OwnerBookingCancellation> {
+    return this.api.completeManualRefund(cancellationId, providerRefundId)
+      .pipe(map(response => response.data));
   }
 
   exportReport(filter: OwnerBookingReportFilter): Observable<Blob> {

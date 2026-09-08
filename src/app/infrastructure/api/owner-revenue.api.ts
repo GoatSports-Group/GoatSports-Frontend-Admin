@@ -6,6 +6,7 @@ import {
   OwnerCustomerMetricsFilter,
   OwnerCustomerMetricsReport,
   OwnerRevenueFilter,
+  OwnerRevenueReportExportFilter,
   OwnerRevenueReport
 } from '@application/dto/owner-revenue/owner-revenue.dto';
 import { environment } from '@environments/environment';
@@ -14,6 +15,7 @@ import { environment } from '@environments/environment';
 export class OwnerRevenueApi {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/venue-service/api/v1/owner/revenue`;
+  private readonly reportBaseUrl = `${environment.apiUrl}/report-service/api/v1/reports`;
 
   getRevenue(filter: OwnerRevenueFilter): Observable<BaseResponse<OwnerRevenueReport>> {
     let params = new HttpParams()
@@ -33,5 +35,29 @@ export class OwnerRevenueApi {
       `${this.baseUrl}/customer-metrics`,
       { params }
     );
+  }
+
+  previewReport(filter: OwnerRevenueReportExportFilter): Observable<Blob> {
+    return this.http.get(`${this.reportBaseUrl}/preview/owner-revenue`, {
+      params: this.reportParams(filter),
+      responseType: 'blob'
+    });
+  }
+
+  exportReport(filter: OwnerRevenueReportExportFilter): Observable<Blob> {
+    return this.http.get(`${this.reportBaseUrl}/export/owner-revenue`, {
+      params: this.reportParams(filter).set('format', 'xlsx'),
+      responseType: 'blob'
+    });
+  }
+
+  private reportParams(filter: OwnerRevenueReportExportFilter): HttpParams {
+    let params = new HttpParams()
+      .set('fromDate', filter.fromDate)
+      .set('toDate', filter.toDate)
+      .set('venueName', filter.venueName)
+      .set('periodLabel', filter.periodLabel);
+    if (filter.venueId) params = params.set('venueId', filter.venueId);
+    return params;
   }
 }

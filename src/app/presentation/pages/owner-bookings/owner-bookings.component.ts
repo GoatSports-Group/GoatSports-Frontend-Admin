@@ -87,6 +87,7 @@ export class OwnerBookingsComponent {
   readonly detailLoading = signal(false);
   readonly detailError = signal<string | null>(null);
   readonly completingId = signal<string | null>(null);
+  readonly cancellationAction = signal<'APPROVE' | 'REJECT' | 'COMPLETE_REFUND' | null>(null);
   readonly exporting = signal(false);
   readonly reportPreviewOpen = signal(false);
   readonly reportPreviewLoading = signal(false);
@@ -130,6 +131,10 @@ export class OwnerBookingsComponent {
     customerName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(120)]],
     customerPhone: ['', [Validators.required, Validators.pattern(/^\+?[0-9 .-]{8,20}$/)]]
   });
+  readonly cancellationNote = this.formBuilder.nonNullable.control('', [Validators.maxLength(1000)]);
+  readonly manualRefundReference = this.formBuilder.nonNullable.control('', [
+    Validators.required, Validators.maxLength(100)
+  ]);
   readonly selectedCreateSlotId = toSignal(
     this.createForm.controls.timeSlotId.valueChanges,
     { initialValue: this.createForm.controls.timeSlotId.value }
@@ -696,7 +701,7 @@ export class OwnerBookingsComponent {
 
   retryDetail(bookingId: string): void { this.openDetail(bookingId); }
   closeDetail(): void {
-    if (this.completingId()) return;
+    if (this.completingId() || this.cancellationAction()) return;
     this.clearDetailSelection();
   }
 
@@ -722,6 +727,64 @@ export class OwnerBookingsComponent {
       },
       error: error => this.notify.error(this.errorMessage(error, 'Không thể hoàn tất đơn đặt sân.'))
     });
+  }
+
+  processCancellation(booking: OwnerBooking, approved: boolean): void {
+    const cancellation = booking.cancellation;
+    if (!cancellation || cancellation.status !== 'PENDING' || this.cancellationAction()) return;
+    const note = this.cancellationNote.value.trim();
+    if (!approved && !note) {
+      this.notify.error('Vui lòng nhập lý do từ chối để người chơi biết.');
+      return;
+    }
+    this.cancellationAction.set(approved ? 'APPROVE' : 'REJECT');
+    this.manageBookings.processCancellation(cancellation.cancellationId, approved, note || undefined).pipe(
+      take(1),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.cancellationAction.set(null))
+    ).subscribe({
+      next: () => {
+        this.cancellationNote.reset('');
+        this.notify.success(approved
+          ? 'Đã chấp thuận hủy sân và khởi tạo hoàn tiền.'
+          : 'Đã từ chối yêu cầu hủy sân.');
+        this.openDetail(booking.bookingId);
+        this.loadBookings(this.page());
+      },
+      error: error => this.notify.error(this.errorMessage(error, 'Không thể xử lý yêu cầu hủy sân.'))
+    });
+  }
+
+  completeManualRefund(booking: OwnerBooking): void {
+    const cancellation = booking.cancellation;
+    const providerRefundId = this.manualRefundReference.value.trim();
+    if (!cancellation || cancellation.status !== 'REFUND_MANUAL_REVIEW' || this.cancellationAction()) return;
+    if (!providerRefundId) {
+      this.notify.error('Vui lòng nhập mã giao dịch chuyển hoàn.');
+      return;
+    }
+    this.cancellationAction.set('COMPLETE_REFUND');
+    this.manageBookings.completeManualRefund(cancellation.cancellationId, providerRefundId).pipe(
+      take(1),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.cancellationAction.set(null))
+    ).subscribe({
+      next: () => {
+        this.manualRefundReference.reset('');
+        this.notify.success('Đã xác nhận hoàn tiền cho người chơi.');
+        this.openDetail(booking.bookingId);
+        this.loadBookings(this.page());
+      },
+      error: error => this.notify.error(this.errorMessage(error, 'Không thể xác nhận hoàn tiền.'))
+    });
+  }
+
+  cancellationStatusLabel(status: string): string {
+    return {
+      PENDING: 'Chờ chủ sân duyệt', APPROVED: 'Đã chấp thuận', REJECTED: 'Đã từ chối',
+      REFUND_PROCESSING: 'Đang hoàn tiền', REFUND_MANUAL_REVIEW: 'Cần hoàn tiền thủ công',
+      REFUNDED: 'Đã hoàn tiền', REFUND_FAILED: 'Hoàn tiền thất bại'
+    }[status] ?? status;
   }
 
   statusLabel(status: string): string {

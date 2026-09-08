@@ -9,7 +9,8 @@ import {
   CreateOwnerWalkInBooking,
   OwnerBookingPaymentMethod,
   OwnerBookingPaymentResult,
-  OwnerBookingReportFilter
+  OwnerBookingReportFilter,
+  OwnerBookingCancellation
 } from '@application/dto/owner-booking/owner-booking.dto';
 import { environment } from '@environments/environment';
 
@@ -52,6 +53,22 @@ export class OwnerBookingApi {
   ): Observable<BaseResponse<OwnerBookingPaymentResult>> {
     return this.http.post<BaseResponse<OwnerBookingPaymentResult>>(
       `${this.baseUrl}/${bookingId}/payments`, { method }
+    );
+  }
+
+  processCancellation(
+    cancellationId: string, approved: boolean, processNote?: string
+  ): Observable<BaseResponse<OwnerBookingCancellation>> {
+    return this.http.post<BaseResponse<OwnerBookingCancellation>>(
+      `${this.baseUrl}/cancellations/${cancellationId}/process`, { approved, processNote }
+    );
+  }
+
+  completeManualRefund(
+    cancellationId: string, providerRefundId: string
+  ): Observable<BaseResponse<OwnerBookingCancellation>> {
+    return this.http.post<BaseResponse<OwnerBookingCancellation>>(
+      `${this.baseUrl}/cancellations/${cancellationId}/manual-refund-completion`, { providerRefundId }
     );
   }
 

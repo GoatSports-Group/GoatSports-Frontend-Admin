@@ -4,7 +4,9 @@
       <h1>Báo cáo doanh thu</h1>
       <p>Đối chiếu doanh thu và hiệu quả hoạt động theo từng cơ sở trong khoảng thời gian bạn chọn.</p>
     </div>
-    <button type="button" class="secondary heading-action">
+    <button type="button" class="secondary heading-action"
+      [disabled]="loading() || !report() || reportPreviewLoading() || exporting()"
+      (click)="openReportPreview()">
       <lucide-icon name="download" />
       Xuất báo cáo
     </button>
@@ -265,3 +267,58 @@
   </section>
   }
 </main>
+
+@if (reportPreviewOpen()) {
+<div class="report-preview-backdrop" (click)="closeReportPreview()">
+  <section class="report-preview-modal" role="dialog" aria-modal="true" aria-labelledby="revenue-report-preview-title"
+    (click)="$event.stopPropagation()">
+    <header class="report-preview-header">
+      <div class="report-preview-heading">
+        <span class="report-preview-icon"><lucide-icon name="file-chart-column" /></span>
+        <div>
+          <span class="preview-eyebrow">BÁO CÁO GOAT SPORTS</span>
+          <h2 id="revenue-report-preview-title">Xem trước báo cáo doanh thu</h2>
+          <p>{{ activeReportDescription() }}</p>
+        </div>
+      </div>
+      <button type="button" class="preview-close" (click)="closeReportPreview()" [disabled]="exporting()"
+        aria-label="Đóng bản xem trước báo cáo">
+        <lucide-icon name="x" />
+      </button>
+    </header>
+
+    <div class="report-preview-stage">
+      @if (reportPreviewLoading()) {
+      <div class="report-preview-state">
+        <lucide-icon name="loader-2" class="spin" />
+        <strong>Đang dựng bản xem trước…</strong>
+        <p>Hệ thống đang tổng hợp doanh thu đúng theo kỳ và cơ sở đã áp dụng.</p>
+      </div>
+      } @else if (reportPreviewError()) {
+      <div class="report-preview-state report-preview-state--error" role="alert">
+        <lucide-icon name="file-warning" />
+        <strong>Không thể tạo bản xem trước</strong>
+        <p>{{ reportPreviewError() }}</p>
+        <button type="button" class="secondary" (click)="openReportPreview()">
+          <lucide-icon name="refresh-cw" /> Thử lại
+        </button>
+      </div>
+      } @else if (reportPreviewUrl()) {
+      <iframe [src]="reportPreviewUrl()" title="Bản xem trước báo cáo doanh thu"></iframe>
+      }
+    </div>
+
+    <footer class="report-preview-footer">
+      <button type="button" class="secondary" (click)="closeReportPreview()" [disabled]="exporting()">Đóng</button>
+      <button type="button" class="primary" (click)="exportRevenueReport()"
+        [disabled]="reportPreviewLoading() || !!reportPreviewError() || !reportPreviewUrl() || exporting()">
+        @if (exporting()) {
+        <lucide-icon name="loader-2" class="spin" /> Đang xuất…
+        } @else {
+        <lucide-icon name="download" /> Xuất Excel
+        }
+      </button>
+    </footer>
+  </section>
+</div>
+}

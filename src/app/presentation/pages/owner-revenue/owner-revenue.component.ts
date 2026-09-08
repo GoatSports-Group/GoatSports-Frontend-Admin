@@ -7,14 +7,17 @@ import {
   signal
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Observable, catchError, finalize, forkJoin, map, of, switchMap, take } from 'rxjs';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { Observable, Subject, catchError, finalize, forkJoin, map, of, switchMap, take, takeUntil } from 'rxjs';
 import {
   OwnerRevenueReport,
+  OwnerRevenueReportExportFilter,
   OwnerRevenueStatusBreakdown
 } from '@application/dto/owner-revenue/owner-revenue.dto';
 import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { GetOwnerRevenueUseCase } from '@application/usecase/owner-revenue/get-owner-revenue.usecase';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
+import { NotifyService } from '@shared/components/notify/notify.service';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-loading.component';
 
@@ -57,6 +60,8 @@ export class OwnerRevenueComponent {
   private readonly getVenues = inject(GetMyOwnerVenuesUseCase);
   private readonly getRevenue = inject(GetOwnerRevenueUseCase);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly sanitizer = inject(DomSanitizer);
+  private readonly notify = inject(NotifyService);
 
   readonly venues = signal<OwnerVenueOverview[]>([]);
   readonly selectedVenueId = signal('');
@@ -68,6 +73,15 @@ export class OwnerRevenueComponent {
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   readonly rankingError = signal<string | null>(null);
+  readonly reportPreviewOpen = signal(false);
+  readonly reportPreviewLoading = signal(false);
+  readonly reportPreviewError = signal<string | null>(null);
+  readonly reportPreviewUrl = signal<SafeResourceUrl | null>(null);
+  readonly exporting = signal(false);
+  private readonly stopReportPreview = new Subject<void>();
+  private reportPreviewObjectUrl: string | null = null;
+  private activeReportFilter: OwnerRevenueReportExportFilter | null = null;
+  private appliedPeriodLabel = 'Tháng';
 
   readonly presets: readonly RevenuePresetOption[] = [
     { value: 'today', label: 'Hôm nay' },
@@ -131,6 +145,11 @@ export class OwnerRevenueComponent {
   });
 
   constructor() {
+    this.destroyRef.onDestroy(() => {
+      this.stopReportPreview.next();
+      this.stopReportPreview.complete();
+      this.releaseReportPreviewUrl();
+    });
     this.loadContext();
   }
 
@@ -174,6 +193,78 @@ export class OwnerRevenueComponent {
   retry(): void {
     if (this.venues().length) this.loadReport();
     else this.loadContext();
+  }
+
+  openReportPreview(): void {
+    if (this.reportPreviewLoading() || this.exporting()) return;
+    const reportFilter = this.currentReportFilter();
+    if (!reportFilter) return;
+
+    this.stopReportPreview.next();
+    this.releaseReportPreviewUrl();
+    this.activeReportFilter = reportFilter;
+    this.reportPreviewOpen.set(true);
+    this.reportPreviewLoading.set(true);
+    this.reportPreviewError.set(null);
+    this.getRevenue.previewReport(reportFilter).pipe(
+      take(1),
+      takeUntil(this.stopReportPreview),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.reportPreviewLoading.set(false))
+    ).subscribe({
+      next: file => {
+        if (!file.size) {
+          this.reportPreviewError.set('Dịch vụ báo cáo không trả dữ liệu xem trước.');
+          return;
+        }
+        this.reportPreviewObjectUrl = URL.createObjectURL(file);
+        this.reportPreviewUrl.set(
+          this.sanitizer.bypassSecurityTrustResourceUrl(this.reportPreviewObjectUrl)
+        );
+      },
+      error: error => this.reportPreviewError.set(
+        this.errorMessage(error, 'Không thể tạo bản xem trước báo cáo doanh thu.')
+      )
+    });
+  }
+
+  closeReportPreview(): void {
+    if (this.exporting()) return;
+    this.stopReportPreview.next();
+    this.releaseReportPreviewUrl();
+    this.reportPreviewError.set(null);
+    this.reportPreviewOpen.set(false);
+    this.activeReportFilter = null;
+  }
+
+  exportRevenueReport(): void {
+    if (this.exporting() || !this.activeReportFilter) return;
+    const filter = this.activeReportFilter;
+    this.exporting.set(true);
+    this.getRevenue.exportReport(filter).pipe(
+      take(1),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.exporting.set(false))
+    ).subscribe({
+      next: file => {
+        if (!file.size) {
+          this.notify.error('Dịch vụ báo cáo không trả dữ liệu Excel.');
+          return;
+        }
+        const url = URL.createObjectURL(file);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = `bao-cao-doanh-thu-${filter.fromDate}-${filter.toDate}.xlsx`;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        URL.revokeObjectURL(url);
+        this.notify.success('Đã xuất báo cáo doanh thu.');
+      },
+      error: error => this.notify.error(
+        this.errorMessage(error, 'Không thể xuất báo cáo doanh thu Excel.')
+      )
+    });
   }
 
   selectVenue(event: Event): void {
@@ -244,6 +335,12 @@ export class OwnerRevenueComponent {
 
   periodName(): string {
     return this.presets.find(option => option.value === this.selectedPreset())?.label ?? 'Tùy chỉnh';
+  }
+
+  activeReportDescription(): string {
+    const filter = this.activeReportFilter;
+    if (!filter) return 'Kiểm tra bố cục và số liệu trước khi xuất tệp Excel.';
+    return `${filter.periodLabel} · ${filter.venueName} · ${this.fullDate(filter.fromDate)} – ${this.fullDate(filter.toDate)}`;
   }
 
   rankingWidth(value: number): number {
@@ -321,6 +418,29 @@ export class OwnerRevenueComponent {
   private applyResult(result: RevenueLoadResult): void {
     this.report.set(result.report);
     this.venueRanking.set(result.ranking);
+    if (result.report) this.appliedPeriodLabel = this.periodName();
+  }
+
+  private currentReportFilter(): OwnerRevenueReportExportFilter | null {
+    const data = this.report();
+    if (!data) return null;
+    const venueId = data.scopeVenueId || undefined;
+    const venueName = venueId
+      ? this.venues().find(venue => venue.venueId === venueId)?.name ?? this.selectedVenueName()
+      : 'Tất cả cơ sở';
+    return {
+      venueId,
+      venueName,
+      fromDate: data.currentPeriod.fromDate,
+      toDate: data.currentPeriod.toDate,
+      periodLabel: this.appliedPeriodLabel
+    };
+  }
+
+  private releaseReportPreviewUrl(): void {
+    if (this.reportPreviewObjectUrl) URL.revokeObjectURL(this.reportPreviewObjectUrl);
+    this.reportPreviewObjectUrl = null;
+    this.reportPreviewUrl.set(null);
   }
 
   private presetRange(preset: Exclude<RevenuePreset, 'custom'>): { fromDate: string; toDate: string } {
@@ -373,8 +493,8 @@ export class OwnerRevenueComponent {
     return Math.ceil(value / power) * power;
   }
 
-  private errorMessage(error: unknown): string {
+  private errorMessage(error: unknown, fallback = 'Không thể tải dữ liệu doanh thu.'): string {
     const candidate = error as { error?: { message?: string }; message?: string };
-    return candidate?.error?.message || candidate?.message || 'Không thể tải dữ liệu doanh thu.';
+    return candidate?.error?.message || candidate?.message || fallback;
   }
 }

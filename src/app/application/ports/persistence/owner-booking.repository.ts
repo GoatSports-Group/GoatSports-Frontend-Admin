@@ -8,7 +8,8 @@ import {
   CreateOwnerWalkInBooking,
   OwnerBookingPaymentMethod,
   OwnerBookingPaymentResult,
-  OwnerBookingReportFilter
+  OwnerBookingReportFilter,
+  OwnerBookingCancellation
 } from '@application/dto/owner-booking/owner-booking.dto';
 
 export interface OwnerBookingRepository {
@@ -19,6 +20,12 @@ export interface OwnerBookingRepository {
   createPayment(
     bookingId: string, method: OwnerBookingPaymentMethod
   ): Observable<OwnerBookingPaymentResult>;
+  processCancellation(
+    cancellationId: string, approved: boolean, processNote?: string
+  ): Observable<OwnerBookingCancellation>;
+  completeManualRefund(
+    cancellationId: string, providerRefundId: string
+  ): Observable<OwnerBookingCancellation>;
   exportReport(filter: OwnerBookingReportFilter): Observable<Blob>;
   previewReport(filter: OwnerBookingReportFilter): Observable<Blob>;
   previewInvoice(bookingId: string): Observable<Blob>;

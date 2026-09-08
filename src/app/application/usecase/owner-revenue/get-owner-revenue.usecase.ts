@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
   OwnerRevenueFilter,
+  OwnerRevenueReportExportFilter,
   OwnerRevenueReport
 } from '@application/dto/owner-revenue/owner-revenue.dto';
 import {
@@ -18,5 +19,13 @@ export class GetOwnerRevenueUseCase {
 
   execute(filter: OwnerRevenueFilter): Observable<OwnerRevenueReport> {
     return this.repository.getRevenue(filter);
+  }
+
+  previewReport(filter: OwnerRevenueReportExportFilter): Observable<Blob> {
+    return this.repository.previewReport(filter);
+  }
+
+  exportReport(filter: OwnerRevenueReportExportFilter): Observable<Blob> {
+    return this.repository.exportReport(filter);
   }
 }

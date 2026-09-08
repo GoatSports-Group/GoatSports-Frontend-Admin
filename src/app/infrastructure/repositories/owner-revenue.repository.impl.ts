@@ -4,6 +4,7 @@ import {
   OwnerCustomerMetricsFilter,
   OwnerCustomerMetricsReport,
   OwnerRevenueFilter,
+  OwnerRevenueReportExportFilter,
   OwnerRevenueReport
 } from '@application/dto/owner-revenue/owner-revenue.dto';
 import { OwnerRevenueRepository } from '@application/ports/persistence/owner-revenue.repository';
@@ -19,5 +20,13 @@ export class OwnerRevenueRepositoryImpl implements OwnerRevenueRepository {
 
   getCustomerMetrics(filter: OwnerCustomerMetricsFilter): Observable<OwnerCustomerMetricsReport> {
     return this.api.getCustomerMetrics(filter).pipe(map(response => response.data));
+  }
+
+  previewReport(filter: OwnerRevenueReportExportFilter): Observable<Blob> {
+    return this.api.previewReport(filter);
+  }
+
+  exportReport(filter: OwnerRevenueReportExportFilter): Observable<Blob> {
+    return this.api.exportReport(filter);
   }
 }

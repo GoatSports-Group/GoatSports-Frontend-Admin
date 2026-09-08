@@ -3205,3 +3205,119 @@ button:disabled {
     overflow: visible;
   }
 }
+.booking-status-cell {
+  display: grid;
+  justify-items: start;
+  gap: 0.35rem;
+}
+
+.cancellation-request-badge {
+  border-radius: 999px;
+  padding: 0.2rem 0.5rem;
+  background: #fff1f2;
+  color: #be123c;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.cancellation-request-badge--refund {
+  background: #fffbeb;
+  color: #a16207;
+}
+
+.cancellation-management header {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.cancellation-management header h3 {
+  margin-right: auto;
+}
+
+.cancellation-state {
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  background: #fff7ed;
+  color: #c2410c;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.cancellation-state[data-status='REFUNDED'],
+.cancellation-state[data-status='APPROVED'] {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.cancellation-state[data-status='REJECTED'],
+.cancellation-state[data-status='REFUND_FAILED'] {
+  background: #fff1f2;
+  color: #be123c;
+}
+
+.cancellation-summary__reason {
+  grid-column: 1 / -1;
+}
+
+.cancellation-workspace {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #dbe4e1;
+  border-radius: 1rem;
+  background: #f8faf9;
+}
+
+.cancellation-workspace label {
+  color: #334155;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.cancellation-workspace textarea,
+.cancellation-workspace input {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  background: #fff;
+  color: #0f172a;
+  font: inherit;
+  resize: vertical;
+}
+
+.cancellation-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.625rem;
+}
+
+.danger-outline-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid #fda4af;
+  border-radius: 0.75rem;
+  padding: 0.7rem 1rem;
+  background: #fff;
+  color: #be123c;
+  font-weight: 800;
+}
+
+.manual-refund-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  border-radius: 0.75rem;
+  padding: 0.8rem;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.manual-refund-warning p {
+  margin: 0;
+  line-height: 1.5;
+}

@@ -8,7 +8,8 @@ import {
   CreateOwnerWalkInBooking,
   OwnerBookingPaymentMethod,
   OwnerBookingPaymentResult,
-  OwnerBookingReportFilter
+  OwnerBookingReportFilter,
+  OwnerBookingCancellation
 } from '@application/dto/owner-booking/owner-booking.dto';
 import {
   OWNER_BOOKING_REPOSITORY_TOKEN,
@@ -41,6 +42,18 @@ export class ManageOwnerBookingsUseCase {
     bookingId: string, method: OwnerBookingPaymentMethod
   ): Observable<OwnerBookingPaymentResult> {
     return this.repository.createPayment(bookingId, method);
+  }
+
+  processCancellation(
+    cancellationId: string, approved: boolean, processNote?: string
+  ): Observable<OwnerBookingCancellation> {
+    return this.repository.processCancellation(cancellationId, approved, processNote);
+  }
+
+  completeManualRefund(
+    cancellationId: string, providerRefundId: string
+  ): Observable<OwnerBookingCancellation> {
+    return this.repository.completeManualRefund(cancellationId, providerRefundId);
   }
 
   exportReport(filter: OwnerBookingReportFilter): Observable<Blob> {

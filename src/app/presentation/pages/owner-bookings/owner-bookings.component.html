@@ -124,7 +124,14 @@
                 {{ paymentStateLabel(booking) }}
               </span>
             </div>
-            <span class="status-badge" [attr.data-status]="booking.status">{{ statusLabel(booking.status) }}</span>
+            <div class="booking-status-cell">
+              <span class="status-badge" [attr.data-status]="booking.status">{{ statusLabel(booking.status) }}</span>
+              @if (booking.cancellation?.status === 'PENDING') {
+              <span class="cancellation-request-badge">Có yêu cầu hủy</span>
+              } @else if (booking.cancellation?.status === 'REFUND_MANUAL_REVIEW') {
+              <span class="cancellation-request-badge cancellation-request-badge--refund">Cần hoàn tiền</span>
+              }
+            </div>
             <button type="button" class="row-detail-button"
               (click)="$event.stopPropagation(); openDetail(booking.bookingId)" [disabled]="detailLoading()"
               [attr.aria-label]="'Xem đơn ' + booking.bookingCode">
@@ -298,6 +305,62 @@
           }
         </dl>
       </section>
+
+      @if (booking.cancellation; as cancellation) {
+      <section class="detail-section cancellation-management">
+        <header><lucide-icon name="calendar-x" />
+          <h3>Yêu cầu hủy sân</h3>
+          <span class="cancellation-state" [attr.data-status]="cancellation.status">
+            {{ cancellationStatusLabel(cancellation.status) }}
+          </span>
+        </header>
+        <dl class="detail-list cancellation-summary">
+          <div><dt>Hình thức xử lý</dt><dd>{{ cancellation.reviewMode === 'AUTOMATIC' ? 'Tự động trong 60 phút' : 'Chủ sân xét duyệt' }}</dd></div>
+          <div><dt>Số tiền hoàn</dt><dd>{{ formatMoney(cancellation.refundAmount) }} ({{ cancellation.refundPercentage }}%)</dd></div>
+          <div class="cancellation-summary__reason"><dt>Lý do của người chơi</dt><dd>{{ cancellation.reason }}</dd></div>
+          @if (cancellation.decisionReason) {
+          <div class="cancellation-summary__reason"><dt>Kết quả xử lý</dt><dd>{{ cancellation.decisionReason }}</dd></div>
+          }
+        </dl>
+
+        @if (cancellation.status === 'PENDING') {
+        <div class="cancellation-workspace">
+          <label for="cancellation-note">Phản hồi cho người chơi</label>
+          <textarea id="cancellation-note" rows="3" maxlength="1000" [formControl]="cancellationNote"
+            placeholder="Bắt buộc khi từ chối; không bắt buộc khi chấp thuận"></textarea>
+          <div class="cancellation-actions">
+            <button type="button" class="danger-outline-button" [disabled]="!!cancellationAction()"
+              (click)="processCancellation(booking, false)">
+              <lucide-icon name="x" /> Từ chối
+            </button>
+            <button type="button" class="primary-button" [disabled]="!!cancellationAction()"
+              (click)="processCancellation(booking, true)">
+              @if (cancellationAction() === 'APPROVE') { <span class="spinner-small"></span> }
+              @else { <lucide-icon name="check" /> }
+              Chấp thuận & hoàn tiền
+            </button>
+          </div>
+        </div>
+        } @else if (cancellation.status === 'REFUND_MANUAL_REVIEW') {
+        <div class="cancellation-workspace cancellation-workspace--refund">
+          <div class="manual-refund-warning">
+            <lucide-icon name="alert-triangle" />
+            <p>payOS chưa hỗ trợ hoàn tiền tự động. Hãy chuyển <strong>{{ formatMoney(cancellation.refundAmount) }}</strong>
+              cho người chơi, sau đó nhập mã giao dịch để hoàn tất đối soát.</p>
+          </div>
+          <label for="manual-refund-reference">Mã giao dịch chuyển hoàn</label>
+          <input id="manual-refund-reference" type="text" maxlength="100" [formControl]="manualRefundReference"
+            placeholder="Ví dụ: FT26351234567890" />
+          <button type="button" class="primary-button" [disabled]="!!cancellationAction() || manualRefundReference.invalid"
+            (click)="completeManualRefund(booking)">
+            @if (cancellationAction() === 'COMPLETE_REFUND') { <span class="spinner-small"></span> }
+            @else { <lucide-icon name="badge-check" /> }
+            Xác nhận đã hoàn tiền
+          </button>
+        </div>
+        }
+      </section>
+      }
 
       <section class="detail-section booking-history">
         <header><lucide-icon name="history" />

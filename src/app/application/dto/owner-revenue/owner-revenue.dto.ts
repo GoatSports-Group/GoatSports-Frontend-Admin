@@ -4,6 +4,11 @@ export interface OwnerRevenueFilter {
   toDate: string;
 }
 
+export interface OwnerRevenueReportExportFilter extends OwnerRevenueFilter {
+  venueName: string;
+  periodLabel: string;
+}
+
 export interface OwnerCustomerMetricsFilter {
   venueId: string;
   month: string;

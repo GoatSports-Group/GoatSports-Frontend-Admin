@@ -4,6 +4,25 @@ export type OwnerBookingStatus =
 
 export type OwnerBookingSource = 'DIRECT' | 'AI_MATCHMAKING' | 'WALK_IN';
 export type OwnerBookingPaymentMethod = 'CASH' | 'PAYOS';
+export type OwnerCancellationStatus =
+  | 'PENDING' | 'APPROVED' | 'REJECTED' | 'REFUND_PROCESSING'
+  | 'REFUND_MANUAL_REVIEW' | 'REFUNDED' | 'REFUND_FAILED';
+
+export interface OwnerBookingCancellation {
+  cancellationId: string;
+  bookingId: string;
+  requestedByUserId: string;
+  refundId?: string;
+  reason: string;
+  refundPercentage: number;
+  refundAmount: number;
+  status: OwnerCancellationStatus;
+  reviewMode: 'AUTOMATIC' | 'OWNER_REVIEW';
+  processedBy?: string;
+  decisionReason?: string;
+  processedAt?: string;
+  createdAt: string;
+}
 
 export interface CreateOwnerWalkInBooking {
   venueCourtId: string;
@@ -62,6 +81,7 @@ export interface OwnerBooking {
   holdExpiresAt?: string;
   createdAt: string;
   updatedAt?: string;
+  cancellation?: OwnerBookingCancellation;
   payments: OwnerPayment[];
   allowedTransitions: OwnerBookingStatus[];
 }
