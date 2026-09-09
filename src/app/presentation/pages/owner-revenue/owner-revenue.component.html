@@ -4,12 +4,12 @@
       <h1>Báo cáo doanh thu</h1>
       <p>Đối chiếu doanh thu và hiệu quả hoạt động theo từng cơ sở trong khoảng thời gian bạn chọn.</p>
     </div>
-    <button type="button" class="secondary heading-action"
-      [disabled]="loading() || !report() || reportPreviewLoading() || exporting()"
-      (click)="openReportPreview()">
-      <lucide-icon name="download" />
-      Xuất báo cáo
-    </button>
+    <div class="heading-actions">
+      <a class="secondary heading-action" routerLink="/admin/bank-account"><lucide-icon name="wallet-cards" /> Tài khoản nhận tiền</a>
+      <button type="button" class="secondary heading-action"
+        [disabled]="loading() || !report() || reportPreviewLoading() || exporting()"
+        (click)="openReportPreview()"><lucide-icon name="download" /> Xuất báo cáo</button>
+    </div>
   </header>
 
   <section class="filter-workspace" aria-label="Bộ lọc báo cáo doanh thu">

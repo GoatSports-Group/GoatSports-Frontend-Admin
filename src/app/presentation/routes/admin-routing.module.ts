@@ -17,6 +17,7 @@ import { OwnerBookingsComponent } from '@presentation/pages/owner-bookings/owner
 import { OwnerCheckInComponent } from '@presentation/pages/owner-check-in/owner-check-in.component';
 import { OwnerRevenueComponent } from '@presentation/pages/owner-revenue/owner-revenue.component';
 import { OwnerReviewsComponent } from '@presentation/pages/owner-reviews/owner-reviews.component';
+import { OwnerBankAccountComponent } from '@presentation/pages/owner-bank-account/owner-bank-account.component';
 
 const routes: Routes = [
   {
@@ -42,6 +43,7 @@ const routes: Routes = [
       { path: 'owner-bookings', component: OwnerBookingsComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
       { path: 'check-in', component: OwnerCheckInComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
       { path: 'finance', component: OwnerRevenueComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
+      { path: 'bank-account', component: OwnerBankAccountComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
       { path: 'reviews', component: OwnerReviewsComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]

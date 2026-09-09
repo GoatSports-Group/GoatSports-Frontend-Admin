@@ -782,7 +782,8 @@ export class OwnerBookingsComponent {
   cancellationStatusLabel(status: string): string {
     return {
       PENDING: 'Chờ chủ sân duyệt', APPROVED: 'Đã chấp thuận', REJECTED: 'Đã từ chối',
-      REFUND_PROCESSING: 'Đang hoàn tiền', REFUND_MANUAL_REVIEW: 'Cần hoàn tiền thủ công',
+      REFUND_AWAITING_CLAIM: 'Chờ người chơi nhận tiền', REFUND_AWAITING_BANK_ACCOUNT: 'Chờ người chơi liên kết ngân hàng',
+      REFUND_PROCESSING: 'payOS đang chuyển hoàn', REFUND_MANUAL_REVIEW: 'Cần hoàn tiền thủ công',
       REFUNDED: 'Đã hoàn tiền', REFUND_FAILED: 'Hoàn tiền thất bại'
     }[status] ?? status;
   }

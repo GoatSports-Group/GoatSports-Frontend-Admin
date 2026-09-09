@@ -20,6 +20,7 @@ import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashbo
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-loading.component';
+import { RouterLink } from '@angular/router';
 
 type RevenuePreset = 'today' | 'week' | 'month' | 'quarter' | 'year' | 'custom';
 
@@ -51,7 +52,7 @@ interface RevenueLoadResult {
 @Component({
   selector: 'app-owner-revenue',
   standalone: true,
-  imports: [LucideIconComponent, PageLoadingComponent],
+  imports: [LucideIconComponent, PageLoadingComponent, RouterLink],
   templateUrl: './owner-revenue.component.html',
   styleUrl: './owner-revenue.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

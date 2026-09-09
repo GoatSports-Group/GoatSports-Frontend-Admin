@@ -341,6 +341,10 @@
             </button>
           </div>
         </div>
+        } @else if (cancellation.status === 'REFUND_AWAITING_BANK_ACCOUNT') {
+          <div class="cancellation-notice"><lucide-icon name="clock" /><span>Yêu cầu đã được duyệt. Tiền đang được giữ an toàn và sẽ tự động chuyển khi người chơi liên kết ngân hàng.</span></div>
+        } @else if (cancellation.status === 'REFUND_AWAITING_CLAIM') {
+          <div class="cancellation-notice"><lucide-icon name="clock" /><span>Hệ thống đang chờ người chơi xác nhận nhận hoàn tiền.</span></div>
         } @else if (cancellation.status === 'REFUND_MANUAL_REVIEW') {
         <div class="cancellation-workspace cancellation-workspace--refund">
           <div class="manual-refund-warning">

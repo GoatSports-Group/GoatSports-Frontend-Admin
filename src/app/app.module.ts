@@ -27,6 +27,7 @@ import { OWNER_BOOKING_REPOSITORY_TOKEN } from '@application/ports/persistence/o
 import { OWNER_CHECK_IN_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-check-in.repository';
 import { OWNER_REVENUE_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-revenue.repository';
 import { OWNER_REVIEW_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-review.repository';
+import { BANK_ACCOUNT_REPOSITORY_TOKEN } from '@application/ports/persistence/bank-account.repository';
 import { WEBSOCKET_SERVICE_TOKEN } from '@application/ports/websocket.service';
 
 import { AuthRepositoryImpl } from '@infrastructure/repositories/auth.repository.impl';
@@ -45,6 +46,7 @@ import { OwnerBookingRepositoryImpl } from '@infrastructure/repositories/owner-b
 import { OwnerCheckInRepositoryImpl } from '@infrastructure/repositories/owner-check-in.repository.impl';
 import { OwnerRevenueRepositoryImpl } from '@infrastructure/repositories/owner-revenue.repository.impl';
 import { OwnerReviewRepositoryImpl } from '@infrastructure/repositories/owner-review.repository.impl';
+import { BankAccountRepositoryImpl } from '@infrastructure/repositories/bank-account.repository.impl';
 import { StompWebSocketService } from '@infrastructure/websocket/stomp-websocket.service';
 import { IMAGE_CONFIG } from '@angular/common';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
@@ -201,6 +203,7 @@ import {
     { provide: OWNER_CHECK_IN_REPOSITORY_TOKEN, useClass: OwnerCheckInRepositoryImpl },
     { provide: OWNER_REVENUE_REPOSITORY_TOKEN, useClass: OwnerRevenueRepositoryImpl },
     { provide: OWNER_REVIEW_REPOSITORY_TOKEN, useClass: OwnerReviewRepositoryImpl },
+    { provide: BANK_ACCOUNT_REPOSITORY_TOKEN, useClass: BankAccountRepositoryImpl },
     { provide: WEBSOCKET_SERVICE_TOKEN, useClass: StompWebSocketService },
     {
       provide: IMAGE_CONFIG,

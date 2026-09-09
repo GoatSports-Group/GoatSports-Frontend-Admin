@@ -26,6 +26,9 @@
   color: var(--ink);
 }
 
+.heading-actions { display: flex; align-items: center; gap: 10px; }
+.heading-actions a { text-decoration: none; }
+
 .page-heading {
   display: flex;
   align-items: flex-end;

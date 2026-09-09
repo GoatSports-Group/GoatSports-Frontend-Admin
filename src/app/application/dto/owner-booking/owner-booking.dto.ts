@@ -5,7 +5,7 @@ export type OwnerBookingStatus =
 export type OwnerBookingSource = 'DIRECT' | 'AI_MATCHMAKING' | 'WALK_IN';
 export type OwnerBookingPaymentMethod = 'CASH' | 'PAYOS';
 export type OwnerCancellationStatus =
-  | 'PENDING' | 'APPROVED' | 'REJECTED' | 'REFUND_PROCESSING'
+  | 'PENDING' | 'APPROVED' | 'REJECTED' | 'REFUND_AWAITING_CLAIM' | 'REFUND_AWAITING_BANK_ACCOUNT' | 'REFUND_PROCESSING'
   | 'REFUND_MANUAL_REVIEW' | 'REFUNDED' | 'REFUND_FAILED';
 
 export interface OwnerBookingCancellation {

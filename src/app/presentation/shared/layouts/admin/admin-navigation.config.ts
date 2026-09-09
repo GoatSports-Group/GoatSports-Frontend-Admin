@@ -29,6 +29,7 @@ export const VENUE_OWNER_NAVIGATION: readonly AdminNavigationItem[] = [
   { title: 'Đơn đặt sân', description: 'Theo dõi đơn thuộc cơ sở của bạn', icon: 'file-text', route: '/owner-bookings' },
   { title: 'Check-in khách', description: 'QR, Booking Code và khách walk-in', icon: 'shield-check', route: '/check-in' },
   { title: 'Doanh thu', description: 'Doanh thu và dữ liệu đối soát thực tế', icon: 'credit-card', route: '/finance' },
+  { title: 'Tài khoản nhận tiền', description: 'Liên kết ngân hàng để nhận doanh thu từ hệ thống', icon: 'wallet-cards', route: '/bank-account' },
   { title: 'Đánh giá', description: 'Phản hồi thật từ booking đã hoàn tất', icon: 'star', route: '/reviews' }
 ];
 
@@ -49,6 +50,6 @@ export const VENUE_OWNER_NAVIGATION_GROUPS: readonly AdminNavigationGroup[] = [
   },
   {
     label: 'Tài chính & chất lượng',
-    items: VENUE_OWNER_NAVIGATION.filter(item => ['/finance', '/reviews'].includes(item.route))
+    items: VENUE_OWNER_NAVIGATION.filter(item => ['/finance', '/bank-account', '/reviews'].includes(item.route))
   }
 ];
