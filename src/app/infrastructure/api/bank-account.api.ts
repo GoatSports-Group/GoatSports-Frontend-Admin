@@ -1,7 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { BaseResponse } from '@application/dto/base/base-response';
-import { BankAccount, BankDirectoryEntry, LinkBankAccountRequest } from '@application/dto/bank-account/bank-account.dto';
+import { BankAccount, BankDirectoryEntry } from '@application/dto/bank-account/bank-account.dto';
+import { EncryptedPayload } from '@application/dto/security/encrypted-payload.dto';
 import { environment } from '@environments/environment';
 @Injectable({ providedIn: 'root' })
 export class BankAccountApi {
@@ -9,7 +10,8 @@ export class BankAccountApi {
   private readonly baseUrl = `${environment.apiUrl}/payment-service/api/v1`;
   getBanks() { return this.http.get<BaseResponse<BankDirectoryEntry[]>>(`${this.baseUrl}/banks`); }
   getMyAccounts() { return this.http.get<BaseResponse<BankAccount[]>>(`${this.baseUrl}/bank-accounts/me`); }
-  link(request: LinkBankAccountRequest) { return this.http.post<BaseResponse<BankAccount>>(`${this.baseUrl}/bank-accounts`, request); }
-  makeDefault(id: string) { return this.http.patch<BaseResponse<BankAccount>>(`${this.baseUrl}/bank-accounts/${id}/default`, {}); }
-  disable(id: string) { return this.http.delete<void>(`${this.baseUrl}/bank-accounts/${id}`); }
+  getEncryptionPublicKey() { return this.http.get<BaseResponse<{ publicKey: string }>>(`${this.baseUrl}/bank-accounts/public-key`); }
+  link(request: EncryptedPayload) { return this.http.post<BaseResponse<BankAccount>>(`${this.baseUrl}/bank-accounts`, request); }
+  makeDefault(request: EncryptedPayload) { return this.http.patch<BaseResponse<BankAccount>>(`${this.baseUrl}/bank-accounts/default`, request); }
+  disable(request: EncryptedPayload) { return this.http.patch<void>(`${this.baseUrl}/bank-accounts/disable`, request); }
 }
