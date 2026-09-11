@@ -220,7 +220,7 @@
                 <lucide-icon name="eye" class="h-4 w-4 shrink-0 text-slate-400"></lucide-icon>
               </button>
               }
-              @for (doc of getNonIdCardDocs(selectedApplication.documents); track doc.ownerApplicationDocumentId) {
+              @for (doc of getNonIdCardDocs(selectedApplication.documents); track doc.documentId) {
               <button type="button" (click)="viewDocument(doc)" class="document-card">
                 <span class="document-icon"><lucide-icon name="file-text" class="h-5 w-5"></lucide-icon></span>
                 <span class="min-w-0 flex-1"><strong>{{ getDocumentTypeLabel(doc.documentType) }}</strong><small>Nhấn để xem tài liệu</small></span>

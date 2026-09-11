@@ -14,7 +14,7 @@ export const OWNER_WORKSPACE_FEATURES: readonly OwnerWorkspaceFeature[] = [
     description: 'Theo dõi tiến trình tiếp nhận, xem xét và kết quả đăng ký chủ sân.',
     icon: 'clipboard-check',
     route: '/admin/applications',
-    plannedCapabilities: ['Tiến trình Camunda', 'Lý do từ chối', 'Lịch sử cập nhật']
+    plannedCapabilities: ['Tiến trình xử lý hồ sơ', 'Lý do từ chối', 'Lịch sử cập nhật']
   },
   {
     id: 'venues',

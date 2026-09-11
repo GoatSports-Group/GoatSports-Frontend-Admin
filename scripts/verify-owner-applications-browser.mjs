@@ -23,6 +23,8 @@ const application = (id, businessName, status, createdAt, rejectReason) => ({
   fullName: 'Đạt Minh', phone: '0867684603', email: 'nguyenthangdat84@gmail.com',
   businessName, businessType: 'INDIVIDUAL', taxCode: '0312345678', identityNumber: '079098123456',
   status, rejectReason, createdAt,
+  receivedAt: createdAt.replace(':31:', ':32:').replace(':12:', ':13:'),
+  viewedAt: createdAt.replace(':31:', ':33:').replace(':12:', ':14:'),
   reviewedAt: status === 'PENDING' ? undefined : createdAt.replace(':31:', ':47:'),
   address: { addressId: `address-${id}`, address: '25 Trần Phú', ward: 'Lộc Thọ', district: 'Nha Trang', city: 'Khánh Hòa' },
   documents: []
@@ -41,13 +43,6 @@ function responseFor(request) {
   if (url.pathname === '/auth-service/api/v1/auth/me') return ok(user);
   if (url.pathname === '/venue-service/api/v1/owner-applications/me') {
     return ok({ meta: { page: 0, pageSize: 100, pages: 1, total: applications.length }, result: applications });
-  }
-  if (url.pathname === '/workflow-service/api/v1/workflows/owner-applications/my/progress/search') {
-    return ok({ items: applications.map(item => ({
-      ownerApplicationId: item.ownerApplicationId,
-      receivedAt: item.createdAt.replace(':31:', ':32:').replace(':12:', ':13:'),
-      viewedAt: item.createdAt.replace(':31:', ':33:').replace(':12:', ':14:')
-    })) });
   }
   return ok([]);
 }

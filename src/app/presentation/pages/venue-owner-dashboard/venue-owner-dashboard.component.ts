@@ -24,6 +24,7 @@ import {
   Observable,
   of,
   reduce,
+  Subscription,
   take,
   timer
 } from 'rxjs';
@@ -82,6 +83,8 @@ export class VenueOwnerDashboardComponent {
   private readonly getRevenue = inject(GetOwnerRevenueUseCase);
   private readonly getFileUrl = inject(GetStorageFileUrlUseCase);
   private readonly destroyRef = inject(DestroyRef);
+  private businessSnapshotSubscription?: Subscription;
+  private dailyRevenueSubscription?: Subscription;
 
   readonly ownerName = input('Chủ sân');
   readonly weather = input<WeatherInfo | null>(null);
@@ -331,7 +334,7 @@ export class VenueOwnerDashboardComponent {
 
   selectVenue(event: Event): void {
     const venueId = (event.target as HTMLSelectElement).value;
-    if (!venueId || venueId === this.selectedVenueId() || this.businessLoading() || this.dailyRevenueLoading()) return;
+    if (!venueId || venueId === this.selectedVenueId()) return;
     this.selectedVenueId.set(venueId);
     this.resetCourtCarousel();
     this.dailyRevenueReport.set(null);
@@ -604,12 +607,13 @@ export class VenueOwnerDashboardComponent {
 
   private loadBusinessSnapshot(): void {
     const venueId = this.selectedVenueId();
-    if (this.businessLoading() || !venueId) return;
+    if (!venueId) return;
+    this.businessSnapshotSubscription?.unsubscribe();
     this.businessLoading.set(true);
     this.businessError.set(null);
     const currentMonth = this.monthRange(0);
 
-    forkJoin({
+    const request = forkJoin({
       monthlyRevenue: this.getRevenue.execute({
         venueId, fromDate: currentMonth.fromDate, toDate: currentMonth.toDate
       }).pipe(
@@ -624,8 +628,12 @@ export class VenueOwnerDashboardComponent {
     }).pipe(
       take(1),
       takeUntilDestroyed(this.destroyRef),
-      finalize(() => this.businessLoading.set(false))
-    ).subscribe(({ monthlyRevenue, upcoming, customerMetrics }) => {
+      finalize(() => {
+        if (this.selectedVenueId() === venueId) this.businessLoading.set(false);
+      })
+    );
+    this.businessSnapshotSubscription = request.subscribe(({ monthlyRevenue, upcoming, customerMetrics }) => {
+      if (this.selectedVenueId() !== venueId) return;
       this.monthlyRevenueReport.set(monthlyRevenue);
       this.upcomingBookings.set((upcoming ?? [])
         .filter(booking => booking.venueId === venueId)
@@ -641,22 +649,28 @@ export class VenueOwnerDashboardComponent {
   private loadDailyRevenue(): void {
     const venueId = this.selectedVenueId();
     const date = this.appliedRevenueDate();
-    if (!venueId || !date || this.dailyRevenueLoading()) return;
+    if (!venueId || !date) return;
+    this.dailyRevenueSubscription?.unsubscribe();
     this.dailyRevenueLoading.set(true);
     this.dailyRevenueError.set(null);
-    forkJoin({
+    const request = forkJoin({
       report: this.getRevenue.execute({ venueId, fromDate: date, toDate: date }),
       bookings: this.loadBookingsForRange(venueId, date, date).pipe(catchError(() => of([])))
     }).pipe(
       take(1),
       takeUntilDestroyed(this.destroyRef),
-      finalize(() => this.dailyRevenueLoading.set(false))
-    ).subscribe({
+      finalize(() => {
+        if (this.selectedVenueId() === venueId) this.dailyRevenueLoading.set(false);
+      })
+    );
+    this.dailyRevenueSubscription = request.subscribe({
       next: ({ report, bookings }) => {
+        if (this.selectedVenueId() !== venueId) return;
         this.dailyRevenueReport.set(report);
         this.dailyRevenueBookings.set(bookings);
       },
       error: () => {
+        if (this.selectedVenueId() !== venueId) return;
         this.dailyRevenueReport.set(null);
         this.dailyRevenueBookings.set([]);
         this.dailyRevenueError.set('Chưa thể tải doanh thu của ngày đã chọn.');

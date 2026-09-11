@@ -1560,7 +1560,7 @@ button:disabled {
 }
 
 .filter-row--primary {
-  grid-template-columns: minmax(150px, .8fr) minmax(150px, .8fr) minmax(170px, 1fr) minmax(170px, 1fr) minmax(185px, 1fr) auto;
+  grid-template-columns: minmax(140px, .75fr) minmax(140px, .75fr) minmax(160px, .9fr) minmax(160px, .9fr) minmax(170px, 1fr) minmax(185px, 1fr) auto;
 }
 
 .filter-row--secondary {
@@ -2470,7 +2470,7 @@ button:disabled {
   }
 
   .filter-row--primary {
-    grid-template-columns: repeat(5, minmax(130px, 1fr)) auto;
+    grid-template-columns: repeat(6, minmax(120px, 1fr)) auto;
   }
 
   .booking-workspace--with-detail {

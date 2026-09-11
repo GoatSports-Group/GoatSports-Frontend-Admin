@@ -8,7 +8,7 @@
     <label class="venue-selector" [class.is-single]="venues().length < 2">
       <span class="sr-only">Chọn cơ sở để xem thống kê</span>
       <lucide-icon name="land-plot" />
-      <select [value]="venue.venueId" [disabled]="venues().length < 2 || businessLoading() || dailyRevenueLoading()"
+      <select [value]="venue.venueId" [disabled]="venues().length < 2"
         (change)="selectVenue($event)" aria-label="Cơ sở đang thống kê">
         @for (venueOption of venues(); track venueOption.venueId) {
         <option [value]="venueOption.venueId">{{ venueOption.name }}</option>

@@ -21,10 +21,16 @@
   </section>
   } @else {
   <form class="filter-panel" [formGroup]="filterForm" (ngSubmit)="applyFilters()">
-    <input type="hidden" formControlName="venueId" />
     <div class="filter-row filter-row--primary">
       <label><span>Từ ngày</span><input type="date" formControlName="fromDate" /></label>
       <label><span>Đến ngày</span><input type="date" formControlName="toDate" /></label>
+      <label><span>Cơ sở</span><select formControlName="venueId"
+          (change)="selectVenue($any($event.target).value)">
+          <option value="">Tất cả cơ sở</option>
+          @for (venue of venues(); track venue.venueId) {
+          <option [value]="venue.venueId">{{ venue.name }}</option>
+          }
+        </select></label>
       <label><span>Sân</span><select formControlName="venueCourtId">
           <option value="">Tất cả sân</option>
           @for (court of courts(); track court.venueCourtId) {
@@ -41,7 +47,7 @@
           <option [value]="status.value">{{ status.label }}</option>
           }
         </select></label>
-      <button type="submit" class="filter-button" [disabled]="loading()">
+      <button type="submit" class="filter-button" [disabled]="loading() || filterCourtsLoading()">
         <lucide-icon name="list-filter" /> Bộ lọc
       </button>
     </div>
@@ -59,7 +65,8 @@
         <lucide-icon name="download" /> Xuất Excel
         }
       </button>
-      <button type="button" class="secondary-button" (click)="clearFilters()" [disabled]="loading()">
+      <button type="button" class="secondary-button" (click)="clearFilters()"
+        [disabled]="loading() || filterCourtsLoading()">
         <lucide-icon name="refresh-cw" /> Làm mới
       </button>
     </div>

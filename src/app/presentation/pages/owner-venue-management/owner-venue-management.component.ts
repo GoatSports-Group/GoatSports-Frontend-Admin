@@ -27,6 +27,11 @@ import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-ic
 import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-loading.component';
 import { VenueImageItem } from './venue-image.model';
 
+interface VenueThumbnailState {
+  source: string;
+  displayUrl: string | null;
+}
+
 @Component({
   selector: 'app-owner-venue-management',
   standalone: true,
@@ -74,6 +79,7 @@ export class OwnerVenueManagementComponent {
   readonly galleryIndex = signal(0);
   readonly images = signal<VenueImageItem[]>([]);
   readonly primaryImageId = signal<string | null>(null);
+  private readonly venueThumbnails = signal<Record<string, VenueThumbnailState>>({});
   readonly venuePageSize = 5;
   readonly uploadingImages = computed(() => this.images().some(image => image.uploading));
   readonly activeVenueCount = computed(() => this.venues().filter(venue => venue.active).length);
@@ -238,6 +244,7 @@ export class OwnerVenueManagementComponent {
     ).subscribe({
       next: venues => {
         this.venues.set(venues);
+        this.syncVenueThumbnails(venues);
         if (!venues.length) {
           this.selectedVenueId.set(null);
           this.venue.set(null);
@@ -252,6 +259,7 @@ export class OwnerVenueManagementComponent {
       },
       error: error => {
         this.venues.set([]);
+        this.venueThumbnails.set({});
         this.selectedVenueId.set(null);
         this.venue.set(null);
         this.syncImages([]);
@@ -282,9 +290,10 @@ export class OwnerVenueManagementComponent {
   }
 
   venueThumbnail(venue: OwnerVenueOverview): string | null {
-    if (venue.venueId === this.selectedVenueId()) return this.primaryImage()?.displayUrl ?? null;
-    const firstImage = venue.imageUrls?.[0];
-    return firstImage && this.isHttpUrl(firstImage) ? firstImage : null;
+    const selectedVenuePreview = venue.venueId === this.selectedVenueId()
+      ? this.primaryImage()?.displayUrl
+      : null;
+    return selectedVenuePreview ?? this.venueThumbnails()[venue.venueId]?.displayUrl ?? null;
   }
 
   retrySelectedVenue(): void {
@@ -325,6 +334,7 @@ export class OwnerVenueManagementComponent {
       next: updated => {
         this.venue.set(updated);
         this.venues.update(venues => venues.map(item => item.venueId === updated.venueId ? updated : item));
+        this.syncVenueThumbnails(this.venues());
         this.patchForm(updated, true);
         this.form.markAsPristine();
         this.notify.success('Thông tin cơ sở đã được cập nhật.');
@@ -495,6 +505,7 @@ export class OwnerVenueManagementComponent {
       next: venue => {
         this.venue.set(venue);
         this.venues.update(venues => venues.map(item => item.venueId === venue.venueId ? venue : item));
+        this.syncVenueThumbnails(this.venues());
         this.patchForm(venue);
         this.form.markAsPristine();
       },
@@ -656,6 +667,52 @@ export class OwnerVenueManagementComponent {
     ).subscribe({
       next: url => this.updateImage(image.id, item => ({ ...item, displayUrl: url, resolving: false })),
       error: () => this.updateImage(image.id, item => ({ ...item, resolving: false }))
+    });
+  }
+
+  private syncVenueThumbnails(venues: OwnerVenueOverview[]): void {
+    const previous = this.venueThumbnails();
+    const next: Record<string, VenueThumbnailState> = {};
+    const unresolved: Array<{ venueId: string; source: string }> = [];
+
+    venues.forEach(venue => {
+      const source = venue.imageUrls?.[0];
+      if (!source) return;
+
+      if (this.isHttpUrl(source)) {
+        next[venue.venueId] = { source, displayUrl: source };
+        return;
+      }
+
+      const cached = previous[venue.venueId];
+      if (cached?.source === source) {
+        next[venue.venueId] = cached;
+        return;
+      }
+
+      next[venue.venueId] = { source, displayUrl: null };
+      unresolved.push({ venueId: venue.venueId, source });
+    });
+
+    this.venueThumbnails.set(next);
+    unresolved.forEach(({ venueId, source }) => {
+      this.getFileUrl.execute(source).pipe(
+        take(1),
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe({
+        next: displayUrl => this.updateVenueThumbnail(venueId, source, displayUrl),
+        error: () => this.updateVenueThumbnail(venueId, source, null)
+      });
+    });
+  }
+
+  private updateVenueThumbnail(venueId: string, source: string, displayUrl: string | null): void {
+    this.venueThumbnails.update(thumbnails => {
+      if (thumbnails[venueId]?.source !== source) return thumbnails;
+      return {
+        ...thumbnails,
+        [venueId]: { source, displayUrl }
+      };
     });
   }
 

@@ -314,6 +314,36 @@ describe('OwnerVenueManagementComponent', () => {
     expect(fixture.componentInstance.form.controls.name.value).toBe('Goat Arena Thủ Đức');
   });
 
+  it('keeps every venue thumbnail visible when switching the selected venue', () => {
+    const firstVenue = { ...venue, imageUrls: ['venues/owner/goat.png'] };
+    const secondVenue: OwnerVenueOverview = {
+      ...venue,
+      venueId: 'venue-2',
+      name: 'Wolf',
+      imageUrls: ['venues/owner/wolf.png']
+    };
+    getMyVenues.execute.mockReturnValue(of([firstVenue, secondVenue]));
+    getVenueOverview.execute.mockImplementation((venueId: string) =>
+      of(venueId === secondVenue.venueId ? secondVenue : firstVenue));
+    getFileUrl.execute.mockImplementation((key: string) =>
+      of(`https://cdn.goat.test/${key.endsWith('wolf.png') ? 'wolf.png' : 'goat.png'}`));
+
+    const fixture = TestBed.createComponent(OwnerVenueManagementComponent);
+    fixture.detectChanges();
+    const thumbnailUrls = () => Array.from(
+      fixture.nativeElement.querySelectorAll('.venue-option img') as NodeListOf<HTMLImageElement>
+    ).map(image => image.src);
+
+    expect(thumbnailUrls())
+      .toEqual(['https://cdn.goat.test/goat.png', 'https://cdn.goat.test/wolf.png']);
+
+    fixture.componentInstance.selectVenue(secondVenue.venueId);
+    fixture.detectChanges();
+
+    expect(thumbnailUrls())
+      .toEqual(['https://cdn.goat.test/goat.png', 'https://cdn.goat.test/wolf.png']);
+  });
+
   it('không chuyển cơ sở khi người dùng giữ lại thay đổi chưa lưu', () => {
     const secondVenue = { ...venue, venueId: 'venue-2', name: 'Goat Arena 2' };
     getMyVenues.execute.mockReturnValue(of([venue, secondVenue]));

@@ -13,7 +13,7 @@ export interface OwnerApplicationAddress {
 }
 
 export interface OwnerApplicationDocument {
-  ownerApplicationDocumentId: string;
+  documentId: string;
   documentType: DocumentType;
   fileUrl: string;
 }

@@ -1,10 +1,17 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  LucideAlertCircle, LucideArrowRight, LucideChevronLeft, LucideChevronRight,
-  LucideCircleCheck, LucideClock, LucideCreditCard, LucideFileText, LucideFilter,
-  LucideInbox, LucideLandPlot, LucidePlus, LucideSearch, LucideUser, LucideX, provideLucideIcons
+  LucideAlertCircle, LucideAlertTriangle, LucideArrowRight, LucideBadgeCheck, LucideBanknote,
+  LucideCalendarDays, LucideCalendarX, LucideCheck, LucideChevronLeft, LucideChevronRight,
+  LucideChevronsLeft, LucideChevronsRight,
+  LucideCircleCheck, LucideCircleCheckBig, LucideClock, LucideCreditCard, LucideDownload,
+  LucideExternalLink, LucideFilePlus2, LucideFileSpreadsheet, LucideFileText, LucideFileWarning,
+  LucideFilter, LucideGlobe, LucideHistory, LucideInbox, LucideLandPlot, LucideListFilter,
+  LucidePlus, LucidePrinter, LucideQrCode, LucideRefreshCw, LucideSearch, LucideShieldAlert,
+  LucideStore, LucideUser, LucideUserPlus, LucideUserRound, LucideWalletCards, LucideX,
+  provideLucideIcons
 } from '@lucide/angular';
 import { OwnerBooking } from '@application/dto/owner-booking/owner-booking.dto';
 import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
@@ -56,10 +63,16 @@ describe('OwnerBookingsComponent', () => {
     await TestBed.configureTestingModule({
       imports: [OwnerBookingsComponent],
       providers: [
+        provideRouter([]),
         provideLucideIcons(
-          LucideAlertCircle, LucideArrowRight, LucideChevronLeft, LucideChevronRight,
-          LucideCircleCheck, LucideClock, LucideCreditCard, LucideFileText, LucideFilter,
-          LucideInbox, LucideLandPlot, LucidePlus, LucideSearch, LucideUser, LucideX
+          LucideAlertCircle, LucideAlertTriangle, LucideArrowRight, LucideBadgeCheck, LucideBanknote,
+          LucideCalendarDays, LucideCalendarX, LucideCheck, LucideChevronLeft, LucideChevronRight,
+          LucideChevronsLeft, LucideChevronsRight,
+          LucideCircleCheck, LucideCircleCheckBig, LucideClock, LucideCreditCard, LucideDownload,
+          LucideExternalLink, LucideFilePlus2, LucideFileSpreadsheet, LucideFileText, LucideFileWarning,
+          LucideFilter, LucideGlobe, LucideHistory, LucideInbox, LucideLandPlot, LucideListFilter,
+          LucidePlus, LucidePrinter, LucideQrCode, LucideRefreshCw, LucideSearch, LucideShieldAlert,
+          LucideStore, LucideUser, LucideUserPlus, LucideUserRound, LucideWalletCards, LucideX
         ),
         { provide: GetMyOwnerVenuesUseCase, useValue: getVenues },
         { provide: ManageOwnerVenueCourtsUseCase, useValue: manageCourts },
@@ -75,11 +88,67 @@ describe('OwnerBookingsComponent', () => {
     fixture.detectChanges();
 
     expect(manageBookings.list).toHaveBeenCalledWith(expect.objectContaining({
-      venueId: 'venue-1', page: 0, size: 12
+      venueId: undefined, venueCourtId: undefined, page: 0, size: 12
     }));
     expect(fixture.nativeElement.textContent).toContain('GS123456');
-    expect(fixture.nativeElement.textContent).toContain('SUCCEEDED');
-    expect(fixture.nativeElement.querySelectorAll('.booking-card')).toHaveLength(1);
+    expect(fixture.nativeElement.textContent).toContain('Chưa thanh toán đủ');
+    expect(fixture.nativeElement.querySelectorAll('.booking-row')).toHaveLength(1);
+  });
+
+  it('loads every venue by default and filters courts and bookings after selecting a venue', () => {
+    const secondVenue: OwnerVenueOverview = {
+      ...venue,
+      venueId: 'venue-2',
+      name: 'Wolf'
+    };
+    getVenues.execute.mockReturnValue(of([venue, secondVenue]));
+    manageCourts.list.mockImplementation((venueId: string) => of([{
+      venueCourtId: venueId === secondVenue.venueId ? 'court-2' : 'court-1',
+      venueId,
+      name: venueId === secondVenue.venueId ? 'Sân Wolf' : 'Sân GOAT',
+      sportType: 'BADMINTON',
+      capacity: 4,
+      surfaceType: 'PVC',
+      active: true
+    }]));
+
+    const fixture = TestBed.createComponent(OwnerBookingsComponent);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+
+    expect(manageCourts.list).toHaveBeenCalledWith('venue-1');
+    expect(manageCourts.list).toHaveBeenCalledWith('venue-2');
+    expect(component.courts().map(court => court.venueCourtId)).toEqual(['court-1', 'court-2']);
+    expect(manageBookings.list).toHaveBeenLastCalledWith(expect.objectContaining({
+      venueId: undefined,
+      venueCourtId: undefined
+    }));
+
+    manageBookings.list.mockClear();
+    component.selectVenue('venue-2');
+
+    expect(component.courts().map(court => court.venueCourtId)).toEqual(['court-2']);
+    expect(manageBookings.list).toHaveBeenLastCalledWith(expect.objectContaining({
+      venueId: 'venue-2',
+      venueCourtId: undefined
+    }));
+
+    manageBookings.list.mockClear();
+    component.filterForm.controls.venueCourtId.setValue('court-2');
+    component.applyFilters();
+
+    expect(manageBookings.list).toHaveBeenCalledWith(expect.objectContaining({
+      venueId: 'venue-2',
+      venueCourtId: 'court-2'
+    }));
+
+    component.selectVenue('');
+
+    expect(component.courts().map(court => court.venueCourtId)).toEqual(['court-1', 'court-2']);
+    expect(manageBookings.list).toHaveBeenLastCalledWith(expect.objectContaining({
+      venueId: undefined,
+      venueCourtId: undefined
+    }));
   });
 
   it('keeps loading visible until backend responds', () => {
@@ -90,7 +159,7 @@ describe('OwnerBookingsComponent', () => {
 
     expect(fixture.componentInstance.loading()).toBe(true);
     expect(fixture.nativeElement.querySelector('app-page-loading')).toBeTruthy();
-    expect(fixture.nativeElement.textContent).toContain('Đang tải danh sách booking');
+    expect(fixture.nativeElement.textContent).toContain('Đang tải danh sách đặt sân');
   });
 
   it('shows real list error and supports retry', () => {

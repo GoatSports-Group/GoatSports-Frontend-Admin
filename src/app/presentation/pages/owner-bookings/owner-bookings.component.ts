@@ -3,7 +3,7 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { Subject, catchError, filter, finalize, map, of, switchMap, take, takeUntil, timer } from 'rxjs';
+import { Observable, Subject, catchError, filter, finalize, forkJoin, map, of, switchMap, take, takeUntil, timer } from 'rxjs';
 import { toDataURL } from 'qrcode';
 import {
   OwnerBooking,
@@ -80,6 +80,7 @@ export class OwnerBookingsComponent {
   readonly page = signal(0);
   readonly pages = signal(0);
   readonly contextLoading = signal(true);
+  readonly filterCourtsLoading = signal(false);
   readonly loading = signal(false);
   readonly loadError = signal<string | null>(null);
   readonly selectedBooking = signal<OwnerBooking | null>(null);
@@ -198,9 +199,9 @@ export class OwnerBookingsComponent {
         this.venues.set(venues);
         const venueId = venues.some(venue => venue.venueId === this.requestedVenueId)
           ? this.requestedVenueId
-          : venues[0]?.venueId ?? '';
+          : '';
         this.filterForm.controls.venueId.setValue(venueId);
-        return venueId ? this.manageCourts.list(venueId) : of([] as OwnerVenueCourt[]);
+        return this.loadFilterCourts(venues, venueId);
       }),
       takeUntilDestroyed(this.destroyRef),
       finalize(() => this.contextLoading.set(false))
@@ -222,11 +223,20 @@ export class OwnerBookingsComponent {
   }
 
   selectVenue(venueId: string): void {
-    if (this.loading() || this.contextLoading()) return;
+    if (this.loading() || this.filterCourtsLoading()) return;
     this.filterForm.patchValue({ venueId, venueCourtId: '' });
-    this.contextLoading.set(true);
-    this.manageCourts.list(venueId).pipe(
-      take(1), takeUntilDestroyed(this.destroyRef), finalize(() => this.contextLoading.set(false))
+    this.loadError.set(null);
+    this.filterCourtsLoading.set(true);
+    this.filterForm.controls.venueId.disable({ emitEvent: false });
+    this.filterForm.controls.venueCourtId.disable({ emitEvent: false });
+    this.loadFilterCourts(this.venues(), venueId).pipe(
+      take(1),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => {
+        this.filterCourtsLoading.set(false);
+        this.filterForm.controls.venueId.enable({ emitEvent: false });
+        this.filterForm.controls.venueCourtId.enable({ emitEvent: false });
+      })
     ).subscribe({
       next: courts => { this.courts.set(courts); this.loadBookings(0); },
       error: error => this.loadError.set(this.errorMessage(error, 'Không thể tải sân thi đấu.'))
@@ -466,11 +476,10 @@ export class OwnerBookingsComponent {
   }
 
   clearFilters(): void {
-    const venueId = this.filterForm.controls.venueId.value;
     this.filterForm.reset({
-      venueId, venueCourtId: '', status: '', paymentStatus: '', query: '', fromDate: '', toDate: ''
+      venueId: '', venueCourtId: '', status: '', paymentStatus: '', query: '', fromDate: '', toDate: ''
     });
-    this.loadBookings(0);
+    this.selectVenue('');
   }
 
   openReportPreview(): void {
@@ -639,12 +648,6 @@ export class OwnerBookingsComponent {
   }
 
   loadBookings(page = this.page()): void {
-    const venueId = this.filterForm.controls.venueId.value;
-    if (!venueId) {
-      this.bookings.set([]); this.total.set(0); this.pages.set(0);
-      this.clearDetailSelection();
-      return;
-    }
     this.loading.set(true);
     this.loadError.set(null);
     this.manageBookings.list(this.filter(page)).pipe(
@@ -956,6 +959,16 @@ export class OwnerBookingsComponent {
       fromDate: value.fromDate || undefined, toDate: value.toDate || undefined,
       page, size: this.pageSize
     };
+  }
+
+  private loadFilterCourts(venues: OwnerVenueOverview[], venueId: string): Observable<OwnerVenueCourt[]> {
+    if (venueId) return this.manageCourts.list(venueId);
+    if (!venues.length) return of([] as OwnerVenueCourt[]);
+    return forkJoin(venues.map(venue => this.manageCourts.list(venue.venueId).pipe(
+      catchError(() => of([] as OwnerVenueCourt[]))
+    ))).pipe(
+      map(courtsByVenue => courtsByVenue.flat())
+    );
   }
 
   private errorMessage(error: any, fallback: string): string {

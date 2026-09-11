@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of, Subject, throwError } from 'rxjs';
+import { NEVER, of, Subject, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   LucideActivity,
@@ -51,13 +51,13 @@ import { GetOwnerCustomerMetricsUseCase } from '@application/usecase/owner-reven
 import { GetOwnerRevenueUseCase } from '@application/usecase/owner-revenue/get-owner-revenue.usecase';
 import { GetStorageFileUrlUseCase } from '@application/usecase/storage/get-storage-file-url.usecase';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
-import { GetOwnerVenueOverviewUseCase } from '@application/usecase/venue-owner-dashboard/get-owner-venue-overview.usecase';
+import { ManageOwnerVenueCourtsUseCase } from '@application/usecase/venue-owner-dashboard/manage-owner-venue-courts.usecase';
 import { VenueOwnerDashboardComponent } from './venue-owner-dashboard.component';
 
 describe('VenueOwnerDashboardComponent', () => {
   const getApplications = { execute: vi.fn() };
   const getVenues = { execute: vi.fn() };
-  const getVenueOverview = { execute: vi.fn() };
+  const manageCourts = { list: vi.fn() };
   const manageBookings = { list: vi.fn(), detail: vi.fn() };
   const getCustomerMetrics = { execute: vi.fn() };
   const getRevenue = { execute: vi.fn() };
@@ -81,7 +81,7 @@ describe('VenueOwnerDashboardComponent', () => {
   beforeEach(async () => {
     getApplications.execute.mockReset();
     getVenues.execute.mockReset().mockReturnValue(of([primaryVenue]));
-    getVenueOverview.execute.mockReset().mockReturnValue(of(primaryVenue));
+    manageCourts.list.mockReset().mockReturnValue(of(primaryVenue.courts));
     manageBookings.list.mockReset().mockReturnValue(of({
       items: [], page: 0, pageSize: 12, pages: 0, total: 0
     }));
@@ -135,7 +135,7 @@ describe('VenueOwnerDashboardComponent', () => {
         ),
         { provide: GetMyOwnerApplicationsUseCase, useValue: getApplications },
         { provide: GetMyOwnerVenuesUseCase, useValue: getVenues },
-        { provide: GetOwnerVenueOverviewUseCase, useValue: getVenueOverview },
+        { provide: ManageOwnerVenueCourtsUseCase, useValue: manageCourts },
         { provide: ManageOwnerBookingsUseCase, useValue: manageBookings },
         { provide: GetOwnerCustomerMetricsUseCase, useValue: getCustomerMetrics },
         { provide: GetOwnerRevenueUseCase, useValue: getRevenue },
@@ -219,32 +219,31 @@ describe('VenueOwnerDashboardComponent', () => {
     getApplications.execute.mockReturnValue(of(pageOf([
       createApplication('application-approved', 'GOAT Arena', 'venue-primary', '2026-08-28T08:00:00Z')
     ])));
-    getVenueOverview.execute.mockReturnValue(of(createVenue({
-      ...primaryVenue,
-      courts: [
+    manageCourts.list
+      .mockReturnValueOnce(of(primaryVenue.courts))
+      .mockReturnValue(of([
         createCourt('court-1', 'venue-primary', true, 'AVAILABLE'),
         createCourt('court-2', 'venue-primary', true, 'OCCUPIED')
-      ]
-    })));
+      ]));
 
     try {
       const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
       fixture.detectChanges();
-      expect(getVenueOverview.execute).not.toHaveBeenCalled();
+      expect(manageCourts.list).toHaveBeenCalledTimes(1);
       expect((fixture.nativeElement.querySelector('.live-courts-list article') as HTMLElement).dataset['status'])
         .toBe('OCCUPIED');
 
       await vi.advanceTimersByTimeAsync(30_000);
       fixture.detectChanges();
 
-      expect(getVenueOverview.execute).toHaveBeenCalledTimes(1);
-      expect(getVenueOverview.execute).toHaveBeenCalledWith('venue-primary');
+      expect(manageCourts.list).toHaveBeenCalledTimes(2);
+      expect(manageCourts.list).toHaveBeenLastCalledWith('venue-primary');
       expect((fixture.nativeElement.querySelector('.live-courts-list article') as HTMLElement).dataset['status'])
         .toBe('AVAILABLE');
 
       fixture.destroy();
       await vi.advanceTimersByTimeAsync(30_000);
-      expect(getVenueOverview.execute).toHaveBeenCalledTimes(1);
+      expect(manageCourts.list).toHaveBeenCalledTimes(2);
     } finally {
       vi.useRealTimers();
     }
@@ -254,11 +253,13 @@ describe('VenueOwnerDashboardComponent', () => {
     getApplications.execute.mockReturnValue(of(pageOf([
       createApplication('application-approved', 'GOAT Arena', 'venue-primary', '2026-08-28T08:00:00Z')
     ])));
+    const courts = Array.from({ length: 7 }, (_, index) =>
+      createCourt(`court-${index + 1}`, 'venue-primary', true, 'AVAILABLE'));
     getVenues.execute.mockReturnValue(of([createVenue({
       ...primaryVenue,
-      courts: Array.from({ length: 7 }, (_, index) =>
-        createCourt(`court-${index + 1}`, 'venue-primary', true, 'AVAILABLE'))
+      courts
     })]));
+    manageCourts.list.mockReturnValue(of(courts));
 
     const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
     fixture.detectChanges();
@@ -286,6 +287,9 @@ describe('VenueOwnerDashboardComponent', () => {
       createApplication('application-approved', 'GOAT Arena', 'venue-primary', '2026-08-28T08:00:00Z')
     ])));
     getVenues.execute.mockReturnValue(of([primaryVenue, secondaryVenue]));
+    manageCourts.list.mockImplementation(venueId => of(
+      venueId === secondaryVenue.venueId ? secondaryVenue.courts : primaryVenue.courts
+    ));
 
     const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
     fixture.detectChanges();
@@ -304,6 +308,30 @@ describe('VenueOwnerDashboardComponent', () => {
     expect(manageBookings.list).toHaveBeenCalledWith(expect.objectContaining({ venueId: 'venue-secondary' }));
     expect(fixture.nativeElement.querySelectorAll('.live-courts-list article')).toHaveLength(1);
     expect(fixture.nativeElement.querySelector('.live-courts-list article')?.dataset['status']).toBe('INACTIVE');
+  });
+
+  it('allows switching venues while the current venue statistics are loading', () => {
+    getApplications.execute.mockReturnValue(of(pageOf([
+      createApplication('application-approved', 'GOAT Arena', 'venue-primary', '2026-08-28T08:00:00Z')
+    ])));
+    getVenues.execute.mockReturnValue(of([primaryVenue, secondaryVenue]));
+    getRevenue.execute.mockReturnValue(NEVER);
+    getCustomerMetrics.execute.mockReturnValue(NEVER);
+
+    const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
+    fixture.detectChanges();
+
+    const venueSelect = fixture.nativeElement.querySelector('.venue-selector select') as HTMLSelectElement;
+    expect(fixture.componentInstance.businessLoading()).toBe(true);
+    expect(venueSelect.disabled).toBe(false);
+
+    venueSelect.value = 'venue-secondary';
+    venueSelect.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.selectedVenueId()).toBe('venue-secondary');
+    expect(getRevenue.execute).toHaveBeenCalledWith(expect.objectContaining({ venueId: 'venue-secondary' }));
+    expect(getCustomerMetrics.execute).toHaveBeenCalledWith(expect.objectContaining({ venueId: 'venue-secondary' }));
   });
 
   it('hiển thị doanh thu ngày, KPI tháng và trạng thái sân thật', () => {
@@ -451,6 +479,7 @@ describe('VenueOwnerDashboardComponent', () => {
       createApplication('application-approved', 'GOAT Riverside', 'venue-secondary', '2026-08-28T08:00:00Z')
     ])));
     getVenues.execute.mockReturnValue(of([secondaryVenue]));
+    manageCourts.list.mockReturnValue(of(secondaryVenue.courts));
 
     const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
     fixture.detectChanges();
@@ -613,8 +642,6 @@ describe('VenueOwnerDashboardComponent', () => {
     expect(dialog.querySelectorAll('.booking-detail-facts > div')).toHaveLength(4);
     expect(dialog.querySelectorAll('.booking-finance > div')).toHaveLength(3);
     expect(dialog.querySelectorAll('.booking-payments article')).toHaveLength(1);
-    expect((dialog.querySelector('footer a') as HTMLAnchorElement).getAttribute('href'))
-      .toContain('/admin/owner-bookings?bookingId=booking-detail-1');
   });
 });
 

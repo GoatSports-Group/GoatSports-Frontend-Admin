@@ -230,13 +230,12 @@ export class VenueOwnerApplicationFormComponent {
     const normalizedForm = Object.fromEntries(Object.entries(this.form).map(([key, value]) => [
       key, typeof value === 'string' ? value.trim() : value
     ]));
-    const workflowForm = {
+    const submissionForm = {
       ...normalizedForm,
-      // Compatibility with the current workflow contract. Venue Service stores only `city`.
       province: normalizedForm['city']
     };
 
-    defer(() => this.submitApplication.execute(workflowForm, {
+    defer(() => this.submitApplication.execute(submissionForm, {
       idCardFront: this.files.idCardFront!,
       idCardBack: this.files.idCardBack!,
       businessLicense: this.files.businessLicense!,

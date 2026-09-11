@@ -1,4 +1,12 @@
-import { Component, OnInit, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  OnInit,
+  inject
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { GetAllOwnerApplicationsUseCase } from '@application/usecase/owner-application/get-all-owner-applications.usecase';
 import { GetOwnerApplicationDetailUseCase } from '@application/usecase/owner-application/get-owner-application-detail.usecase';
 import { ApproveOwnerApplicationUseCase } from '@application/usecase/owner-application/approve-owner-application.usecase';
@@ -14,6 +22,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { RejectReasonDialogComponent } from '@presentation/pages/owner-applications/owner-application-dialog/reject-reason-dialog.component';
 import { DocumentPreviewDialogComponent } from '@presentation/pages/owner-applications/document-preview-dialog/document-preview-dialog.component';
+import { Subject, Subscription, debounceTime, finalize } from 'rxjs';
 import {
   buildOwnerApplicationFilter,
   getBusinessTypeLabel,
@@ -29,7 +38,8 @@ import {
   selector: 'app-admin-owner-applications',
   templateUrl: './owner-applications.component.html',
   styleUrls: ['./owner-applications.component.scss'],
-  standalone: false
+  standalone: false,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OwnerApplicationsComponent implements OnInit {
   private getAllUseCase = inject(GetAllOwnerApplicationsUseCase);
@@ -39,6 +49,11 @@ export class OwnerApplicationsComponent implements OnInit {
   private markViewedUseCase = inject(MarkOwnerApplicationViewedUseCase);
   private dialog = inject(MatDialog);
   private snackBar = inject(NotifyService);
+  private changeDetectorRef = inject(ChangeDetectorRef);
+  private destroyRef = inject(DestroyRef);
+  private searchChanges = new Subject<void>();
+  private listSubscription?: Subscription;
+  private detailSubscription?: Subscription;
 
   readonly OwnerApplicationStatus = OwnerApplicationStatus;
   readonly OwnerApplicationStatusOp = OWNER_APPLICATION_STATUS_OPTIONS;
@@ -64,28 +79,37 @@ export class OwnerApplicationsComponent implements OnInit {
   pageIndex = 0;
 
   ngOnInit() {
+    this.searchChanges.pipe(
+      debounceTime(300),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.pageIndex = 0;
+      this.loadApplications();
+    });
     this.loadApplications();
   }
 
   loadApplications() {
+    this.listSubscription?.unsubscribe();
     this.loadingList = true;
     const filterQuery = buildOwnerApplicationFilter(this.filterStatus, this.searchQuery);
 
-    this.getAllUseCase.execute({
+    this.listSubscription = this.getAllUseCase.execute({
       page: this.pageIndex,
       size: this.pageSize,
       filter: filterQuery
-    }).subscribe({
-      next: (response) => {
-        this.filteredApplications = sortOwnerApplications(response.result);
-
-        if (response.result.length < this.pageSize) {
-          this.totalItems = this.pageIndex * this.pageSize + response.result.length;
-        } else {
-          this.totalItems = (this.pageIndex + 2) * this.pageSize;
-        }
-
+    }).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => {
         this.loadingList = false;
+        this.changeDetectorRef.markForCheck();
+      })
+    ).subscribe({
+      next: (response) => {
+        const applications = response?.result ?? [];
+        this.filteredApplications = sortOwnerApplications(applications);
+
+        this.totalItems = response?.meta?.total ?? applications.length;
 
         const firstApp = this.filteredApplications.length > 0 ? this.filteredApplications[0] : null;
         if (firstApp) {
@@ -99,7 +123,6 @@ export class OwnerApplicationsComponent implements OnInit {
         this.snackBar.open('Không thể tải danh sách đơn đăng ký làm chủ sân!', 'Đóng', {
           duration: 4000
         });
-        this.loadingList = false;
       }
     });
   }
@@ -111,26 +134,40 @@ export class OwnerApplicationsComponent implements OnInit {
   }
 
   onSearchChange() {
-    this.pageIndex = 0;
-    this.loadApplications();
+    this.searchChanges.next();
   }
 
   selectApplication(app: OwnerApplication) {
-    this.loadingDetail = true;
+    this.detailSubscription?.unsubscribe();
     this.selectedApplication = app;
+    this.loadingDetail = false;
+    this.changeDetectorRef.markForCheck();
+
     if (app.status === OwnerApplicationStatus.PENDING) {
-      this.markViewedUseCase.execute(app.ownerApplicationId).subscribe({
+      this.markViewedUseCase.execute(app.ownerApplicationId).pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe({
         error: error => console.warn('Failed to mark owner application as viewed:', error)
       });
     }
-    this.getDetailUseCase.execute(app.ownerApplicationId).subscribe({
+
+    const selectedId = app.ownerApplicationId;
+    this.detailSubscription = this.getDetailUseCase.execute(selectedId).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => {
+        if (this.selectedApplication?.ownerApplicationId === selectedId) {
+          this.loadingDetail = false;
+          this.changeDetectorRef.markForCheck();
+        }
+      })
+    ).subscribe({
       next: (fullDetails) => {
-        this.selectedApplication = fullDetails;
-        this.loadingDetail = false;
+        if (this.selectedApplication?.ownerApplicationId === selectedId) {
+          this.selectedApplication = fullDetails;
+        }
       },
       error: (err) => {
         console.error('Failed to load application details', err);
-        this.loadingDetail = false;
       }
     });
   }
@@ -139,7 +176,13 @@ export class OwnerApplicationsComponent implements OnInit {
     if (this.processingAction) return;
 
     this.processingAction = true;
-    this.approveUseCase.execute(app.ownerApplicationId).subscribe({
+    this.approveUseCase.execute(app.ownerApplicationId).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => {
+        this.processingAction = false;
+        this.changeDetectorRef.markForCheck();
+      })
+    ).subscribe({
       next: () => {
         this.snackBar.open(`Đã phê duyệt đơn đăng ký của ${app.fullName} thành công!`, 'Đóng', {
           duration: 5000
@@ -154,7 +197,6 @@ export class OwnerApplicationsComponent implements OnInit {
           this.filteredApplications.map(a => a.ownerApplicationId === app.ownerApplicationId ? updatedApp : a)
         );
         this.selectedApplication = updatedApp;
-        this.processingAction = false;
       },
       error: (err) => {
         console.error(err);
@@ -162,7 +204,6 @@ export class OwnerApplicationsComponent implements OnInit {
         this.snackBar.open(errMsg, 'Đóng', {
           duration: 4000
         });
-        this.processingAction = false;
       }
     });
   }
@@ -179,7 +220,13 @@ export class OwnerApplicationsComponent implements OnInit {
     dialogRef.afterClosed().subscribe((reason: string | null) => {
       if (reason) {
         this.processingAction = true;
-        this.rejectUseCase.execute(app.ownerApplicationId, reason).subscribe({
+        this.rejectUseCase.execute(app.ownerApplicationId, reason).pipe(
+          takeUntilDestroyed(this.destroyRef),
+          finalize(() => {
+            this.processingAction = false;
+            this.changeDetectorRef.markForCheck();
+          })
+        ).subscribe({
           next: () => {
             this.snackBar.open(`Đã từ chối đơn đăng ký của ${app.fullName}.`, 'Đóng', {
               duration: 5000
@@ -195,7 +242,6 @@ export class OwnerApplicationsComponent implements OnInit {
               this.filteredApplications.map(a => a.ownerApplicationId === app.ownerApplicationId ? updatedApp : a)
             );
             this.selectedApplication = updatedApp;
-            this.processingAction = false;
           },
           error: (err) => {
             console.error(err);
@@ -203,7 +249,6 @@ export class OwnerApplicationsComponent implements OnInit {
             this.snackBar.open(errMsg, 'Đóng', {
               duration: 4000
             });
-            this.processingAction = false;
           }
         });
       }

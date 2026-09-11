@@ -43,7 +43,7 @@ export function getDocumentTypeLabel(type: DocumentType): string {
 }
 
 export function isIdCardDocument(document: OwnerApplicationDocument): boolean {
-  return ['ID_CARD', 'ID_CARD_FRONT', 'ID_CARD_BACK'].includes(document.documentType as string);
+  return document.documentType === DocumentType.IDENTITY_CARD;
 }
 
 export function getIdCardDocuments(documents: OwnerApplicationDocument[] = []): OwnerApplicationDocument[] {
