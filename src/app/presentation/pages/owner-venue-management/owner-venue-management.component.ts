@@ -32,6 +32,11 @@ interface VenueThumbnailState {
   displayUrl: string | null;
 }
 
+interface VenueCoordinates {
+  latitude: number;
+  longitude: number;
+}
+
 @Component({
   selector: 'app-owner-venue-management',
   standalone: true,
@@ -68,6 +73,7 @@ export class OwnerVenueManagementComponent {
   readonly venuePage = signal(1);
   readonly addingAmenity = signal(false);
   readonly selectedAddressValue = signal('');
+  readonly selectedAddressCoordinates = signal<VenueCoordinates | null>(null);
   readonly addressSelectedFromVietMap = signal(false);
   readonly addressSuggestions = signal<AddressSuggestion[]>([]);
   readonly addressSearchLoading = signal(false);
@@ -161,6 +167,7 @@ export class OwnerVenueManagementComponent {
     const value = (event.target as HTMLInputElement).value;
     if (value !== this.selectedAddressValue()) {
       this.selectedAddressValue.set('');
+      this.selectedAddressCoordinates.set(null);
       this.addressSelectedFromVietMap.set(false);
     }
     this.activeSuggestionIndex.set(-1);
@@ -221,6 +228,11 @@ export class OwnerVenueManagementComponent {
           city: resolved.city
         });
         this.selectedAddressValue.set(address);
+        this.selectedAddressCoordinates.set(
+          resolved.latitude != null && resolved.longitude != null
+            ? { latitude: resolved.latitude, longitude: resolved.longitude }
+            : null
+        );
         this.addressSelectedFromVietMap.set(true);
         this.addressSuggestions.set([]);
         this.addressSearchError.set('');
@@ -548,6 +560,11 @@ export class OwnerVenueManagementComponent {
       amenities: [...(venue.amenities ?? [])]
     });
     this.selectedAddressValue.set(venue.address ?? '');
+    this.selectedAddressCoordinates.set(
+      venue.latitude != null && venue.longitude != null
+        ? { latitude: venue.latitude, longitude: venue.longitude }
+        : null
+    );
     this.addressSelectedFromVietMap.set(false);
     this.addressSuggestions.set([]);
     this.addressSuggestionsOpen.set(false);
@@ -559,8 +576,10 @@ export class OwnerVenueManagementComponent {
 
   private toRequest(): OwnerVenueUpdate {
     const value = this.form.getRawValue();
+    const coordinates = this.selectedAddressCoordinates();
     return {
       ...value,
+      ...(coordinates ?? {}),
       description: value.description.trim() || undefined,
       ward: value.ward.trim() || undefined,
       district: value.district.trim() || undefined,
