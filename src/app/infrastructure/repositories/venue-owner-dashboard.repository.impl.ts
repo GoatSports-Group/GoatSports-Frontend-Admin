@@ -5,7 +5,9 @@ import {
   OwnerVenueCourt,
   OwnerVenueCourtUpsert,
   OwnerVenueOverview,
-  OwnerVenueUpdate
+  OwnerVenueUpdate,
+  CancellationPolicy,
+  CancellationPolicyUpdate
 } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import {
   VenueFacilityLayout,
@@ -66,5 +68,12 @@ export class VenueOwnerDashboardRepositoryImpl implements VenueOwnerDashboardRep
     request: VenueFacilityLayoutUpdate
   ): Observable<VenueFacilityLayout> {
     return this.api.updateVenueFacilityLayout(venueId, request).pipe(map(response => response.data));
+  }
+
+  updateCancellationPolicy(
+    venueId: string,
+    request: CancellationPolicyUpdate
+  ): Observable<CancellationPolicy> {
+    return this.api.updateCancellationPolicy(venueId, request).pipe(map(response => response.data));
   }
 }

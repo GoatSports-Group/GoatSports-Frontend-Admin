@@ -20,6 +20,7 @@ import { SearchAddressSuggestionsUseCase } from '@application/usecase/owner-appl
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
 import { GetOwnerVenueOverviewUseCase } from '@application/usecase/venue-owner-dashboard/get-owner-venue-overview.usecase';
 import { UpdateOwnerVenueUseCase } from '@application/usecase/venue-owner-dashboard/update-owner-venue.usecase';
+import { UpdateCancellationPolicyUseCase } from '@application/usecase/venue-owner-dashboard/update-cancellation-policy.usecase';
 import { GetStorageFileUrlUseCase } from '@application/usecase/storage/get-storage-file-url.usecase';
 import { UploadVenueImageUseCase } from '@application/usecase/storage/upload-venue-image.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
@@ -54,6 +55,7 @@ export class OwnerVenueManagementComponent {
   private readonly getMyVenues = inject(GetMyOwnerVenuesUseCase);
   private readonly getVenueOverview = inject(GetOwnerVenueOverviewUseCase);
   private readonly updateVenue = inject(UpdateOwnerVenueUseCase);
+  private readonly updateCancellationPolicy = inject(UpdateCancellationPolicyUseCase);
   private readonly getFileUrl = inject(GetStorageFileUrlUseCase);
   private readonly uploadVenueImage = inject(UploadVenueImageUseCase);
   private readonly searchAddressSuggestions = inject(SearchAddressSuggestionsUseCase);
@@ -63,6 +65,7 @@ export class OwnerVenueManagementComponent {
 
   readonly loading = signal(true);
   readonly saving = signal(false);
+  readonly savingPolicy = signal(false);
   readonly loadError = signal<string | null>(null);
   readonly detailLoading = signal(false);
   readonly detailError = signal<string | null>(null);
@@ -89,7 +92,7 @@ export class OwnerVenueManagementComponent {
   readonly venuePageSize = 5;
   readonly uploadingImages = computed(() => this.images().some(image => image.uploading));
   readonly activeVenueCount = computed(() => this.venues().filter(venue => venue.active).length);
-  readonly selectionLocked = computed(() => this.saving() || this.uploadingImages()
+  readonly selectionLocked = computed(() => this.saving() || this.savingPolicy() || this.uploadingImages()
     || this.detailLoading() || this.addressDetailLoading());
   readonly filteredVenues = computed(() => {
     const query = this.venueSearch().trim().toLocaleLowerCase('vi');
@@ -131,6 +134,13 @@ export class OwnerVenueManagementComponent {
     district: ['', Validators.maxLength(255)],
     city: ['', [Validators.required, Validators.maxLength(255)]],
     amenities: [[] as string[]]
+  });
+
+  readonly policyForm = this.formBuilder.nonNullable.group({
+    fullRefundHoursBefore: [24, [Validators.required, Validators.min(0), Validators.max(8760)]],
+    partialRefundHoursBefore: [12, [Validators.required, Validators.min(0), Validators.max(8760)]],
+    partialRefundPercentage: [50, [Validators.required, Validators.min(0), Validators.max(100)]],
+    noRefundHoursBefore: [0, [Validators.required, Validators.min(0), Validators.max(8760)]]
   });
 
   constructor() {
@@ -282,7 +292,8 @@ export class OwnerVenueManagementComponent {
 
   selectVenue(venueId: string): void {
     if (venueId === this.selectedVenueId() || this.selectionLocked()) return;
-    if (this.form.dirty && !window.confirm('Bạn có thay đổi chưa lưu. Chuyển cơ sở sẽ hủy các thay đổi này.')) {
+    if ((this.form.dirty || this.policyForm.dirty)
+      && !window.confirm('Bạn có thay đổi chưa lưu. Chuyển cơ sở sẽ hủy các thay đổi này.')) {
       return;
     }
     this.loadVenueDetail(venueId);
@@ -364,6 +375,46 @@ export class OwnerVenueManagementComponent {
       this.patchForm(venue);
       this.form.markAsPristine();
     }
+  }
+
+  saveCancellationPolicy(): void {
+    const venue = this.venue();
+    if (!venue || this.savingPolicy()) return;
+    this.policyForm.markAllAsTouched();
+    if (this.policyForm.invalid) return;
+
+    const policy = this.policyForm.getRawValue();
+    if (policy.fullRefundHoursBefore < policy.partialRefundHoursBefore
+      || policy.partialRefundHoursBefore < policy.noRefundHoursBefore) {
+      this.notify.warning('Các mốc giờ phải giảm dần từ hoàn toàn bộ đến không hoàn tiền.');
+      return;
+    }
+
+    this.savingPolicy.set(true);
+    this.policyForm.disable({ emitEvent: false });
+    this.updateCancellationPolicy.execute(venue.venueId, policy).pipe(
+      take(1),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => {
+        this.savingPolicy.set(false);
+        this.policyForm.enable({ emitEvent: false });
+      })
+    ).subscribe({
+      next: cancellationPolicy => {
+        const updated = { ...venue, cancellationPolicy };
+        this.venue.set(updated);
+        this.venues.update(venues => venues.map(item => item.venueId === venue.venueId ? updated : item));
+        this.policyForm.patchValue(cancellationPolicy);
+        this.policyForm.markAsPristine();
+        this.notify.success('Quy tắc hoàn tiền đã được cập nhật.');
+      },
+      error: error => this.notify.error(this.errorMessage(error, 'Không thể cập nhật quy tắc hoàn tiền.'))
+    });
+  }
+
+  resetCancellationPolicy(): void {
+    const venue = this.venue();
+    if (venue && !this.savingPolicy()) this.patchPolicyForm(venue);
   }
 
   fieldInvalid(name: keyof typeof this.form.controls): boolean {
@@ -572,6 +623,18 @@ export class OwnerVenueManagementComponent {
     this.activeSuggestionIndex.set(-1);
     this.addingAmenity.set(false);
     this.syncImages(venue.imageUrls ?? [], preserveLocalImagePreviews);
+    this.patchPolicyForm(venue);
+  }
+
+  private patchPolicyForm(venue: OwnerVenueOverview): void {
+    const policy = venue.cancellationPolicy;
+    this.policyForm.patchValue({
+      fullRefundHoursBefore: policy?.fullRefundHoursBefore ?? 24,
+      partialRefundHoursBefore: policy?.partialRefundHoursBefore ?? 12,
+      partialRefundPercentage: policy?.partialRefundPercentage ?? 50,
+      noRefundHoursBefore: policy?.noRefundHoursBefore ?? 0
+    });
+    this.policyForm.markAsPristine();
   }
 
   private toRequest(): OwnerVenueUpdate {

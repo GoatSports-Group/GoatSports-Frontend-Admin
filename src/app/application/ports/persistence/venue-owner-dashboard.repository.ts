@@ -4,7 +4,9 @@ import {
   OwnerVenueCourt,
   OwnerVenueCourtUpsert,
   OwnerVenueOverview,
-  OwnerVenueUpdate
+  OwnerVenueUpdate,
+  CancellationPolicy,
+  CancellationPolicyUpdate
 } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import {
   VenueFacilityLayout,
@@ -27,6 +29,10 @@ export interface VenueOwnerDashboardRepository {
     venueId: string,
     request: VenueFacilityLayoutUpdate
   ): Observable<VenueFacilityLayout>;
+  updateCancellationPolicy(
+    venueId: string,
+    request: CancellationPolicyUpdate
+  ): Observable<CancellationPolicy>;
 }
 
 export const VENUE_OWNER_DASHBOARD_REPOSITORY_TOKEN =

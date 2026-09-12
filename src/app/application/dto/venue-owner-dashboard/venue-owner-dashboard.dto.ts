@@ -45,6 +45,15 @@ export interface OwnerVenueUpdate {
   amenities: string[];
 }
 
+export interface CancellationPolicy {
+  fullRefundHoursBefore: number;
+  partialRefundHoursBefore: number;
+  partialRefundPercentage: number;
+  noRefundHoursBefore: number;
+}
+
+export type CancellationPolicyUpdate = CancellationPolicy;
+
 export interface OwnerVenueCourtUpsert {
   name: string;
   sportType: SportType;
@@ -74,5 +83,6 @@ export interface OwnerVenueOverview {
   longitude?: number;
   imageUrls: string[];
   amenities: string[];
+  cancellationPolicy?: CancellationPolicy | null;
   courts: OwnerVenueCourt[];
 }

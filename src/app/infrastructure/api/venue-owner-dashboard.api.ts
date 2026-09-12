@@ -6,7 +6,9 @@ import {
   OwnerVenueCourt,
   OwnerVenueCourtUpsert,
   OwnerVenueOverview,
-  OwnerVenueUpdate
+  OwnerVenueUpdate,
+  CancellationPolicy,
+  CancellationPolicyUpdate
 } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import {
   VenueFacilityLayout,
@@ -98,6 +100,16 @@ export class VenueOwnerDashboardApi {
   ): Observable<BaseResponse<VenueFacilityLayout>> {
     return this.http.put<BaseResponse<VenueFacilityLayout>>(
       `${this.apiBase}/venue-service/api/v1/owner/venues/${venueId}/facility-layout`,
+      request
+    );
+  }
+
+  updateCancellationPolicy(
+    venueId: string,
+    request: CancellationPolicyUpdate
+  ): Observable<BaseResponse<CancellationPolicy>> {
+    return this.http.put<BaseResponse<CancellationPolicy>>(
+      `${this.apiBase}/venue-service/api/v1/owner/venues/${venueId}/cancellation-policy`,
       request
     );
   }

@@ -358,6 +358,142 @@
   white-space: nowrap;
 }
 
+.policy-form {
+  border-top: 1px solid #edf1ef;
+}
+
+.policy-section {
+  padding-block: 18px 22px;
+}
+
+.policy-section__intro,
+.policy-grid,
+.policy-preview,
+.policy-actions {
+  grid-column: 2;
+}
+
+.policy-section__intro h3 {
+  margin: 0;
+  color: var(--venue-text);
+  font-size: 15px;
+}
+
+.policy-section__intro p {
+  margin: 4px 0 12px;
+  color: var(--venue-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.policy-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.number-with-unit {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  overflow: hidden;
+  border: 1px solid #d5dfda;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.number-with-unit:focus-within {
+  border-color: var(--venue-primary);
+  box-shadow: 0 0 0 2px rgb(0 137 97 / 10%);
+}
+
+.number-with-unit input {
+  min-width: 0;
+  height: 38px;
+  padding: 0 10px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--venue-text);
+  font: inherit;
+}
+
+.number-with-unit span {
+  display: grid;
+  place-items: center;
+  padding: 0 10px;
+  border-left: 1px solid #dce5e0;
+  background: #f4f8f6;
+  color: #607169;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.policy-preview {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 12px;
+  padding: 11px 12px;
+  border-radius: 8px;
+  background: #edf8f4;
+  color: #176b52;
+}
+
+.policy-preview lucide-icon {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  margin-top: 1px;
+}
+
+.policy-preview p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.policy-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.policy-actions button {
+  min-height: 38px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--venue-primary);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.policy-actions button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 1100px) {
+  .policy-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .policy-section__intro,
+  .policy-grid,
+  .policy-preview,
+  .policy-actions {
+    grid-column: 1;
+  }
+
+  .policy-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .form-grid {
   display: grid;
   min-width: 0;

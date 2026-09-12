@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   LucideAlertCircle, LucideChevronLeft, LucideChevronRight, LucideCircleCheck, LucideClipboardCheck,
   LucideClock, LucideImage, LucideInbox, LucideMapPin, LucidePhone, LucidePlus, LucideReceipt,
-  LucideSave, LucideSearch, LucideSparkles, LucideStar, LucideStore, LucideUpload, LucideX,
+  LucideRefreshCw, LucideSave, LucideSearch, LucideSparkles, LucideStar, LucideStore, LucideUpload, LucideX,
   provideLucideIcons
 } from '@lucide/angular';
 import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
@@ -13,6 +13,7 @@ import { SearchAddressSuggestionsUseCase } from '@application/usecase/owner-appl
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
 import { GetOwnerVenueOverviewUseCase } from '@application/usecase/venue-owner-dashboard/get-owner-venue-overview.usecase';
 import { UpdateOwnerVenueUseCase } from '@application/usecase/venue-owner-dashboard/update-owner-venue.usecase';
+import { UpdateCancellationPolicyUseCase } from '@application/usecase/venue-owner-dashboard/update-cancellation-policy.usecase';
 import { GetStorageFileUrlUseCase } from '@application/usecase/storage/get-storage-file-url.usecase';
 import { UploadVenueImageUseCase } from '@application/usecase/storage/upload-venue-image.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
@@ -29,6 +30,7 @@ describe('OwnerVenueManagementComponent', () => {
   const getMyVenues = { execute: vi.fn() };
   const getVenueOverview = { execute: vi.fn() };
   const updateVenue = { execute: vi.fn() };
+  const updateCancellationPolicy = { execute: vi.fn() };
   const getFileUrl = { execute: vi.fn() };
   const uploadVenueImage = { execute: vi.fn() };
   const searchAddress = { execute: vi.fn(), resolve: vi.fn() };
@@ -38,6 +40,12 @@ describe('OwnerVenueManagementComponent', () => {
     getMyVenues.execute.mockReset().mockReturnValue(of([venue]));
     getVenueOverview.execute.mockReset().mockReturnValue(of(venue));
     updateVenue.execute.mockReset().mockReturnValue(of(venue));
+    updateCancellationPolicy.execute.mockReset().mockReturnValue(of({
+      fullRefundHoursBefore: 24,
+      partialRefundHoursBefore: 12,
+      partialRefundPercentage: 50,
+      noRefundHoursBefore: 0
+    }));
     getFileUrl.execute.mockReset().mockReturnValue(of('https://cdn.goat.test/venue.png'));
     uploadVenueImage.execute.mockReset().mockReturnValue(of('temp/venues/owner/new.png'));
     searchAddress.execute.mockReset().mockReturnValue(of([]));
@@ -50,11 +58,12 @@ describe('OwnerVenueManagementComponent', () => {
         provideLucideIcons(
           LucideAlertCircle, LucideChevronLeft, LucideChevronRight, LucideCircleCheck, LucideClipboardCheck,
           LucideClock, LucideImage, LucideInbox, LucideMapPin, LucidePhone, LucidePlus, LucideReceipt,
-          LucideSave, LucideSearch, LucideSparkles, LucideStar, LucideStore, LucideUpload, LucideX
+          LucideRefreshCw, LucideSave, LucideSearch, LucideSparkles, LucideStar, LucideStore, LucideUpload, LucideX
         ),
         { provide: GetMyOwnerVenuesUseCase, useValue: getMyVenues },
         { provide: GetOwnerVenueOverviewUseCase, useValue: getVenueOverview },
         { provide: UpdateOwnerVenueUseCase, useValue: updateVenue },
+        { provide: UpdateCancellationPolicyUseCase, useValue: updateCancellationPolicy },
         { provide: GetStorageFileUrlUseCase, useValue: getFileUrl },
         { provide: UploadVenueImageUseCase, useValue: uploadVenueImage },
         { provide: SearchAddressSuggestionsUseCase, useValue: searchAddress },
@@ -358,5 +367,52 @@ describe('OwnerVenueManagementComponent', () => {
     expect(confirm).toHaveBeenCalledOnce();
     expect(fixture.componentInstance.selectedVenueId()).toBe('venue-1');
     expect(getVenueOverview.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it('lưu quy tắc hoàn tiền của đúng cơ sở và cập nhật dữ liệu đang hiển thị', () => {
+    const fixture = TestBed.createComponent(OwnerVenueManagementComponent);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    component.policyForm.setValue({
+      fullRefundHoursBefore: 48,
+      partialRefundHoursBefore: 24,
+      partialRefundPercentage: 60,
+      noRefundHoursBefore: 6
+    });
+
+    component.saveCancellationPolicy();
+
+    expect(updateCancellationPolicy.execute).toHaveBeenCalledOnce();
+    expect(updateCancellationPolicy.execute).toHaveBeenCalledWith('venue-1', {
+      fullRefundHoursBefore: 48,
+      partialRefundHoursBefore: 24,
+      partialRefundPercentage: 60,
+      noRefundHoursBefore: 6
+    });
+    expect(component.venue()?.cancellationPolicy).toEqual({
+      fullRefundHoursBefore: 24,
+      partialRefundHoursBefore: 12,
+      partialRefundPercentage: 50,
+      noRefundHoursBefore: 0
+    });
+    expect(component.policyForm.pristine).toBe(true);
+    expect(notify.success).toHaveBeenCalledWith('Quy tắc hoàn tiền đã được cập nhật.');
+  });
+
+  it('không gửi quy tắc hoàn tiền khi các mốc giờ không giảm dần', () => {
+    const fixture = TestBed.createComponent(OwnerVenueManagementComponent);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    component.policyForm.setValue({
+      fullRefundHoursBefore: 12,
+      partialRefundHoursBefore: 24,
+      partialRefundPercentage: 50,
+      noRefundHoursBefore: 0
+    });
+
+    component.saveCancellationPolicy();
+
+    expect(updateCancellationPolicy.execute).not.toHaveBeenCalled();
+    expect(notify.warning).toHaveBeenCalledOnce();
   });
 });

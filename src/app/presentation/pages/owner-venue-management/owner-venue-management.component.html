@@ -304,6 +304,57 @@
         </div>
 
       </form>
+
+      <form class="policy-form" [formGroup]="policyForm" (ngSubmit)="saveCancellationPolicy()" novalidate>
+        <section class="form-section policy-section">
+          <header>
+            <lucide-icon name="refresh-cw" />
+            <span>Quy tắc hoàn tiền</span>
+          </header>
+          <div class="policy-section__intro">
+            <div>
+              <h3>{{ selectedVenue.cancellationPolicy ? 'Cập nhật quy tắc hoàn tiền' : 'Tạo quy tắc hoàn tiền' }}</h3>
+              <p>Các mốc giờ được tính ngược từ thời điểm bắt đầu chơi. Quy tắc này được hiển thị cho người chơi trước khi đặt sân.</p>
+            </div>
+          </div>
+          <div class="form-grid policy-grid">
+            <label class="field">
+              <span>Hoàn 100% khi hủy trước <b>*</b></span>
+              <div class="number-with-unit"><input type="number" min="0" max="8760" formControlName="fullRefundHoursBefore" /><span>giờ</span></div>
+            </label>
+            <label class="field">
+              <span>Hoàn một phần khi hủy trước <b>*</b></span>
+              <div class="number-with-unit"><input type="number" min="0" max="8760" formControlName="partialRefundHoursBefore" /><span>giờ</span></div>
+            </label>
+            <label class="field">
+              <span>Tỷ lệ hoàn một phần <b>*</b></span>
+              <div class="number-with-unit"><input type="number" min="0" max="100" step="1" formControlName="partialRefundPercentage" /><span>%</span></div>
+            </label>
+            <label class="field">
+              <span>Mốc không hoàn tiền <b>*</b></span>
+              <div class="number-with-unit"><input type="number" min="0" max="8760" formControlName="noRefundHoursBefore" /><span>giờ</span></div>
+            </label>
+          </div>
+          <div class="policy-preview">
+            <lucide-icon name="circle-alert" />
+            <p>
+              Hủy từ <strong>{{ policyForm.controls.fullRefundHoursBefore.value }} giờ</strong> trước giờ chơi được hoàn 100%;
+              từ <strong>{{ policyForm.controls.partialRefundHoursBefore.value }} giờ</strong> được hoàn
+              <strong>{{ policyForm.controls.partialRefundPercentage.value }}%</strong>; trong vòng
+              <strong>{{ policyForm.controls.noRefundHoursBefore.value }} giờ</strong> trước giờ chơi sẽ không hoàn tiền.
+            </p>
+          </div>
+          <footer class="policy-actions">
+            <button type="button" class="button button--secondary" (click)="resetCancellationPolicy()"
+              [disabled]="savingPolicy() || !policyForm.dirty">Khôi phục</button>
+            <button type="submit" class="button button--primary"
+              [disabled]="savingPolicy() || policyForm.invalid || !policyForm.dirty">
+              @if (savingPolicy()) { <span class="button-spinner"></span> Đang lưu... }
+              @else { <lucide-icon name="save" /> Lưu quy tắc hoàn tiền }
+            </button>
+          </footer>
+        </section>
+      </form>
       }
     </div>
     @if (venue()) {
