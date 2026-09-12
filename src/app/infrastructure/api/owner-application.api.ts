@@ -32,10 +32,36 @@ export interface PreparedOwnerApplicationUploadResponse {
 
 export interface SubmitOwnerApplicationRequest extends Record<string, unknown> {
   ownerApplicationId: string;
+  identityVerificationId: string;
   documents: Array<{
     slot: OwnerApplicationDocumentSlot;
     objectKey: string;
   }>;
+}
+
+export interface OwnerIdentityVerificationResponse {
+  verificationId: string;
+  status: 'PROCESSING' | 'VERIFIED' | 'RETRY_REQUIRED' | 'MANUAL_REVIEW' | 'REJECTED';
+  document: {
+    documentType: string;
+    identityNumber: string | null;
+    fullName: string | null;
+    dateOfBirth: string | null;
+    expiryDate: string | null;
+    gender: string | null;
+    nationality: string | null;
+    placeOfOrigin: string | null;
+    placeOfResidence: string | null;
+  } | null;
+  scores: {
+    frontQuality: number;
+    backQuality: number;
+    ocrConfidence: number;
+    faceSimilarity: number;
+    livenessScore: number;
+  } | null;
+  reasonCode: string | null;
+  message: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -67,6 +93,26 @@ export class OwnerApplicationApi {
     return this.http.post<BaseResponse<OwnerApplication>>(
       `${this.apiBase}/venue-service/api/v1/owner-applications`,
       request
+    );
+  }
+
+  verifyIdentity(
+    ownerApplicationId: string,
+    identityFrontKey: string,
+    identityBackKey: string,
+    livenessFrames: string[]
+  ): Observable<BaseResponse<OwnerIdentityVerificationResponse>> {
+    return this.http.post<BaseResponse<OwnerIdentityVerificationResponse>>(
+      `${this.apiBase}/venue-service/api/v1/owner-applications/${ownerApplicationId}/identity-verification`,
+      { identityFrontKey, identityBackKey, livenessFrames }
+    );
+  }
+
+  getIdentityVerification(
+    verificationId: string
+  ): Observable<BaseResponse<OwnerIdentityVerificationResponse>> {
+    return this.http.get<BaseResponse<OwnerIdentityVerificationResponse>>(
+      `${this.apiBase}/venue-service/api/v1/owner-applications/identity-verifications/${verificationId}`
     );
   }
 

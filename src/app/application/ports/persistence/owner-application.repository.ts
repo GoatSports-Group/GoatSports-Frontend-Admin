@@ -12,10 +12,26 @@ export interface OwnerApplicationRepository {
   approve(id: string): Observable<void>;
   reject(id: string, rejectReason: string): Observable<void>;
   getFileUrl(key: string): Observable<string>;
-  submit(
-    form: Record<string, unknown>,
-    files: { idCardFront: File; idCardBack: File; businessLicense: File; venueImage: File }
-  ): Observable<void>;
+  verifyIdentity(files: OwnerApplicationFiles, livenessFrames: string[]): Observable<PreparedOwnerIdentity>;
+  submit(form: Record<string, unknown>, preparedIdentity: PreparedOwnerIdentity): Observable<void>;
+}
+
+export interface OwnerApplicationFiles {
+  idCardFront: File;
+  idCardBack: File;
+  businessLicense: File;
+  venueImage: File;
+}
+
+export interface PreparedOwnerIdentity {
+  ownerApplicationId: string;
+  identityVerificationId: string;
+  fullName: string;
+  identityNumber: string;
+  documents: Array<{
+    slot: 'IDENTITY_FRONT' | 'IDENTITY_BACK' | 'BUSINESS_LICENSE' | 'VENUE_PHOTO';
+    objectKey: string;
+  }>;
 }
 
 export const OWNER_APPLICATION_REPOSITORY_TOKEN = new InjectionToken<OwnerApplicationRepository>('OwnerApplicationRepository');

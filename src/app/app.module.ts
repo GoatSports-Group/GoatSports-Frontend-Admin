@@ -162,7 +162,9 @@ import {
   LucideTrophy,
   LucideCalendarRange,
   LucideBadgeCheck,
-  LucideFileChartColumn
+  LucideFileChartColumn,
+  LucideImageUp,
+  LucideScanFace
 } from '@lucide/angular';
 
 @NgModule({
@@ -323,7 +325,9 @@ import {
       LucideTrophy,
       LucideCalendarRange,
       LucideBadgeCheck,
-      LucideFileChartColumn
+      LucideFileChartColumn,
+      LucideImageUp,
+      LucideScanFace
     )
   ],
   bootstrap: [AppComponent]

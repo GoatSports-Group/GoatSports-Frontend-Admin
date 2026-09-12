@@ -4,18 +4,19 @@
       <span>Bước {{ currentStep() }}/4</span>
       <strong>{{ steps[currentStep() - 1] }}</strong>
     </p>
+
     <ol class="stepper">
       @for (step of steps; track step; let index = $index; let last = $last) {
         <li
           [class.is-active]="currentStep() === index + 1"
-          [class.is-complete]="currentStep() > index + 1"
+          [class.is-complete]="furthestStep() > index + 1"
           [attr.aria-current]="currentStep() === index + 1 ? 'step' : null">
           <button
             type="button"
             (click)="goToStep(index + 1)"
-            [disabled]="index + 1 > currentStep() || submitting()"
+            [disabled]="index + 1 > furthestStep() || submitting() || verifying()"
             [attr.aria-label]="'Mở bước ' + (index + 1) + ': ' + step">
-            @if (currentStep() > index + 1) {
+            @if (furthestStep() > index + 1) {
               <app-lucide-icon name="check" [size]="14" aria-hidden="true" />
             } @else {
               {{ index + 1 }}
@@ -33,29 +34,100 @@
     <section class="preparation-list" aria-labelledby="preparation-title">
       <h3 id="preparation-title">Chuẩn bị trước khi bắt đầu</h3>
       <ul>
-        <li><app-lucide-icon name="circle-check" [size]="16" aria-hidden="true" /> Giấy tờ tùy thân còn hiệu lực</li>
+        <li><app-lucide-icon name="circle-check" [size]="16" aria-hidden="true" /> CCCD còn hiệu lực, rõ nét và đủ bốn góc</li>
+        <li><app-lucide-icon name="circle-check" [size]="16" aria-hidden="true" /> Thiết bị có camera để xác minh người thật</li>
+        <li><app-lucide-icon name="circle-check" [size]="16" aria-hidden="true" /> Giấy phép kinh doanh và ảnh thực tế của sân</li>
         <li><app-lucide-icon name="circle-check" [size]="16" aria-hidden="true" /> Thông tin cơ sở và địa chỉ chính xác</li>
-        <li><app-lucide-icon name="circle-check" [size]="16" aria-hidden="true" /> Giấy phép kinh doanh nếu có</li>
-        <li><app-lucide-icon name="circle-check" [size]="16" aria-hidden="true" /> Hình ảnh hoặc giấy tờ liên quan</li>
       </ul>
     </section>
   </aside>
 
   <section class="owner-form-panel">
     <header class="owner-form-panel__header">
-      <h2>{{ steps[currentStep() - 1] }}</h2>
-      <p>{{ currentStep() === 1
-        ? 'Cung cấp thông tin của người đại diện pháp lý hoặc người chịu trách nhiệm quản lý cơ sở.'
-        : stepDescriptions[currentStep() - 1] + ' để GoatSports kiểm tra hồ sơ của bạn.' }}</p>
+      <div>
+        <span class="owner-form-panel__eyebrow">ĐĂNG KÝ ĐỐI TÁC CHỦ SÂN</span>
+        <h2>{{ steps[currentStep() - 1] }}</h2>
+        <p>{{ panelDescriptions[currentStep() - 1] }}</p>
+      </div>
+      @if (preparedIdentity()) {
+        <span class="verification-badge">
+          <app-lucide-icon name="badge-check" [size]="17" aria-hidden="true" />
+          Danh tính đã xác minh
+        </span>
+      }
     </header>
 
     <form (ngSubmit)="currentStep() < 4 ? nextStep() : submit()" novalidate>
-      <div class="owner-form-panel__body" [class.owner-form-panel__body--documents]="currentStep() === 4">
+      <div class="owner-form-panel__body" [class.owner-form-panel__body--documents]="currentStep() === 1">
         @if (currentStep() === 1) {
+          <div class="document-grid">
+            @for (key of fileKeys; track key) {
+              <label class="document-card" [class.has-file]="files[key]">
+                <span class="document-card__icon" aria-hidden="true">
+                  <app-lucide-icon [name]="files[key] ? 'circle-check' : 'image-up'" [size]="21" />
+                </span>
+                <span class="document-card__content">
+                  <strong>{{ fileLabels[key] }} <em>*</em></strong>
+                  @if (files[key]; as file) {
+                    <small class="document-card__file" [title]="file.name">{{ file.name }}</small>
+                  } @else {
+                    <small>{{ fileHints[key] }}</small>
+                  }
+                </span>
+                @if (files[key]) {
+                  <button
+                    type="button"
+                    (click)="$event.preventDefault(); $event.stopPropagation(); removeFile(key)">
+                    Chọn lại
+                  </button>
+                } @else {
+                  <span class="document-card__action">Tải ảnh lên</span>
+                }
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  [disabled]="verifying()"
+                  (change)="selectFile(key, $event)">
+              </label>
+            }
+          </div>
+
+          <section class="identity-check">
+            <div class="identity-check__copy">
+              <span class="identity-check__icon" aria-hidden="true">
+                <app-lucide-icon name="scan-face" [size]="22" />
+              </span>
+              <div>
+                <strong>Xác minh người đại diện</strong>
+                <p>Khi nhấn “Xác minh và tiếp tục”, camera sẽ ghi nhanh 5 khung hình để kiểm tra người thật và đối chiếu với ảnh CCCD.</p>
+              </div>
+            </div>
+            <div class="identity-check__camera">
+              @if (preparedIdentity()) {
+                <app-lucide-icon name="badge-check" [size]="24" aria-hidden="true" />
+                <span>CCCD và khuôn mặt đã được xác minh</span>
+              } @else {
+                <app-lucide-icon name="shield-check" [size]="24" aria-hidden="true" />
+                <span>Ảnh camera chỉ dùng để xác minh và không lưu trong hồ sơ</span>
+              }
+            </div>
+          </section>
+        } @else if (currentStep() === 2) {
           <div class="form-grid">
+            <div class="verified-fields-note">
+              <app-lucide-icon name="sparkles" [size]="18" aria-hidden="true" />
+              <div>
+                <strong>Thông tin được trích xuất từ CCCD</strong>
+                <span>Họ tên và số CCCD đã được khóa theo kết quả xác minh.</span>
+              </div>
+            </div>
             <label>
-              <span class="field-label">Họ và tên <em>*</em></span>
-              <input name="fullName" [(ngModel)]="form.fullName" placeholder="Nhập họ và tên" autocomplete="name" maxlength="100">
+              <span class="field-label">Họ và tên</span>
+              <input name="fullName" [(ngModel)]="form.fullName" readonly autocomplete="name">
+            </label>
+            <label>
+              <span class="field-label">Số CCCD</span>
+              <input name="identityNumber" [(ngModel)]="form.identityNumber" readonly autocomplete="off">
             </label>
             <label>
               <span class="field-label">Số điện thoại <em>*</em></span>
@@ -67,17 +139,12 @@
               <input name="email" [(ngModel)]="form.email" placeholder="Nhập địa chỉ email" type="email" inputmode="email" autocomplete="email" spellcheck="false" maxlength="160">
               <small>Email dùng để nhận thông báo và trao đổi.</small>
             </label>
-            <label>
-              <span class="field-label">Số CCCD / Hộ chiếu <em>*</em></span>
-              <input name="identityNumber" [(ngModel)]="form.identityNumber" placeholder="Nhập số CCCD hoặc hộ chiếu" autocomplete="off" spellcheck="false" maxlength="12">
-              <small>Dùng để xác minh danh tính. Thông tin này chỉ phục vụ quá trình xét duyệt.</small>
-            </label>
             <p class="privacy-note">
               <app-lucide-icon name="shield-check" [size]="16" aria-hidden="true" />
               Thông tin được bảo vệ theo chính sách của GoatSports.
             </p>
           </div>
-        } @else if (currentStep() === 2) {
+        } @else if (currentStep() === 3) {
           <div class="form-grid">
             <label>
               <span class="field-label">Tên doanh nghiệp / Cơ sở <em>*</em></span>
@@ -96,7 +163,7 @@
               <small>Nhập đúng mã số thuế đã đăng ký cho cơ sở.</small>
             </label>
           </div>
-        } @else if (currentStep() === 3) {
+        } @else {
           <div class="form-grid">
             <div class="address-field">
               <label for="owner-venue-address" class="field-label">Địa chỉ chi tiết <em>*</em></label>
@@ -165,45 +232,105 @@
               <input name="city" [(ngModel)]="form.city" placeholder="Nhập tỉnh hoặc thành phố" autocomplete="address-level1">
             </label>
           </div>
-        } @else {
-          <div class="document-grid">
-            @for (key of fileKeys; track key) {
-              <label class="document-card" [class.has-file]="files[key]">
-                <span class="document-card__icon" aria-hidden="true">
-                  <app-lucide-icon [name]="files[key] ? 'circle-check' : 'upload'" [size]="20" />
-                </span>
-                <strong>{{ fileLabels[key] }}</strong>
-                @if (files[key]; as file) {
-                  <small [title]="file.name">{{ file.name }}</small>
-                  <button type="button" (click)="$event.preventDefault(); $event.stopPropagation(); removeFile(key)">Chọn lại</button>
-                } @else {
-                  <small>Ảnh hoặc PDF, tối đa 2MB</small>
-                }
-                <input type="file" accept="image/*,.pdf,application/pdf" (change)="selectFile(key, $event)">
-              </label>
-            }
-          </div>
         }
       </div>
 
       <footer class="owner-form-panel__footer">
         @if (currentStep() > 1) {
-          <button type="button" class="button--secondary" (click)="previousStep()" [disabled]="submitting()">
+          <button type="button" class="button--secondary" (click)="previousStep()" [disabled]="submitting() || verifying()">
             <app-lucide-icon name="arrow-left" [size]="17" aria-hidden="true" />
             Quay lại
           </button>
         } @else {
-          <button type="button" class="button--secondary" (click)="cancel()" [disabled]="submitting()">
+          <button type="button" class="button--secondary" (click)="cancel()" [disabled]="submitting() || verifying()">
             <app-lucide-icon name="history" [size]="17" aria-hidden="true" />
             Quay lại lịch sử
           </button>
         }
 
-        <button type="submit" class="button--primary" [disabled]="submitting()">
-          {{ currentStep() < 4 ? 'Tiếp tục' : (submitting() ? 'Đang gửi...' : 'Gửi đơn đăng ký') }}
-          @if (!submitting()) { <app-lucide-icon name="arrow-right" [size]="17" aria-hidden="true" /> }
+        <button type="submit" class="button--primary" [disabled]="submitting() || verifying()">
+          @if (currentStep() === 1) {
+            {{ verifying() ? 'Đang xác minh...' : (preparedIdentity() ? 'Tiếp tục' : 'Xác minh và tiếp tục') }}
+          } @else if (currentStep() < 4) {
+            Tiếp tục
+          } @else {
+            {{ submitting() ? 'Đang gửi...' : 'Gửi đơn đăng ký' }}
+          }
+          @if (!submitting() && !verifying()) {
+            <app-lucide-icon name="arrow-right" [size]="17" aria-hidden="true" />
+          }
         </button>
       </footer>
     </form>
   </section>
 </div>
+
+@if (cameraActive()) {
+  <div class="face-modal-backdrop" role="presentation">
+    <section
+      class="face-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="face-modal-title"
+      aria-describedby="face-modal-description">
+      <header class="face-modal__header">
+        <div>
+          <span>XÁC MINH NGƯỜI ĐẠI DIỆN</span>
+          <h2 id="face-modal-title">Đưa khuôn mặt vào giữa khung</h2>
+          <p id="face-modal-description">Giữ thiết bị ngang tầm mắt, đủ sáng và không đội mũ hoặc đeo kính tối màu.</p>
+        </div>
+        <button
+          type="button"
+          class="face-modal__close"
+          aria-label="Đóng camera"
+          [disabled]="faceScanning()"
+          (click)="cancelFaceScan()">
+          <app-lucide-icon name="x" [size]="22" aria-hidden="true" />
+        </button>
+      </header>
+
+      <div class="face-camera" [class.is-scanning]="faceScanning()">
+        <video #cameraVideo muted playsinline aria-label="Camera xác minh khuôn mặt"></video>
+        <div class="face-camera__shade" aria-hidden="true"></div>
+        <div class="face-camera__guide" aria-hidden="true">
+          <span></span>
+        </div>
+        <div class="face-camera__status" aria-live="polite">
+          @if (!cameraReady()) {
+            <span class="face-camera__spinner"></span>
+            Đang khởi động camera...
+          } @else if (scanCountdown() > 0) {
+            <strong>{{ scanCountdown() }}</strong>
+            Giữ khuôn mặt ổn định
+          } @else if (faceScanning()) {
+            <span class="face-camera__scan-line" aria-hidden="true"></span>
+            Đang quét khuôn mặt {{ scanProgress() }}%
+          } @else {
+            Căn mắt ngang vạch, toàn bộ khuôn mặt nằm trong khung oval
+          }
+        </div>
+      </div>
+
+      <div class="face-modal__tips">
+        <span><app-lucide-icon name="sun" [size]="17" aria-hidden="true" /> Khuôn mặt đủ sáng</span>
+        <span><app-lucide-icon name="scan-qr-code" [size]="17" aria-hidden="true" /> Nhìn thẳng, giữ yên</span>
+        <span><app-lucide-icon name="user-check" [size]="17" aria-hidden="true" /> Một người trong khung</span>
+      </div>
+
+      <footer class="face-modal__footer">
+        <p>
+          <app-lucide-icon name="shield-check" [size]="17" aria-hidden="true" />
+          Khung hình chỉ được gửi để xác minh và không lưu trong hồ sơ.
+        </p>
+        <button
+          type="button"
+          class="face-modal__scan"
+          [disabled]="!cameraReady() || faceScanning()"
+          (click)="startFaceScan()">
+          <app-lucide-icon name="scan-face" [size]="19" aria-hidden="true" />
+          {{ faceScanning() ? 'Đang quét...' : 'Bắt đầu quét khuôn mặt' }}
+        </button>
+      </footer>
+    </section>
+  </div>
+}

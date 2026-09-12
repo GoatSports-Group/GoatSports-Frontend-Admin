@@ -1,10 +1,28 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, forkJoin, map, of, switchMap, throwError } from 'rxjs';
-import { OwnerApplicationRepository } from '@application/ports/persistence/owner-application.repository';
+import {
+  Observable,
+  catchError,
+  exhaustMap,
+  filter,
+  forkJoin,
+  map,
+  of,
+  switchMap,
+  take,
+  throwError,
+  timeout,
+  timer
+} from 'rxjs';
+import {
+  OwnerApplicationFiles,
+  OwnerApplicationRepository,
+  PreparedOwnerIdentity
+} from '@application/ports/persistence/owner-application.repository';
 import { OwnerApplication } from '@domain/entities/owner-application';
 import {
   OwnerApplicationApi,
   OwnerApplicationDocumentSlot,
+  OwnerIdentityVerificationResponse,
   PrepareOwnerApplicationUploadRequest,
   SubmitOwnerApplicationRequest
 } from '@infrastructure/api/owner-application.api';
@@ -17,10 +35,7 @@ import { BaseListResponse } from '@application/dto/base/base-response';
 export class OwnerApplicationRepositoryImpl implements OwnerApplicationRepository {
   private ownerApplicationApi = inject(OwnerApplicationApi);
 
-  submit(
-    form: Record<string, unknown>,
-    files: { idCardFront: File; idCardBack: File; businessLicense: File; venueImage: File }
-  ): Observable<void> {
+  verifyIdentity(files: OwnerApplicationFiles, livenessFrames: string[]): Observable<PreparedOwnerIdentity> {
     const uploads: Array<{ file: File; slot: OwnerApplicationDocumentSlot }> = [
       { file: files.idCardFront, slot: 'IDENTITY_FRONT' },
       { file: files.idCardBack, slot: 'IDENTITY_BACK' },
@@ -58,25 +73,88 @@ export class OwnerApplicationRepositoryImpl implements OwnerApplicationRepositor
         const objectKeys = prepared.documents.map(document => document.objectKey);
 
         return forkJoin(uploadRequests).pipe(
+          switchMap(documents => {
+            const front = documents.find(document => document.slot === 'IDENTITY_FRONT');
+            const back = documents.find(document => document.slot === 'IDENTITY_BACK');
+            if (!front || !back) throw new Error('Thiếu ảnh CCCD để xác minh.');
+
+            return this.ownerApplicationApi.verifyIdentity(
+              prepared.ownerApplicationId,
+              front.objectKey,
+              back.objectKey,
+              livenessFrames
+            ).pipe(
+              switchMap(response => this.waitForVerification(response.data)),
+              map(verification => {
+                if (
+                  verification?.status !== 'VERIFIED'
+                  || !verification.document?.fullName
+                  || !verification.document.identityNumber
+                ) {
+                  throw new Error(verification?.message || 'CCCD hoặc khuôn mặt chưa được xác minh.');
+                }
+                return {
+                  ownerApplicationId: prepared.ownerApplicationId,
+                  identityVerificationId: verification.verificationId,
+                  fullName: verification.document.fullName,
+                  identityNumber: verification.document.identityNumber,
+                  documents
+                };
+              })
+            );
+          }),
           catchError(error => this.ownerApplicationApi.cleanupUploads(
             prepared.ownerApplicationId,
             objectKeys
           ).pipe(
             catchError(() => of(void 0)),
             switchMap(() => throwError(() => error))
-          )),
-          switchMap(documents => {
-            const submitRequest: SubmitOwnerApplicationRequest = {
-              ...form,
-              ownerApplicationId: prepared.ownerApplicationId,
-              documents
-            };
-            return this.ownerApplicationApi.submitApplication(submitRequest);
-          })
+          ))
         );
-      }),
-      map(() => undefined)
+      })
     );
+  }
+
+  private waitForVerification(
+    verification: OwnerIdentityVerificationResponse
+  ): Observable<OwnerIdentityVerificationResponse> {
+    if (!verification?.verificationId || verification.status !== 'PROCESSING') {
+      return of(verification);
+    }
+    return timer(0, 1000).pipe(
+      exhaustMap(() => this.ownerApplicationApi.getIdentityVerification(verification.verificationId).pipe(
+        map(response => response.data),
+        catchError(error => this.isTransientPollingError(error)
+          ? of(null)
+          : throwError(() => error))
+      )),
+      filter((result): result is OwnerIdentityVerificationResponse => result !== null),
+      filter(result => result.status !== 'PROCESSING'),
+      timeout({
+        first: 120000,
+        with: () => throwError(() => new Error(
+          'Quá thời gian xác minh CCCD và khuôn mặt. Vui lòng thử lại.'
+        ))
+      }),
+      take(1)
+    );
+  }
+
+  private isTransientPollingError(error: unknown): boolean {
+    const status = (error as { status?: number } | null)?.status;
+    return status === 0 || status === 502 || status === 503 || status === 504;
+  }
+
+  submit(form: Record<string, unknown>, preparedIdentity: PreparedOwnerIdentity): Observable<void> {
+    const submitRequest: SubmitOwnerApplicationRequest = {
+      ...form,
+      ownerApplicationId: preparedIdentity.ownerApplicationId,
+      identityVerificationId: preparedIdentity.identityVerificationId,
+      fullName: preparedIdentity.fullName,
+      identityNumber: preparedIdentity.identityNumber,
+      documents: preparedIdentity.documents
+    };
+    return this.ownerApplicationApi.submitApplication(submitRequest).pipe(map(() => undefined));
   }
 
   getAllApplications(filter: PageFilter): Observable<BaseListResponse<OwnerApplication>> {

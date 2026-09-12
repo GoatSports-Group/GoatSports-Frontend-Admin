@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 @Component({
   selector: 'app-venue-owner-submission-loader',
@@ -6,8 +6,8 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   template: `
     <section class="submission-card" role="status" aria-live="polite" aria-modal="true">
       <span class="submission-card__spinner" aria-hidden="true"></span>
-      <h2>Đang tạo hồ sơ chủ sân</h2>
-      <p>Hệ thống đang tải tài liệu và gửi đơn đăng ký.<br>Vui lòng không đóng hoặc tải lại trang.</p>
+      <h2>{{ title() }}</h2>
+      <p>{{ message() }}</p>
     </section>
   `,
   styles: `
@@ -56,4 +56,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   `,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class VenueOwnerSubmissionLoaderComponent { }
+export class VenueOwnerSubmissionLoaderComponent {
+  readonly title = input('Đang tạo hồ sơ chủ sân');
+  readonly message = input('Hệ thống đang tải tài liệu và gửi đơn đăng ký. Vui lòng không đóng hoặc tải lại trang.');
+}
