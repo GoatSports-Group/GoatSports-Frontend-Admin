@@ -118,7 +118,7 @@ export class VenueOwnerApplicationFormComponent implements OnDestroy {
     'Vị trí và thông tin địa chỉ'
   ];
   readonly panelDescriptions = [
-    'Tải đủ bốn ảnh, sau đó GoatSports sẽ kiểm tra CCCD, người thật và đối chiếu khuôn mặt.',
+    'Tải hai ảnh CCCD, một giấy phép PDF và một ảnh sân; mỗi file tối đa 2 MB.',
     'Họ tên và số CCCD được tự động điền từ kết quả xác minh; bạn chỉ cần bổ sung thông tin liên hệ.',
     'Cung cấp thông tin kinh doanh để GoatSports kiểm tra hồ sơ cơ sở.',
     'Chọn địa chỉ chính xác để người chơi có thể tìm thấy sân của bạn.'
@@ -130,10 +130,16 @@ export class VenueOwnerApplicationFormComponent implements OnDestroy {
     venueImage: 'Hình ảnh cơ sở / sân'
   };
   readonly fileHints: Record<FileKey, string> = {
-    idCardFront: 'Ảnh rõ nét, đủ bốn góc, không lóa sáng',
-    idCardBack: 'Ảnh rõ nét, không che mã QR và ngày cấp',
-    businessLicense: 'Ảnh giấy phép còn nguyên nội dung',
-    venueImage: 'Ảnh tổng quan thực tế của cơ sở'
+    idCardFront: 'JPG, PNG hoặc WebP · tối đa 2 MB',
+    idCardBack: 'JPG, PNG hoặc WebP · tối đa 2 MB',
+    businessLicense: 'Chỉ nhận file PDF · tối đa 2 MB',
+    venueImage: 'Một ảnh JPG, PNG hoặc WebP · tối đa 2 MB'
+  };
+  readonly fileAccepts: Record<FileKey, string> = {
+    idCardFront: 'image/jpeg,image/png,image/webp',
+    idCardBack: 'image/jpeg,image/png,image/webp',
+    businessLicense: 'application/pdf',
+    venueImage: 'image/jpeg,image/png,image/webp'
   };
   readonly fileKeys: FileKey[] = ['idCardFront', 'idCardBack', 'businessLicense', 'venueImage'];
 
@@ -249,7 +255,7 @@ export class VenueOwnerApplicationFormComponent implements OnDestroy {
     ).subscribe({
       next: resolved => {
         if (resolved.latitude === null || resolved.longitude === null) {
-          this.addressSearchError.set('VietMap không trả về tọa độ cho địa chỉ này. Vui lòng chọn địa chỉ khác.');
+          this.addressSearchError.set('Dịch vụ địa chỉ không trả về tọa độ. Vui lòng chọn địa chỉ khác.');
           this.addressSuggestionsOpen.set(true);
           return;
         }
@@ -264,7 +270,7 @@ export class VenueOwnerApplicationFormComponent implements OnDestroy {
         this.addressSearchError.set('');
       },
       error: () => {
-        this.addressSearchError.set('Không thể lấy chi tiết địa chỉ từ VietMap. Vui lòng thử lại.');
+        this.addressSearchError.set('Không thể lấy chi tiết địa chỉ. Vui lòng thử lại.');
         this.addressSuggestionsOpen.set(true);
       }
     });
@@ -279,8 +285,13 @@ export class VenueOwnerApplicationFormComponent implements OnDestroy {
       input.value = '';
       return;
     }
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      this.notify.warning('Tài liệu chỉ nhận ảnh JPG, PNG hoặc WebP.');
+    const allowedTypes = key === 'businessLicense'
+      ? ['application/pdf']
+      : ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      this.notify.warning(key === 'businessLicense'
+        ? 'Giấy phép kinh doanh chỉ nhận file PDF.'
+        : `${this.fileLabels[key]} chỉ nhận ảnh JPG, PNG hoặc WebP.`);
       input.value = '';
       return;
     }

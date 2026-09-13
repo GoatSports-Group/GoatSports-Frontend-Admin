@@ -227,7 +227,7 @@ describe('OwnerVenueManagementComponent', () => {
     expect(component.form.controls.amenities.value).toEqual(['Sân cỏ nhân tạo']);
   });
 
-  it('dùng gợi ý VietMap để tự điền các trường địa chỉ hành chính', () => {
+  it('dùng gợi ý địa chỉ để tự điền các trường hành chính', () => {
     const suggestion = {
       id: 'vietmap-1',
       refId: 'ref-1',
@@ -253,7 +253,7 @@ describe('OwnerVenueManagementComponent', () => {
     expect(component.form.controls.ward.value).toBe('Lộc Thọ');
     expect(component.form.controls.district.value).toBe('Nha Trang');
     expect(component.form.controls.city.value).toBe('Khánh Hòa');
-    expect(component.addressSelectedFromVietMap()).toBe(true);
+    expect(component.addressSelectedFromSuggestion()).toBe(true);
     expect(component.form.dirty).toBe(true);
   });
 

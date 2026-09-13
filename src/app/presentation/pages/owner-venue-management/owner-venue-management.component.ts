@@ -77,7 +77,7 @@ export class OwnerVenueManagementComponent {
   readonly addingAmenity = signal(false);
   readonly selectedAddressValue = signal('');
   readonly selectedAddressCoordinates = signal<VenueCoordinates | null>(null);
-  readonly addressSelectedFromVietMap = signal(false);
+  readonly addressSelectedFromSuggestion = signal(false);
   readonly addressSuggestions = signal<AddressSuggestion[]>([]);
   readonly addressSearchLoading = signal(false);
   readonly addressDetailLoading = signal(false);
@@ -178,7 +178,7 @@ export class OwnerVenueManagementComponent {
     if (value !== this.selectedAddressValue()) {
       this.selectedAddressValue.set('');
       this.selectedAddressCoordinates.set(null);
-      this.addressSelectedFromVietMap.set(false);
+      this.addressSelectedFromSuggestion.set(false);
     }
     this.activeSuggestionIndex.set(-1);
     this.addressInput.next(value);
@@ -243,13 +243,13 @@ export class OwnerVenueManagementComponent {
             ? { latitude: resolved.latitude, longitude: resolved.longitude }
             : null
         );
-        this.addressSelectedFromVietMap.set(true);
+        this.addressSelectedFromSuggestion.set(true);
         this.addressSuggestions.set([]);
         this.addressSearchError.set('');
         this.form.markAsDirty();
       },
       error: () => {
-        this.addressSearchError.set('Không thể lấy chi tiết địa chỉ từ VietMap. Vui lòng thử lại.');
+        this.addressSearchError.set('Không thể lấy chi tiết địa chỉ. Vui lòng thử lại.');
         this.addressSuggestionsOpen.set(true);
       }
     });
@@ -616,7 +616,7 @@ export class OwnerVenueManagementComponent {
         ? { latitude: venue.latitude, longitude: venue.longitude }
         : null
     );
-    this.addressSelectedFromVietMap.set(false);
+    this.addressSelectedFromSuggestion.set(false);
     this.addressSuggestions.set([]);
     this.addressSuggestionsOpen.set(false);
     this.addressSearchError.set('');

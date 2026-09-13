@@ -1,50 +1,30 @@
-import { HttpBackend, HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, map, of, throwError } from 'rxjs';
+import { Observable, map, of } from 'rxjs';
 import { AddressSuggestion } from '@application/dto/owner-application/address-suggestion.dto';
+import { BaseResponse } from '@application/dto/base/base-response';
 import { environment } from '@environments/environment';
-import {
-  VietMapAutocompleteResult,
-  VietMapPlaceResult,
-  mapVietMapSuggestion,
-  mergeVietMapPlace
-} from './address-suggestion.mapper';
 
 @Injectable({ providedIn: 'root' })
 export class AddressSuggestionApi {
-  private readonly http = new HttpClient(inject(HttpBackend));
-  private readonly baseUrl = environment.vietMapApiUrl.replace(/\/$/, '');
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = `${environment.apiUrl}/venue-service/api/v1/address-suggestions`;
 
   search(query: string): Observable<AddressSuggestion[]> {
     const normalizedQuery = query.trim().slice(0, 160);
     if (normalizedQuery.length < 3) return of([]);
-    if (!environment.vietMapApiKey) {
-      return throwError(() => new Error('NG_APP_VIETMAP_API_KEY chưa được cấu hình'));
-    }
+    const params = new HttpParams().set('query', normalizedQuery);
 
-    const params = new HttpParams()
-      .set('apikey', environment.vietMapApiKey)
-      .set('text', normalizedQuery)
-      .set('display_type', '5');
-
-    return this.http.get<VietMapAutocompleteResult[]>(`${this.baseUrl}/autocomplete/v4`, { params }).pipe(
-      map(response => (response ?? [])
-        .map(result => mapVietMapSuggestion(result))
-        .filter((suggestion): suggestion is AddressSuggestion => suggestion !== null)
-        .slice(0, 6))
+    return this.http.get<BaseResponse<AddressSuggestion[]>>(this.baseUrl, { params }).pipe(
+      map(response => response.data ?? [])
     );
   }
 
   resolve(suggestion: AddressSuggestion): Observable<AddressSuggestion> {
-    if (!environment.vietMapApiKey) {
-      return throwError(() => new Error('NG_APP_VIETMAP_API_KEY chưa được cấu hình'));
-    }
-    const params = new HttpParams()
-      .set('apikey', environment.vietMapApiKey)
-      .set('refid', suggestion.refId);
+    const params = new HttpParams().set('refId', suggestion.refId);
 
-    return this.http.get<VietMapPlaceResult>(`${this.baseUrl}/place/v4`, { params }).pipe(
-      map(place => mergeVietMapPlace(suggestion, place))
+    return this.http.get<BaseResponse<AddressSuggestion>>(`${this.baseUrl}/resolve`, { params }).pipe(
+      map(response => response.data)
     );
   }
 }

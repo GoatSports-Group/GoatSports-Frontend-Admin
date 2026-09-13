@@ -51,7 +51,8 @@ export class OwnerApplicationRepositoryImpl implements OwnerApplicationRepositor
       documents: uploads.map(item => ({
         slot: item.slot,
         fileName: item.file.name,
-        contentType: item.file.type || 'application/octet-stream'
+        contentType: item.file.type || 'application/octet-stream',
+        fileSize: item.file.size
       }))
     };
     const idempotencyKey = `owner-application:${crypto.randomUUID()}`;

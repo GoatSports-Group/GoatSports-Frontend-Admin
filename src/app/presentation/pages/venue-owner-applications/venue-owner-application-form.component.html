@@ -85,7 +85,7 @@
                 }
                 <input
                   type="file"
-                  accept="image/jpeg,image/png,image/webp"
+                  [accept]="fileAccepts[key]"
                   [disabled]="verifying()"
                   (change)="selectFile(key, $event)">
               </label>

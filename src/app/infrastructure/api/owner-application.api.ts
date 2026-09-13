@@ -18,6 +18,7 @@ export interface PrepareOwnerApplicationUploadRequest {
     slot: OwnerApplicationDocumentSlot;
     fileName: string;
     contentType: string;
+    fileSize: number;
   }>;
 }
 

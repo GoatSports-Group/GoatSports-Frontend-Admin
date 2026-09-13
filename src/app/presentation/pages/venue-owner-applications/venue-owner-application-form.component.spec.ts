@@ -104,6 +104,30 @@ describe('VenueOwnerApplicationFormComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('phân tích realtime');
   });
 
+  it('accepts only a PDF business license and enforces the 2 MB limit', () => {
+    const fixture = TestBed.createComponent(VenueOwnerApplicationFormComponent);
+    const component = fixture.componentInstance;
+    const pdf = new File(['pdf'], 'license.pdf', { type: 'application/pdf' });
+
+    component.selectFile('businessLicense', {
+      target: { files: [pdf], value: 'license.pdf' }
+    } as unknown as Event);
+
+    expect(component.files.businessLicense).toBe(pdf);
+
+    const oversizedImage = new File(
+      [new Uint8Array(2 * 1024 * 1024 + 1)],
+      'venue.jpg',
+      { type: 'image/jpeg' }
+    );
+    component.selectFile('venueImage', {
+      target: { files: [oversizedImage], value: 'venue.jpg' }
+    } as unknown as Event);
+
+    expect(component.files.venueImage).toBeNull();
+    expect(notify.warning).toHaveBeenCalledWith(expect.stringContaining('2MB'));
+  });
+
   it('returns to history from the first step without claiming to save a draft', () => {
     const fixture = TestBed.createComponent(VenueOwnerApplicationFormComponent);
     const cancelled = vi.fn();
