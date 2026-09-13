@@ -277,19 +277,22 @@
         <div>
           <span>XÁC MINH NGƯỜI ĐẠI DIỆN</span>
           <h2 id="face-modal-title">Đưa khuôn mặt vào giữa khung</h2>
-          <p id="face-modal-description">Giữ thiết bị ngang tầm mắt, đủ sáng và không đội mũ hoặc đeo kính tối màu.</p>
+          <p id="face-modal-description">Hệ thống tự quét khi bạn nhìn thẳng, giữ yên, đủ sáng và không đeo kính.</p>
         </div>
         <button
           type="button"
           class="face-modal__close"
           aria-label="Đóng camera"
-          [disabled]="faceScanning()"
           (click)="cancelFaceScan()">
           <app-lucide-icon name="x" [size]="22" aria-hidden="true" />
         </button>
       </header>
 
-      <div class="face-camera" [class.is-scanning]="faceScanning()">
+      <div
+        class="face-camera"
+        [class.is-scanning]="faceScanning()"
+        [class.is-ready]="faceReadiness()?.ready && faceStable()"
+        [class.has-warning]="cameraReady() && faceReadiness() && !faceReadiness()?.ready">
         <video #cameraVideo muted playsinline aria-label="Camera xác minh khuôn mặt"></video>
         <div class="face-camera__shade" aria-hidden="true"></div>
         <div class="face-camera__guide" aria-hidden="true">
@@ -299,37 +302,35 @@
           @if (!cameraReady()) {
             <span class="face-camera__spinner"></span>
             Đang khởi động camera...
-          } @else if (scanCountdown() > 0) {
-            <strong>{{ scanCountdown() }}</strong>
-            Giữ khuôn mặt ổn định
           } @else if (faceScanning()) {
             <span class="face-camera__scan-line" aria-hidden="true"></span>
-            Đang quét khuôn mặt {{ scanProgress() }}%
+            {{ faceStatus() }}
           } @else {
-            Căn mắt ngang vạch, toàn bộ khuôn mặt nằm trong khung oval
+            {{ faceStatus() }}
           }
         </div>
       </div>
 
       <div class="face-modal__tips">
-        <span><app-lucide-icon name="sun" [size]="17" aria-hidden="true" /> Khuôn mặt đủ sáng</span>
-        <span><app-lucide-icon name="scan-qr-code" [size]="17" aria-hidden="true" /> Nhìn thẳng, giữ yên</span>
-        <span><app-lucide-icon name="user-check" [size]="17" aria-hidden="true" /> Một người trong khung</span>
+        <span [class.is-valid]="faceReadiness() && faceReadiness()!.brightness >= 55 && faceReadiness()!.brightness <= 215">
+          <app-lucide-icon name="sun" [size]="17" aria-hidden="true" /> Khuôn mặt đủ sáng
+        </span>
+        <span [class.is-valid]="faceReadiness()?.frontal && faceStable()">
+          <app-lucide-icon name="scan-qr-code" [size]="17" aria-hidden="true" /> Nhìn thẳng, giữ yên
+        </span>
+        <span [class.is-valid]="faceReadiness()?.faceCount === 1 && faceReadiness()?.centered">
+          <app-lucide-icon name="user-check" [size]="17" aria-hidden="true" /> Một người trong khung
+        </span>
+        <span [class.is-valid]="faceReadiness()?.glassesFree">
+          <app-lucide-icon name="eye" [size]="17" aria-hidden="true" /> Không đeo kính
+        </span>
       </div>
 
       <footer class="face-modal__footer">
         <p>
           <app-lucide-icon name="shield-check" [size]="17" aria-hidden="true" />
-          Khung hình chỉ được gửi để xác minh và không lưu trong hồ sơ.
+          Khung hình được phân tích realtime để xác minh và không lưu trong hồ sơ.
         </p>
-        <button
-          type="button"
-          class="face-modal__scan"
-          [disabled]="!cameraReady() || faceScanning()"
-          (click)="startFaceScan()">
-          <app-lucide-icon name="scan-face" [size]="19" aria-hidden="true" />
-          {{ faceScanning() ? 'Đang quét...' : 'Bắt đầu quét khuôn mặt' }}
-        </button>
       </footer>
     </section>
   </div>

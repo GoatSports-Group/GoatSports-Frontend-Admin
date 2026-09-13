@@ -20,8 +20,10 @@ import { AddressSuggestion } from '@application/dto/owner-application/address-su
 import { BusinessType } from '@application/dto/owner-application/owner-application.dto';
 import {
   OwnerApplicationFiles,
+  OwnerFaceReadiness,
   PreparedOwnerIdentity
 } from '@application/ports/persistence/owner-application.repository';
+import { AnalyzeOwnerFaceReadinessUseCase } from '@application/usecase/owner-application/analyze-owner-face-readiness.usecase';
 import { SearchAddressSuggestionsUseCase } from '@application/usecase/owner-application/search-address-suggestions.usecase';
 import { SubmitOwnerApplicationUseCase } from '@application/usecase/owner-application/submit-owner-application.usecase';
 import { VerifyOwnerIdentityUseCase } from '@application/usecase/owner-application/verify-owner-identity.usecase';
@@ -34,6 +36,7 @@ import {
   defer,
   distinctUntilChanged,
   finalize,
+  firstValueFrom,
   map,
   of,
   switchMap
@@ -68,6 +71,7 @@ type ApplicationForm = {
 export class VenueOwnerApplicationFormComponent implements OnDestroy {
   private readonly submitApplication = inject(SubmitOwnerApplicationUseCase);
   private readonly verifyIdentity = inject(VerifyOwnerIdentityUseCase);
+  private readonly analyzeFaceReadiness = inject(AnalyzeOwnerFaceReadinessUseCase);
   private readonly notify = inject(NotifyService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly overlay = inject(Overlay);
@@ -79,6 +83,10 @@ export class VenueOwnerApplicationFormComponent implements OnDestroy {
   private cameraStream: MediaStream | null = null;
   private captureResolve: ((frames: string[]) => void) | null = null;
   private captureReject: ((reason: unknown) => void) | null = null;
+  private faceMonitorGeneration = 0;
+  private previousFaceSample: OwnerFaceReadiness | null = null;
+  private stableSampleCount = 0;
+  private readonly capturedLivenessFrames: string[] = [];
 
   @ViewChild('cameraVideo') cameraVideo?: ElementRef<HTMLVideoElement>;
 
@@ -91,8 +99,10 @@ export class VenueOwnerApplicationFormComponent implements OnDestroy {
   readonly cameraActive = signal(false);
   readonly cameraReady = signal(false);
   readonly faceScanning = signal(false);
-  readonly scanCountdown = signal(0);
   readonly scanProgress = signal(0);
+  readonly faceReadiness = signal<OwnerFaceReadiness | null>(null);
+  readonly faceStable = signal(false);
+  readonly faceStatus = signal('Đang khởi động camera...');
   readonly preparedIdentity = signal<PreparedOwnerIdentity | null>(null);
   readonly addressSuggestions = signal<AddressSuggestion[]>([]);
   readonly addressSearchLoading = signal(false);
@@ -346,48 +356,62 @@ export class VenueOwnerApplicationFormComponent implements OnDestroy {
     this.hideSubmissionLoader();
   }
 
-  async startFaceScan(): Promise<void> {
-    if (!this.cameraReady() || this.faceScanning()) return;
+  private async monitorFaceReadiness(generation: number): Promise<void> {
     const video = this.cameraVideo?.nativeElement;
     if (!video?.videoWidth || !video.videoHeight) {
       this.failFaceScan(new Error('Camera chưa sẵn sàng. Vui lòng thử lại.'));
       return;
     }
 
-    this.faceScanning.set(true);
-    this.scanProgress.set(0);
-    try {
-      for (let second = 3; second > 0; second -= 1) {
+    while (this.cameraActive() && generation === this.faceMonitorGeneration) {
+      try {
         this.ensureCameraActive();
-        this.scanCountdown.set(second);
-        await this.delay(1000);
+        const frame = this.captureCameraFrame(video);
+        const readiness = await firstValueFrom(this.analyzeFaceReadiness.execute(frame));
+        if (!this.cameraActive() || generation !== this.faceMonitorGeneration) return;
+        this.faceReadiness.set(readiness);
+
+        if (!readiness.ready) {
+          this.resetRealtimeCapture(readiness.message);
+          await this.delay(220);
+          continue;
+        }
+
+        const stable = this.isFaceStable(readiness);
+        this.previousFaceSample = readiness;
+        this.faceStable.set(stable);
+        if (!stable) {
+          this.resetRealtimeCapture('Giữ đầu và khuôn mặt đứng yên.');
+          this.previousFaceSample = readiness;
+          await this.delay(220);
+          continue;
+        }
+
+        this.stableSampleCount += 1;
+        if (this.stableSampleCount < 3) {
+          this.faceStatus.set('Đúng tư thế, tiếp tục giữ yên...');
+          await this.delay(220);
+          continue;
+        }
+
+        this.faceScanning.set(true);
+        this.capturedLivenessFrames.push(frame);
+        this.scanProgress.set(this.capturedLivenessFrames.length * 20);
+        this.faceStatus.set(`Đang tự động quét khuôn mặt ${this.scanProgress()}%`);
+        if (this.capturedLivenessFrames.length >= 5) {
+          const resolve = this.captureResolve;
+          const frames = [...this.capturedLivenessFrames];
+          this.clearCaptureCallbacks();
+          this.stopCamera();
+          resolve?.(frames);
+          return;
+        }
+        await this.delay(220);
+      } catch {
+        if (!this.cameraActive() || generation !== this.faceMonitorGeneration) return;
+        this.resetRealtimeCapture('Không thể phân tích camera realtime. Đang thử kết nối lại...');
+        await this.delay(900);
       }
-      this.scanCountdown.set(0);
-
-      const canvas = document.createElement('canvas');
-      canvas.width = 540;
-      canvas.height = Math.max(405, Math.round(540 * video.videoHeight / video.videoWidth));
-      const context = canvas.getContext('2d');
-      if (!context) throw new Error('Không thể đọc hình ảnh từ camera.');
-
-      const frames: string[] = [];
-      for (let index = 0; index < 5; index += 1) {
-        this.ensureCameraActive();
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        frames.push(canvas.toDataURL('image/jpeg', 0.86));
-        this.scanProgress.set((index + 1) * 20);
-        await this.delay(260);
-      }
-
-      const resolve = this.captureResolve;
-      this.clearCaptureCallbacks();
-      this.stopCamera();
-      resolve?.(frames);
-    } catch (error) {
-      this.failFaceScan(error);
-    } finally {
-      this.faceScanning.set(false);
-      this.scanCountdown.set(0);
     }
   }
 
@@ -443,8 +467,13 @@ export class VenueOwnerApplicationFormComponent implements OnDestroy {
     this.cameraActive.set(true);
     this.cameraReady.set(false);
     this.faceScanning.set(false);
-    this.scanCountdown.set(0);
     this.scanProgress.set(0);
+    this.faceReadiness.set(null);
+    this.faceStable.set(false);
+    this.faceStatus.set('Đang khởi động camera...');
+    this.previousFaceSample = null;
+    this.stableSampleCount = 0;
+    this.capturedLivenessFrames.length = 0;
 
     return new Promise<string[]>((resolve, reject) => {
       this.captureResolve = resolve;
@@ -472,6 +501,9 @@ export class VenueOwnerApplicationFormComponent implements OnDestroy {
       }
       await this.delay(500);
       this.cameraReady.set(true);
+      this.faceStatus.set('Đưa khuôn mặt vào giữa khung và nhìn thẳng vào camera.');
+      const generation = ++this.faceMonitorGeneration;
+      void this.monitorFaceReadiness(generation);
     } catch (error) {
       if (error instanceof DOMException && error.name === 'NotAllowedError') {
         this.failFaceScan(new Error('Bạn cần cho phép truy cập camera để xác minh khuôn mặt.'));
@@ -482,14 +514,19 @@ export class VenueOwnerApplicationFormComponent implements OnDestroy {
   }
 
   private stopCamera(): void {
+    this.faceMonitorGeneration += 1;
     this.cameraStream?.getTracks().forEach(track => track.stop());
     this.cameraStream = null;
     if (this.cameraVideo?.nativeElement) this.cameraVideo.nativeElement.srcObject = null;
     this.cameraActive.set(false);
     this.cameraReady.set(false);
     this.faceScanning.set(false);
-    this.scanCountdown.set(0);
     this.scanProgress.set(0);
+    this.faceReadiness.set(null);
+    this.faceStable.set(false);
+    this.previousFaceSample = null;
+    this.stableSampleCount = 0;
+    this.capturedLivenessFrames.length = 0;
   }
 
   private failFaceScan(error: unknown): void {
@@ -508,6 +545,43 @@ export class VenueOwnerApplicationFormComponent implements OnDestroy {
     if (!this.cameraActive() || !this.cameraStream) {
       throw new DOMException('Đã hủy xác minh khuôn mặt.', 'AbortError');
     }
+  }
+
+  private captureCameraFrame(video: HTMLVideoElement): string {
+    const canvas = document.createElement('canvas');
+    canvas.width = 480;
+    canvas.height = Math.max(360, Math.round(480 * video.videoHeight / video.videoWidth));
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Không thể đọc hình ảnh từ camera.');
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/jpeg', 0.76);
+  }
+
+  private isFaceStable(current: OwnerFaceReadiness): boolean {
+    const previous = this.previousFaceSample;
+    if (!previous?.faceBox || !current.faceBox) return false;
+    const [x, y, width, height] = current.faceBox;
+    const [previousX, previousY, previousWidth, previousHeight] = previous.faceBox;
+    const centerMovement = Math.hypot(
+      x + width / 2 - (previousX + previousWidth / 2),
+      y + height / 2 - (previousY + previousHeight / 2)
+    );
+    return centerMovement <= 0.022
+      && Math.abs(width - previousWidth) <= 0.035
+      && Math.abs(height - previousHeight) <= 0.045
+      && Math.abs(current.yawRatio - previous.yawRatio) <= 0.08
+      && Math.abs(current.pitchRatio - previous.pitchRatio) <= 0.10
+      && Math.abs(current.rollDegrees - previous.rollDegrees) <= 4;
+  }
+
+  private resetRealtimeCapture(message: string): void {
+    this.faceScanning.set(false);
+    this.faceStable.set(false);
+    this.faceStatus.set(message);
+    this.scanProgress.set(0);
+    this.stableSampleCount = 0;
+    this.capturedLivenessFrames.length = 0;
+    if (!this.faceReadiness()?.ready) this.previousFaceSample = null;
   }
 
   private delay(milliseconds: number): Promise<void> {

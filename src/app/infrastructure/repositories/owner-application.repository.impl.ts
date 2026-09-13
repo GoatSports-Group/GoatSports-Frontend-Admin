@@ -16,6 +16,7 @@ import {
 import {
   OwnerApplicationFiles,
   OwnerApplicationRepository,
+  OwnerFaceReadiness,
   PreparedOwnerIdentity
 } from '@application/ports/persistence/owner-application.repository';
 import { OwnerApplication } from '@domain/entities/owner-application';
@@ -34,6 +35,10 @@ import { BaseListResponse } from '@application/dto/base/base-response';
 })
 export class OwnerApplicationRepositoryImpl implements OwnerApplicationRepository {
   private ownerApplicationApi = inject(OwnerApplicationApi);
+
+  analyzeFaceReadiness(frame: string): Observable<OwnerFaceReadiness> {
+    return this.ownerApplicationApi.analyzeFaceReadiness(frame).pipe(map(response => response.data));
+  }
 
   verifyIdentity(files: OwnerApplicationFiles, livenessFrames: string[]): Observable<PreparedOwnerIdentity> {
     const uploads: Array<{ file: File; slot: OwnerApplicationDocumentSlot }> = [

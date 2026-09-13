@@ -548,6 +548,16 @@
   box-shadow: 0 0 0 1000px rgb(4 17 13 / 44%), 0 0 0 8px rgb(54 225 168 / 24%);
 }
 
+.face-camera.is-ready .face-camera__guide span {
+  border-color: #36e1a8;
+  box-shadow: 0 0 0 1000px rgb(4 17 13 / 40%), 0 0 0 8px rgb(54 225 168 / 24%);
+}
+
+.face-camera.has-warning .face-camera__guide span {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 1000px rgb(4 17 13 / 44%), 0 0 0 8px rgb(251 191 36 / 22%);
+}
+
 .face-camera__status {
   display: inline-flex;
   position: absolute;
@@ -590,7 +600,7 @@
 
 .face-modal__tips {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 9px;
   padding: 14px 24px 0;
 
@@ -610,18 +620,24 @@
   }
 
   app-lucide-icon { color: var(--primary); }
+
+  span.is-valid {
+    border-color: #86d9bb;
+    background: #effcf6;
+    color: #087653;
+  }
 }
 
 .face-modal__footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 18px;
   padding: 17px 24px 21px;
 
   p {
     display: flex;
-    max-width: 360px;
+    max-width: 520px;
     align-items: flex-start;
     gap: 7px;
     margin: 0;
@@ -631,26 +647,6 @@
   }
 
   p app-lucide-icon { flex: 0 0 17px; color: var(--primary); }
-}
-
-.face-modal__scan {
-  display: inline-flex;
-  min-height: 46px;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0 18px;
-  cursor: pointer;
-  border: 1px solid var(--primary);
-  border-radius: 10px;
-  background: var(--primary);
-  color: #fff;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 750;
-
-  &:hover:not(:disabled) { border-color: var(--primary-dark); background: var(--primary-dark); }
-  &:disabled { cursor: wait; opacity: .6; }
 }
 
 @keyframes face-spin { to { transform: rotate(360deg); } }
@@ -749,7 +745,6 @@
   .face-camera__status { max-width: calc(100% - 24px); white-space: normal; text-align: center; }
   .face-modal__tips { grid-template-columns: 1fr; padding-inline: 14px; }
   .face-modal__footer { align-items: stretch; flex-direction: column; padding: 14px 14px 18px; }
-  .face-modal__scan { width: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {

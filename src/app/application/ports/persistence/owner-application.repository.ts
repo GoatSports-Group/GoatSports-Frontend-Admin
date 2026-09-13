@@ -12,8 +12,26 @@ export interface OwnerApplicationRepository {
   approve(id: string): Observable<void>;
   reject(id: string, rejectReason: string): Observable<void>;
   getFileUrl(key: string): Observable<string>;
+  analyzeFaceReadiness(frame: string): Observable<OwnerFaceReadiness>;
   verifyIdentity(files: OwnerApplicationFiles, livenessFrames: string[]): Observable<PreparedOwnerIdentity>;
   submit(form: Record<string, unknown>, preparedIdentity: PreparedOwnerIdentity): Observable<void>;
+}
+
+export interface OwnerFaceReadiness {
+  ready: boolean;
+  reasonCode: string;
+  message: string;
+  faceCount: number;
+  brightness: number;
+  centered: boolean;
+  frontal: boolean;
+  glassesFree: boolean;
+  eyesOpen: boolean;
+  maskFree: boolean;
+  faceBox: [number, number, number, number] | null;
+  yawRatio: number;
+  pitchRatio: number;
+  rollDegrees: number;
 }
 
 export interface OwnerApplicationFiles {

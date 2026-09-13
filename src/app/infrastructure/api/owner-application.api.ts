@@ -64,11 +64,35 @@ export interface OwnerIdentityVerificationResponse {
   message: string | null;
 }
 
+export interface OwnerFaceReadinessResponse {
+  ready: boolean;
+  reasonCode: string;
+  message: string;
+  faceCount: number;
+  brightness: number;
+  centered: boolean;
+  frontal: boolean;
+  glassesFree: boolean;
+  eyesOpen: boolean;
+  maskFree: boolean;
+  faceBox: [number, number, number, number] | null;
+  yawRatio: number;
+  pitchRatio: number;
+  rollDegrees: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class OwnerApplicationApi {
   private http = inject(HttpClient);
   private uploadHttp = new HttpClient(inject(HttpBackend));
   private apiBase = environment.apiUrl;
+
+  analyzeFaceReadiness(frame: string): Observable<BaseResponse<OwnerFaceReadinessResponse>> {
+    return this.http.post<BaseResponse<OwnerFaceReadinessResponse>>(
+      `${this.apiBase}/venue-service/api/v1/owner-applications/identity-verification/readiness`,
+      { frame }
+    );
+  }
 
   prepareUploads(
     request: PrepareOwnerApplicationUploadRequest,
