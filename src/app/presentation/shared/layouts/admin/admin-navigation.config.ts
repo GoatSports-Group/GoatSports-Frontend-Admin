@@ -17,6 +17,7 @@ export const PLATFORM_ADMIN_NAVIGATION: readonly AdminNavigationItem[] = [
   { title: 'Chủ sân', description: 'Duyệt đơn và quản lý hồ sơ đối tác chủ sân', icon: 'land-plot', route: '/owner-applications' },
   { title: 'Người dùng', description: 'Quản lý tài khoản thành viên hệ thống', icon: 'users', route: '/users' },
   { title: 'Vai trò', description: 'Quản lý nhóm vai trò và quyền hạn', icon: 'shield', route: '/roles' },
+  { title: 'Kiểm duyệt', description: 'Xử lý báo cáo nội dung và khiếu nại của tác giả', icon: 'shield', route: '/moderation' },
   { title: 'Nhật ký', description: 'Theo dõi nhật ký hoạt động hệ thống', icon: 'activity', route: '/logs' }
 ];
 

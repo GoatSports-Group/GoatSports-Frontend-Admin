@@ -1,0 +1,215 @@
+<main class="moderation-page">
+  <section class="hero">
+    <div>
+      <p class="eyebrow"><lucide-icon name="shield" /> Kiểm duyệt nội dung</p>
+      <h1>Báo cáo &amp; khiếu nại</h1>
+      <p>Xử lý nội dung bị báo cáo trên bảng tin và xét duyệt khiếu nại của tác giả.</p>
+    </div>
+    <div class="scope-note">
+      <lucide-icon name="info" />
+      <div>
+        <strong>Phạm vi kiểm duyệt</strong>
+        <span>Chỉ tác động lên bài viết và bình luận. Đình chỉ tài khoản hoặc cơ sở do dịch vụ sở hữu thực hiện.</span>
+      </div>
+    </div>
+  </section>
+
+  <nav class="lane-tabs" aria-label="Chế độ kiểm duyệt">
+    <button type="button" [class.active]="lane() === 'REPORTS'" [disabled]="loading()"
+      (click)="switchLane('REPORTS')">
+      <lucide-icon name="flag" /> Hàng đợi báo cáo
+    </button>
+    <button type="button" [class.active]="lane() === 'APPEALS'" [disabled]="loading()"
+      (click)="switchLane('APPEALS')">
+      <lucide-icon name="gavel" /> Khiếu nại
+    </button>
+  </nav>
+
+  <section class="filter-panel" aria-label="Bộ lọc">
+    @if (lane() === 'REPORTS') {
+      <label>Trạng thái báo cáo
+        <select [value]="reportStatusFilter()" [disabled]="loading()" (change)="selectReportStatus($event)">
+          <option value="">Chờ xử lý và đang xem xét</option>
+          @for (status of reportStatuses; track status) {
+            <option [value]="status">{{ statusLabel(status) }}</option>
+          }
+        </select>
+      </label>
+    } @else {
+      <label>Trạng thái khiếu nại
+        <select [value]="appealStatusFilter()" [disabled]="loading()" (change)="selectAppealStatus($event)">
+          @for (status of appealStatuses; track status) {
+            <option [value]="status">{{ statusLabel(status) }}</option>
+          }
+        </select>
+      </label>
+    }
+    <button type="button" class="primary" [disabled]="loading()" (click)="load(0)">
+      @if (loading()) { <lucide-icon name="loader-2" class="spin" /> Đang tải }
+      @else { <lucide-icon name="refresh-cw" /> Làm mới }
+    </button>
+  </section>
+
+  @if (notice()) {
+    <p class="notice" role="status"><lucide-icon name="check-circle" /> {{ notice() }}</p>
+  }
+
+  @if (loading()) {
+    <app-page-loading title="Đang tải hàng đợi kiểm duyệt"
+      description="Đang đồng bộ báo cáo và khiếu nại mới nhất từ mạng xã hội." />
+  } @else if (error()) {
+    <section class="state-card error-state">
+      <lucide-icon name="alert-circle" />
+      <div><h2>Chưa tải được dữ liệu</h2><p>{{ error() }}</p></div>
+      <button type="button" class="secondary" (click)="retry()"><lucide-icon name="rotate-ccw" /> Thử lại</button>
+    </section>
+  } @else if (lane() === 'REPORTS' && !reports().length) {
+    <section class="state-card empty-state">
+      <lucide-icon name="shield-check" />
+      <div><h2>Không có báo cáo cần xử lý</h2><p>Hàng đợi trống với bộ lọc hiện tại.</p></div>
+    </section>
+  } @else if (lane() === 'APPEALS' && !appeals().length) {
+    <section class="state-card empty-state">
+      <lucide-icon name="gavel" />
+      <div><h2>Không có khiếu nại</h2><p>Chưa có tác giả nào khiếu nại quyết định kiểm duyệt.</p></div>
+    </section>
+  } @else {
+    <section class="result-strip">
+      <div><span>Tổng cộng</span><strong>{{ total() }} mục</strong></div>
+      <p><lucide-icon name="list" /> Trang {{ page() + 1 }} / {{ pages() }}</p>
+    </section>
+
+    @if (lane() === 'REPORTS') {
+      <ul class="queue">
+        @for (report of reports(); track report.reportId) {
+          <li class="queue-card">
+            <header>
+              <div class="title-row">
+                <span class="target-pill">{{ targetLabel(report.targetType) }}</span>
+                <span class="status" [class.status--resolved]="report.status === 'RESOLVED'"
+                  [class.status--rejected]="report.status === 'REJECTED'">
+                  {{ statusLabel(report.status) }}
+                </span>
+              </div>
+              <span class="meta">#{{ shortId(report.reportId) }} · {{ report.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+            </header>
+
+            <blockquote>{{ report.reason }}</blockquote>
+
+            <dl>
+              <div><dt><lucide-icon name="user" /> Người báo cáo</dt><dd>{{ shortId(report.reporterId) }}</dd></div>
+              <div><dt><lucide-icon name="file-text" /> Nội dung</dt><dd>{{ shortId(report.targetId) }}</dd></div>
+              @if (report.evidence.length) {
+                <div><dt><lucide-icon name="paperclip" /> Minh chứng</dt><dd>{{ report.evidence.length }} tệp</dd></div>
+              }
+            </dl>
+
+            @if (report.actions.length) {
+              <ul class="action-trail">
+                @for (action of report.actions; track action.actionId) {
+                  <li>
+                    <lucide-icon name="check" />
+                    <span><strong>{{ actionLabel(action.actionType) }}</strong> — {{ action.reason }}</span>
+                    <time>{{ action.actionAt | date:'dd/MM HH:mm' }}</time>
+                  </li>
+                }
+              </ul>
+            }
+
+            @if (report.status === 'PENDING' || report.status === 'REVIEWING') {
+              <footer>
+                @if (openReportId() === report.reportId) {
+                  <div class="action-form">
+                    <label>Hành động
+                      <select [value]="draftAction()" [disabled]="submitting()" (change)="selectAction($event)">
+                        @for (choice of actionChoices; track choice.value) {
+                          <option [value]="choice.value">{{ choice.label }}</option>
+                        }
+                      </select>
+                    </label>
+                    <p class="hint">{{ activeHint() }}</p>
+                    <label>Lý do xử lý
+                      <textarea rows="3" [value]="draftReason()" [disabled]="submitting()"
+                        placeholder="Ghi rõ căn cứ để tác giả và kiểm toán viên hiểu được quyết định"
+                        (input)="updateReason($event)"></textarea>
+                    </label>
+                    @if (reasonTooShort()) {
+                      <p class="form-error">Lý do phải có ít nhất 10 ký tự.</p>
+                    }
+                    <div class="form-buttons">
+                      <button type="button" class="primary" [disabled]="submitting() || reasonTooShort()"
+                        (click)="submitAction(report.reportId)">
+                        @if (submitting()) { <lucide-icon name="loader-2" class="spin" /> Đang gửi }
+                        @else { <lucide-icon name="check" /> Xác nhận }
+                      </button>
+                      <button type="button" class="ghost" [disabled]="submitting()"
+                        (click)="toggleReport(report.reportId)">Hủy</button>
+                    </div>
+                  </div>
+                } @else {
+                  <button type="button" class="secondary" (click)="toggleReport(report.reportId)">
+                    <lucide-icon name="gavel" /> Xử lý báo cáo
+                  </button>
+                }
+              </footer>
+            }
+          </li>
+        }
+      </ul>
+    } @else {
+      <ul class="queue">
+        @for (appeal of appeals(); track appeal.appealId) {
+          <li class="queue-card">
+            <header>
+              <div class="title-row">
+                <span class="target-pill">{{ actionLabel(appeal.actionType) }}</span>
+                <span class="status" [class.status--resolved]="appeal.status === 'APPROVED'"
+                  [class.status--rejected]="appeal.status === 'REJECTED'">
+                  {{ statusLabel(appeal.status) }}
+                </span>
+              </div>
+              <span class="meta">#{{ shortId(appeal.appealId) }} · {{ appeal.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+            </header>
+
+            <blockquote>{{ appeal.reason }}</blockquote>
+
+            <dl>
+              <div><dt><lucide-icon name="user" /> Người khiếu nại</dt><dd>{{ shortId(appeal.appellantId) }}</dd></div>
+              <div><dt><lucide-icon name="file-text" /> Nội dung</dt>
+                <dd>{{ targetLabel(appeal.targetType) }} · {{ shortId(appeal.targetId) }}</dd></div>
+              @if (appeal.reviewedAt) {
+                <div><dt><lucide-icon name="clock" /> Đã xét</dt>
+                  <dd>{{ appeal.reviewedAt | date:'dd/MM/yyyy HH:mm' }}</dd></div>
+              }
+            </dl>
+
+            @if (appeal.status === 'PENDING') {
+              <footer class="decision-row">
+                <button type="button" class="primary" [disabled]="submitting()"
+                  (click)="reviewAppeal(appeal.appealId, 'APPROVED')">
+                  <lucide-icon name="undo-2" /> Chấp nhận &amp; khôi phục
+                </button>
+                <button type="button" class="danger" [disabled]="submitting()"
+                  (click)="reviewAppeal(appeal.appealId, 'REJECTED')">
+                  <lucide-icon name="x" /> Từ chối
+                </button>
+              </footer>
+            }
+          </li>
+        }
+      </ul>
+    }
+
+    @if (pages() > 1) {
+      <nav class="pagination" aria-label="Phân trang">
+        <button type="button" class="secondary" [disabled]="page() === 0" (click)="goToPage(page() - 1)">
+          <lucide-icon name="chevron-left" /> Trước
+        </button>
+        <span>{{ page() + 1 }} / {{ pages() }}</span>
+        <button type="button" class="secondary" [disabled]="page() + 1 >= pages()" (click)="goToPage(page() + 1)">
+          Sau <lucide-icon name="chevron-right" />
+        </button>
+      </nav>
+    }
+  }
+</main>

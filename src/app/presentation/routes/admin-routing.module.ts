@@ -18,6 +18,7 @@ import { OwnerCheckInComponent } from '@presentation/pages/owner-check-in/owner-
 import { OwnerRevenueComponent } from '@presentation/pages/owner-revenue/owner-revenue.component';
 import { OwnerReviewsComponent } from '@presentation/pages/owner-reviews/owner-reviews.component';
 import { OwnerBankAccountComponent } from '@presentation/pages/owner-bank-account/owner-bank-account.component';
+import { ModerationComponent } from '@presentation/pages/moderation/moderation.component';
 
 const routes: Routes = [
   {
@@ -37,6 +38,7 @@ const routes: Routes = [
       { path: 'roles', component: RolesComponent, canActivate: [AdminGuard], data: { allowedRoles: ['ADMIN'] } },
       { path: 'roles/:id/permissions', component: AssignPermissionsComponent, canActivate: [AdminGuard], data: { allowedRoles: ['ADMIN'] } },
       { path: 'logs', component: LogsComponent, canActivate: [AdminGuard], data: { allowedRoles: ['ADMIN'] } },
+      { path: 'moderation', component: ModerationComponent, canActivate: [AdminGuard], data: { allowedRoles: ['ADMIN'] } },
       { path: 'venues', component: OwnerVenueManagementComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
       { path: 'courts', component: OwnerCourtManagementComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
       { path: 'schedule', component: OwnerScheduleComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
