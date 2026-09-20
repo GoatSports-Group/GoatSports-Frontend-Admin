@@ -24,19 +24,14 @@ export class StorageRepositoryImpl implements StorageRepository {
     return this.storageApi.getFileUrl(key);
   }
 
-  confirmUpload(tempKey: string): Observable<string[]> {
-    return this.storageApi.confirmUpload(tempKey).pipe(
-      map(response => response.data)
-    );
-  }
-
   uploadAvatar(file: File): Observable<string> {
     return this.storageApi.getPresignedUrl(file.name, file.type, 'avatars').pipe(
       switchMap(response => {
         const presigned = response.data[0];
+        // Tra ve objectKey tam; service so huu ho so (auth-service) moi la ben goi
+        // /internal/files/confirm de doi sang vung luu vinh vien.
         return this.storageApi.uploadToPresignedUrl(presigned.uploadUrl, file).pipe(
-          switchMap(() => this.storageApi.confirmUpload(presigned.objectKey)),
-          map(confirmResponse => confirmResponse.data[0])
+          map(() => presigned.objectKey)
         );
       })
     );
