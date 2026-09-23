@@ -30,6 +30,11 @@
                 "glob": "**/*",
                 "input": "src/assets",
                 "output": "/assets"
+              },
+              {
+                "glob": "three.{core,module}.min.js",
+                "input": "node_modules/three/build",
+                "output": "/assets/vendor/three"
               }
             ],
             "styles": [
