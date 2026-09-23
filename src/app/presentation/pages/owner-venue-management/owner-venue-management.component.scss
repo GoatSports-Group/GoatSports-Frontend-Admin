@@ -1,10 +1,10 @@
 :host {
-  --venue-primary: #059669;
-  --venue-primary-dark: #047857;
-  --venue-primary-soft: #ecfdf5;
-  --venue-text: #172033;
-  --venue-muted: #64748b;
-  --venue-border: #dce5e2;
+  --venue-primary: var(--primary);
+  --venue-primary-dark: var(--primary-hover);
+  --venue-primary-soft: var(--primary-light);
+  --venue-text: var(--ink);
+  --venue-muted: var(--body);
+  --venue-border: var(--hairline);
   display: block;
   min-width: 0;
   font-family: 'Be Vietnam Pro', sans-serif;
@@ -45,7 +45,7 @@ h1 {
   overflow: hidden;
   border: 1px solid var(--venue-border);
   border-radius: 14px;
-  background: #fff;
+  background: var(--surface);
 }
 
 .venue-selector {
@@ -53,7 +53,7 @@ h1 {
   min-width: 0;
   flex-direction: column;
   border-right: 1px solid var(--venue-border);
-  background: #fbfcfc;
+  background: var(--surface-subtle);
   grid-row: 1;
 }
 
@@ -64,12 +64,12 @@ h1 {
   justify-content: space-between;
   gap: 16px;
   padding: 0 10px;
-  border-bottom: 1px solid #edf1ef;
+  border-bottom: 1px solid var(--hairline);
 }
 
 .venue-selector__heading h2 {
   margin: 0;
-  color: #26332e;
+  color: var(--ink);
   font-size: 15px;
   font-weight: 750;
 }
@@ -86,7 +86,7 @@ h1 {
 }
 
 .venue-selector__heading a:hover {
-  color: #035f48;
+  color: var(--primary);
 }
 
 .venue-selector__heading lucide-icon {
@@ -101,10 +101,10 @@ h1 {
   gap: 8px;
   margin: 8px 10px;
   padding: 0 12px;
-  border: 1px solid #d7e0dd;
+  border: 1px solid var(--border-strong);
   border-radius: 9px;
-  background: #fff;
-  color: #7a8984;
+  background: var(--surface);
+  color: var(--body);
   transition: border-color .18s ease, box-shadow .18s ease;
 }
 
@@ -138,7 +138,7 @@ h1 {
 .venue-list {
   display: grid;
   align-content: start;
-  border-top: 1px solid #edf1ef;
+  border-top: 1px solid var(--hairline);
 }
 
 .venue-option {
@@ -152,7 +152,7 @@ h1 {
   padding: 9px 12px;
   cursor: pointer;
   border: 0;
-  border-bottom: 1px solid #e8eeeb;
+  border-bottom: 1px solid var(--hairline);
   background: transparent;
   color: inherit;
   font: inherit;
@@ -169,7 +169,7 @@ h1 {
 }
 
 .venue-option:hover:not(:disabled) {
-  background: #f3f8f6;
+  background: var(--surface-strong);
 }
 
 .venue-option:focus-visible {
@@ -185,7 +185,7 @@ h1 {
   padding: 8px 10px;
   border: 1px solid #62c6a5;
   border-radius: 9px;
-  background: linear-gradient(90deg, #effbf6, #f9fdfb);
+  background: linear-gradient(90deg, var(--primary-light), var(--primary-light));
   box-shadow: 0 2px 8px rgb(5 150 105 / 7%);
 }
 
@@ -204,10 +204,10 @@ h1 {
   height: 62px;
   place-items: center;
   overflow: hidden;
-  border: 1px solid #d8e2de;
+  border: 1px solid var(--hairline);
   border-radius: 8px;
-  background: #edf4f1;
-  color: #789088;
+  background: var(--surface-strong);
+  color: var(--body);
 }
 
 .venue-option__thumb img {
@@ -236,7 +236,7 @@ h1 {
 }
 
 .venue-option__copy>strong {
-  color: #25322d;
+  color: var(--ink);
   font-size: 15px;
   font-weight: 750;
 }
@@ -252,8 +252,8 @@ h1 {
   margin-top: 7px;
   padding: 3px 7px;
   border-radius: 6px;
-  background: #fff7ed;
-  color: #b45309;
+  background: var(--warning-soft);
+  color: var(--warning);
   font-size: 11px;
   font-weight: 700;
 }
@@ -273,13 +273,13 @@ h1 {
 }
 
 .venue-option__dot.is-active {
-  background: var(--venue-primary);
+  background: var(--primary-fill);
 }
 
 .venue-option__chevron {
   width: 15px;
   height: 15px;
-  color: #82908b;
+  color: var(--body);
 }
 
 .venue-option.is-selected .venue-option__chevron {
@@ -346,8 +346,8 @@ h1 {
 .venue-selector__footer nav button {
   cursor: pointer;
   border: 1px solid var(--venue-border);
-  background: #fff;
-  color: #56645f;
+  background: var(--surface);
+  color: var(--body);
 }
 
 .venue-selector__footer nav button:disabled {
@@ -356,7 +356,7 @@ h1 {
 }
 
 .venue-selector__footer nav span {
-  background: var(--venue-primary);
+  background: var(--primary-fill);
   color: #fff;
   font-size: 14px;
   font-weight: 750;
@@ -364,7 +364,7 @@ h1 {
 
 .venue-editor {
   min-width: 0;
-  background: #fff;
+  background: var(--surface);
   grid-row: 1;
 }
 
@@ -380,7 +380,7 @@ h1 {
 
 .selected-venue-heading h2 {
   margin: 0;
-  color: #26443a;
+  color: var(--primary-strong);
   font-size: 17px;
   font-weight: 750;
 }
@@ -391,10 +391,10 @@ h1 {
   align-items: center;
   gap: 7px;
   padding: 6px 10px;
-  border: 1px solid #fed7aa;
+  border: 1px solid var(--warning-soft);
   border-radius: 9px;
-  background: #fffaf1;
-  color: #b45309;
+  background: var(--warning-soft);
+  color: var(--warning);
   font-size: 13px;
   font-weight: 700;
 }
@@ -407,7 +407,7 @@ h1 {
 }
 
 .status-pill.is-active {
-  border-color: #b8e7d7;
-  background: #f4fcf8;
+  border-color: var(--primary-light);
+  background: var(--primary-light);
   color: var(--venue-primary-dark);
 }

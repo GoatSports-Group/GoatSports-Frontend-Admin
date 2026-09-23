@@ -30,10 +30,10 @@
           </defs>
 
           <!-- Y-Axis Grid lines -->
-          <line x1="0" y1="20" x2="100" y2="20" stroke="#f8fafc" stroke-width="0.5" />
-          <line x1="0" y1="45" x2="100" y2="45" stroke="#f8fafc" stroke-width="0.5" />
-          <line x1="0" y1="70" x2="100" y2="70" stroke="#f8fafc" stroke-width="0.5" />
-          <line x1="0" y1="90" x2="100" y2="90" stroke="#f1f5f9" stroke-width="0.75" />
+          <line x1="0" y1="20" x2="100" y2="20" style="stroke: var(--surface-subtle)" stroke-width="0.5" />
+          <line x1="0" y1="45" x2="100" y2="45" style="stroke: var(--surface-subtle)" stroke-width="0.5" />
+          <line x1="0" y1="70" x2="100" y2="70" style="stroke: var(--surface-subtle)" stroke-width="0.5" />
+          <line x1="0" y1="90" x2="100" y2="90" style="stroke: var(--surface-strong)" stroke-width="0.75" />
           
           <!-- Area Path -->
           <path [attr.d]="areaPath" fill="url(#areaGrad)" class="transition-all duration-500" />
@@ -48,7 +48,7 @@
 
           <!-- Hover vertical indicator line -->
           @if (hoverIndex !== null && hoverX !== null) {
-            <line [attr.x1]="hoverX" y1="0" [attr.x2]="hoverX" y2="90" stroke="#94a3b8" stroke-width="0.5" stroke-dasharray="2" />
+            <line [attr.x1]="hoverX" y1="0" [attr.x2]="hoverX" y2="90" style="stroke: var(--muted)" stroke-width="0.5" stroke-dasharray="2" />
             <circle [attr.cx]="hoverX" [attr.cy]="hoverY" r="1.5" fill="#10b981" stroke="white" stroke-width="0.75" />
           }
         </svg>

@@ -64,15 +64,15 @@
   .venue-map-tooltip {
     width: 300px;
     padding: 0 !important;
-    border: 1px solid #f1f5f9 !important;
+    border: 1px solid var(--hairline) !important;
     border-radius: 16px !important;
-    background: #fff !important;
-    box-shadow: 0 10px 15px -3px rgb(15 23 42 / 10%), 0 4px 6px -2px rgb(15 23 42 / 5%) !important;
+    background: var(--surface) !important;
+    box-shadow: 0 10px 15px -3px var(--hairline), 0 4px 6px -2px var(--hairline) !important;
     white-space: normal !important;
   }
 
   .leaflet-tooltip-top.venue-map-tooltip::before {
-    border-top-color: #fff !important;
+    border-top-color: var(--surface) !important;
   }
 
   .custom-leaflet-marker {

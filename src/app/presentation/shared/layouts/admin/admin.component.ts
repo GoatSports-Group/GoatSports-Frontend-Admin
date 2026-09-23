@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal, computed, HostListener } from '@angular/core';
+import { ThemeToggleComponent } from '../../components/theme-toggle/theme-toggle.component';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { interval, of } from 'rxjs';
@@ -31,7 +32,7 @@ import {
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [
+  imports: [ThemeToggleComponent, 
     CommonModule,
     RouterModule,
     MatMenuModule,

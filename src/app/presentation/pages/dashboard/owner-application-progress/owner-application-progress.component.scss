@@ -3,12 +3,6 @@
 @use './owner-application-compact';
 
 :host {
-  --primary: #059669;
-  --primary-light: #d1fae5;
-  --text-dark: #0f172a;
-  --text-muted: #64748b;
-  --bg-card: #fff;
-  --border-color: #cbd5e1;
   display: block;
   min-width: 0;
   font-family: 'Be Vietnam Pro', sans-serif;
@@ -24,7 +18,7 @@
   border: 1px solid var(--border-color);
   border-radius: 20px;
   background: var(--bg-card);
-  box-shadow: 0 4px 12px rgb(15 23 42 / 5%);
+  box-shadow: 0 4px 12px var(--hairline);
   text-align: center;
 
   h2, p { margin: 0; }
@@ -37,7 +31,7 @@
     cursor: pointer;
     border: 0;
     border-radius: 11px;
-    background: var(--primary);
+    background: var(--primary-fill);
     color: #fff;
     font-size: 14px;
     font-weight: 700;
@@ -57,7 +51,7 @@
   lucide-icon { width: 24px; height: 24px; }
 }
 
-.history-state--error .history-state__icon { background: #fff0f2; color: #d92d4c; }
+.history-state--error .history-state__icon { background: var(--danger-soft); color: var(--danger); }
 
 .history-spinner {
   width: 38px;

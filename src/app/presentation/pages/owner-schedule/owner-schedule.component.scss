@@ -1,7 +1,7 @@
 :host {
   display: block;
   min-width: 0;
-  color: #17251f;
+  color: var(--ink);
 }
 
 * {
@@ -39,7 +39,7 @@ input:focus-visible {
   min-height: calc(100vh - 76px);
   grid-template-columns: minmax(0, 1fr);
   padding: 0;
-  background: #f4f7f5;
+  background: var(--canvas);
 }
 
 .schedule-page--editor-open {
@@ -66,7 +66,7 @@ input:focus-visible {
 
 .page-heading h1 {
   margin: 0;
-  color: #123d2d;
+  color: var(--primary-strong);
   font-size: 30px;
   font-weight: 800;
   line-height: 1.15;
@@ -75,7 +75,7 @@ input:focus-visible {
 
 .page-heading p {
   margin: 6px 0 0;
-  color: #6c7973;
+  color: var(--body);
   font-size: 15px;
   line-height: 1.45;
 }
@@ -107,7 +107,7 @@ input:focus-visible {
 
 .primary-button {
   border: 1px solid #075c3c;
-  background: linear-gradient(180deg, #087649, #045f3b);
+  background: linear-gradient(180deg, var(--primary-fill), #045f3b);
   color: #fff;
   box-shadow: 0 3px 8px rgba(4, 95, 59, .16);
 }
@@ -118,15 +118,15 @@ input:focus-visible {
 
 .secondary-button,
 .today-button {
-  border: 1px solid #d7dfdb;
-  background: #fff;
-  color: #354740;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--ink-2);
 }
 
 .secondary-button:hover:not(:disabled),
 .today-button:hover:not(:disabled) {
   border-color: #9fb4aa;
-  background: #f8fbf9;
+  background: var(--surface-subtle);
 }
 
 .primary-button lucide-icon,
@@ -151,7 +151,7 @@ input:focus-visible {
 }
 
 .context-select>span {
-  color: #58675f;
+  color: var(--body);
   font-size: 13px;
   font-weight: 650;
 }
@@ -165,10 +165,10 @@ input:focus-visible {
   min-width: 0;
   height: 44px;
   padding: 0 13px;
-  border: 1px solid #d5ded9;
+  border: 1px solid var(--border-strong);
   border-radius: 9px;
-  background: #fff;
-  color: #26362f;
+  background: var(--surface);
+  color: var(--ink-2);
   font-size: 14px;
 }
 
@@ -181,16 +181,16 @@ input:focus-visible {
   gap: 8px;
   padding: 0 13px;
   overflow: visible;
-  border: 1px solid #d5ded9;
+  border: 1px solid var(--border-strong);
   border-radius: 9px;
-  background: #fff;
-  color: #34463e;
+  background: var(--surface);
+  color: var(--ink-2);
   cursor: pointer;
 }
 
 .date-range-picker:hover:not(.is-disabled) {
   border-color: #8fb7a6;
-  background: #fbfefc;
+  background: var(--primary-light);
 }
 
 .date-range-picker:focus-visible {
@@ -229,10 +229,10 @@ input:focus-visible {
   left: 0;
   width: 100%;
   padding: 12px;
-  border: 1px solid #d2ddd7;
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
-  background: #fff;
-  color: #293a32;
+  background: var(--surface);
+  color: var(--ink-2);
   cursor: default;
   box-shadow: 0 16px 38px rgba(28, 52, 41, .18);
 }
@@ -267,8 +267,8 @@ input:focus-visible {
 }
 
 .calendar-picker-popover > header button:hover {
-  background: #edf6f1;
-  color: #08764a;
+  background: var(--surface-strong);
+  color: var(--primary);
 }
 
 .calendar-picker-weekdays,
@@ -280,7 +280,7 @@ input:focus-visible {
 
 .calendar-picker-weekdays {
   margin-bottom: 4px;
-  color: #718078;
+  color: var(--body);
   font-size: 11px;
   font-weight: 700;
   text-align: center;
@@ -296,25 +296,25 @@ input:focus-visible {
 }
 
 .calendar-picker-days button:hover {
-  background: #e8f5ef;
-  color: #076d45;
+  background: var(--surface-strong);
+  color: var(--primary);
 }
 
 .calendar-picker-days button.is-outside {
-  color: #adb7b2;
+  color: var(--muted);
 }
 
 .calendar-picker-days button.is-selected-week {
-  background: #e2f3eb;
-  color: #076d45;
+  background: var(--surface-strong);
+  color: var(--primary);
 }
 
 .calendar-picker-days button.is-today {
-  box-shadow: inset 0 0 0 1px #08764a;
+  box-shadow: inset 0 0 0 1px var(--primary);
 }
 
 .calendar-picker-days button.is-selected-week.is-today {
-  background: #08764a;
+  background: var(--primary-fill);
   color: #fff;
 }
 
@@ -325,11 +325,11 @@ input:focus-visible {
   gap: 8px;
   margin-top: 10px;
   padding-top: 9px;
-  border-top: 1px solid #e9efec;
+  border-top: 1px solid var(--hairline);
 }
 
 .calendar-picker-popover > footer span {
-  color: #75827c;
+  color: var(--body);
   font-size: 10px;
 }
 
@@ -338,8 +338,8 @@ input:focus-visible {
   padding: 5px 8px;
   border: 0;
   border-radius: 7px;
-  background: #e8f5ef;
-  color: #08764a;
+  background: var(--surface-strong);
+  color: var(--primary);
   font-size: 11px;
   font-weight: 700;
 }
@@ -354,9 +354,9 @@ input:focus-visible {
   width: 39px;
   height: 44px;
   place-items: center;
-  border: 1px solid #d5ded9;
-  background: #fff;
-  color: #46564f;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--ink-2);
 }
 
 .week-navigation button:first-child {
@@ -384,7 +384,7 @@ input:focus-visible {
   min-height: 48px;
   align-items: flex-end;
   margin: 2px 2px 0;
-  border-bottom: 1px solid #dce4e0;
+  border-bottom: 1px solid var(--hairline);
 }
 
 .schedule-tabs button {
@@ -393,7 +393,7 @@ input:focus-visible {
   padding: 0 2px;
   border: 0;
   background: transparent;
-  color: #58675f;
+  color: var(--body);
   font-size: 14px;
   font-weight: 650;
 }
@@ -405,12 +405,12 @@ input:focus-visible {
   bottom: -1px;
   left: 0;
   height: 2px;
-  background: #08764a;
+  background: var(--primary-fill);
   transform: scaleX(0);
 }
 
 .schedule-tabs button.active {
-  color: #08764a;
+  color: var(--primary);
 }
 
 .schedule-tabs button.active::after {
@@ -421,10 +421,10 @@ input:focus-visible {
   min-width: 0;
   margin-top: 18px;
   padding: 14px;
-  border: 1px solid #d9e3de;
+  border: 1px solid var(--hairline);
   border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 8px 24px rgba(26, 62, 46, .045);
+  background: var(--surface);
+  box-shadow: 0 8px 24px var(--hairline);
 }
 
 .calendar-legend {
@@ -435,7 +435,7 @@ input:focus-visible {
   gap: 24px;
   margin-bottom: 12px;
   padding: 0 4px;
-  color: #66756e;
+  color: var(--body);
   font-size: 13px;
 }
 
@@ -458,23 +458,23 @@ input:focus-visible {
 .calendar-legend i[data-status='OCCUPIED'] { background: #2f78c4; }
 .calendar-legend i[data-status='PAYMENT_DUE'] { background: #b35a27; }
 .calendar-legend i[data-status='UPCOMING'] { background: #e68a18; }
-.calendar-legend i[data-status='COMPLETED'] { background: #08764a; }
+.calendar-legend i[data-status='COMPLETED'] { background: var(--primary-fill); }
 .calendar-legend i[data-status='MAINTENANCE'] { background: #db443e; }
 .calendar-legend i[data-status='DISABLED'] { background: #8f9893; }
 
 .week-calendar {
   min-width: 0;
   overflow: visible;
-  border: 1px solid #dce4e0;
+  border: 1px solid var(--hairline);
   border-radius: 12px;
-  background: #fff;
+  background: var(--surface);
 }
 
 .week-calendar__header {
   display: grid;
   grid-template-columns: 64px repeat(7, minmax(126px, 1fr));
   min-width: 950px;
-  border-bottom: 1px solid #dce4e0;
+  border-bottom: 1px solid var(--hairline);
 }
 
 .time-heading,
@@ -483,8 +483,8 @@ input:focus-visible {
   min-height: 58px;
   place-content: center;
   text-align: center;
-  border-right: 1px solid #dfe7e3;
-  background: #fff;
+  border-right: 1px solid var(--hairline);
+  background: var(--surface);
 }
 
 .day-heading:last-child {
@@ -492,31 +492,31 @@ input:focus-visible {
 }
 
 .time-heading {
-  color: #77837d;
+  color: var(--body);
   font-size: 12px;
 }
 
 .day-heading strong {
-  color: #2a3b33;
+  color: var(--ink-2);
   font-size: 14px;
   font-weight: 700;
 }
 
 .day-heading span {
-  color: #748079;
+  color: var(--body);
   font-size: 12px;
 }
 
 .day-heading--today {
-  background: #e9f6ef;
+  background: var(--surface-strong);
 }
 
 .day-heading--today strong {
-  color: #067448;
+  color: var(--primary);
 }
 
 .day-heading--weekend strong {
-  color: #cf4e36;
+  color: var(--danger);
 }
 
 .week-calendar__body {
@@ -529,15 +529,15 @@ input:focus-visible {
   position: absolute;
   inset: 0 auto 0 0;
   width: 64px;
-  border-right: 1px solid #e5ebe8;
-  background: #fff;
+  border-right: 1px solid var(--hairline);
+  background: var(--surface);
 }
 
 .time-axis span {
   position: absolute;
   right: 10px;
   z-index: 1;
-  color: #77837d;
+  color: var(--body);
   font-size: 12px;
   font-weight: 600;
   transform: translateY(-8px);
@@ -561,8 +561,8 @@ input:focus-visible {
 .calendar-day {
   position: relative;
   min-width: 0;
-  border-right: 1px solid #e5ebe8;
-  background-image: repeating-linear-gradient(to bottom, transparent 0 71px, #e8eeeb 71px 72px);
+  border-right: 1px solid var(--hairline);
+  background-image: repeating-linear-gradient(to bottom, transparent 0 71px, var(--surface-strong) 71px 72px);
 }
 
 .calendar-day:last-child {
@@ -584,10 +584,10 @@ input:focus-visible {
   gap: 2px;
   padding: 7px 9px;
   overflow: hidden;
-  border: 1px solid #b9dfcf;
+  border: 1px solid var(--primary-light);
   border-radius: 6px;
-  background: #dff3e9;
-  color: #234238;
+  background: var(--primary-light);
+  color: var(--primary-strong);
   font-size: 12px;
   line-height: 1.3;
 }
@@ -611,31 +611,31 @@ input:focus-visible {
 
 .calendar-slot[data-status='AWAITING_CHECK_IN'] {
   border-color: #e8c56d;
-  background: #fff7df;
-  color: #715314;
+  background: var(--warning-soft);
+  color: var(--warning);
 }
 
 .calendar-slot[data-status='OCCUPIED'] {
   border-color: #8ab7e8;
-  background: #e8f2ff;
-  color: #245e99;
+  background: var(--info-soft);
+  color: var(--info);
 }
 
 .calendar-slot[data-status='PAYMENT_DUE'] {
   border-color: #d9a17d;
   background: #fbeee7;
-  color: #89451f;
+  color: var(--warning);
 }
 
 .calendar-slot[data-status='UPCOMING'] {
   border-color: #efb15c;
-  background: #fff2df;
-  color: #9b590d;
+  background: var(--warning-soft);
+  color: var(--warning);
 }
 
 .calendar-slot[data-status='COMPLETED'] {
   border-color: #075c3c;
-  background: #08764a;
+  background: var(--primary-fill);
   color: #fff;
 }
 
@@ -646,14 +646,14 @@ input:focus-visible {
 
 .calendar-slot[data-status='MAINTENANCE'] {
   border-color: #ec9a96;
-  background: repeating-linear-gradient(135deg, #fff1f1 0 4px, #ffe5e5 4px 8px);
-  color: #a8322e;
+  background: repeating-linear-gradient(135deg, var(--danger-soft) 0 4px, var(--danger-soft) 4px 8px);
+  color: var(--danger);
 }
 
 .calendar-slot[data-status='DISABLED'] {
   border-color: #c5cbc8;
-  background: #f0f2f1;
-  color: #69726d;
+  background: var(--surface-strong);
+  color: var(--body);
 }
 
 .calendar-slot__status-icon {
@@ -662,7 +662,7 @@ input:focus-visible {
   bottom: 5px;
   width: 15px;
   height: 15px;
-  color: #2f78c4;
+  color: var(--info);
 }
 
 .calendar-slot[data-status='COMPLETED'] .calendar-slot__status-icon {
@@ -688,14 +688,14 @@ input:focus-visible {
   height: 20px;
   place-items: center;
   padding: 0;
-  border: 1px solid #c9d7d0;
+  border: 1px solid var(--border-strong);
   border-radius: 4px;
-  background: #fff;
-  color: #496158;
+  background: var(--surface);
+  color: var(--body);
 }
 
 .calendar-slot__actions button.danger {
-  color: #dc3f3f;
+  color: var(--danger);
 }
 
 .calendar-slot__actions lucide-icon {
@@ -706,9 +706,9 @@ input:focus-visible {
 .active-rules {
   margin-top: 18px;
   overflow: hidden;
-  border: 1px solid #dce4e0;
+  border: 1px solid var(--hairline);
   border-radius: 12px;
-  background: #fff;
+  background: var(--surface);
 }
 
 .active-rules>header {
@@ -718,7 +718,7 @@ input:focus-visible {
   justify-content: space-between;
   gap: 12px;
   padding: 0 18px;
-  border-bottom: 1px solid #e8eeeb;
+  border-bottom: 1px solid var(--hairline);
 }
 
 .active-rules>header>div {
@@ -735,8 +735,8 @@ input:focus-visible {
 .active-rules header span {
   padding: 4px 9px;
   border-radius: 999px;
-  background: #edf7f2;
-  color: #438064;
+  background: var(--surface-strong);
+  color: var(--primary);
   font-size: 11px;
 }
 
@@ -746,10 +746,10 @@ input:focus-visible {
   align-items: center;
   gap: 5px;
   padding: 0 11px;
-  border: 1px solid #d8e0dc;
+  border: 1px solid var(--border-strong);
   border-radius: 7px;
-  background: #fff;
-  color: #3d5047;
+  background: var(--surface);
+  color: var(--ink-2);
   font-size: 12px;
   font-weight: 650;
 }
@@ -759,8 +759,8 @@ input:focus-visible {
   padding: 0 9px;
   border: 0;
   border-radius: 999px;
-  background: #edf7f2;
-  color: #34775a;
+  background: var(--surface-strong);
+  color: var(--primary);
   font-size: 11px;
 }
 
@@ -782,8 +782,8 @@ input:focus-visible {
   max-height: 260px;
   gap: 0;
   overflow: auto;
-  border-bottom: 1px solid #e3ebe7;
-  background: #f8fbf9;
+  border-bottom: 1px solid var(--hairline);
+  background: var(--surface-subtle);
 }
 
 .active-rule-details>section {
@@ -791,7 +791,7 @@ input:focus-visible {
   grid-template-columns: 125px minmax(0, 1fr);
   gap: 14px;
   padding: 11px 18px;
-  border-bottom: 1px solid #e8eeeb;
+  border-bottom: 1px solid var(--hairline);
 }
 
 .active-rule-details>section:last-child {
@@ -799,7 +799,7 @@ input:focus-visible {
 }
 
 .active-rule-details>section>strong {
-  color: #08764a;
+  color: var(--primary);
   font-size: 12px;
 }
 
@@ -822,16 +822,16 @@ input:focus-visible {
 }
 
 .active-rule-details b {
-  color: #26372f;
+  color: var(--ink-2);
 }
 
 .active-rule-details span {
-  color: #08764a;
+  color: var(--primary);
   font-weight: 750;
 }
 
 .active-rule-details small {
-  color: #66766e;
+  color: var(--body);
 }
 
 .rule-summary-grid {
@@ -845,7 +845,7 @@ input:focus-visible {
   grid-template-columns: 32px minmax(0, 1fr);
   gap: 11px;
   padding: 6px 18px;
-  border-right: 1px solid #e6ece9;
+  border-right: 1px solid var(--hairline);
 }
 
 .rule-summary-grid article:first-child {
@@ -859,15 +859,15 @@ input:focus-visible {
 .rule-summary-grid article>lucide-icon {
   width: 23px;
   height: 23px;
-  color: #be8a17;
+  color: var(--warning);
 }
 
 .rule-summary-grid article:nth-child(2)>lucide-icon {
-  color: #4073a6;
+  color: var(--info);
 }
 
 .rule-summary-grid article:nth-child(3)>lucide-icon {
-  color: #c44e36;
+  color: var(--danger);
 }
 
 .rule-summary-grid article div {
@@ -880,19 +880,19 @@ input:focus-visible {
 }
 
 .rule-summary-grid span {
-  color: #68766f;
+  color: var(--body);
   font-size: 11px;
 }
 
 .rule-summary-grid b {
   margin-top: 4px;
-  color: #08764a;
+  color: var(--primary);
   font-size: 13px;
 }
 
 .active-rules__empty {
   padding: 18px;
-  color: #75827c;
+  color: var(--body);
   font-size: 13px;
   text-align: center;
 }
@@ -900,10 +900,10 @@ input:focus-visible {
 .pricing-workspace {
   margin-top: 18px;
   padding: 16px;
-  border: 1px solid #d9e3de;
+  border: 1px solid var(--hairline);
   border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 8px 24px rgba(26, 62, 46, .045);
+  background: var(--surface);
+  box-shadow: 0 8px 24px var(--hairline);
 }
 
 .generation-strip {
@@ -913,9 +913,9 @@ input:focus-visible {
   align-items: end;
   margin-bottom: 18px;
   padding: 13px;
-  border: 1px solid #dce4e0;
+  border: 1px solid var(--hairline);
   border-radius: 8px;
-  background: #f8fbf9;
+  background: var(--surface-subtle);
 }
 
 .generation-strip>div,
@@ -928,7 +928,7 @@ input:focus-visible {
 
 .generation-strip>div span,
 .pricing-heading span {
-  color: #08764a;
+  color: var(--primary);
   font-size: 12px;
   font-weight: 800;
   letter-spacing: .04em;
@@ -940,7 +940,7 @@ input:focus-visible {
 }
 
 .generation-strip label>span {
-  color: #5d6b64;
+  color: var(--body);
   font-size: 12px;
   font-weight: 650;
 }
@@ -960,7 +960,7 @@ input:focus-visible {
 
 .pricing-heading p {
   margin: 0;
-  color: #75827c;
+  color: var(--body);
   font-size: 13px;
 }
 
@@ -981,7 +981,7 @@ input:focus-visible {
 
 .rule-select-all {
   gap: 8px;
-  color: #365348;
+  color: var(--ink-2);
   font-size: 13px;
   font-weight: 700;
 }
@@ -1011,7 +1011,7 @@ input:focus-visible {
   place-content: center;
   border: 1px solid #aab8b1;
   border-radius: 4px;
-  background: #fff;
+  background: var(--surface);
   cursor: pointer;
   transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
 }
@@ -1034,8 +1034,8 @@ input:focus-visible {
 .rule-select-all input:indeterminate,
 .rule-group__header input:indeterminate,
 .rule-card__select input:indeterminate {
-  border-color: #08764a;
-  background: #079361;
+  border-color: var(--primary);
+  background: var(--primary-fill);
   box-shadow: 0 0 0 2px rgba(7, 147, 97, .1);
 }
 
@@ -1051,8 +1051,8 @@ input:focus-visible {
 .rule-select-all input:disabled,
 .rule-group__header input:disabled,
 .rule-card__select input:disabled {
-  border-color: #d7dfdb;
-  background: #eef2f0;
+  border-color: var(--border-strong);
+  background: var(--surface-strong);
   box-shadow: none;
   cursor: not-allowed;
 }
@@ -1075,9 +1075,9 @@ input:focus-visible {
 
 .rule-group {
   overflow: hidden;
-  border: 1px solid #dce4e0;
+  border: 1px solid var(--hairline);
   border-radius: 10px;
-  background: #fff;
+  background: var(--surface);
 }
 
 .rule-group__header {
@@ -1087,8 +1087,8 @@ input:focus-visible {
   align-items: center;
   gap: 10px;
   padding: 8px 14px;
-  border-bottom: 1px solid #dce4e0;
-  background: #f3f9f6;
+  border-bottom: 1px solid var(--hairline);
+  background: var(--surface-subtle);
 }
 
 .rule-group__header label {
@@ -1108,12 +1108,12 @@ input:focus-visible {
 }
 
 .rule-group__toggle strong {
-  color: #086c45;
+  color: var(--primary);
   font-size: 14px;
 }
 
 .rule-group__toggle span {
-  color: #6e7c75;
+  color: var(--body);
   font-size: 12px;
   font-weight: 650;
 }
@@ -1121,7 +1121,7 @@ input:focus-visible {
 .rule-group__toggle lucide-icon {
   width: 17px;
   height: 17px;
-  color: #4f665b;
+  color: var(--body);
   transition: transform .2s ease;
 }
 
@@ -1145,7 +1145,7 @@ input:focus-visible {
 
 .rule-list {
   overflow: hidden;
-  background: #fff;
+  background: var(--surface);
 }
 
 .rule-card {
@@ -1154,7 +1154,7 @@ input:focus-visible {
   gap: 14px;
   align-items: center;
   padding: 13px 14px;
-  border-bottom: 1px solid #e8eeeb;
+  border-bottom: 1px solid var(--hairline);
 }
 
 .rule-card:last-child {
@@ -1162,16 +1162,16 @@ input:focus-visible {
 }
 
 .rule-card:hover {
-  background: #fbfdfc;
+  background: var(--surface-subtle);
 }
 
 .rule-card--selected {
-  background: #f5fbf8;
-  box-shadow: inset 3px 0 #0a9662;
+  background: var(--surface-subtle);
+  box-shadow: inset 3px 0 var(--primary);
 }
 
 .rule-card--ineligible {
-  background: #fafbfa;
+  background: var(--surface-subtle);
 }
 
 .rule-card--ineligible .rule-card__day,
@@ -1193,7 +1193,7 @@ input:focus-visible {
 }
 
 .rule-card__day span {
-  color: #08764a;
+  color: var(--primary);
   font-size: 12px;
   font-weight: 750;
 }
@@ -1204,29 +1204,29 @@ input:focus-visible {
 
 .rule-card small,
 .rule-card__price span {
-  color: #748079;
+  color: var(--body);
   font-size: 11px;
 }
 
 .rule-card__price strong {
-  color: #08764a;
+  color: var(--primary);
   font-size: 16px;
 }
 
 .rule-card__price em {
-  color: #748079;
+  color: var(--body);
   font-size: 11px;
   font-style: normal;
   font-weight: 500;
 }
 
 .rule-card__dates span {
-  color: #43554c;
+  color: var(--ink-2);
   font-size: 13px;
 }
 
 .rule-card__dates em {
-  color: #a16207;
+  color: var(--warning);
   font-size: 11px;
   font-style: normal;
   font-weight: 650;
@@ -1242,14 +1242,14 @@ input:focus-visible {
   width: 34px;
   height: 34px;
   place-items: center;
-  border: 1px solid #d8e0dc;
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
-  background: #fff;
-  color: #4b5f55;
+  background: var(--surface);
+  color: var(--body);
 }
 
 .rule-card__actions button.danger {
-  color: #dc3f3f;
+  color: var(--danger);
 }
 
 .rule-card__actions lucide-icon {
@@ -1278,9 +1278,9 @@ input:focus-visible {
   flex-direction: column;
   overflow: hidden auto;
   overscroll-behavior: contain;
-  border: 1px solid #d5dfda;
+  border: 1px solid var(--border-strong);
   border-radius: 18px;
-  background: #fff;
+  background: var(--surface);
   box-shadow: 0 24px 70px rgba(10, 28, 20, .24);
   animation: modal-content-in .18s ease-out;
 }
@@ -1295,13 +1295,13 @@ input:focus-visible {
   justify-content: space-between;
   gap: 12px;
   padding: 0 20px;
-  border-bottom: 1px solid #e5ebe8;
-  background: #fff;
+  border-bottom: 1px solid var(--hairline);
+  background: var(--surface);
 }
 
 .rule-editor h2 {
   margin: 0;
-  color: #23352d;
+  color: var(--ink-2);
   font-size: 18px;
 }
 
@@ -1314,7 +1314,7 @@ input:focus-visible {
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: #4e5d56;
+  color: var(--body);
 }
 
 .rule-editor>header lucide-icon {
@@ -1332,12 +1332,12 @@ input:focus-visible {
   display: grid;
   gap: 13px;
   padding: 18px 20px;
-  border-bottom: 1px solid #edf1ef;
+  border-bottom: 1px solid var(--hairline);
 }
 
 .editor-section h3 {
   margin: 0;
-  color: #34463e;
+  color: var(--ink-2);
   font-size: 14px;
 }
 
@@ -1348,7 +1348,7 @@ input:focus-visible {
 }
 
 .editor-section label>span {
-  color: #69766f;
+  color: var(--body);
   font-size: 12px;
   font-weight: 600;
 }
@@ -1360,11 +1360,11 @@ input:focus-visible {
 }
 
 .editor-section .field-hint {
-  color: #718078;
+  color: var(--body);
 }
 
 .editor-section .field-error {
-  color: #cf3f3f;
+  color: var(--danger);
   font-weight: 650;
 }
 
@@ -1374,10 +1374,10 @@ input:focus-visible {
   align-items: start;
   gap: 9px;
   padding: 11px 12px;
-  border: 1px solid #bde4d3;
+  border: 1px solid var(--primary-light);
   border-radius: 9px;
-  background: #f0faf6;
-  color: #176646;
+  background: var(--primary-light);
+  color: var(--primary);
 }
 
 .rule-time-notice lucide-icon {
@@ -1397,19 +1397,19 @@ input:focus-visible {
 }
 
 .rule-time-notice span {
-  color: #557168;
+  color: var(--body);
   font-size: 11px;
   line-height: 1.45;
 }
 
 .rule-time-notice--error {
-  border-color: #f0b9b9;
-  background: #fff5f5;
-  color: #c73535;
+  border-color: var(--danger-soft);
+  background: var(--danger-soft);
+  color: var(--danger);
 }
 
 .rule-time-notice--error span {
-  color: #9f4545;
+  color: var(--danger);
 }
 
 .editor-section--price {
@@ -1430,10 +1430,10 @@ input:focus-visible {
   min-width: 0;
   height: 34px;
   padding: 0;
-  border: 1px solid #d5ded9;
+  border: 1px solid var(--border-strong);
   border-radius: 7px;
-  background: #fff;
-  color: #516159;
+  background: var(--surface);
+  color: var(--body);
   font-size: 11px;
   font-weight: 700;
 }
@@ -1455,7 +1455,7 @@ input:focus-visible {
   display: grid;
   height: 44px;
   place-items: center;
-  color: #7e8a84;
+  color: var(--body);
   font-size: 13px;
   font-style: normal;
 }
@@ -1472,8 +1472,8 @@ input:focus-visible {
   margin: 0;
   padding: 11px;
   border-radius: 6px;
-  background: #f2f8f5;
-  color: #607069;
+  background: var(--surface-strong);
+  color: var(--body);
   font-size: 11px;
   line-height: 1.45;
 }
@@ -1482,7 +1482,7 @@ input:focus-visible {
   width: 15px;
   height: 15px;
   flex: 0 0 15px;
-  color: #08764a;
+  color: var(--primary);
 }
 
 .editor-actions {
@@ -1494,8 +1494,8 @@ input:focus-visible {
   gap: 7px;
   margin-top: auto;
   padding: 16px 20px;
-  border-top: 1px solid #e5ebe8;
-  background: #fff;
+  border-top: 1px solid var(--hairline);
+  background: var(--surface);
 }
 
 .editor-actions .secondary-button {
@@ -1509,9 +1509,9 @@ input:focus-visible {
   min-height: 220px;
   place-items: center;
   padding: 28px;
-  border: 1px dashed #c8d5cf;
+  border: 1px dashed var(--border-strong);
   border-radius: 10px;
-  background: #fff;
+  background: var(--surface);
   text-align: center;
 }
 
@@ -1529,18 +1529,18 @@ input:focus-visible {
 .state-card p,
 .inline-empty p {
   margin: 4px 0 14px;
-  color: #6d7973;
+  color: var(--body);
 }
 
 .state-card lucide-icon,
 .inline-empty lucide-icon {
   width: 32px;
   height: 32px;
-  color: #08764a;
+  color: var(--primary);
 }
 
 .state-card a {
-  background: #08764a;
+  background: var(--primary-fill);
   color: #fff;
 }
 
@@ -1550,26 +1550,26 @@ input:focus-visible {
   gap: 13px;
   place-items: center start;
   border-style: solid;
-  border-color: #f4c6c6;
-  background: #fff8f8;
+  border-color: var(--danger-soft);
+  background: var(--danger-soft);
   text-align: left;
 }
 
 .error-state>lucide-icon {
   width: 22px;
   height: 22px;
-  color: #d63f3f;
+  color: var(--danger);
 }
 
 .error-state p {
   margin: 3px 0 0;
-  color: #8b3434;
+  color: var(--danger);
 }
 
 .error-state button {
-  border: 1px solid #efc6c6;
-  background: #fff;
-  color: #bd3030;
+  border: 1px solid var(--danger-soft);
+  background: var(--surface);
+  color: var(--danger);
 }
 
 .sr-only {
@@ -1587,7 +1587,7 @@ input:focus-visible {
   width: 14px;
   height: 14px;
   border: 2px solid rgba(255, 255, 255, .4);
-  border-top-color: #fff;
+  border-top-color: var(--surface);
   border-radius: 50%;
   animation: spin .8s linear infinite;
 }
@@ -1715,7 +1715,7 @@ input:focus-visible {
   .rule-summary-grid article {
     padding: 10px 3px;
     border-right: 0;
-    border-bottom: 1px solid #e6ece9;
+    border-bottom: 1px solid var(--hairline);
   }
 
   .rule-summary-grid article:last-child {

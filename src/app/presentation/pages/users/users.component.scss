@@ -25,14 +25,14 @@
 
   .custom-premium-menu,
   .mat-mdc-menu-panel.custom-premium-menu {
-    background-color: #ffffff !important;
+    background-color: var(--surface) !important;
     border-radius: 16px !important;
     overflow: hidden !important;
-    box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06) !important;
-    border: 1px solid #f1f5f9 !important;
+    box-shadow: 0 20px 25px -5px var(--hairline), 0 8px 10px -6px var(--hairline) !important;
+    border: 1px solid var(--hairline) !important;
 
     .mat-mdc-menu-content {
-      background-color: #ffffff !important;
+      background-color: var(--surface) !important;
       padding: 6px !important;
     }
 
@@ -42,29 +42,29 @@
       height: 38px !important;
       min-height: 38px !important;
       font-weight: 600 !important;
-      color: #1e293b !important;
+      color: var(--ink) !important;
       border-radius: 10px !important;
       margin-bottom: 2px !important;
       transition: all 0.15s ease !important;
 
       &:hover {
-        background-color: #f0fdf4 !important;
-        color: #047857 !important;
+        background-color: var(--primary-light) !important;
+        color: var(--primary-hover) !important;
 
         lucide-icon {
-          color: #059669 !important;
+          color: var(--primary) !important;
         }
       }
 
       &.danger-item {
-        color: #e11d48 !important;
+        color: var(--danger) !important;
 
         &:hover {
-          background-color: #fff1f2 !important;
-          color: #be123c !important;
+          background-color: var(--danger-soft) !important;
+          color: var(--danger) !important;
 
           lucide-icon {
-            color: #e11d48 !important;
+            color: var(--danger) !important;
           }
         }
       }
@@ -95,23 +95,23 @@
   .mat-mdc-paginator {
     font-family: var(--font-sports-body) !important;
     font-size: 12.5px !important;
-    color: #64748b !important;
+    color: var(--body) !important;
 
     .mat-mdc-paginator-page-size-label {
-      color: #64748b !important;
+      color: var(--body) !important;
       font-weight: 600 !important;
     }
 
     .mat-mdc-select-value {
-      color: #0f172a !important;
+      color: var(--ink) !important;
       font-weight: 700 !important;
     }
 
     .mat-mdc-icon-button {
-      color: #64748b !important;
+      color: var(--body) !important;
 
       &[disabled] {
-        color: #cbd5e1 !important;
+        color: var(--muted) !important;
       }
     }
   }
@@ -129,7 +129,7 @@
     .mat-mdc-dialog-surface {
       border-radius: 0 !important;
       box-shadow: -20px 0 50px rgba(15, 23, 42, 0.18) !important;
-      background-color: #ffffff !important;
+      background-color: var(--surface) !important;
       overflow: hidden !important;
       height: 100vh !important;
       max-height: 100vh !important;

@@ -58,12 +58,12 @@
   }
 
   .venue-option:nth-child(odd) {
-    border-right: 1px solid #e8eeeb;
+    border-right: 1px solid var(--hairline);
   }
 
   .venue-selector__footer {
     margin-top: 0;
-    border-top: 1px solid #edf1ef;
+    border-top: 1px solid var(--hairline);
   }
 
   .venue-gallery__thumbnails {
@@ -100,7 +100,7 @@
   .venue-option {
     width: min(300px, calc(100vw - 56px));
     min-width: min(300px, calc(100vw - 56px));
-    border-right: 1px solid #e8eeeb;
+    border-right: 1px solid var(--hairline);
     scroll-snap-align: start;
   }
 

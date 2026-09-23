@@ -24,19 +24,19 @@
   .mat-mdc-paginator {
     font-family: var(--font-sports-body) !important;
     font-size: 12px !important;
-    color: #64748b !important;
+    color: var(--body) !important;
   }
 
   .custom-dark-menu,
   .mat-mdc-menu-panel.custom-dark-menu {
-    background-color: #ffffff !important; // White background
+    background-color: var(--surface) !important; // White background
     border-radius: 16px !important;
     overflow: hidden !important;
-    box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06) !important;
-    border: 1px solid #f1f5f9 !important; // Light gray border
+    box-shadow: 0 20px 25px -5px var(--hairline), 0 8px 10px -6px var(--hairline) !important;
+    border: 1px solid var(--hairline) !important; // Light gray border
 
     .mat-mdc-menu-content {
-      background-color: #ffffff !important;
+      background-color: var(--surface) !important;
       padding: 6px !important;
     }
 
@@ -46,45 +46,45 @@
       height: 38px !important;
       min-height: 38px !important;
       font-weight: 600 !important;
-      color: #1e293b !important; // Slate-850 text
+      color: var(--ink) !important; // Slate-850 text
       border-radius: 10px !important;
       margin-bottom: 2px !important;
       transition: all 0.15s ease !important;
 
       &:hover:not([disabled]) {
-        background-color: #f0fdf4 !important; // Emerald-50 hover
-        color: #047857 !important; // Emerald-700 text
+        background-color: var(--primary-light) !important; // Emerald-50 hover
+        color: var(--primary-hover) !important; // Emerald-700 text
 
         lucide-icon {
-          color: #059669 !important; // Emerald-600 icon
+          color: var(--primary) !important; // Emerald-600 icon
         }
 
         .text-rose-500,
         .text-rose-600 {
-          color: #be123c !important; // Rose-700 text
+          color: var(--danger) !important; // Rose-700 text
         }
       }
 
       &.danger-item:not([disabled]) {
-        color: #e11d48 !important;
+        color: var(--danger) !important;
 
         lucide-icon {
-          color: #e11d48 !important;
+          color: var(--danger) !important;
         }
 
         &:hover {
-          background-color: #fff1f2 !important;
-          color: #be123c !important;
+          background-color: var(--danger-soft) !important;
+          color: var(--danger) !important;
         }
       }
 
       &[disabled] {
         opacity: 0.35 !important;
-        color: #94a3b8 !important; // Slate-400
+        color: var(--muted) !important; // Slate-400
         cursor: not-allowed !important;
 
         lucide-icon {
-          color: #94a3b8 !important;
+          color: var(--muted) !important;
         }
       }
 
@@ -100,12 +100,12 @@
         align-items: center !important;
         justify-content: center !important;
         flex-shrink: 0 !important;
-        color: #64748b !important; // Slate-500 icon
+        color: var(--body) !important; // Slate-500 icon
         margin-right: 8px !important;
 
         &.text-rose-500,
         &.text-rose-600 {
-          color: #ef4444 !important; // Rose-500 icon
+          color: var(--danger) !important; // Rose-500 icon
         }
 
         &.text-emerald-500,

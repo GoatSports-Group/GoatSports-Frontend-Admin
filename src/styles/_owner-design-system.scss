@@ -5,26 +5,26 @@
  * so the platform-admin experience can evolve independently.
  */
 .admin-shell--owner {
-  --owner-canvas: #f4f7f5;
-  --owner-surface: #ffffff;
-  --owner-surface-subtle: #f8faf9;
-  --owner-surface-strong: #edf4f0;
-  --owner-ink: #17201d;
-  --owner-ink-secondary: #3f4d48;
-  --owner-ink-muted: #65736e;
-  --owner-border: #dbe5e0;
-  --owner-border-strong: #c8d7d0;
-  --owner-accent: #0f766e;
-  --owner-accent-strong: #115e59;
-  --owner-accent-soft: #e7f5f1;
-  --owner-success: #18794e;
-  --owner-success-soft: #eaf7f0;
-  --owner-warning: #a15c07;
-  --owner-warning-soft: #fff7e7;
-  --owner-danger: #be123c;
-  --owner-danger-soft: #fff1f3;
-  --owner-info: #315f7d;
-  --owner-info-soft: #edf5fa;
+  --owner-canvas: var(--canvas);
+  --owner-surface: var(--surface);
+  --owner-surface-subtle: var(--surface-subtle);
+  --owner-surface-strong: var(--surface-strong);
+  --owner-ink: var(--ink);
+  --owner-ink-secondary: var(--ink-2);
+  --owner-ink-muted: var(--body);
+  --owner-border: var(--hairline);
+  --owner-border-strong: var(--border-strong);
+  --owner-accent: var(--primary);
+  --owner-accent-strong: var(--primary-hover);
+  --owner-accent-soft: var(--primary-light);
+  --owner-success: var(--success);
+  --owner-success-soft: var(--success-soft);
+  --owner-warning: var(--warning);
+  --owner-warning-soft: var(--warning-soft);
+  --owner-danger: var(--danger);
+  --owner-danger-soft: var(--danger-soft);
+  --owner-info: var(--info);
+  --owner-info-soft: var(--info-soft);
   --owner-shadow-raised: 0 18px 44px rgb(37 77 62 / 10%);
   --owner-shadow-floating: 0 28px 72px rgb(23 32 29 / 18%);
   --owner-ease: cubic-bezier(.16, 1, .3, 1);
@@ -94,14 +94,14 @@
 }
 
 .admin-shell--owner :is(input, textarea)::placeholder {
-  color: #84918c;
+  color: var(--body);
 }
 
 .admin-shell--owner :is(.primary-button, .button--primary, button.primary, a.primary) {
   min-height: 44px;
   border: 1px solid var(--owner-accent);
   border-radius: 10px;
-  background: var(--owner-accent);
+  background: var(--primary-fill);
   box-shadow: 0 8px 18px rgb(15 118 110 / 14%);
   color: #fff;
   font-weight: 700;
@@ -110,7 +110,7 @@
 
 .admin-shell--owner :is(.primary-button, .button--primary, button.primary, a.primary):hover:not(:disabled) {
   border-color: var(--owner-accent-strong);
-  background: var(--owner-accent-strong);
+  background: var(--primary-fill-hover);
   box-shadow: 0 10px 24px rgb(15 118 110 / 18%);
 }
 
@@ -200,7 +200,7 @@
 
 .admin-shell--owner .skeleton,
 .admin-shell--owner :is(.loading-grid, .loading-lines) > span {
-  background: linear-gradient(90deg, #edf2ef 20%, #f8faf9 46%, #edf2ef 72%);
+  background: linear-gradient(90deg, var(--surface-strong) 20%, var(--surface-subtle) 46%, var(--surface-strong) 72%);
   background-size: 240% 100%;
   animation: owner-skeleton 1.35s ease-in-out infinite;
 }

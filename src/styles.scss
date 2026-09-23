@@ -3,6 +3,7 @@
 @use 'material-icons/iconfont/material-icons.scss';
 @use './styles/fonts';
 @use './styles/owner-design-system';
+@use './styles/goat-theme';
 @use "tailwindcss";
 
 :root {
@@ -25,26 +26,26 @@
   --font-sans: 'Be Vietnam Pro', sans-serif;
   --font-display: 'Be Vietnam Pro', sans-serif;
 
-  --color-primary: #059669;
-  --color-primary-hover: #047857;
-  --color-primary-light: #f0fdf4;
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-light: var(--primary-light);
 
   --color-accent: #0ea5e9;
   --color-accent-hover: #0284c7;
   --color-accent-light: #f0f9ff;
 
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-danger: #ef4444;
-  --color-info: #06b6d4;
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
 
-  --color-text-dark: #0f172a;
-  --color-text-muted: #64748b;
+  --color-text-dark: var(--ink);
+  --color-text-muted: var(--body);
   --color-text-light: #ffffff;
 
-  --color-bg-body: #f8fafc;
-  --color-bg-card: #ffffff;
-  --color-border-color: #e2e8f0;
+  --color-bg-body: var(--canvas);
+  --color-bg-card: var(--surface);
+  --color-border-color: var(--hairline);
 }
 
 /* Custom Typography Utilities */
@@ -58,18 +59,18 @@
 /* Glass Card Global Utilities */
 .glass-card,
 .white-card {
-  background-color: rgba(255, 255, 255, 0.95) !important;
-  border: 1px solid #e2e8f0 !important;
+  background-color: var(--surface) !important;
+  border: 1px solid var(--hairline) !important;
   backdrop-filter: blur(16px) !important;
-  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.05) !important;
+  box-shadow: 0 20px 50px var(--hairline) !important;
   border-radius: 24px !important;
 }
 
 /* Reset and base styles */
 html,
 body {
-  background-color: #f8fafc !important;
-  color: #0f172a !important;
+  background-color: var(--canvas) !important;
+  color: var(--ink) !important;
   font-family: 'Be Vietnam Pro', sans-serif !important;
   min-height: 100dvh;
   font-size: 16px;
@@ -85,7 +86,7 @@ h6 {
 }
 
 input[type="checkbox"] {
-  accent-color: #059669 !important; // Primary emerald green theme color
+  accent-color: var(--primary) !important; // Primary emerald green theme color
 }
 
 /* Angular CDK Drag & Drop styles - Global Scope */
@@ -96,9 +97,9 @@ input[type="checkbox"] {
   padding: 1rem !important;
   box-sizing: border-box !important;
   border-radius: 0.75rem !important;
-  background-color: #ffffff !important;
-  border: 1px solid #f1f5f9 !important;
-  box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.12), 0 4px 6px -2px rgba(15, 23, 42, 0.04) !important;
+  background-color: var(--surface) !important;
+  border: 1px solid var(--hairline) !important;
+  box-shadow: 0 12px 28px -4px var(--hairline), 0 4px 6px -2px var(--hairline) !important;
   cursor: grabbing !important;
   --tw-bg-opacity: 1 !important;
   --tw-border-opacity: 1 !important;
@@ -113,9 +114,9 @@ input[type="checkbox"] {
 }
 
 .cdk-dashboard-stat-preview {
-  background-color: #ffffff !important;
+  background-color: var(--surface) !important;
   border-radius: 28px !important;
-  box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.15), 0 10px 10px -5px rgba(15, 23, 42, 0.08) !important;
+  box-shadow: 0 20px 25px -5px var(--hairline), 0 10px 10px -5px var(--hairline) !important;
   cursor: grabbing !important;
   overflow: hidden !important;
 }
@@ -139,28 +140,28 @@ input[type="checkbox"] {
   .mat-drawer-content,
   .gs-content,
   .gs-main {
-    background-color: #f8fafc !important;
-    color: #0f172a !important;
+    background-color: var(--surface-subtle) !important;
+    color: var(--ink) !important;
   }
 
   .mat-mdc-card {
-    background-color: #ffffff !important;
-    border: 1px solid #e2e8f0 !important;
+    background-color: var(--surface) !important;
+    border: 1px solid var(--hairline) !important;
     border-radius: 24px !important;
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05) !important;
+    box-shadow: 0 10px 30px var(--hairline) !important;
   }
 
   table,
   .mat-mdc-table {
     background-color: transparent !important;
-    color: #0f172a !important;
+    color: var(--ink) !important;
   }
 
   th,
   .mat-mdc-header-cell {
-    background-color: #f8fafc !important;
-    color: #64748b !important;
-    border-bottom: 1px solid #e2e8f0 !important;
+    background-color: var(--surface-subtle) !important;
+    color: var(--body) !important;
+    border-bottom: 1px solid var(--hairline) !important;
     font-weight: 800 !important;
     font-family: 'Be Vietnam Pro', sans-serif !important;
     text-transform: uppercase;
@@ -170,15 +171,15 @@ input[type="checkbox"] {
 
   td,
   .mat-mdc-cell {
-    color: #1e293b !important;
-    border-bottom: 1px solid #f1f5f9 !important;
+    color: var(--ink) !important;
+    border-bottom: 1px solid var(--hairline) !important;
     font-size: 14px !important;
     font-family: 'Be Vietnam Pro', sans-serif !important;
   }
 
   tr:hover,
   .mat-mdc-row:hover {
-    background-color: #f1f5f9 !important;
+    background-color: var(--surface-strong) !important;
   }
 }
 
@@ -283,26 +284,26 @@ input[type="checkbox"] {
   width: 100% !important;
   height: 44px !important;
   padding: 0 16px !important;
-  background-color: #f8fafc !important;
-  border: 1px solid #e2e8f0 !important;
+  background-color: var(--surface-subtle) !important;
+  border: 1px solid var(--hairline) !important;
   outline: none !important;
   border-radius: 16px !important;
   font-size: 13px !important;
   font-weight: 600 !important;
-  color: #1e293b !important;
+  color: var(--ink) !important;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
 
   &::placeholder {
-    color: #94a3b8 !important;
+    color: var(--muted) !important;
   }
 
   &:hover {
-    background-color: #f1f5f9 !important;
-    border-color: #cbd5e1 !important;
+    background-color: var(--surface-strong) !important;
+    border-color: var(--border-strong) !important;
   }
 
   &:focus {
-    background-color: #ffffff !important;
+    background-color: var(--surface) !important;
     border-color: #10b981 !important;
     box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.05) !important;
   }
@@ -311,26 +312,26 @@ input[type="checkbox"] {
 .custom-dialog-textarea {
   width: 100% !important;
   padding: 12px 16px !important;
-  background-color: #f8fafc !important;
-  border: 1px solid #e2e8f0 !important;
+  background-color: var(--surface-subtle) !important;
+  border: 1px solid var(--hairline) !important;
   outline: none !important;
   border-radius: 16px !important;
   font-size: 13px !important;
   font-weight: 600 !important;
-  color: #1e293b !important;
+  color: var(--ink) !important;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
 
   &::placeholder {
-    color: #94a3b8 !important;
+    color: var(--muted) !important;
   }
 
   &:hover {
-    background-color: #f1f5f9 !important;
-    border-color: #cbd5e1 !important;
+    background-color: var(--surface-strong) !important;
+    border-color: var(--border-strong) !important;
   }
 
   &:focus {
-    background-color: #ffffff !important;
+    background-color: var(--surface) !important;
     border-color: #10b981 !important;
     box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.05) !important;
   }
@@ -340,23 +341,23 @@ input[type="checkbox"] {
   width: 100% !important;
   height: 44px !important;
   padding: 0 16px !important;
-  background-color: #f8fafc !important;
-  border: 1px solid #e2e8f0 !important;
+  background-color: var(--surface-subtle) !important;
+  border: 1px solid var(--hairline) !important;
   outline: none !important;
   border-radius: 16px !important;
   font-size: 13px !important;
   font-weight: 600 !important;
-  color: #1e293b !important;
+  color: var(--ink) !important;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
   cursor: pointer;
 
   &:hover {
-    background-color: #f1f5f9 !important;
-    border-color: #cbd5e1 !important;
+    background-color: var(--surface-strong) !important;
+    border-color: var(--border-strong) !important;
   }
 
   &:focus {
-    background-color: #ffffff !important;
+    background-color: var(--surface) !important;
     border-color: #10b981 !important;
     box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.05) !important;
   }
@@ -366,14 +367,14 @@ input[type="checkbox"] {
 .mat-mdc-paginator {
   background: transparent !important;
   background-color: transparent !important;
-  color: #334155 !important;
+  color: var(--ink-2) !important;
   font-family: inherit !important;
   font-size: 13px !important;
   font-weight: 600 !important;
 
   .mat-mdc-paginator-page-size-label,
   .mat-mdc-paginator-range-label {
-    color: #475569 !important;
+    color: var(--body) !important;
     font-size: 12px !important;
     font-weight: 600 !important;
   }
@@ -383,48 +384,48 @@ input[type="checkbox"] {
     
     .mat-mdc-select-trigger {
       padding: 4px 10px !important;
-      background-color: #f8fafc !important;
-      border: 1px solid #e2e8f0 !important;
+      background-color: var(--surface-subtle) !important;
+      border: 1px solid var(--hairline) !important;
       border-radius: 12px !important;
       transition: all 0.2s ease !important;
       min-width: 64px !important;
       height: auto !important;
 
       &:hover {
-        background-color: #f1f5f9 !important;
-        border-color: #cbd5e1 !important;
+        background-color: var(--surface-strong) !important;
+        border-color: var(--border-strong) !important;
       }
     }
   }
 
   .mat-mdc-select-value {
-    color: #1e293b !important;
+    color: var(--ink) !important;
     font-size: 13px !important;
     font-weight: 700 !important;
   }
 
   .mat-mdc-select-arrow svg {
-    fill: #475569 !important;
-    color: #475569 !important;
+    fill: var(--body) !important;
+    color: var(--body) !important;
   }
 
   .mat-mdc-icon-button {
-    color: #475569 !important;
+    color: var(--body) !important;
     --mat-icon-button-state-layer-color: #475569 !important;
     --mat-paginator-enabled-icon-color: #475569 !important;
     --mat-sys-on-surface-variant: #475569 !important;
     
     &:hover:not([disabled]):not(.mat-mdc-button-disabled):not([aria-disabled="true"]) {
-      background-color: #f1f5f9 !important;
-      color: #0f172a !important;
+      background-color: var(--surface-strong) !important;
+      color: var(--ink) !important;
     }
 
     &[disabled],
     &.mat-mdc-button-disabled,
     &[aria-disabled="true"] {
-      color: #cbd5e1 !important;
+      color: var(--muted) !important;
       opacity: 0.35 !important;
-      --mat-sys-on-surface-variant: #cbd5e1 !important;
+      --mat-sys-on-surface-variant: var(--border-strong) !important;
       background-color: transparent !important;
       background: transparent !important;
       pointer-events: none !important;
@@ -489,10 +490,10 @@ body div.cdk-overlay-pane.custom-assign-role-dialog .mat-mdc-dialog-content {
 .owner-profile-menu.mat-mdc-menu-panel {
   min-width: 240px !important;
   margin-top: 8px;
-  border: 1px solid #dbe5e0;
+  border: 1px solid var(--hairline);
   border-radius: 14px !important;
-  background: #fff;
-  box-shadow: 0 20px 48px rgb(23 32 29 / 16%);
+  background: var(--surface);
+  box-shadow: 0 20px 48px var(--hairline);
 }
 
 .owner-profile-menu .profile-menu-heading {
@@ -502,14 +503,14 @@ body div.cdk-overlay-pane.custom-assign-role-dialog .mat-mdc-dialog-content {
 }
 
 .owner-profile-menu .profile-menu-heading strong {
-  color: #17201d;
+  color: var(--ink);
   font-size: 14px;
   font-weight: 700;
 }
 
 .owner-profile-menu .profile-menu-heading span {
   overflow: hidden;
-  color: #65736e;
+  color: var(--body);
   font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -517,7 +518,7 @@ body div.cdk-overlay-pane.custom-assign-role-dialog .mat-mdc-dialog-content {
 
 .owner-profile-menu .mat-mdc-menu-item {
   min-height: 48px;
-  color: #3f4d48;
+  color: var(--ink-2);
 }
 
 .owner-profile-menu .mat-mdc-menu-item lucide-icon {

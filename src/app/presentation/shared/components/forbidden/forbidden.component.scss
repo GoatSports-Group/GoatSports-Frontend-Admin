@@ -24,7 +24,7 @@
     height: 80px;
     width: 80px;
     margin-bottom: 24px;
-    color: #ff4d4d;
+    color: var(--danger);
   }
 
   h1 {
@@ -32,7 +32,7 @@
     font-weight: 700;
     letter-spacing: 1px;
     margin-bottom: 16px;
-    color: #ff4d4d;
+    color: var(--danger);
   }
 
   p {
@@ -44,7 +44,7 @@
 
   .role-hint {
     font-size: 14px;
-    color: #888888;
+    color: var(--body);
     margin-bottom: 32px;
   }
 

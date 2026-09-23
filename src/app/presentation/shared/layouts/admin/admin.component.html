@@ -21,6 +21,7 @@
     </button>
 
     <div class="admin-topbar__actions">
+      <app-theme-toggle size="sm"></app-theme-toggle>
       <div class="notification-menu">
         <button type="button" class="shell-icon-button notification-trigger" (click)="toggleNotifDropdown($event)"
           aria-label="Mở thông báo" [attr.aria-expanded]="isNotifOpen">
