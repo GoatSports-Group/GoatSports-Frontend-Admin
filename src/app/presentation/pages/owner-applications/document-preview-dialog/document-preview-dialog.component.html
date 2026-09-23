@@ -16,11 +16,7 @@
 
   <!-- Dialog Body -->
   @if (loading) {
-  <div
-    class="min-h-[400px] flex flex-col items-center justify-center gap-3 text-slate-500 bg-slate-50 border border-slate-200 rounded-2xl p-3">
-    <mat-spinner diameter="40" color="accent"></mat-spinner>
-    <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mt-2">Đang tải tài liệu...</p>
-  </div>
+  <app-loading-skeleton height="400px" radius="16px" label="Đang tải tài liệu"></app-loading-skeleton>
   } @else if (error) {
   <div
     class="min-h-[400px] flex flex-col items-center justify-center gap-2 text-slate-500 bg-slate-50 border border-slate-200 rounded-2xl p-3 py-12">

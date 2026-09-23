@@ -85,11 +85,7 @@
 
     <div class="venue-editor">
       @if (detailLoading()) {
-      <section class="detail-state" aria-live="polite">
-        <span class="spinner" aria-hidden="true"></span>
-        <h2>Đang tải cơ sở đã chọn</h2>
-        <p>Thông tin chỉnh sửa sẽ xuất hiện trong giây lát.</p>
-      </section>
+      <app-loading-skeleton variant="info" [count]="6" label="Đang tải cơ sở đã chọn"></app-loading-skeleton>
       } @else if (detailError()) {
       <section class="detail-state detail-state--error" role="alert">
         <lucide-icon name="alert-circle" />

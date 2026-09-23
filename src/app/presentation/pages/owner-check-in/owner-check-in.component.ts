@@ -31,6 +31,7 @@ import { NotifyService } from '@shared/components/notify/notify.service';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { PaginationComponent } from '@shared/components/ui/pagination/pagination.component';
 import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-loading.component';
+import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/loading-skeleton.component';
 
 type WorkspaceTab = 'check-in' | 'walk-in' | 'history';
 type LookupMode = 'bookingCode' | 'qrCode';
@@ -45,7 +46,7 @@ interface ResolvedCheckInScope {
 @Component({
   selector: 'app-owner-check-in',
   standalone: true,
-  imports: [ReactiveFormsModule, LucideIconComponent, PaginationComponent, PageLoadingComponent],
+  imports: [LoadingSkeletonComponent, ReactiveFormsModule, LucideIconComponent, PaginationComponent, PageLoadingComponent],
   templateUrl: './owner-check-in.component.html',
   styleUrl: './owner-check-in.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

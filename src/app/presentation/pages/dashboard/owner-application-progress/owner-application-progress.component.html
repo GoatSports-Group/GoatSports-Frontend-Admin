@@ -1,9 +1,5 @@
 @if (loading()) {
-  <div class="history-state" role="status" aria-live="polite">
-    <span class="history-spinner" aria-hidden="true"></span>
-    <h2>Đang tải hồ sơ</h2>
-    <p>Vui lòng chờ trong giây lát.</p>
-  </div>
+  <app-loading-skeleton variant="rows" [count]="4" label="Đang tải hồ sơ"></app-loading-skeleton>
 } @else if (error()) {
   <div class="history-state history-state--error" role="alert">
     <span class="history-state__icon"><lucide-icon name="alert-triangle" /></span>

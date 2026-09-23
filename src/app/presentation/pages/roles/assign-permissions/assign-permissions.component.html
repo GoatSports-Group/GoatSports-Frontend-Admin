@@ -50,10 +50,7 @@
   <!-- Table Card Wrapper -->
   <div class="bg-white border border-slate-100 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.015)] overflow-hidden">
     @if (loading) {
-      <div class="flex flex-col items-center justify-center py-20">
-        <mat-spinner diameter="40" color="accent"></mat-spinner>
-        <p class="text-xs font-extrabold text-slate-400 uppercase tracking-wider font-display mt-4">Đang tải danh sách quyền...</p>
-      </div>
+      <app-loading-skeleton variant="table" [flush]="true" [count]="8" [columns]="4" label="Đang tải danh sách quyền"></app-loading-skeleton>
     } @else {
       <!-- Empty State -->
       @if (permissions.length === 0) {

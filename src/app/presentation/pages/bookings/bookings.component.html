@@ -27,10 +27,7 @@
   <!-- Data Table Card -->
   <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
     @if (loading) {
-      <div class="p-8 text-center">
-        <mat-progress-spinner mode="indeterminate" diameter="36" class="mx-auto"></mat-progress-spinner>
-        <span class="text-xs text-slate-400 mt-2 block">Đang tải danh sách đơn đặt...</span>
-      </div>
+      <app-loading-skeleton variant="table" [flush]="true" [count]="8" [columns]="6" label="Đang tải danh sách đơn đặt"></app-loading-skeleton>
     } @else if (bookings.length > 0) {
       <div class="overflow-x-auto">
         <table class="w-full text-left text-sm text-slate-600">

@@ -73,12 +73,7 @@
 
   <!-- Loading State -->
   @if (loading) {
-  <div
-    class="min-h-[350px] flex flex-col items-center justify-center bg-white border border-slate-100 rounded-3xl shadow-sm">
-    <mat-spinner diameter="40" color="accent"></mat-spinner>
-    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider font-display mt-4">Đang tải danh sách vai trò...
-    </p>
-  </div>
+  <app-loading-skeleton variant="table" [count]="5" [columns]="4" label="Đang tải danh sách vai trò"></app-loading-skeleton>
   } @else {
 
   <!-- Empty State -->

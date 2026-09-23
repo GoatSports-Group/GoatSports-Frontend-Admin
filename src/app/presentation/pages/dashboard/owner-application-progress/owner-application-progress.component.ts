@@ -8,11 +8,12 @@ import {
   getBusinessTypeLabel,
   getOwnerApplicationStatusLabel
 } from './owner-application-progress.utils';
+import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/loading-skeleton.component';
 
 @Component({
   selector: 'app-owner-application-progress',
   standalone: true,
-  imports: [CommonModule, LucideIconComponent],
+  imports: [LoadingSkeletonComponent, CommonModule, LucideIconComponent],
   templateUrl: './owner-application-progress.component.html',
   styleUrl: './owner-application-progress.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

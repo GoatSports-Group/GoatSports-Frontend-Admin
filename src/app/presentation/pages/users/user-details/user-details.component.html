@@ -1,11 +1,6 @@
 @if (loadingDetails) {
   <!-- Loading Details State -->
-  <div class="flex flex-col items-center justify-center py-20 bg-white border border-slate-100 rounded-3xl shadow-xs">
-    <mat-spinner diameter="40" color="accent"></mat-spinner>
-    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider font-display mt-4">
-      Đang tải thông tin chi tiết...
-    </p>
-  </div>
+  <app-loading-skeleton variant="detail" label="Đang tải thông tin người dùng"></app-loading-skeleton>
 } @else if (selectedUser) {
   <!-- User Details View -->
   <div class="flex flex-col gap-6 animate-fade-in">

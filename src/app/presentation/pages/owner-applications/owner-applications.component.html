@@ -42,10 +42,7 @@
 
     <div class="flex-1 space-y-2.5 overflow-y-auto bg-slate-50/60 p-3.5">
       @if (loadingList) {
-      <div class="flex h-full min-h-64 flex-col items-center justify-center gap-3 rounded-2xl border border-slate-100 bg-white">
-        <mat-spinner diameter="30" color="accent"></mat-spinner>
-        <p class="text-xs font-bold text-slate-400">Đang tải hồ sơ...</p>
-      </div>
+      <app-loading-skeleton variant="rows" [count]="5" label="Đang tải hồ sơ"></app-loading-skeleton>
       } @else if (filteredApplications.length === 0) {
       <div class="flex h-full min-h-64 flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white p-6 text-center">
         <div class="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-400">
@@ -104,9 +101,8 @@
     class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.05)]">
     @if (selectedApplication) {
       @if (loadingDetail) {
-      <div class="flex flex-1 flex-col items-center justify-center gap-3">
-        <mat-spinner diameter="38" color="accent"></mat-spinner>
-        <p class="text-sm font-bold text-slate-400">Đang tải chi tiết hồ sơ...</p>
+      <div class="flex-1 overflow-hidden p-5">
+        <app-loading-skeleton variant="info" [count]="6" label="Đang tải chi tiết hồ sơ"></app-loading-skeleton>
       </div>
       } @else {
       <header class="shrink-0 border-b border-slate-100 bg-white px-5 py-5 sm:px-6">

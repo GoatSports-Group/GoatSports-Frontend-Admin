@@ -365,8 +365,7 @@
     </header>
 
     @if (detailLoading()) {
-    <div class="detail-state"><app-lucide-icon name="loader-2" class="spin" [size]="24" /><strong>Đang tải chi tiết
-        đơn…</strong></div>
+    <app-loading-skeleton variant="info" [count]="6" label="Đang tải chi tiết đơn"></app-loading-skeleton>
     } @else if (detailError()) {
     <div class="detail-state detail-state--error" role="alert">
       <app-lucide-icon name="alert-circle" [size]="24" />

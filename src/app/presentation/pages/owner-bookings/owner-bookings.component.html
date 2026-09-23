@@ -167,7 +167,7 @@
       </button>
     </header>
     @if (detailLoading()) {
-    <div class="detail-state"><span class="spinner"></span><strong>Đang tải chi tiết đơn…</strong></div>
+    <app-loading-skeleton variant="info" [count]="6" label="Đang tải chi tiết đơn"></app-loading-skeleton>
     } @else if (detailError()) {
     <div class="detail-state detail-state--error" role="alert">
       <lucide-icon name="alert-circle" /><strong>Không thể tải chi tiết</strong>

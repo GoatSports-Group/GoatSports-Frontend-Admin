@@ -16,11 +16,7 @@
 
   <!-- Loading State -->
   @if (loading) {
-  <div class="flex-1 flex flex-col items-center justify-center py-20 min-h-[300px]">
-    <mat-spinner diameter="35" color="accent"></mat-spinner>
-    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider font-display mt-4">Đang tải danh sách
-      quyền...</p>
-  </div>
+  <app-loading-skeleton variant="rows" [count]="6" label="Đang tải danh sách quyền"></app-loading-skeleton>
   } @else {
 
   <!-- Dialog Body Content -->

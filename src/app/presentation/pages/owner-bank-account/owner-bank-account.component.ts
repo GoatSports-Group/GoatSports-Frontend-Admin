@@ -10,8 +10,9 @@ import { BANK_ACCOUNT_REPOSITORY_TOKEN, BankAccountRepository } from '@applicati
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { CryptoService } from '@presentation/services/crypto.service';
+import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/loading-skeleton.component';
 
-@Component({ selector: 'app-owner-bank-account', standalone: true, imports: [CommonModule, FormsModule, LucideIconComponent], templateUrl: './owner-bank-account.component.html', styleUrl: './owner-bank-account.component.scss', changeDetection: ChangeDetectionStrategy.OnPush })
+@Component({ selector: 'app-owner-bank-account', standalone: true, imports: [LoadingSkeletonComponent, CommonModule, FormsModule, LucideIconComponent], templateUrl: './owner-bank-account.component.html', styleUrl: './owner-bank-account.component.scss', changeDetection: ChangeDetectionStrategy.OnPush })
 export class OwnerBankAccountComponent {
   private readonly repository: BankAccountRepository = inject(BANK_ACCOUNT_REPOSITORY_TOKEN);
   private readonly notify = inject(NotifyService);

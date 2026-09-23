@@ -7,11 +7,12 @@ import {
   getHttpStatusClass,
   getLogActionBadgeClass
 } from '@shared/utils/log-display.utils';
+import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/loading-skeleton.component';
 
 @Component({
   selector: 'app-log-table',
   standalone: true,
-  imports: [CommonModule, PaginationComponent],
+  imports: [LoadingSkeletonComponent, CommonModule, PaginationComponent],
   templateUrl: './log-table.component.html',
   styleUrls: ['./log-table.component.scss']
 })

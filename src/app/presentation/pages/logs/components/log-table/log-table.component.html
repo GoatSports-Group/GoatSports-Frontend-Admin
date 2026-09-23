@@ -16,9 +16,8 @@
       <tbody class="divide-y divide-slate-100">
         <!-- Loading State -->
         <tr *ngIf="loading">
-          <td colspan="6" class="py-20 text-center">
-            <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-emerald-500 border-t-transparent"></div>
-            <p class="text-sm font-semibold text-slate-400 mt-3">Đang tải danh sách nhật ký...</p>
+          <td colspan="6" class="p-0">
+            <app-loading-skeleton variant="table" [flush]="true" [head]="false" [count]="8" [columns]="6" label="Đang tải danh sách nhật ký"></app-loading-skeleton>
           </td>
         </tr>
 

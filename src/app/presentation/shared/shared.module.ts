@@ -55,7 +55,6 @@ const MATERIAL_MODULES = [
 
 const COMPONENT_DECLARATIONS = [
   StarRatingComponent,
-  LoadingSkeletonComponent,
   ConfirmDialogComponent
 ];
 
@@ -70,6 +69,7 @@ const COMPONENT_DECLARATIONS = [
     RouterModule,
     ...MATERIAL_MODULES,
     LucideIconComponent,
+    LoadingSkeletonComponent,
     PaginationComponent
   ],
   exports: [
@@ -79,6 +79,7 @@ const COMPONENT_DECLARATIONS = [
     RouterModule,
     ...MATERIAL_MODULES,
     LucideIconComponent,
+    LoadingSkeletonComponent,
     PaginationComponent,
     ...COMPONENT_DECLARATIONS
   ]

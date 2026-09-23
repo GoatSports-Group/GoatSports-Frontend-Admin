@@ -1,8 +1,14 @@
-<section class="page-loading" [attr.data-size]="size()" role="status" aria-live="polite"
-  [attr.aria-label]="title()">
-  <div class="page-loading__content">
-    <span class="page-loading__spinner" aria-hidden="true"></span>
-    <strong>{{ title() }}</strong>
-    <p>{{ description() }}</p>
-  </div>
+<section class="page-loading" [attr.data-size]="size()" role="status" aria-live="polite" [attr.aria-label]="title()">
+  <span class="page-loading__sr">{{ title() }}. {{ description() }}</span>
+
+  @if (resolvedLayout() === 'page') {
+    <div class="page-loading__head" aria-hidden="true">
+      <app-loading-skeleton [decorative]="true" width="220px" height="28px" radius="8px" />
+      <app-loading-skeleton [decorative]="true" width="min(420px, 80%)" height="14px" radius="6px" />
+    </div>
+    <app-loading-skeleton [decorative]="true" variant="stats" [count]="4" />
+    <app-loading-skeleton [decorative]="true" variant="table" [count]="count()" [columns]="columns()" />
+  } @else {
+    <app-loading-skeleton [decorative]="true" [variant]="skeletonVariant()" [count]="count()" [columns]="columns()" />
+  }
 </section>

@@ -408,7 +408,7 @@
       </section>
 
       @if (courtLoading()) {
-      <section class="table-loading"><span class="spinner"></span> Đang tải danh sách sân...</section>
+      <app-loading-skeleton variant="table" [count]="5" [columns]="5" label="Đang tải danh sách sân"></app-loading-skeleton>
       } @else {
       <section class="court-table" role="table" aria-label="Danh sách sân thi đấu">
         <div class="court-table__header" role="row">
@@ -503,8 +503,7 @@
         <div><span>Giá thuê</span><strong>{{ formatCurrency(courtPrice(court)) }}<small>/giờ</small></strong></div>
       </section>
       @if (courtBookingLoading()) {
-      <section class="detail-booking-state" aria-live="polite"><span class="spinner"></span> Đang tải toàn bộ booking
-        của sân...</section>
+      <app-loading-skeleton variant="rows" [count]="4" label="Đang tải booking của sân"></app-loading-skeleton>
       } @else if (courtBookingError()) {
       <section class="detail-booking-state detail-booking-state--error" role="alert">
         <lucide-icon name="alert-circle" />
@@ -777,7 +776,7 @@
 
       <div class="maintenance-slot-list">
         @if (maintenanceLoading()) {
-        <div class="maintenance-loading"><span class="spinner"></span>Đang tải khung giờ...</div>
+        <app-loading-skeleton variant="rows" [count]="3" label="Đang tải khung giờ"></app-loading-skeleton>
         } @else {
         @for (slot of maintenanceSlots(); track slot.timeSlotId) {
         <button type="button" class="maintenance-slot" [class.is-selected]="maintenanceSlotSelected(slot.timeSlotId)"

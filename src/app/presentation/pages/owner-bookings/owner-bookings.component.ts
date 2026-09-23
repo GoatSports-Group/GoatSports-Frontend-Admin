@@ -26,6 +26,7 @@ import { NotifyService } from '@shared/components/notify/notify.service';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-loading.component';
 import { PaginationComponent } from '@shared/components/ui/pagination/pagination.component';
+import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/loading-skeleton.component';
 
 interface StatusOption { value: '' | OwnerBookingStatus; label: string; }
 type PaymentFilter = '' | 'PAID' | 'UNPAID' | 'FAILED';
@@ -35,7 +36,7 @@ type ResolvedPaymentMethod = 'CASH' | 'PAYOS';
 @Component({
   selector: 'app-owner-bookings',
   standalone: true,
-  imports: [ReactiveFormsModule, LucideIconComponent, PageLoadingComponent, PaginationComponent],
+  imports: [LoadingSkeletonComponent, ReactiveFormsModule, LucideIconComponent, PageLoadingComponent, PaginationComponent],
   templateUrl: './owner-bookings.component.html',
   styleUrl: './owner-bookings.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

@@ -48,6 +48,7 @@ import {
   createAutomaticFacilityLayout
 } from './facility-layout.models';
 import { FacilityLayoutStore } from './facility-layout.store';
+import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/loading-skeleton.component';
 
 interface SportOption {
   value: SportType;
@@ -95,7 +96,7 @@ type PointerOperation = PointerOperationBase & (
 @Component({
   selector: 'app-owner-court-management',
   standalone: true,
-  imports: [
+  imports: [LoadingSkeletonComponent, 
     ReactiveFormsModule,
     RouterLink,
     LucideIconComponent,
