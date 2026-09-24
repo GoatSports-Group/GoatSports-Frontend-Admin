@@ -9,7 +9,7 @@
     }
   </header>
 
-  <div class="feature-list">
+  <div class="feature-list goat-stagger">
     @for (feature of operationFeatures(); track feature.id) {
       @if (operationsEnabled()) {
         <a class="feature-card" [routerLink]="feature.route">

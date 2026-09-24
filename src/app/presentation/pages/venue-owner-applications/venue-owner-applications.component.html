@@ -51,7 +51,7 @@
           <p>Thử tìm theo tên cơ sở, người đại diện hoặc trạng thái.</p>
         </div>
         } @else {
-        <div class="application-list">
+        <div class="application-list goat-stagger">
           @for (application of pagedApplications(); track application.ownerApplicationId) {
           <button type="button" class="application-list__item"
             [class.is-selected]="selectedApplication().ownerApplicationId === application.ownerApplicationId"
