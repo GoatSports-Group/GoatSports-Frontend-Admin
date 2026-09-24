@@ -1,5 +1,5 @@
 <main class="page">
-  <nav class="crumbs" aria-label="Đường dẫn"><a routerLink="/tournaments">Giải đấu</a><lucide-icon name="chevron-right" />
+  <nav class="crumbs" aria-label="Đường dẫn"><a routerLink="/admin/tournaments">Giải đấu</a><lucide-icon name="chevron-right" />
     <strong>{{ tournament()?.name ?? 'Chi tiết giải' }}</strong></nav>
 
   @if (loading()) {
@@ -19,8 +19,7 @@
         mỗi ngày · {{ t.startDate | date:'dd/MM' }} – {{ t.endDate | date:'dd/MM/yyyy' }}</p>
     </div>
     <div class="actions">
-      <a class="btn" [href]="publicUrl" target="_blank" rel="noopener"><lucide-icon name="external-link" />Trang công khai</a>
-      @if (editable()) { <button type="button" class="btn" (click)="showEdit.set(true)"><lucide-icon name="pencil" />Chỉnh sửa</button> }
+      @if (t.status === 'DRAFT') { <button type="button" class="btn" (click)="showEdit.set(true)"><lucide-icon name="pencil" />Chỉnh sửa</button> }
       @if (t.status === 'DRAFT') {
       <button type="button" class="btn btn--primary" [disabled]="busy()" (click)="publish()"><lucide-icon name="flag" />Công bố & giữ sân</button>
       } @else if (canGenerate() && !fixtures().length) {
@@ -75,7 +74,7 @@
           </td>
           <td class="reason">{{ item.statusReason ?? '' }}</td>
           <td class="row-action">
-            @if (editable() && (item.status === 'PENDING_MEMBERS' || item.status === 'PENDING_PAYMENT' || item.status === 'CONFIRMED')) {
+            @if (notStarted() && (item.status === 'PENDING_MEMBERS' || item.status === 'PENDING_PAYMENT' || item.status === 'CONFIRMED')) {
             <button type="button" class="btn btn--sm btn--danger-ghost" [disabled]="busy()" (click)="askReject(item)">Từ chối</button>
             }
           </td>
@@ -146,7 +145,7 @@
         <input class="field__control" type="date" [min]="t.startDate" [max]="t.endDate" [(ngModel)]="plan.playDate" name="date" /></label>
       <div class="field"><span class="field__label">Bắt đầu</span>
         <app-select [options]="timeOptions()" [(ngModel)]="plan.startTime" name="time" placeholder="Chọn giờ" ariaLabel="Giờ bắt đầu"></app-select></div>
-      <button type="button" class="btn btn--primary" [disabled]="busy() || editable() === false && t.status !== 'IN_PROGRESS'" (click)="scheduleMatch()">Xếp sân</button>
+      <button type="button" class="btn btn--primary" [disabled]="busy() || !notStarted() && t.status !== 'IN_PROGRESS'" (click)="scheduleMatch()">Xếp sân</button>
     </div>
   </section>
   @if (schedules().length) {
@@ -188,7 +187,7 @@
   }
 
   @if (showEdit()) {
-  <app-owner-tournament-form [tournament]="t" [rules]="rules()" [locked]="holding().length > 0" (saved)="onEdited()" (closed)="showEdit.set(false)" />
+  <app-owner-tournament-form [tournament]="t" [rules]="rules()" (saved)="onEdited()" (closed)="showEdit.set(false)" />
   }
 
   @if (confirm(); as state) {

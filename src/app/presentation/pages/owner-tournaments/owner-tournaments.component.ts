@@ -60,6 +60,6 @@ export class OwnerTournamentsComponent {
 
   onCreated(tournament: OwnerTournament): void {
     this.showCreate.set(false);
-    void this.router.navigate(['/tournaments', tournament.tournamentId]);
+    void this.router.navigate(['/admin/tournaments', tournament.tournamentId]);
   }
 }

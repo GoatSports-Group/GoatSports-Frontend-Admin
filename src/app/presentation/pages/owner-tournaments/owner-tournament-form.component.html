@@ -3,17 +3,13 @@
     <header class="modal__header">
       <div>
         <h2 id="t-form-title">{{ isEdit ? 'Chỉnh sửa giải đấu' : 'Tạo giải đấu' }}</h2>
-        <p>Giải diễn ra tại cơ sở của bạn. Sân đã chọn bị khóa với người chơi trong khung giờ thi đấu suốt thời gian giải.</p>
+        <p>Giải diễn ra tại cơ sở của bạn. Sân đã chọn bị khóa với người chơi trong khung giờ thi đấu suốt thời gian giải. <b>Sau khi công bố, nội dung giải không sửa được nữa.</b></p>
       </div>
       <button type="button" class="icon-btn" aria-label="Đóng" (click)="close()"><lucide-icon name="x" /></button>
     </header>
 
     <div class="modal__body">
       <fieldset class="form-body" [disabled]="!!saving()">
-        @if (locked) {
-        <p class="note"><lucide-icon name="shield" />Đã có người đăng ký nên lệ phí, môn, hình thức, cơ sở và điều kiện tham dự được giữ nguyên.</p>
-        }
-
         <section class="section">
           <h3>Thông tin giải</h3>
           <label class="field">
@@ -25,12 +21,12 @@
             <div class="field">
               <span class="field__label">Môn thi đấu</span>
               <app-select [options]="sportOptions" [ngModel]="form.sportType" (ngModelChange)="selectSport($event)" name="sport"
-                [disabled]="locked" ariaLabel="Môn thi đấu"></app-select>
+                ariaLabel="Môn thi đấu"></app-select>
             </div>
             <div class="field">
               <span class="field__label">Hình thức</span>
               <app-select [options]="playFormatOptions()" [(ngModel)]="form.playFormat" (ngModelChange)="touch()" name="playFormat"
-                [disabled]="locked" placeholder="Chọn hình thức" ariaLabel="Hình thức thi đấu"></app-select>
+                placeholder="Chọn hình thức" ariaLabel="Hình thức thi đấu"></app-select>
               @if (selectedFormat(); as format) {
               <span class="field__hint">{{ format.participantType === 'TEAM'
                 ? 'Đăng ký theo đội ' + format.rosterMin + '–' + format.rosterMax + ' người, đồng đội tự xác nhận.'
@@ -56,7 +52,7 @@
             <div class="field">
               <span class="field__label">Cơ sở <b>*</b></span>
               <app-select [options]="venueOptions()" [ngModel]="form.venueId" (ngModelChange)="selectVenue($event)" name="venue"
-                [disabled]="locked || venuesLoading()" leadingIcon="map-pin" ariaLabel="Cơ sở"
+                [disabled]="venuesLoading()" leadingIcon="map-pin" ariaLabel="Cơ sở"
                 [placeholder]="venuesLoading() ? 'Đang tải...' : venues().length ? 'Chọn cơ sở' : 'Chưa có cơ sở hoạt động'"></app-select>
               @if (errors().venue) { <span class="field__error" role="alert">{{ errors().venue }}</span> }
             </div>
@@ -115,7 +111,7 @@
             </label>
             <label class="field">
               <span class="field__label">Lệ phí (đ)</span>
-              <input class="field__control" type="number" min="0" step="1000" [(ngModel)]="form.entryFee" name="fee" [disabled]="locked" />
+              <input class="field__control" type="number" min="0" step="1000" [(ngModel)]="form.entryFee" name="fee" />
               <span class="field__hint">Người chơi có 24 giờ để đóng; hệ thống tự hoàn khi rút hoặc bị từ chối.</span>
             </label>
             <label class="field">
@@ -139,30 +135,28 @@
         <section class="section">
           <div class="section__head">
             <h3>Điều kiện tham dự</h3>
-            @if (!locked && eligibility.length < 8) {
+            @if (eligibility.length < 8) {
             <button type="button" class="btn btn--ghost btn--sm" (click)="addRule()"><lucide-icon name="plus" />Thêm điều kiện</button>
             }
           </div>
           @for (rule of eligibility; track $index) {
           <div class="rule-row">
             <app-select [options]="ruleTypes" [ngModel]="rule.ruleType" (ngModelChange)="changeRuleType($index, $event)" [name]="'type' + $index"
-              [disabled]="locked" [ariaLabel]="'Loại điều kiện ' + ($index + 1)"></app-select>
+              [ariaLabel]="'Loại điều kiện ' + ($index + 1)"></app-select>
             @if (rule.ruleType === 'GENDER') {
             <app-select [options]="genderOptions" [(ngModel)]="rule.expectedValue" [name]="'value' + $index"
-              [disabled]="locked" ariaLabel="Giới tính"></app-select>
+              ariaLabel="Giới tính"></app-select>
             } @else {
             <app-select [options]="operatorOptions" [(ngModel)]="rule.operator" [name]="'op' + $index"
-              [disabled]="locked" ariaLabel="Toán tử"></app-select>
+              ariaLabel="Toán tử"></app-select>
             @if (rule.ruleType === 'SKILL_LEVEL') {
             <app-select [options]="skillOptions" [(ngModel)]="rule.expectedValue" [name]="'value' + $index"
-              [disabled]="locked" ariaLabel="Trình độ"></app-select>
+              ariaLabel="Trình độ"></app-select>
             } @else {
-            <input class="field__control" type="number" [(ngModel)]="rule.expectedValue" [name]="'value' + $index" [disabled]="locked" />
+            <input class="field__control" type="number" [(ngModel)]="rule.expectedValue" [name]="'value' + $index" />
             }
             }
-            @if (!locked) {
             <button type="button" class="icon-btn" (click)="removeRule($index)" aria-label="Xóa điều kiện"><lucide-icon name="trash-2" /></button>
-            }
           </div>
           } @empty {
           <p class="field__hint">Không giới hạn — mọi người chơi đều đăng ký được. Điều kiện xét theo hồ sơ thể thao thật, với đội xét từng người.</p>

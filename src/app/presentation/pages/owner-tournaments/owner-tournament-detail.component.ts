@@ -10,7 +10,6 @@ import {
 import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { OWNER_TOURNAMENT_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-tournament.repository';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
-import { environment } from '@environments/environment';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/loading-skeleton.component';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
@@ -38,7 +37,6 @@ export class OwnerTournamentDetailComponent {
   private readonly getVenues = inject(GetMyOwnerVenuesUseCase);
   private readonly notify = inject(NotifyService);
   readonly tournamentId = this.route.snapshot.paramMap.get('id') ?? '';
-  readonly publicUrl = `${environment.clientApiUrl}/tournaments/${this.tournamentId}`;
 
   readonly sportLabel = SPORT_LABEL;
   readonly formatLabel = FORMAT_LABEL;
@@ -89,7 +87,8 @@ export class OwnerTournamentDetailComponent {
     item.status === 'COMPLETED' && item.registration1Id && item.registration2Id));
   readonly allPlayed = computed(() => this.fixtures().length > 0 && this.fixtures().every(item => item.status === 'COMPLETED'));
   readonly status = computed<TournamentStatus | null>(() => this.tournament()?.status ?? null);
-  readonly editable = computed(() => !['IN_PROGRESS', 'COMPLETED', 'CANCELLED'].includes(this.status() ?? ''));
+  /** Giai chua bat dau: con tu choi dang ky duoc. Noi dung giai chi sua duoc khi con la ban nhap. */
+  readonly notStarted = computed(() => !['IN_PROGRESS', 'COMPLETED', 'CANCELLED'].includes(this.status() ?? ''));
   readonly canGenerate = computed(() => !this.hasResults() && this.confirmed().length >= 2
     && !['DRAFT', 'COMPLETED', 'CANCELLED'].includes(this.status() ?? ''));
   /** Gio bat dau cho duoc trong khung thi dau, buoc = thoi luong mot tran. */

@@ -37,8 +37,6 @@ export class OwnerTournamentFormComponent implements OnInit {
 
   @Input() tournament: OwnerTournament | null = null;
   @Input() rules: readonly EligibilityRule[] = [];
-  /** Da co dang ky giu suat: backend khoa le phi, mon, hinh thuc, co so va dieu kien. */
-  @Input() locked = false;
   @Output() readonly saved = new EventEmitter<OwnerTournament>();
   @Output() readonly closed = new EventEmitter<void>();
 

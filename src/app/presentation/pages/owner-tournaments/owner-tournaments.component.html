@@ -46,7 +46,7 @@
           <td class="num">{{ item.currentParticipants }}/{{ item.maxParticipants }}</td>
           <td class="num">{{ formatVnd(item.entryFee) }}</td>
           <td><span class="badge" [class]="'badge badge--' + statusMeta[item.status].tone">{{ statusMeta[item.status].label }}</span></td>
-          <td class="row-action"><a class="btn btn--sm" [routerLink]="['/tournaments', item.tournamentId]">Điều hành<lucide-icon name="arrow-right" /></a></td>
+          <td class="row-action"><a class="btn btn--sm" [routerLink]="['/admin/tournaments', item.tournamentId]">Điều hành<lucide-icon name="arrow-right" /></a></td>
         </tr>
         }
       </tbody>
