@@ -1,0 +1,91 @@
+@use 'tournament-ops' as t;
+@include t.tournament-ops;
+
+.crumbs {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  color: var(--body);
+  font-size: 14px;
+  white-space: nowrap;
+
+  a { color: var(--body); font-weight: 700; text-decoration: none; &:hover { color: var(--primary); } }
+  lucide-icon { width: 16px; height: 16px; flex: none; }
+  strong { overflow: hidden; color: var(--primary); text-overflow: ellipsis; }
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px !important;
+  font-size: 14px !important;
+  font-weight: 700;
+}
+
+.count--alert { background: var(--danger); color: var(--surface); }
+
+.btn--danger { border-color: var(--danger); background: var(--danger); color: var(--surface); }
+
+.row-action { text-align: right; white-space: nowrap; }
+.reason { max-width: 280px; color: var(--body); font-size: 13px; }
+.deadline { display: block; margin-top: 4px; color: var(--warning); font-size: 13px; font-weight: 700; }
+
+.rounds { display: grid; gap: 16px; }
+
+.matches { display: grid; margin: 0; padding: 0; list-style: none; }
+
+.match {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 180px) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 8px 20px;
+  border-top: 1px solid var(--hairline);
+
+  &:first-child { border-top: 0; }
+  &.is-done { background: var(--surface-subtle); }
+}
+
+.match__no { color: var(--body); font-size: 13px; font-weight: 700; }
+
+.match__team {
+  overflow: hidden;
+  color: var(--ink);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.match__team--right { text-align: right; }
+
+.match__score {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  input { width: 64px; text-align: center; font-variant-numeric: tabular-nums; }
+}
+
+.match__score--read { font-size: 16px; font-variant-numeric: tabular-nums; font-weight: 900; }
+
+.match__when { overflow: hidden; color: var(--body); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+
+.plan {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 12px;
+  padding: 20px;
+}
+
+.confirm-text { margin: 0; color: var(--ink); font-size: 15px; line-height: 1.6; }
+
+@media (max-width: 1023px) {
+  .plan { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .match { grid-template-columns: 32px minmax(0, 1fr) auto minmax(0, 1fr); }
+  .match__when, .match > .btn { grid-column: 2 / -1; }
+}

@@ -1,0 +1,63 @@
+<main class="page">
+  <header class="page-head">
+    <div>
+      <h1>Giải đấu</h1>
+      <p>Tổ chức giải tại cơ sở của bạn: giữ sân cho cả thời gian giải, nhận đăng ký và lệ phí, xếp lịch và cập nhật kết quả.</p>
+    </div>
+    <button type="button" class="btn btn--primary" (click)="showCreate.set(true)"><lucide-icon name="plus" />Tạo giải đấu</button>
+  </header>
+
+  <section class="kpis" aria-label="Tổng quan giải đấu">
+    <div class="kpi"><span>Đang mở đăng ký</span><strong>{{ kpis().open }}</strong></div>
+    <div class="kpi"><span>Đang diễn ra</span><strong>{{ kpis().running }}</strong></div>
+    <div class="kpi"><span>Suất đã giữ</span><strong>{{ kpis().seats }}</strong><small>gồm đội đang chờ đủ người / đóng phí</small></div>
+    <div class="kpi"><span>Bản nháp</span><strong>{{ kpis().drafts }}</strong></div>
+  </section>
+
+  @if (loading()) {
+  <app-loading-skeleton variant="table" [count]="5" [columns]="6" label="Đang tải giải đấu" />
+  } @else if (error()) {
+  <div class="state state--error" role="alert">
+    <lucide-icon name="alert-circle" /><strong>Chưa tải được giải đấu</strong><p>{{ error() }}</p>
+    <button type="button" class="btn" (click)="load()"><lucide-icon name="rotate-ccw" />Thử lại</button>
+  </div>
+  } @else if (!items().length) {
+  <div class="state">
+    <lucide-icon name="trophy" /><strong>Chưa có giải đấu nào</strong>
+    <p>Tạo giải đầu tiên: chọn sân cùng môn tại cơ sở, khung giờ thi đấu và hình thức (đơn, đôi hay đội).</p>
+    <button type="button" class="btn btn--primary" (click)="showCreate.set(true)"><lucide-icon name="plus" />Tạo giải đấu</button>
+  </div>
+  } @else {
+  <section class="card table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>Giải đấu</th><th>Thời gian</th><th class="num">Đăng ký</th><th class="num">Lệ phí</th><th>Trạng thái</th><th></th></tr>
+      </thead>
+      <tbody>
+        @for (item of items(); track item.tournamentId) {
+        <tr>
+          <td>
+            <div class="cell-title">
+              <strong>{{ item.name }}</strong>
+              <small>{{ sportLabel[item.sportType] }} · {{ item.playFormatLabel }} · {{ formatLabel[item.format] }}</small>
+            </div>
+          </td>
+          <td>{{ item.startDate | date:'dd/MM' }} – {{ item.endDate | date:'dd/MM/yyyy' }}</td>
+          <td class="num">{{ item.currentParticipants }}/{{ item.maxParticipants }}</td>
+          <td class="num">{{ formatVnd(item.entryFee) }}</td>
+          <td><span class="badge" [class]="'badge badge--' + statusMeta[item.status].tone">{{ statusMeta[item.status].label }}</span></td>
+          <td class="row-action"><a class="btn btn--sm" [routerLink]="['/tournaments', item.tournamentId]">Điều hành<lucide-icon name="arrow-right" /></a></td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </section>
+  @if (total() > pageSize) {
+  <app-pagination [pageIndex]="pageIndex()" [pageSize]="pageSize" [totalItems]="total()" (pageChange)="goToPage($event)" />
+  }
+  }
+
+  @if (showCreate()) {
+  <app-owner-tournament-form (saved)="onCreated($event)" (closed)="showCreate.set(false)" />
+  }
+</main>

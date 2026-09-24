@@ -19,6 +19,8 @@ import { OwnerRevenueComponent } from '@presentation/pages/owner-revenue/owner-r
 import { OwnerReviewsComponent } from '@presentation/pages/owner-reviews/owner-reviews.component';
 import { OwnerBankAccountComponent } from '@presentation/pages/owner-bank-account/owner-bank-account.component';
 import { ModerationComponent } from '@presentation/pages/moderation/moderation.component';
+import { OwnerTournamentsComponent } from '@presentation/pages/owner-tournaments/owner-tournaments.component';
+import { OwnerTournamentDetailComponent } from '@presentation/pages/owner-tournaments/owner-tournament-detail.component';
 
 const routes: Routes = [
   {
@@ -47,6 +49,8 @@ const routes: Routes = [
       { path: 'finance', component: OwnerRevenueComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
       { path: 'bank-account', component: OwnerBankAccountComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
       { path: 'reviews', component: OwnerReviewsComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
+      { path: 'tournaments', component: OwnerTournamentsComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
+      { path: 'tournaments/:id', component: OwnerTournamentDetailComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   }

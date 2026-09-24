@@ -29,6 +29,7 @@ export const VENUE_OWNER_NAVIGATION: readonly AdminNavigationItem[] = [
   { title: 'Lịch và bảng giá', description: 'Khung giờ, ngày nghỉ và quy tắc giá', icon: 'calendar', route: '/schedule' },
   { title: 'Đơn đặt sân', description: 'Theo dõi đơn thuộc cơ sở của bạn', icon: 'file-text', route: '/owner-bookings' },
   { title: 'Check-in khách', description: 'QR, Booking Code và khách walk-in', icon: 'shield-check', route: '/check-in' },
+  { title: 'Giải đấu', description: 'Tổ chức giải tại cơ sở: sân, đăng ký, lịch và kết quả', icon: 'trophy', route: '/tournaments' },
   { title: 'Doanh thu', description: 'Doanh thu và dữ liệu đối soát thực tế', icon: 'credit-card', route: '/finance' },
   { title: 'Tài khoản nhận tiền', description: 'Liên kết ngân hàng để nhận doanh thu từ hệ thống', icon: 'wallet-cards', route: '/bank-account' },
   { title: 'Đánh giá', description: 'Phản hồi thật từ booking đã hoàn tất', icon: 'star', route: '/reviews' }
@@ -46,7 +47,7 @@ export const VENUE_OWNER_NAVIGATION_GROUPS: readonly AdminNavigationGroup[] = [
   {
     label: 'Vận hành',
     items: VENUE_OWNER_NAVIGATION.filter(item =>
-      ['/venues', '/courts', '/schedule', '/owner-bookings', '/check-in'].includes(item.route)
+      ['/venues', '/courts', '/schedule', '/owner-bookings', '/check-in', '/tournaments'].includes(item.route)
     )
   },
   {

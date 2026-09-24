@@ -1,0 +1,222 @@
+<main class="page">
+  <nav class="crumbs" aria-label="Đường dẫn"><a routerLink="/tournaments">Giải đấu</a><lucide-icon name="chevron-right" />
+    <strong>{{ tournament()?.name ?? 'Chi tiết giải' }}</strong></nav>
+
+  @if (loading()) {
+  <app-loading-skeleton variant="stats" [count]="4" label="Đang tải giải đấu" />
+  <app-loading-skeleton variant="table" [count]="5" [columns]="5" [decorative]="true" />
+  } @else if (error()) {
+  <div class="state state--error" role="alert"><lucide-icon name="alert-circle" /><strong>Không mở được giải</strong><p>{{ error() }}</p>
+    <button type="button" class="btn" (click)="load()"><lucide-icon name="rotate-ccw" />Thử lại</button></div>
+  } @else if (tournament(); as t) {
+
+  <header class="page-head">
+    <div>
+      <p class="meta"><span class="badge" [class]="'badge badge--' + statusMeta[t.status].tone">{{ statusMeta[t.status].label }}</span>
+        {{ sportLabel[t.sportType] }} · {{ t.playFormatLabel }} · {{ formatLabel[t.format] }}</p>
+      <h1>{{ t.name }}</h1>
+      <p>{{ venue()?.name ?? 'Cơ sở' }} · {{ tournamentCourts().length }} sân · {{ t.dailyStartTime?.slice(0, 5) }}–{{ t.dailyEndTime?.slice(0, 5) }}
+        mỗi ngày · {{ t.startDate | date:'dd/MM' }} – {{ t.endDate | date:'dd/MM/yyyy' }}</p>
+    </div>
+    <div class="actions">
+      <a class="btn" [href]="publicUrl" target="_blank" rel="noopener"><lucide-icon name="external-link" />Trang công khai</a>
+      @if (editable()) { <button type="button" class="btn" (click)="showEdit.set(true)"><lucide-icon name="pencil" />Chỉnh sửa</button> }
+      @if (t.status === 'DRAFT') {
+      <button type="button" class="btn btn--primary" [disabled]="busy()" (click)="publish()"><lucide-icon name="flag" />Công bố & giữ sân</button>
+      } @else if (canGenerate() && !fixtures().length) {
+      <button type="button" class="btn btn--primary" [disabled]="busy()" (click)="askGenerate()"><lucide-icon name="network" />Xếp lịch thi đấu</button>
+      } @else if (t.status === 'IN_PROGRESS' && allPlayed()) {
+      <button type="button" class="btn btn--primary" [disabled]="busy()" (click)="askComplete()"><lucide-icon name="trophy" />Kết thúc giải</button>
+      }
+      @if (t.status !== 'COMPLETED' && t.status !== 'CANCELLED') {
+      <button type="button" class="btn btn--danger-ghost" [disabled]="busy()" (click)="askCancel()"><lucide-icon name="ban" />Hủy giải</button>
+      }
+    </div>
+  </header>
+
+  <section class="kpis" aria-label="Số liệu giải">
+    <div class="kpi"><span>Suất đã giữ</span><strong>{{ t.currentParticipants }}/{{ t.maxParticipants }}</strong>
+      <small>{{ t.participantType === 'TEAM' ? 'Đội ' + t.rosterMin + '–' + t.rosterMax + ' người' : 'Đăng ký cá nhân' }}</small></div>
+    <div class="kpi"><span>Đã xác nhận</span><strong>{{ confirmed().length }}</strong></div>
+    <div class="kpi"><span>Chờ đóng phí</span><strong>{{ awaitingPayment().length }}</strong><small>hạn 24 giờ, quá hạn tự trả suất</small></div>
+    <div class="kpi"><span>Lệ phí đã thu</span><strong>{{ formatVnd(feeCollected()) }}</strong><small>{{ formatVnd(t.entryFee) }} / đăng ký</small></div>
+  </section>
+
+  <nav class="tabs" role="tablist">
+    <button type="button" role="tab" class="tab" [class.is-active]="tab() === 'REGISTRATIONS'" (click)="tab.set('REGISTRATIONS')">
+      <lucide-icon name="users" />Đăng ký<span class="count">{{ holding().length }}</span></button>
+    <button type="button" role="tab" class="tab" [class.is-active]="tab() === 'FIXTURES'" (click)="tab.set('FIXTURES')">
+      <lucide-icon name="network" />Lịch & kết quả<span class="count">{{ fixtures().length }}</span></button>
+    <button type="button" role="tab" class="tab" [class.is-active]="tab() === 'SCHEDULE'" (click)="tab.set('SCHEDULE')">
+      <lucide-icon name="map-pin" />Xếp sân
+      @if (unscheduled().length) { <span class="count count--alert">{{ unscheduled().length }}</span> }</button>
+    @if (t.format === 'ROUND_ROBIN') {
+    <button type="button" role="tab" class="tab" [class.is-active]="tab() === 'STANDINGS'" (click)="tab.set('STANDINGS')">
+      <lucide-icon name="list-checks" />Bảng xếp hạng</button>
+    }
+  </nav>
+
+  @switch (tab()) {
+  @case ('REGISTRATIONS') {
+  @if (registrations().length) {
+  <section class="card table-wrap">
+    <table class="table">
+      <thead><tr><th>Đăng ký</th><th class="num">Thành viên</th><th>Trạng thái</th><th>Lệ phí</th><th>Ghi chú</th><th></th></tr></thead>
+      <tbody>
+        @for (item of registrations(); track item.registrationId) {
+        <tr>
+          <td><div class="cell-title"><strong>{{ names().get(item.registrationId) }}</strong>
+            <small>{{ item.type === 'INDIVIDUAL' ? 'Cá nhân' : item.clubId ? 'Đội đại diện CLB' : 'Đội tự lập' }} · {{ item.registeredAt | date:'dd/MM HH:mm' }}</small></div></td>
+          <td class="num">{{ item.type === 'INDIVIDUAL' ? '1' : acceptedCount(item) + '/' + t.rosterMin }}</td>
+          <td><span class="badge" [class]="'badge badge--' + registrationMeta[item.status].tone">{{ registrationMeta[item.status].label }}</span></td>
+          <td>
+            @if (item.paymentStatus; as pay) { <span class="badge" [class]="'badge badge--' + paymentMeta[pay].tone">{{ paymentMeta[pay].label }}</span> }
+            @if (item.status === 'PENDING_PAYMENT' && item.paymentDeadline) { <small class="deadline">hạn {{ item.paymentDeadline | date:'HH:mm dd/MM' }}</small> }
+          </td>
+          <td class="reason">{{ item.statusReason ?? '' }}</td>
+          <td class="row-action">
+            @if (editable() && (item.status === 'PENDING_MEMBERS' || item.status === 'PENDING_PAYMENT' || item.status === 'CONFIRMED')) {
+            <button type="button" class="btn btn--sm btn--danger-ghost" [disabled]="busy()" (click)="askReject(item)">Từ chối</button>
+            }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </section>
+  } @else {
+  <div class="state"><lucide-icon name="users" /><strong>Chưa có đăng ký</strong>
+    <p>{{ t.status === 'DRAFT' ? 'Công bố giải để người chơi thấy và đăng ký.' : 'Đăng ký mở theo lịch bạn đã đặt.' }}</p></div>
+  }
+  }
+
+  @case ('FIXTURES') {
+  @if (fixtures().length) {
+  <div class="rounds">
+    @for (round of rounds(); track round.round) {
+    <section class="card">
+      <header class="card__head"><h2>{{ round.name }}</h2><p>{{ round.fixtures.length }} trận</p></header>
+      <ul class="matches">
+        @for (fixture of round.fixtures; track fixture.fixtureId) {
+        <li class="match" [class.is-done]="fixture.status === 'COMPLETED'">
+          <span class="match__no">#{{ fixture.matchNumber }}</span>
+          <span class="match__team">{{ fixture.registration1Id ? names().get(fixture.registration1Id) : 'Chờ xác định' }}</span>
+          @if (t.status === 'IN_PROGRESS' && fixture.registration1Id && fixture.registration2Id) {
+          <span class="match__score">
+            <input class="field__control" type="number" min="0" [(ngModel)]="scores[fixture.fixtureId].score1" aria-label="Tỷ số đội 1" />
+            <span>–</span>
+            <input class="field__control" type="number" min="0" [(ngModel)]="scores[fixture.fixtureId].score2" aria-label="Tỷ số đội 2" />
+          </span>
+          } @else {
+          <span class="match__score match__score--read">{{ fixture.score1 ?? '–' }} : {{ fixture.score2 ?? '–' }}</span>
+          }
+          <span class="match__team match__team--right">{{ fixture.registration2Id ? names().get(fixture.registration2Id) : (fixture.roundNumber > 1 ? 'Chờ xác định' : 'Miễn thi đấu') }}</span>
+          <span class="match__when">
+            @if (schedule(fixture); as when) { {{ when.playDate | date:'dd/MM' }} {{ when.startTime.slice(0, 5) }} · {{ courtNames().get(when.courtId) ?? 'Sân' }} }
+            @else { Chưa xếp sân }
+          </span>
+          @if (t.status === 'IN_PROGRESS' && fixture.registration1Id && fixture.registration2Id) {
+          <button type="button" class="btn btn--sm" [disabled]="busy()" (click)="saveScore(fixture)">{{ fixture.status === 'COMPLETED' ? 'Sửa' : 'Lưu' }}</button>
+          }
+        </li>
+        }
+      </ul>
+    </section>
+    }
+  </div>
+  } @else {
+  <div class="state"><lucide-icon name="network" /><strong>Chưa có lịch thi đấu</strong>
+    <p>{{ canGenerate() ? confirmed().length + ' đăng ký đã xác nhận, có thể xếp lịch.' : 'Cần công bố giải và có ít nhất 2 đăng ký đã xác nhận.' }}</p>
+    @if (canGenerate()) { <button type="button" class="btn btn--primary" (click)="askGenerate()">Xếp lịch thi đấu</button> }
+  </div>
+  }
+  }
+
+  @case ('SCHEDULE') {
+  <section class="card">
+    <header class="card__head"><div><h2>Xếp trận vào sân</h2>
+      <p>Chỉ trong các sân và khung giờ giải đã giữ, người chơi thường không đặt được nên không cần giữ thêm.</p></div></header>
+    <div class="plan">
+      <label class="field"><span class="field__label">Trận</span>
+        <select class="field__control" [(ngModel)]="plan.fixtureId" name="fixture">
+          <option value="">Không gắn trận (giữ trước)</option>
+          @for (fixture of unscheduled(); track fixture.fixtureId) { <option [value]="fixture.fixtureId">{{ fixtureLabel(fixture) }}</option> }
+        </select></label>
+      <label class="field"><span class="field__label">Sân</span>
+        <select class="field__control" [(ngModel)]="plan.courtId" name="court">
+          <option value="">Chọn sân</option>
+          @for (court of tournamentCourts(); track court.id) { <option [value]="court.id">{{ court.name }}</option> }
+        </select></label>
+      <label class="field"><span class="field__label">Ngày</span>
+        <input class="field__control" type="date" [min]="t.startDate" [max]="t.endDate" [(ngModel)]="plan.playDate" name="date" /></label>
+      <label class="field"><span class="field__label">Bắt đầu</span>
+        <select class="field__control" [(ngModel)]="plan.startTime" name="time">
+          <option value="">Chọn giờ</option>
+          @for (time of startTimes(); track time) { <option [value]="time">{{ time }}</option> }
+        </select></label>
+      <button type="button" class="btn btn--primary" [disabled]="busy() || editable() === false && t.status !== 'IN_PROGRESS'" (click)="scheduleMatch()">Xếp sân</button>
+    </div>
+  </section>
+  @if (schedules().length) {
+  <section class="card table-wrap">
+    <table class="table">
+      <thead><tr><th>Ngày</th><th>Giờ</th><th>Sân</th><th>Trận</th><th></th></tr></thead>
+      <tbody>
+        @for (item of schedules(); track item.reservationId) {
+        @if (item.status === 'CONFIRMED' || item.status === 'PENDING') {
+        <tr>
+          <td>{{ item.playDate | date:'dd/MM/yyyy' }}</td>
+          <td>{{ item.startTime.slice(0, 5) }}–{{ item.endTime.slice(0, 5) }}</td>
+          <td>{{ courtNames().get(item.courtId) ?? 'Sân' }}</td>
+          <td>@for (fixture of fixtures(); track fixture.fixtureId) { @if (fixture.reservationId === item.reservationId) { {{ fixtureLabel(fixture) }} } }</td>
+          <td class="row-action"><button type="button" class="btn btn--sm btn--danger-ghost" [disabled]="busy()" (click)="releaseSchedule(item)">Bỏ lịch</button></td>
+        </tr>
+        }
+        }
+      </tbody>
+    </table>
+  </section>
+  }
+  }
+
+  @case ('STANDINGS') {
+  <section class="card table-wrap">
+    <table class="table">
+      <thead><tr><th class="num">#</th><th>Đội</th><th class="num">Trận</th><th class="num">T</th><th class="num">H</th><th class="num">B</th><th class="num">HS</th><th class="num">Điểm</th></tr></thead>
+      <tbody>
+        @for (row of standings(); track row.registrationId) {
+        <tr><td class="num">{{ row.rank }}</td><td>{{ names().get(row.registrationId) }}</td><td class="num">{{ row.played }}</td>
+          <td class="num">{{ row.won }}</td><td class="num">{{ row.drawn }}</td><td class="num">{{ row.lost }}</td>
+          <td class="num">{{ row.scoreFor - row.scoreAgainst }}</td><td class="num"><b>{{ row.points }}</b></td></tr>
+        }
+      </tbody>
+    </table>
+  </section>
+  }
+  }
+
+  @if (showEdit()) {
+  <app-owner-tournament-form [tournament]="t" [rules]="rules()" [locked]="holding().length > 0" (saved)="onEdited()" (closed)="showEdit.set(false)" />
+  }
+
+  @if (confirm(); as state) {
+  <div class="modal-backdrop" (click)="closeConfirm()">
+    <section class="modal" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" (click)="$event.stopPropagation()">
+      <header class="modal__header"><div><h2 id="confirm-title">{{ state.title }}</h2></div></header>
+      <div class="modal__body">
+        <p class="confirm-text">{{ state.message }}</p>
+        @if (state.reason) {
+        <label class="field"><span class="field__label">Lý do</span>
+          <textarea class="field__control" rows="3" maxlength="300" [(ngModel)]="confirmReason" name="reason"></textarea></label>
+        }
+      </div>
+      <footer class="modal__footer">
+        <button type="button" class="btn" (click)="closeConfirm()" [disabled]="busy()">Quay lại</button>
+        <button type="button" class="btn" [class.btn--primary]="!state.danger" [class.btn--danger]="state.danger" (click)="runConfirm()" [disabled]="busy()">
+          @if (busy()) { <lucide-icon name="loader-2" class="spin" /> }{{ state.label }}</button>
+      </footer>
+    </section>
+  </div>
+  }
+  }
+</main>

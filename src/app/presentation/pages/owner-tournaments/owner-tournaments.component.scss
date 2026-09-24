@@ -1,0 +1,4 @@
+@use 'tournament-ops' as t;
+@include t.tournament-ops;
+
+.row-action { text-align: right; white-space: nowrap; }

@@ -27,6 +27,8 @@ import { OWNER_BOOKING_REPOSITORY_TOKEN } from '@application/ports/persistence/o
 import { OWNER_CHECK_IN_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-check-in.repository';
 import { OWNER_REVENUE_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-revenue.repository';
 import { OWNER_REVIEW_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-review.repository';
+import { OWNER_TOURNAMENT_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-tournament.repository';
+import { OwnerTournamentRepositoryImpl } from '@infrastructure/repositories/owner-tournament.repository.impl';
 import { SOCIAL_MODERATION_REPOSITORY_TOKEN } from '@application/ports/persistence/social-moderation.repository';
 import { BANK_ACCOUNT_REPOSITORY_TOKEN } from '@application/ports/persistence/bank-account.repository';
 import { WEBSOCKET_SERVICE_TOKEN } from '@application/ports/websocket.service';
@@ -209,6 +211,7 @@ import {
     { provide: OWNER_CHECK_IN_REPOSITORY_TOKEN, useClass: OwnerCheckInRepositoryImpl },
     { provide: OWNER_REVENUE_REPOSITORY_TOKEN, useClass: OwnerRevenueRepositoryImpl },
     { provide: OWNER_REVIEW_REPOSITORY_TOKEN, useClass: OwnerReviewRepositoryImpl },
+    { provide: OWNER_TOURNAMENT_REPOSITORY_TOKEN, useClass: OwnerTournamentRepositoryImpl },
     { provide: SOCIAL_MODERATION_REPOSITORY_TOKEN, useClass: SocialModerationRepositoryImpl },
     { provide: BANK_ACCOUNT_REPOSITORY_TOKEN, useClass: BankAccountRepositoryImpl },
     { provide: WEBSOCKET_SERVICE_TOKEN, useClass: StompWebSocketService },

@@ -1,0 +1,206 @@
+<div class="modal-backdrop" (click)="close()">
+  <section class="modal modal--wide" role="dialog" aria-modal="true" aria-labelledby="t-form-title" (click)="$event.stopPropagation()">
+    <header class="modal__header">
+      <div>
+        <h2 id="t-form-title">{{ isEdit ? 'Chỉnh sửa giải đấu' : 'Tạo giải đấu' }}</h2>
+        <p>Giải diễn ra tại cơ sở của bạn. Sân đã chọn bị khóa với người chơi trong khung giờ thi đấu suốt thời gian giải.</p>
+      </div>
+      <button type="button" class="icon-btn" aria-label="Đóng" (click)="close()"><lucide-icon name="x" /></button>
+    </header>
+
+    <div class="modal__body">
+      <fieldset class="form-body" [disabled]="!!saving()">
+        @if (locked) {
+        <p class="note"><lucide-icon name="shield" />Đã có người đăng ký nên lệ phí, môn, hình thức, cơ sở và điều kiện tham dự được giữ nguyên.</p>
+        }
+
+        <section class="section">
+          <h3>Thông tin giải</h3>
+          <label class="field">
+            <span class="field__label">Tên giải đấu <b>*</b></span>
+            <input class="field__control" maxlength="150" [(ngModel)]="form.name" name="name" placeholder="Ví dụ: Giải cầu lông mở rộng mùa thu" />
+            @if (errors().name) { <span class="field__error" role="alert">{{ errors().name }}</span> }
+          </label>
+          <div class="grid grid--3">
+            <label class="field">
+              <span class="field__label">Môn thi đấu</span>
+              <select class="field__control" [ngModel]="form.sportType" (ngModelChange)="selectSport($event)" name="sport" [disabled]="locked">
+                @for (sport of sports; track sport) { <option [ngValue]="sport">{{ sportLabel[sport] }}</option> }
+              </select>
+            </label>
+            <label class="field">
+              <span class="field__label">Hình thức</span>
+              <select class="field__control" [(ngModel)]="form.playFormat" (ngModelChange)="touch()" name="playFormat" [disabled]="locked">
+                @for (format of formats(); track format.code) { <option [ngValue]="format.code">{{ format.label }}</option> }
+              </select>
+              @if (selectedFormat(); as format) {
+              <span class="field__hint">{{ format.participantType === 'TEAM'
+                ? 'Đăng ký theo đội ' + format.rosterMin + '–' + format.rosterMax + ' người, đồng đội tự xác nhận.'
+                : 'Mỗi người chơi đăng ký cá nhân.' }}</span>
+              }
+              @if (errors().format) { <span class="field__error" role="alert">{{ errors().format }}</span> }
+            </label>
+            <label class="field">
+              <span class="field__label">Thể thức</span>
+              <select class="field__control" [(ngModel)]="form.format" (ngModelChange)="touch()" name="format">
+                <option ngValue="SINGLE_ELIMINATION">{{ formatLabel.SINGLE_ELIMINATION }}</option>
+                <option ngValue="ROUND_ROBIN">{{ formatLabel.ROUND_ROBIN }}</option>
+              </select>
+            </label>
+          </div>
+          <label class="field">
+            <span class="field__label">Mô tả</span>
+            <textarea class="field__control" rows="3" maxlength="3000" [(ngModel)]="form.description" name="description"></textarea>
+          </label>
+        </section>
+
+        <section class="section">
+          <h3>Địa điểm & sân thi đấu</h3>
+          <div class="grid grid--2">
+            <label class="field">
+              <span class="field__label">Cơ sở <b>*</b></span>
+              <select class="field__control" [ngModel]="form.venueId" (ngModelChange)="selectVenue($event)" name="venue"
+                [disabled]="locked || venuesLoading()">
+                @if (!venues().length) { <option value="">{{ venuesLoading() ? 'Đang tải...' : 'Chưa có cơ sở hoạt động' }}</option> }
+                @for (venue of venues(); track venue.venueId) { <option [ngValue]="venue.venueId">{{ venue.name }}</option> }
+              </select>
+              @if (errors().venue) { <span class="field__error" role="alert">{{ errors().venue }}</span> }
+            </label>
+            <div class="grid grid--3 grid--tight">
+              <label class="field">
+                <span class="field__label">Từ</span>
+                <input class="field__control" type="time" [(ngModel)]="form.dailyStartTime" (ngModelChange)="touch()" name="dailyStart" />
+              </label>
+              <label class="field">
+                <span class="field__label">Đến</span>
+                <input class="field__control" type="time" [(ngModel)]="form.dailyEndTime" (ngModelChange)="touch()" name="dailyEnd" />
+              </label>
+              <label class="field">
+                <span class="field__label">Phút/trận</span>
+                <input class="field__control" type="number" min="15" max="240" step="5" [(ngModel)]="form.matchDurationMinutes"
+                  (ngModelChange)="touch()" name="duration" />
+              </label>
+            </div>
+          </div>
+          @if (errors().window) { <span class="field__error" role="alert">{{ errors().window }}</span> }
+
+          <div class="field">
+            <span class="field__label">Sân dùng cho giải <b>*</b></span>
+            @if (venue() && !sportCourts().length) {
+            <p class="note note--danger"><lucide-icon name="alert-triangle" />Cơ sở này chưa có sân {{ sportLabel[form.sportType].toLowerCase() }} đang hoạt động nên không tổ chức giải môn này được.</p>
+            } @else {
+            <div class="court-grid">
+              @for (court of sportCourts(); track court.venueCourtId) {
+              <label class="court" [class.is-selected]="form.courtIds.includes(court.venueCourtId)">
+                <input type="checkbox" [checked]="form.courtIds.includes(court.venueCourtId)"
+                  (change)="toggleCourt(court.venueCourtId, $any($event.target).checked)" />
+                <span><strong>{{ court.name }}</strong><small>{{ court.surfaceType || 'Sân ' + sportLabel[form.sportType].toLowerCase() }}</small></span>
+              </label>
+              }
+            </div>
+            }
+            @if (errors().courts) { <span class="field__error" role="alert">{{ errors().courts }}</span> }
+          </div>
+
+          @if (capacityInfo(); as info) {
+          <p class="note" [class.note--success]="info.enough && info.required > 0" [class.note--danger]="!info.enough">
+            <lucide-icon [name]="info.enough ? 'check' : 'alert-triangle'" />
+            <span>Giải cần tối đa <b>{{ info.required }}</b> trận; {{ form.courtIds.length }} sân trong khung giờ này đủ cho
+              <b>{{ info.available }}</b> trận. Người chơi không đặt được các sân này trong khung giờ thi đấu.</span>
+          </p>
+          }
+        </section>
+
+        <section class="section">
+          <h3>Quy mô, lệ phí & lịch</h3>
+          <div class="grid grid--3">
+            <label class="field">
+              <span class="field__label">Số suất</span>
+              <input class="field__control" type="number" min="2" max="128" [(ngModel)]="form.maxParticipants" (ngModelChange)="touch()" name="max" />
+              @if (errors().size) { <span class="field__error" role="alert">{{ errors().size }}</span> }
+            </label>
+            <label class="field">
+              <span class="field__label">Lệ phí (đ)</span>
+              <input class="field__control" type="number" min="0" step="1000" [(ngModel)]="form.entryFee" name="fee" [disabled]="locked" />
+              <span class="field__hint">Người chơi có 24 giờ để đóng; hệ thống tự hoàn khi rút hoặc bị từ chối.</span>
+            </label>
+            <label class="field">
+              <span class="field__label">Giải thưởng (đ)</span>
+              <input class="field__control" type="number" min="0" step="100000" [(ngModel)]="form.prizePool" name="prize" />
+            </label>
+          </div>
+          <div class="grid grid--4">
+            <label class="field"><span class="field__label">Mở đăng ký</span>
+              <input class="field__control" type="date" [(ngModel)]="form.registrationOpenDate" name="open" /></label>
+            <label class="field"><span class="field__label">Đóng đăng ký</span>
+              <input class="field__control" type="date" [(ngModel)]="form.registrationCloseDate" name="close" /></label>
+            <label class="field"><span class="field__label">Khai mạc</span>
+              <input class="field__control" type="date" [(ngModel)]="form.startDate" (ngModelChange)="touch()" name="start" /></label>
+            <label class="field"><span class="field__label">Kết thúc</span>
+              <input class="field__control" type="date" [(ngModel)]="form.endDate" (ngModelChange)="touch()" name="end" /></label>
+          </div>
+          @if (errors().dates) { <span class="field__error" role="alert">{{ errors().dates }}</span> }
+        </section>
+
+        <section class="section">
+          <div class="section__head">
+            <h3>Điều kiện tham dự</h3>
+            @if (!locked && eligibility.length < 8) {
+            <button type="button" class="btn btn--ghost btn--sm" (click)="addRule()"><lucide-icon name="plus" />Thêm điều kiện</button>
+            }
+          </div>
+          @for (rule of eligibility; track $index) {
+          <div class="rule-row">
+            <select class="field__control" [ngModel]="rule.ruleType" (ngModelChange)="changeRuleType($index, $event)" [name]="'type' + $index" [disabled]="locked">
+              @for (type of ruleTypes; track type.value) { <option [ngValue]="type.value">{{ type.label }}</option> }
+            </select>
+            @if (rule.ruleType === 'GENDER') {
+            <select class="field__control" [(ngModel)]="rule.expectedValue" [name]="'value' + $index" [disabled]="locked">
+              <option value="FEMALE">Chỉ dành cho Nữ</option><option value="MALE">Chỉ dành cho Nam</option>
+            </select>
+            } @else {
+            <select class="field__control" [(ngModel)]="rule.operator" [name]="'op' + $index" [disabled]="locked">
+              <option value="GREATER_THAN_OR_EQUAL">Từ</option><option value="LESS_THAN_OR_EQUAL">Tối đa</option>
+            </select>
+            @if (rule.ruleType === 'SKILL_LEVEL') {
+            <select class="field__control" [(ngModel)]="rule.expectedValue" [name]="'value' + $index" [disabled]="locked">
+              <option value="BEGINNER">Mới chơi</option><option value="INTERMEDIATE">Trung bình</option>
+              <option value="ADVANCED">Nâng cao</option><option value="PRO">Chuyên nghiệp</option>
+            </select>
+            } @else {
+            <input class="field__control" type="number" [(ngModel)]="rule.expectedValue" [name]="'value' + $index" [disabled]="locked" />
+            }
+            }
+            @if (!locked) {
+            <button type="button" class="icon-btn" (click)="removeRule($index)" aria-label="Xóa điều kiện"><lucide-icon name="trash-2" /></button>
+            }
+          </div>
+          } @empty {
+          <p class="field__hint">Không giới hạn — mọi người chơi đều đăng ký được. Điều kiện xét theo hồ sơ thể thao thật, với đội xét từng người.</p>
+          }
+        </section>
+
+        <section class="section">
+          <h3>Điều lệ</h3>
+          <label class="field">
+            <span class="field__label">Mỗi dòng một điều</span>
+            <textarea class="field__control" rows="4" [(ngModel)]="rulesText" name="charter"></textarea>
+          </label>
+        </section>
+      </fieldset>
+    </div>
+
+    <footer class="modal__footer">
+      <button type="button" class="btn" (click)="close()" [disabled]="!!saving()">Hủy</button>
+      @if (isEdit) {
+      <button type="button" class="btn btn--primary" (click)="submit(true)" [disabled]="!!saving()">
+        @if (saving()) { <lucide-icon name="loader-2" class="spin" /> }Lưu thay đổi</button>
+      } @else {
+      <button type="button" class="btn" (click)="submit(false)" [disabled]="!!saving()">
+        @if (saving() === 'draft') { <lucide-icon name="loader-2" class="spin" /> }Lưu nháp</button>
+      <button type="button" class="btn btn--primary" (click)="submit(true)" [disabled]="!!saving()">
+        @if (saving() === 'publish') { <lucide-icon name="loader-2" class="spin" /> }Công bố & giữ sân</button>
+      }
+    </footer>
+  </section>
+</div>
