@@ -8,11 +8,12 @@ import { OWNER_TOURNAMENT_REPOSITORY_TOKEN } from '@application/ports/persistenc
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
+import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
 import { FORMAT_LABEL, SPORTS, SPORT_LABEL, addDays, capacity, isoDate } from './tournament-labels';
 
 type Errors = Partial<Record<'name' | 'venue' | 'courts' | 'window' | 'size' | 'dates' | 'format', string>>;
 
-const RULE_TYPES: ReadonlyArray<{ value: EligibilityRuleType; label: string }> = [
+const RULE_TYPES: ReadonlyArray<SelectOption & { value: EligibilityRuleType }> = [
   { value: 'AGE', label: 'Độ tuổi' }, { value: 'GENDER', label: 'Giới tính' },
   { value: 'SKILL_LEVEL', label: 'Trình độ' }, { value: 'ELO_RATING', label: 'Điểm ELO' }
 ];
@@ -24,7 +25,7 @@ const RULE_TYPES: ReadonlyArray<{ value: EligibilityRuleType; label: string }> =
 @Component({
   selector: 'app-owner-tournament-form',
   standalone: true,
-  imports: [FormsModule, LucideIconComponent],
+  imports: [FormsModule, LucideIconComponent, SelectComponent],
   templateUrl: './owner-tournament-form.component.html',
   styleUrl: './owner-tournament-form.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -45,10 +46,27 @@ export class OwnerTournamentFormComponent implements OnInit {
   readonly sportLabel = SPORT_LABEL;
   readonly formatLabel = FORMAT_LABEL;
   readonly ruleTypes = RULE_TYPES;
+  readonly sportOptions: readonly SelectOption[] = SPORTS.map(value => ({ value, label: SPORT_LABEL[value] }));
+  readonly bracketOptions: readonly SelectOption[] = [
+    { value: 'SINGLE_ELIMINATION', label: FORMAT_LABEL.SINGLE_ELIMINATION },
+    { value: 'ROUND_ROBIN', label: FORMAT_LABEL.ROUND_ROBIN }
+  ];
+  readonly genderOptions: readonly SelectOption[] = [
+    { value: 'FEMALE', label: 'Chỉ dành cho Nữ' }, { value: 'MALE', label: 'Chỉ dành cho Nam' }
+  ];
+  readonly operatorOptions: readonly SelectOption[] = [
+    { value: 'GREATER_THAN_OR_EQUAL', label: 'Từ' }, { value: 'LESS_THAN_OR_EQUAL', label: 'Tối đa' }
+  ];
+  readonly skillOptions: readonly SelectOption[] = [
+    { value: 'BEGINNER', label: 'Mới chơi' }, { value: 'INTERMEDIATE', label: 'Trung bình' },
+    { value: 'ADVANCED', label: 'Nâng cao' }, { value: 'PRO', label: 'Chuyên nghiệp' }
+  ];
 
   readonly venues = signal<OwnerVenueOverview[]>([]);
   readonly venuesLoading = signal(true);
   readonly formats = signal<PlayFormat[]>([]);
+  readonly playFormatOptions = computed<SelectOption[]>(() => this.formats().map(item => ({ value: item.code, label: item.label })));
+  readonly venueOptions = computed<SelectOption[]>(() => this.venues().map(item => ({ value: item.venueId, label: item.name })));
   readonly saving = signal<'draft' | 'publish' | null>(null);
   readonly errors = signal<Errors>({});
   /** Tang moi lan form doi de computed tinh lai (form dung ngModel, khong phai signal). */

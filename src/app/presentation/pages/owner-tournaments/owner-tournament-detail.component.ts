@@ -14,6 +14,7 @@ import { environment } from '@environments/environment';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/loading-skeleton.component';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
+import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
 import { OwnerTournamentFormComponent } from './owner-tournament-form.component';
 import {
   FORMAT_LABEL, HOLDING, PAYMENT_META, REGISTRATION_META, SPORT_LABEL, STATUS_META, formatVnd, minutesOf, timeOf
@@ -26,7 +27,7 @@ interface Confirm { title: string; message: string; label: string; danger: boole
 @Component({
   selector: 'app-owner-tournament-detail',
   standalone: true,
-  imports: [DatePipe, FormsModule, RouterLink, LucideIconComponent, LoadingSkeletonComponent, OwnerTournamentFormComponent],
+  imports: [DatePipe, FormsModule, RouterLink, LucideIconComponent, LoadingSkeletonComponent, OwnerTournamentFormComponent, SelectComponent],
   templateUrl: './owner-tournament-detail.component.html',
   styleUrl: './owner-tournament-detail.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -92,6 +93,12 @@ export class OwnerTournamentDetailComponent {
   readonly canGenerate = computed(() => !this.hasResults() && this.confirmed().length >= 2
     && !['DRAFT', 'COMPLETED', 'CANCELLED'].includes(this.status() ?? ''));
   /** Gio bat dau cho duoc trong khung thi dau, buoc = thoi luong mot tran. */
+  readonly fixtureOptions = computed<SelectOption[]>(() => [
+    { value: '', label: 'Không gắn trận (giữ trước)' },
+    ...this.unscheduled().map(item => ({ value: item.fixtureId, label: this.fixtureLabel(item) }))
+  ]);
+  readonly courtOptions = computed<SelectOption[]>(() => this.tournamentCourts().map(court => ({ value: court.id, label: court.name })));
+  readonly timeOptions = computed<SelectOption[]>(() => this.startTimes().map(time => ({ value: time, label: time })));
   readonly startTimes = computed(() => {
     const t = this.tournament();
     if (!t?.dailyStartTime || !t.dailyEndTime || !t.matchDurationMinutes) return [];

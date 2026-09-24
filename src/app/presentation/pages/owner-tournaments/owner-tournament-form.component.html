@@ -22,31 +22,27 @@
             @if (errors().name) { <span class="field__error" role="alert">{{ errors().name }}</span> }
           </label>
           <div class="grid grid--3">
-            <label class="field">
+            <div class="field">
               <span class="field__label">Môn thi đấu</span>
-              <select class="field__control" [ngModel]="form.sportType" (ngModelChange)="selectSport($event)" name="sport" [disabled]="locked">
-                @for (sport of sports; track sport) { <option [ngValue]="sport">{{ sportLabel[sport] }}</option> }
-              </select>
-            </label>
-            <label class="field">
+              <app-select [options]="sportOptions" [ngModel]="form.sportType" (ngModelChange)="selectSport($event)" name="sport"
+                [disabled]="locked" ariaLabel="Môn thi đấu"></app-select>
+            </div>
+            <div class="field">
               <span class="field__label">Hình thức</span>
-              <select class="field__control" [(ngModel)]="form.playFormat" (ngModelChange)="touch()" name="playFormat" [disabled]="locked">
-                @for (format of formats(); track format.code) { <option [ngValue]="format.code">{{ format.label }}</option> }
-              </select>
+              <app-select [options]="playFormatOptions()" [(ngModel)]="form.playFormat" (ngModelChange)="touch()" name="playFormat"
+                [disabled]="locked" placeholder="Chọn hình thức" ariaLabel="Hình thức thi đấu"></app-select>
               @if (selectedFormat(); as format) {
               <span class="field__hint">{{ format.participantType === 'TEAM'
                 ? 'Đăng ký theo đội ' + format.rosterMin + '–' + format.rosterMax + ' người, đồng đội tự xác nhận.'
                 : 'Mỗi người chơi đăng ký cá nhân.' }}</span>
               }
               @if (errors().format) { <span class="field__error" role="alert">{{ errors().format }}</span> }
-            </label>
-            <label class="field">
+            </div>
+            <div class="field">
               <span class="field__label">Thể thức</span>
-              <select class="field__control" [(ngModel)]="form.format" (ngModelChange)="touch()" name="format">
-                <option ngValue="SINGLE_ELIMINATION">{{ formatLabel.SINGLE_ELIMINATION }}</option>
-                <option ngValue="ROUND_ROBIN">{{ formatLabel.ROUND_ROBIN }}</option>
-              </select>
-            </label>
+              <app-select [options]="bracketOptions" [(ngModel)]="form.format" (ngModelChange)="touch()" name="format"
+                ariaLabel="Thể thức"></app-select>
+            </div>
           </div>
           <label class="field">
             <span class="field__label">Mô tả</span>
@@ -57,15 +53,13 @@
         <section class="section">
           <h3>Địa điểm & sân thi đấu</h3>
           <div class="grid grid--2">
-            <label class="field">
+            <div class="field">
               <span class="field__label">Cơ sở <b>*</b></span>
-              <select class="field__control" [ngModel]="form.venueId" (ngModelChange)="selectVenue($event)" name="venue"
-                [disabled]="locked || venuesLoading()">
-                @if (!venues().length) { <option value="">{{ venuesLoading() ? 'Đang tải...' : 'Chưa có cơ sở hoạt động' }}</option> }
-                @for (venue of venues(); track venue.venueId) { <option [ngValue]="venue.venueId">{{ venue.name }}</option> }
-              </select>
+              <app-select [options]="venueOptions()" [ngModel]="form.venueId" (ngModelChange)="selectVenue($event)" name="venue"
+                [disabled]="locked || venuesLoading()" leadingIcon="map-pin" ariaLabel="Cơ sở"
+                [placeholder]="venuesLoading() ? 'Đang tải...' : venues().length ? 'Chọn cơ sở' : 'Chưa có cơ sở hoạt động'"></app-select>
               @if (errors().venue) { <span class="field__error" role="alert">{{ errors().venue }}</span> }
-            </label>
+            </div>
             <div class="grid grid--3 grid--tight">
               <label class="field">
                 <span class="field__label">Từ</span>
@@ -151,22 +145,17 @@
           </div>
           @for (rule of eligibility; track $index) {
           <div class="rule-row">
-            <select class="field__control" [ngModel]="rule.ruleType" (ngModelChange)="changeRuleType($index, $event)" [name]="'type' + $index" [disabled]="locked">
-              @for (type of ruleTypes; track type.value) { <option [ngValue]="type.value">{{ type.label }}</option> }
-            </select>
+            <app-select [options]="ruleTypes" [ngModel]="rule.ruleType" (ngModelChange)="changeRuleType($index, $event)" [name]="'type' + $index"
+              [disabled]="locked" [ariaLabel]="'Loại điều kiện ' + ($index + 1)"></app-select>
             @if (rule.ruleType === 'GENDER') {
-            <select class="field__control" [(ngModel)]="rule.expectedValue" [name]="'value' + $index" [disabled]="locked">
-              <option value="FEMALE">Chỉ dành cho Nữ</option><option value="MALE">Chỉ dành cho Nam</option>
-            </select>
+            <app-select [options]="genderOptions" [(ngModel)]="rule.expectedValue" [name]="'value' + $index"
+              [disabled]="locked" ariaLabel="Giới tính"></app-select>
             } @else {
-            <select class="field__control" [(ngModel)]="rule.operator" [name]="'op' + $index" [disabled]="locked">
-              <option value="GREATER_THAN_OR_EQUAL">Từ</option><option value="LESS_THAN_OR_EQUAL">Tối đa</option>
-            </select>
+            <app-select [options]="operatorOptions" [(ngModel)]="rule.operator" [name]="'op' + $index"
+              [disabled]="locked" ariaLabel="Toán tử"></app-select>
             @if (rule.ruleType === 'SKILL_LEVEL') {
-            <select class="field__control" [(ngModel)]="rule.expectedValue" [name]="'value' + $index" [disabled]="locked">
-              <option value="BEGINNER">Mới chơi</option><option value="INTERMEDIATE">Trung bình</option>
-              <option value="ADVANCED">Nâng cao</option><option value="PRO">Chuyên nghiệp</option>
-            </select>
+            <app-select [options]="skillOptions" [(ngModel)]="rule.expectedValue" [name]="'value' + $index"
+              [disabled]="locked" ariaLabel="Trình độ"></app-select>
             } @else {
             <input class="field__control" type="number" [(ngModel)]="rule.expectedValue" [name]="'value' + $index" [disabled]="locked" />
             }

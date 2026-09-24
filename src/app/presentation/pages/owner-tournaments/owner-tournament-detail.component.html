@@ -137,23 +137,15 @@
     <header class="card__head"><div><h2>Xếp trận vào sân</h2>
       <p>Chỉ trong các sân và khung giờ giải đã giữ, người chơi thường không đặt được nên không cần giữ thêm.</p></div></header>
     <div class="plan">
-      <label class="field"><span class="field__label">Trận</span>
-        <select class="field__control" [(ngModel)]="plan.fixtureId" name="fixture">
-          <option value="">Không gắn trận (giữ trước)</option>
-          @for (fixture of unscheduled(); track fixture.fixtureId) { <option [value]="fixture.fixtureId">{{ fixtureLabel(fixture) }}</option> }
-        </select></label>
-      <label class="field"><span class="field__label">Sân</span>
-        <select class="field__control" [(ngModel)]="plan.courtId" name="court">
-          <option value="">Chọn sân</option>
-          @for (court of tournamentCourts(); track court.id) { <option [value]="court.id">{{ court.name }}</option> }
-        </select></label>
+      <div class="field"><span class="field__label">Trận</span>
+        <app-select [options]="fixtureOptions()" [(ngModel)]="plan.fixtureId" name="fixture" [searchable]="true"
+          searchPlaceholder="Tìm trận..." ariaLabel="Trận"></app-select></div>
+      <div class="field"><span class="field__label">Sân</span>
+        <app-select [options]="courtOptions()" [(ngModel)]="plan.courtId" name="court" placeholder="Chọn sân" ariaLabel="Sân"></app-select></div>
       <label class="field"><span class="field__label">Ngày</span>
         <input class="field__control" type="date" [min]="t.startDate" [max]="t.endDate" [(ngModel)]="plan.playDate" name="date" /></label>
-      <label class="field"><span class="field__label">Bắt đầu</span>
-        <select class="field__control" [(ngModel)]="plan.startTime" name="time">
-          <option value="">Chọn giờ</option>
-          @for (time of startTimes(); track time) { <option [value]="time">{{ time }}</option> }
-        </select></label>
+      <div class="field"><span class="field__label">Bắt đầu</span>
+        <app-select [options]="timeOptions()" [(ngModel)]="plan.startTime" name="time" placeholder="Chọn giờ" ariaLabel="Giờ bắt đầu"></app-select></div>
       <button type="button" class="btn btn--primary" [disabled]="busy() || editable() === false && t.status !== 'IN_PROGRESS'" (click)="scheduleMatch()">Xếp sân</button>
     </div>
   </section>

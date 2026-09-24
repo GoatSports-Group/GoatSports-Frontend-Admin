@@ -16,9 +16,9 @@ export class OwnerTournamentRepositoryImpl implements OwnerTournamentRepository 
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/club-service/api/v1/tournaments`;
 
-  /** club-service bat one-indexed-parameters: gui page + 1. */
+  /** club-service phan trang 0-based. */
   getMine(page: number, size: number): Observable<OwnerTournamentPage> {
-    const params = new HttpParams().set('role', 'ORGANIZING').set('page', page + 1).set('size', size)
+    const params = new HttpParams().set('role', 'ORGANIZING').set('page', page).set('size', size)
       .set('sort', 'startDate,desc');
     return this.http.get<BaseResponse<PagedModel<OwnerTournament>>>(`${this.baseUrl}/me`, { params }).pipe(map(response => ({
       items: response.data?.content ?? [],

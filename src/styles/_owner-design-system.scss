@@ -53,9 +53,15 @@
   font-family: inherit;
 }
 
-.admin-shell--owner :is(button, a, input, select, textarea):focus-visible {
-  outline: 3px solid rgb(15 118 110 / 28%);
-  outline-offset: 2px;
+.admin-shell--owner :is(button, a, input[type='checkbox'], input[type='radio']):focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+/* GOAT-DESIGN §6: text fields show focus through the caret only, never a border change, outline or ring. */
+.admin-shell--owner :is(input:not([type='checkbox'], [type='radio'], [type='range']), select, textarea):is(:focus, :focus-visible) {
+  outline: none;
+  box-shadow: none;
 }
 
 .admin-shell--owner :is(button, a) {
@@ -86,11 +92,6 @@
 
 .admin-shell--owner :is(input, select, textarea):hover:not(:disabled) {
   border-color: var(--owner-border-strong);
-}
-
-.admin-shell--owner :is(input, select, textarea):focus {
-  border-color: var(--owner-accent);
-  box-shadow: 0 0 0 3px rgb(15 118 110 / 12%);
 }
 
 .admin-shell--owner :is(input, textarea)::placeholder {
