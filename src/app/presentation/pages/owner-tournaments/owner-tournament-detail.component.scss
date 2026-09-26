@@ -82,6 +82,23 @@
   padding: 20px;
 }
 
+.plan-hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0 20px 18px;
+  color: var(--warning);
+  font-size: 14px;
+  font-weight: 600;
+
+  lucide-icon { width: 16px; height: 16px; }
+  a { color: var(--primary); font-weight: 700; }
+}
+
+.plan-hint--muted { color: var(--body); font-weight: 500; }
+
 .confirm-text { margin: 0; color: var(--ink); font-size: 15px; line-height: 1.6; }
 
 @media (max-width: 1023px) {

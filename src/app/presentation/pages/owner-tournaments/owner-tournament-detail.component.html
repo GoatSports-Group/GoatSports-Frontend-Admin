@@ -140,13 +140,23 @@
         <app-select [options]="fixtureOptions()" [(ngModel)]="plan.fixtureId" name="fixture" [searchable]="true"
           searchPlaceholder="Tìm trận..." ariaLabel="Trận"></app-select></div>
       <div class="field"><span class="field__label">Sân</span>
-        <app-select [options]="courtOptions()" [(ngModel)]="plan.courtId" name="court" placeholder="Chọn sân" ariaLabel="Sân"></app-select></div>
+        <app-select [options]="courtOptions()" [ngModel]="plan.courtId" (ngModelChange)="onPlanChange('courtId', $event)"
+          name="court" placeholder="Chọn sân" ariaLabel="Sân"></app-select></div>
       <label class="field"><span class="field__label">Ngày</span>
-        <input class="field__control" type="date" [min]="t.startDate" [max]="t.endDate" [(ngModel)]="plan.playDate" name="date" /></label>
-      <div class="field"><span class="field__label">Bắt đầu</span>
-        <app-select [options]="timeOptions()" [(ngModel)]="plan.startTime" name="time" placeholder="Chọn giờ" ariaLabel="Giờ bắt đầu"></app-select></div>
-      <button type="button" class="btn btn--primary" [disabled]="busy() || !notStarted() && t.status !== 'IN_PROGRESS'" (click)="scheduleMatch()">Xếp sân</button>
+        <input class="field__control" type="date" [min]="t.startDate" [max]="t.endDate" [ngModel]="plan.playDate"
+          (ngModelChange)="onPlanChange('playDate', $event)" name="date" /></label>
+      <div class="field"><span class="field__label">Khung giờ</span>
+        <app-select [options]="timeOptions()" [(ngModel)]="plan.slot" name="time" ariaLabel="Khung giờ"
+          [placeholder]="courtSlotsLoading() ? 'Đang tải khung giờ...' : 'Chọn khung giờ'"></app-select></div>
+      <button type="button" class="btn btn--primary" [disabled]="busy() || !plan.slot || !notStarted() && t.status !== 'IN_PROGRESS'"
+        (click)="scheduleMatch()">Xếp sân</button>
     </div>
+    @if (plan.courtId && plan.playDate && !courtSlotsLoading() && !timeOptions().length) {
+    <p class="plan-hint"><lucide-icon name="calendar-x" />Sân này chưa có khung giờ nào trong ngày {{ plan.playDate | date:'dd/MM/yyyy' }}.
+      <a routerLink="/admin/schedule" [queryParams]="{ venueId: t.venueId, venueCourtId: plan.courtId }">Sinh lịch ở Lịch và bảng giá</a></p>
+    } @else {
+    <p class="plan-hint plan-hint--muted">Khung giờ lấy từ các slot đã sinh ở Lịch và bảng giá, trong giờ giải giữ sân.</p>
+    }
   </section>
   @if (schedules().length) {
   <section class="card table-wrap">
@@ -160,7 +170,11 @@
           <td>{{ item.startTime.slice(0, 5) }}–{{ item.endTime.slice(0, 5) }}</td>
           <td>{{ courtNames().get(item.courtId) ?? 'Sân' }}</td>
           <td>@for (fixture of fixtures(); track fixture.fixtureId) { @if (fixture.reservationId === item.reservationId) { {{ fixtureLabel(fixture) }} } }</td>
-          <td class="row-action"><button type="button" class="btn btn--sm btn--danger-ghost" [disabled]="busy()" (click)="releaseSchedule(item)">Bỏ lịch</button></td>
+          <td class="row-action">
+            @if (canRelease(item)) {
+            <button type="button" class="btn btn--sm btn--danger-ghost" [disabled]="busy()" (click)="releaseSchedule(item)">Bỏ lịch</button>
+            }
+          </td>
         </tr>
         }
         }

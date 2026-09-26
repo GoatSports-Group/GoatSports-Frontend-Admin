@@ -16,7 +16,7 @@
     justify-content: space-between;
     gap: 16px;
 
-    > div { min-width: 0; flex: 1 1 420px; }
+    > div:not(.actions) { min-width: 0; flex: 1 1 420px; }
 
     h1 {
       margin: 0;
@@ -36,7 +36,7 @@
     }
   }
 
-  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; margin-left: auto; }
 
   .btn {
     display: inline-flex;

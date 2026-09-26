@@ -461,6 +461,8 @@ input:focus-visible {
 .calendar-legend i[data-status='COMPLETED'] { background: var(--primary-fill); }
 .calendar-legend i[data-status='MAINTENANCE'] { background: #db443e; }
 .calendar-legend i[data-status='DISABLED'] { background: #8f9893; }
+.calendar-legend i[data-status='TOURNAMENT'] { border: 1.5px dashed var(--info); background: var(--surface); }
+.calendar-legend i[data-status='TOURNAMENT_MATCH'] { background: var(--sports-navy); }
 
 .week-calendar {
   min-width: 0;
@@ -648,6 +650,31 @@ input:focus-visible {
   border-color: #ec9a96;
   background: repeating-linear-gradient(135deg, var(--danger-soft) 0 4px, var(--danger-soft) 4px 8px);
   color: var(--danger);
+}
+
+// Giải giữ sân: viền đứt, không bán cho người chơi. Có trận: nền navy như vùng "nổi bật" của giải.
+.calendar-slot[data-status='TOURNAMENT'] {
+  border: 1.5px dashed var(--info);
+  background: var(--surface);
+  color: var(--info);
+}
+
+.calendar-slot[data-status='TOURNAMENT_MATCH'] {
+  border-color: var(--sports-navy);
+  background: var(--sports-navy);
+  color: #fff;
+}
+
+.calendar-slot[data-status='TOURNAMENT_MATCH'] > span,
+.calendar-slot[data-status='TOURNAMENT_MATCH'] > small {
+  color: rgba(255, 255, 255, .88);
+}
+
+.calendar-slot--link {
+  cursor: pointer;
+  transition: box-shadow var(--motion-fast, 180ms) ease, border-color var(--motion-fast, 180ms) ease;
+
+  &:hover, &:focus-visible { box-shadow: 0 4px 12px rgb(7 25 45 / 18%); outline: none; }
 }
 
 .calendar-slot[data-status='DISABLED'] {

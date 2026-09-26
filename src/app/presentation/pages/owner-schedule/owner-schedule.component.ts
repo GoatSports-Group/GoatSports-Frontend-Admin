@@ -9,9 +9,11 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { EMPTY, Observable, catchError, expand, finalize, forkJoin, of, reduce, switchMap, take } from 'rxjs';
 import { OwnerBooking, OwnerBookingFilter } from '@application/dto/owner-booking/owner-booking.dto';
+import { MatchSchedule, TournamentFixture, TournamentRegistration } from '@application/dto/owner-tournament/owner-tournament.dto';
+import { OWNER_TOURNAMENT_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-tournament.repository';
 import {
   CourtPricingRule,
   CourtPricingRuleUpsert,
@@ -72,7 +74,16 @@ type CalendarSlotVisualStatus =
   | 'UPCOMING'
   | 'COMPLETED'
   | 'MAINTENANCE'
-  | 'DISABLED';
+  | 'DISABLED'
+  | 'TOURNAMENT'
+  | 'TOURNAMENT_MATCH';
+
+/** Những gì lịch sân cần biết về một giải đang giữ sân: tên, các lịch trận và nhãn trận. */
+interface HeldTournament {
+  name: string;
+  schedules: MatchSchedule[];
+  matchLabels: Map<string, string>;
+}
 
 @Component({
   selector: 'app-owner-schedule',
@@ -89,6 +100,8 @@ export class OwnerScheduleComponent {
   private readonly manageCourts = inject(ManageOwnerVenueCourtsUseCase);
   private readonly manageSchedule = inject(ManageOwnerScheduleUseCase);
   private readonly manageBookings = inject(ManageOwnerBookingsUseCase);
+  private readonly tournaments = inject(OWNER_TOURNAMENT_REPOSITORY_TOKEN);
+  private readonly router = inject(Router);
   private readonly notify = inject(NotifyService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
@@ -110,6 +123,7 @@ export class OwnerScheduleComponent {
   readonly rules = signal<CourtPricingRule[]>([]);
   readonly slots = signal<OwnerTimeSlot[]>([]);
   readonly bookings = signal<OwnerBooking[]>([]);
+  readonly heldTournaments = signal<Map<string, HeldTournament>>(new Map());
   readonly slotStatusFilter = signal<'ALL' | OwnerTimeSlotStatus>(
     this.isSlotStatus(this.requestedSlotStatus) ? this.requestedSlotStatus : 'ALL'
   );
@@ -393,6 +407,7 @@ export class OwnerScheduleComponent {
         this.rules.set(result.rules);
         this.slots.set(result.slots);
         this.bookings.set(result.bookings);
+        this.loadHeldTournaments(result.slots);
       },
       error: error => {
         this.rules.set([]);
@@ -678,6 +693,7 @@ export class OwnerScheduleComponent {
   slotVisualStatus(slot: OwnerTimeSlot): CalendarSlotVisualStatus {
     const court = this.selectedCourt();
     if (slot.status === 'MAINTENANCE') return 'MAINTENANCE';
+    if (slot.tournamentId) return this.matchInSlot(slot) ? 'TOURNAMENT_MATCH' : 'TOURNAMENT';
 
     const booking = this.bookingForSlot(slot);
     if (booking?.status === 'COMPLETED') {
@@ -704,9 +720,72 @@ export class OwnerScheduleComponent {
       UPCOMING: 'Sắp có lịch',
       COMPLETED: 'Hoàn thành',
       MAINTENANCE: 'Bảo trì',
-      DISABLED: 'Tạm ngưng'
+      DISABLED: 'Tạm ngưng',
+      TOURNAMENT: 'Giải đấu giữ sân',
+      TOURNAMENT_MATCH: 'Có trận giải'
     };
     return labels[this.slotVisualStatus(slot)];
+  }
+
+  /** Dòng phụ của slot: tên giải (hoặc trận) thay cho giá, vì slot giải không bán cho người chơi. */
+  slotDetail(slot: OwnerTimeSlot): string {
+    if (!slot.tournamentId) return this.compactMoney(slot.pricePerHour);
+    const match = this.matchInSlot(slot);
+    return match?.label ?? this.heldTournaments().get(slot.tournamentId)?.name ?? 'Giải đấu';
+  }
+
+  slotTitle(slot: OwnerTimeSlot): string {
+    if (!slot.tournamentId) return this.slotStatusLabel(slot) + ' · ' + this.compactMoney(slot.pricePerHour) + '/giờ';
+    const name = this.heldTournaments().get(slot.tournamentId)?.name ?? 'Giải đấu';
+    const match = this.matchInSlot(slot);
+    return match
+      ? `${name} · ${match.label} · ${this.timeValue(match.schedule.startTime)}–${this.timeValue(match.schedule.endTime)} · bấm để mở giải`
+      : `${name} giữ sân, chưa xếp trận vào khung giờ này · bấm để mở giải`;
+  }
+
+  openHeldTournament(slot: OwnerTimeSlot): void {
+    if (slot.tournamentId) this.router.navigate(['/admin/tournaments', slot.tournamentId], { queryParams: { tab: 'SCHEDULE' } });
+  }
+
+  /** Trận của giải được xếp giao với khung giờ của slot (cùng sân, cùng ngày). */
+  private matchInSlot(slot: OwnerTimeSlot): { schedule: MatchSchedule; label: string } | null {
+    const held = slot.tournamentId ? this.heldTournaments().get(slot.tournamentId) : undefined;
+    if (!held) return null;
+    const [start, end] = [this.timeToMinutes(slot.startTime), this.timeToMinutes(slot.endTime)];
+    const schedule = held.schedules.find(item => (item.status === 'CONFIRMED' || item.status === 'PENDING')
+      && item.courtId === slot.venueCourtId && item.playDate === slot.date
+      && this.timeToMinutes(item.startTime) < end && this.timeToMinutes(item.endTime) > start);
+    return schedule ? { schedule, label: held.matchLabels.get(schedule.reservationId) ?? 'Giữ trước' } : null;
+  }
+
+  /** Tên giải và lịch trận nằm ở club-service; chỉ tải cho các giải đang giữ sân trong tuần đang xem. */
+  private loadHeldTournaments(slots: OwnerTimeSlot[]): void {
+    const ids = [...new Set(slots.map(slot => slot.tournamentId).filter((id): id is string => !!id))];
+    if (!ids.length) { this.heldTournaments.set(new Map()); return; }
+    forkJoin(ids.map(id => forkJoin({
+      tournament: this.tournaments.get(id),
+      schedules: this.tournaments.getSchedules(id),
+      fixtures: this.tournaments.getFixtures(id),
+      registrations: this.tournaments.getRegistrations(id)
+    }).pipe(catchError(() => of(null))))).pipe(take(1), takeUntilDestroyed(this.destroyRef)).subscribe(results => {
+      const held = new Map<string, HeldTournament>();
+      results.forEach((result, index) => {
+        if (!result) return;
+        held.set(ids[index], {
+          name: result.tournament.name,
+          schedules: result.schedules,
+          matchLabels: this.matchLabels(result.fixtures, result.registrations)
+        });
+      });
+      this.heldTournaments.set(held);
+    });
+  }
+
+  private matchLabels(fixtures: TournamentFixture[], registrations: TournamentRegistration[]): Map<string, string> {
+    const names = new Map(registrations.map(item => [item.registrationId, item.teamName || 'Người chơi']));
+    const side = (id?: string | null) => id ? names.get(id) ?? 'Đội' : 'Chờ';
+    return new Map(fixtures.filter(item => item.reservationId).map(item => [item.reservationId as string,
+      `${item.roundName}: ${side(item.registration1Id)} – ${side(item.registration2Id)}`]));
   }
 
   previousWeek(): void { this.moveWeek(-7); }

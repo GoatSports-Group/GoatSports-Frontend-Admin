@@ -1,11 +1,11 @@
+import { OWNER_TOURNAMENT_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-tournament.repository';
+import { ManageOwnerBookingsUseCase } from '@application/usecase/owner-booking/manage-owner-bookings.usecase';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  LucideActivity, LucideAlertCircle, LucideCalendar, LucideInfo, LucideLandPlot,
-  LucidePencil, LucidePlus, LucideReceipt, LucideRotateCcw, LucideShieldOff,
-  LucideTrash2, LucideX, provideLucideIcons
+  LucideActivity, LucideAlertCircle, LucideCalendar, LucideCalendarX, LucideCheckCircle, LucideChevronDown, LucideChevronLeft, LucideChevronRight, LucideChevronUp, LucideCircleAlert, LucideInfo, LucideLandPlot, LucidePencil, LucidePlus, LucideReceipt, LucideRotateCcw, LucideShieldOff, LucideTrash2, LucideTrendingDown, LucideTrendingUp, LucideChartNoAxesColumnIncreasing, LucideX, provideLucideIcons
 } from '@lucide/angular';
 import { CourtPricingRule } from '@application/dto/owner-schedule/owner-schedule.dto';
 import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
@@ -54,14 +54,14 @@ describe('OwnerScheduleComponent', () => {
       providers: [
         provideRouter([]),
         provideLucideIcons(
-          LucideActivity, LucideAlertCircle, LucideCalendar, LucideInfo, LucideLandPlot,
-          LucidePencil, LucidePlus, LucideReceipt, LucideRotateCcw, LucideShieldOff,
-          LucideTrash2, LucideX
+          LucideActivity, LucideAlertCircle, LucideCalendar, LucideCalendarX, LucideCheckCircle, LucideChevronDown, LucideChevronLeft, LucideChevronRight, LucideChevronUp, LucideCircleAlert, LucideInfo, LucideLandPlot, LucidePencil, LucidePlus, LucideReceipt, LucideRotateCcw, LucideShieldOff, LucideTrash2, LucideTrendingDown, LucideTrendingUp, LucideChartNoAxesColumnIncreasing, LucideX
         ),
         { provide: GetMyOwnerVenuesUseCase, useValue: getVenues },
         { provide: ManageOwnerVenueCourtsUseCase, useValue: manageCourts },
         { provide: ManageOwnerScheduleUseCase, useValue: manageSchedule },
-        { provide: NotifyService, useValue: notify }
+        { provide: NotifyService, useValue: notify },
+        { provide: OWNER_TOURNAMENT_REPOSITORY_TOKEN, useValue: {} },
+        { provide: ManageOwnerBookingsUseCase, useValue: { list: () => of({ content: [], page: 0, pages: 1 }) } }
       ]
     }).compileComponents();
   });

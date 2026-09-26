@@ -8,6 +8,8 @@ import {
   TournamentStatus
 } from '@application/dto/owner-tournament/owner-tournament.dto';
 import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
+import { OwnerTimeSlot } from '@application/dto/owner-schedule/owner-schedule.dto';
+import { ManageOwnerScheduleUseCase } from '@application/usecase/owner-schedule/manage-owner-schedule.usecase';
 import { OWNER_TOURNAMENT_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-tournament.repository';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
@@ -35,6 +37,7 @@ export class OwnerTournamentDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly repository = inject(OWNER_TOURNAMENT_REPOSITORY_TOKEN);
   private readonly getVenues = inject(GetMyOwnerVenuesUseCase);
+  private readonly manageSchedule = inject(ManageOwnerScheduleUseCase);
   private readonly notify = inject(NotifyService);
   readonly tournamentId = this.route.snapshot.paramMap.get('id') ?? '';
 
@@ -55,12 +58,16 @@ export class OwnerTournamentDetailComponent {
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly busy = signal(false);
-  readonly tab = signal<Tab>('REGISTRATIONS');
+  readonly tab = signal<Tab>(this.initialTab());
   readonly showEdit = signal(false);
   readonly confirm = signal<Confirm | null>(null);
   confirmReason = '';
   scores: Record<string, { score1: number | null; score2: number | null }> = {};
-  plan = { fixtureId: '', courtId: '', playDate: '', startTime: '' };
+  /** slot là khoá 'HH:mm|HH:mm' của một slot đã sinh ở Lịch và bảng giá. */
+  plan = { fixtureId: '', courtId: '', playDate: '', slot: '' };
+  readonly courtSlots = signal<OwnerTimeSlot[]>([]);
+  readonly courtSlotsLoading = signal(false);
+  readonly planKey = signal('');
 
   readonly holding = computed(() => this.registrations().filter(item => HOLDING.has(item.status)));
   readonly confirmed = computed(() => this.registrations().filter(item => item.status === 'CONFIRMED'));
@@ -97,15 +104,29 @@ export class OwnerTournamentDetailComponent {
     ...this.unscheduled().map(item => ({ value: item.fixtureId, label: this.fixtureLabel(item) }))
   ]);
   readonly courtOptions = computed<SelectOption[]>(() => this.tournamentCourts().map(court => ({ value: court.id, label: court.name })));
-  readonly timeOptions = computed<SelectOption[]>(() => this.startTimes().map(time => ({ value: time, label: time })));
-  readonly startTimes = computed(() => {
+  /**
+   * Giờ xếp trận lấy đúng các slot chủ sân đã sinh ở Lịch và bảng giá cho sân + ngày đang chọn, trong khung giải giữ
+   * và đủ dài cho một trận. Slot đã có trận khác của giải vẫn hiện nhưng bị khoá để chủ sân thấy lịch đã kín.
+   */
+  readonly timeOptions = computed<SelectOption[]>(() => {
+    this.planKey();
     const t = this.tournament();
-    if (!t?.dailyStartTime || !t.dailyEndTime || !t.matchDurationMinutes) return [];
-    const times: string[] = [];
-    for (let at = minutesOf(t.dailyStartTime); at + t.matchDurationMinutes <= minutesOf(t.dailyEndTime); at += t.matchDurationMinutes) {
-      times.push(timeOf(at));
-    }
-    return times;
+    if (!t?.dailyStartTime || !t.dailyEndTime) return [];
+    const [open, close] = [minutesOf(t.dailyStartTime), minutesOf(t.dailyEndTime)];
+    const minutes = t.matchDurationMinutes ?? 0;
+    const taken = this.schedules().filter(item => (item.status === 'CONFIRMED' || item.status === 'PENDING')
+      && item.courtId === this.plan.courtId && item.playDate === this.plan.playDate);
+    return this.courtSlots()
+      .filter(slot => slot.date === this.plan.playDate && slot.status !== 'MAINTENANCE'
+        && minutesOf(slot.startTime) >= open && minutesOf(slot.endTime) <= close
+        && minutesOf(slot.endTime) - minutesOf(slot.startTime) >= minutes)
+      .sort((a, b) => a.startTime.localeCompare(b.startTime))
+      .map(slot => {
+        const [start, end] = [minutesOf(slot.startTime), minutesOf(slot.endTime)];
+        const busy = taken.some(item => minutesOf(item.startTime) < end && minutesOf(item.endTime) > start);
+        const label = `${timeOf(start)} – ${timeOf(end)}`;
+        return { value: `${timeOf(start)}|${timeOf(end)}`, label: busy ? `${label} · đã có trận` : label, disabled: busy };
+      });
   });
 
   constructor() { this.load(); }
@@ -152,7 +173,44 @@ export class OwnerTournamentDetailComponent {
     this.rules.set(data.rules);
     this.scores = Object.fromEntries(data.fixtures.map(item => [item.fixtureId,
       { score1: item.score1 ?? null, score2: item.score2 ?? null }]));
-    if (!this.plan.playDate) this.plan.playDate = data.tournament.startDate;
+    if (!this.plan.playDate) {
+      this.plan.playDate = data.tournament.startDate;
+      this.loadCourtSlots();
+    }
+  }
+
+  onPlanChange(field: 'courtId' | 'playDate', value: string): void {
+    this.plan[field] = value ?? '';
+    this.plan.slot = '';
+    this.loadCourtSlots();
+  }
+
+  /** Slot của sân trong ngày đã chọn, sinh từ quy tắc giá (venue-service). */
+  private loadCourtSlots(): void {
+    const { courtId, playDate } = this.plan;
+    const key = `${courtId}|${playDate}`;
+    this.planKey.set(key);
+    if (!courtId || !playDate) { this.courtSlots.set([]); return; }
+    this.courtSlotsLoading.set(true);
+    this.manageSchedule.listSlots(courtId, playDate, playDate).subscribe({
+      next: slots => {
+        if (this.planKey() !== key) return;
+        this.courtSlots.set(slots);
+        this.courtSlotsLoading.set(false);
+      },
+      error: () => { this.courtSlots.set([]); this.courtSlotsLoading.set(false); }
+    });
+  }
+
+  /** Lịch của giải đã khép lại hoặc của trận đã có kết quả là lịch sử, không bỏ được. */
+  canRelease(item: MatchSchedule): boolean {
+    if (this.status() === 'COMPLETED' || this.status() === 'CANCELLED') return false;
+    return !this.fixtures().some(fixture => fixture.reservationId === item.reservationId && fixture.status === 'COMPLETED');
+  }
+
+  private initialTab(): Tab {
+    const tab = this.route.snapshot.queryParamMap.get('tab');
+    return tab === 'FIXTURES' || tab === 'SCHEDULE' || tab === 'STANDINGS' ? tab : 'REGISTRATIONS';
   }
 
   acceptedCount(registration: TournamentRegistration): number {
@@ -220,15 +278,14 @@ export class OwnerTournamentDetailComponent {
 
   scheduleMatch(): void {
     const t = this.tournament();
-    if (!t || !this.plan.courtId || !this.plan.playDate || !this.plan.startTime) {
-      this.notify.warning('Chọn sân, ngày và giờ bắt đầu.');
+    if (!t || !this.plan.courtId || !this.plan.playDate || !this.plan.slot) {
+      this.notify.warning('Chọn sân, ngày và khung giờ.');
       return;
     }
-    const end = timeOf(minutesOf(this.plan.startTime) + (t.matchDurationMinutes ?? 60));
+    const [startTime, endTime] = this.plan.slot.split('|');
     this.run(this.repository.scheduleMatch(this.tournamentId, {
-      courtId: this.plan.courtId, fixtureId: this.plan.fixtureId || null, playDate: this.plan.playDate,
-      startTime: this.plan.startTime, endTime: end
-    }), 'Đã xếp sân cho trận.', () => { this.plan.fixtureId = ''; this.plan.startTime = ''; });
+      courtId: this.plan.courtId, fixtureId: this.plan.fixtureId || null, playDate: this.plan.playDate, startTime, endTime
+    }), 'Đã xếp sân cho trận.', () => { this.plan.fixtureId = ''; this.plan.slot = ''; });
   }
 
   releaseSchedule(item: MatchSchedule): void {

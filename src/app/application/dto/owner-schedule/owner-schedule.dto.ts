@@ -34,6 +34,8 @@ export interface OwnerTimeSlot {
   endTime: string;
   pricePerHour: number;
   status: OwnerTimeSlotStatus;
+  /** Giải đấu đang giữ sân ở khung giờ này; slot vẫn AVAILABLE nhưng người chơi không đặt được. */
+  tournamentId?: string | null;
 }
 
 export interface GenerateTimeSlotsRequest {
