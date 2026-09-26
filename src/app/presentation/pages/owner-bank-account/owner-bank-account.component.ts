@@ -1,10 +1,10 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, from, Observable } from 'rxjs';
 import { finalize, switchMap } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { BankAccount, BankDirectoryEntry } from '@application/dto/bank-account/bank-account.dto';
+import { BankAccount, BankDirectoryEntry, PayoutBalance, Withdrawal } from '@application/dto/bank-account/bank-account.dto';
 import { EncryptedPayload } from '@application/dto/security/encrypted-payload.dto';
 import { BANK_ACCOUNT_REPOSITORY_TOKEN, BankAccountRepository } from '@application/ports/persistence/bank-account.repository';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
@@ -23,14 +23,19 @@ export class OwnerBankAccountComponent {
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly showForm = signal(false);
+  readonly balance = signal<PayoutBalance | null>(null);
+  readonly withdrawals = signal<Withdrawal[]>([]);
+  readonly withdrawing = signal(false);
+  readonly payoutAccount = computed(() => this.accounts().find(item => item.isDefault && (item.status === 'VERIFIED' || item.status === 'PENDING_VERIFICATION')));
+  readonly canWithdraw = computed(() => { const balance = this.balance(); return !!balance && !!this.payoutAccount() && balance.available >= balance.minimumWithdrawal; });
   bankBin = ''; accountNumber = ''; accountName = '';
   constructor() { this.load(); }
   bank(bin: string) { return this.banks().find(item => item.bin === bin); }
   load(): void {
     this.loading.set(true);
-    forkJoin({ banks: this.repository.getBanks(), accounts: this.repository.getMyAccounts() })
+    forkJoin({ banks: this.repository.getBanks(), accounts: this.repository.getMyAccounts(), balance: this.repository.getPayoutBalance(), withdrawals: this.repository.getWithdrawals() })
       .pipe(finalize(() => this.loading.set(false)), takeUntilDestroyed(this.destroyRef)).subscribe({
-        next: result => { this.banks.set(result.banks); this.accounts.set(result.accounts); this.showForm.set(result.accounts.length === 0); },
+        next: result => { this.banks.set(result.banks); this.accounts.set(result.accounts); this.balance.set(result.balance); this.withdrawals.set(result.withdrawals); this.showForm.set(result.accounts.length === 0); },
         error: error => this.notify.error(error?.error?.message || 'Không thể tải tài khoản nhận doanh thu.')
       });
   }
@@ -68,6 +73,25 @@ export class OwnerBankAccountComponent {
       error: error => this.notify.error(error?.error?.message || 'Không thể gỡ tài khoản.')
     });
   }
+  withdraw(): void {
+    const balance = this.balance(); const account = this.payoutAccount();
+    if (!balance || !account || !this.canWithdraw()) return;
+    if (!window.confirm(`Rút ${this.money(balance.available)} về tài khoản ****${account.accountNumberLast4}?`)) return;
+    this.withdrawing.set(true);
+    this.repository.withdraw().pipe(
+      switchMap(withdrawal => forkJoin({ withdrawal: [withdrawal], balance: this.repository.getPayoutBalance(), withdrawals: this.repository.getWithdrawals() })),
+      finalize(() => this.withdrawing.set(false)), takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: result => {
+        this.balance.set(result.balance); this.withdrawals.set(result.withdrawals);
+        if (result.withdrawal.status === 'FAILED') this.notify.error(result.withdrawal.failureReason || 'payOS từ chối lệnh chuyển, tiền vẫn nằm trong số dư.');
+        else this.notify.success(result.withdrawal.status === 'PAID' ? 'Đã chuyển tiền về tài khoản của bạn.' : 'Đã gửi lệnh rút, payOS đang xử lý.');
+      },
+      error: error => this.notify.error(error?.error?.message || 'Không thể rút tiền lúc này.')
+    });
+  }
+  money(value: number | undefined): string { return new Intl.NumberFormat('vi-VN').format(value ?? 0) + ' ₫'; }
+  withdrawalStatus(status: Withdrawal['status']) { return ({ PAID: 'Đã chuyển', FAILED: 'Thất bại', CANCELLED: 'Đã hủy' } as Record<string, string>)[status] ?? 'Đang xử lý'; }
   status(status: BankAccount['status']) { return { PENDING_VERIFICATION: 'Chờ payout xác minh', VERIFIED: 'Đã xác minh', REJECTED: 'Không hợp lệ', DISABLED: 'Đã tắt' }[status]; }
   private encryptBankingPayload(payload: object): Observable<EncryptedPayload> {
     return this.repository.getEncryptionPublicKey().pipe(

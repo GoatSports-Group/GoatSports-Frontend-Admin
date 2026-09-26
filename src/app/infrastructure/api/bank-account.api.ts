@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { BaseResponse } from '@application/dto/base/base-response';
-import { BankAccount, BankDirectoryEntry } from '@application/dto/bank-account/bank-account.dto';
+import { BankAccount, BankDirectoryEntry, PayoutBalance, Withdrawal } from '@application/dto/bank-account/bank-account.dto';
 import { EncryptedPayload } from '@application/dto/security/encrypted-payload.dto';
 import { environment } from '@environments/environment';
 @Injectable({ providedIn: 'root' })
@@ -14,4 +14,7 @@ export class BankAccountApi {
   link(request: EncryptedPayload) { return this.http.post<BaseResponse<BankAccount>>(`${this.baseUrl}/bank-accounts`, request); }
   makeDefault(request: EncryptedPayload) { return this.http.patch<BaseResponse<BankAccount>>(`${this.baseUrl}/bank-accounts/default`, request); }
   disable(request: EncryptedPayload) { return this.http.patch<void>(`${this.baseUrl}/bank-accounts/disable`, request); }
+  getPayoutBalance() { return this.http.get<BaseResponse<PayoutBalance>>(`${this.baseUrl}/payouts/me/balance`); }
+  getWithdrawals() { return this.http.get<BaseResponse<Withdrawal[]>>(`${this.baseUrl}/payouts/me`); }
+  withdraw() { return this.http.post<BaseResponse<Withdrawal>>(`${this.baseUrl}/payouts/me/withdraw`, {}); }
 }
