@@ -1,13 +1,14 @@
 import { InjectionToken } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
-  EligibilityRule, MatchSchedule, OwnerTournament, OwnerTournamentPage, OwnerTournamentRevenue, PlayFormat, ScheduleMatchRequest,
+  EligibilityRule, MatchSchedule, OwnerTournament, OwnerTournamentFilter, OwnerTournamentPage, OwnerTournamentRevenue, OwnerTournamentSummary, PlayFormat, ScheduleMatchRequest,
   TournamentFixture, TournamentRegistration, TournamentSport, TournamentStanding, TournamentStatus, TournamentUpsert
 } from '@application/dto/owner-tournament/owner-tournament.dto';
 
 /** Giai do chu san to chuc (club-service /api/v1/tournaments). */
 export interface OwnerTournamentRepository {
-  getMine(page: number, size: number): Observable<OwnerTournamentPage>;
+  getMine(page: number, size: number, filter?: OwnerTournamentFilter): Observable<OwnerTournamentPage>;
+  getSummary(): Observable<OwnerTournamentSummary>;
   get(tournamentId: string): Observable<OwnerTournament>;
   getPlayFormats(sport: TournamentSport): Observable<PlayFormat[]>;
   create(request: TournamentUpsert): Observable<OwnerTournament>;

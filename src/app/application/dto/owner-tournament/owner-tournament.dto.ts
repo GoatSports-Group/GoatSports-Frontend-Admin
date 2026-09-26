@@ -180,3 +180,18 @@ export interface OwnerTournamentRevenue {
   paidRegistrations: number;
   entries: TournamentRevenueEntry[];
 }
+
+/** Bộ lọc danh sách giải của chủ sân (club-service /tournaments/me?role=ORGANIZING). */
+export interface OwnerTournamentFilter {
+  status?: TournamentStatus;
+  sportType?: TournamentSport;
+  venueId?: string;
+  keyword?: string;
+}
+
+/** Số giải theo trạng thái trên toàn bộ giải của chủ sân (không phụ thuộc trang đang xem). */
+export interface OwnerTournamentSummary {
+  byStatus: Partial<Record<TournamentStatus, number>>;
+  total: number;
+  seatsHeld: number;
+}

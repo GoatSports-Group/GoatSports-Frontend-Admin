@@ -7,12 +7,40 @@
     <button type="button" class="btn btn--primary" (click)="showCreate.set(true)"><lucide-icon name="plus" />Tạo giải đấu</button>
   </header>
 
+  <!-- Số liệu trên toàn bộ giải của chủ sân; bấm để lọc nhanh. -->
   <section class="kpis" aria-label="Tổng quan giải đấu">
-    <div class="kpi"><span>Đang mở đăng ký</span><strong>{{ kpis().open }}</strong></div>
-    <div class="kpi"><span>Đang diễn ra</span><strong>{{ kpis().running }}</strong></div>
-    <div class="kpi"><span>Suất đã giữ</span><strong>{{ kpis().seats }}</strong><small>gồm đội đang chờ đủ người / đóng phí</small></div>
-    <div class="kpi"><span>Bản nháp</span><strong>{{ kpis().drafts }}</strong></div>
+    <button type="button" class="kpi kpi--link" [class.is-active]="status() === 'REGISTRATION_OPEN'" (click)="setStatus('REGISTRATION_OPEN')">
+      <span>Đang mở đăng ký</span><strong>{{ countOf('REGISTRATION_OPEN') }}</strong></button>
+    <button type="button" class="kpi kpi--link" [class.is-active]="status() === 'IN_PROGRESS'" (click)="setStatus('IN_PROGRESS')">
+      <span>Đang diễn ra</span><strong>{{ countOf('IN_PROGRESS') }}</strong></button>
+    <div class="kpi"><span>Suất đã giữ</span><strong>{{ summary()?.seatsHeld ?? 0 }}</strong><small>ở các giải chưa kết thúc, gồm đội chờ đủ người / đóng phí</small></div>
+    <button type="button" class="kpi kpi--link" [class.is-active]="status() === 'DRAFT'" (click)="setStatus('DRAFT')">
+      <span>Bản nháp</span><strong>{{ countOf('DRAFT') }}</strong></button>
   </section>
+
+  <nav class="tabs" role="tablist" aria-label="Lọc theo trạng thái">
+    <button type="button" role="tab" class="tab" [class.is-active]="!status()" [attr.aria-selected]="!status()" (click)="setStatus('')">
+      Tất cả<span class="count">{{ summary()?.total ?? 0 }}</span></button>
+    @for (value of statusTabs; track value) {
+    <button type="button" role="tab" class="tab" [class.is-active]="status() === value" [attr.aria-selected]="status() === value"
+      (click)="setStatus(value)">{{ statusMeta[value].label }}<span class="count">{{ countOf(value) }}</span></button>
+    }
+  </nav>
+
+  <div class="toolbar" role="search">
+    <label class="search">
+      <lucide-icon name="search" />
+      <input type="search" [ngModel]="keyword" (ngModelChange)="onKeyword($event)" name="keyword"
+        placeholder="Tìm theo tên giải..." aria-label="Tìm theo tên giải" />
+    </label>
+    <app-select class="toolbar__select" [options]="sportOptions()" [ngModel]="sport()" (ngModelChange)="setSport($event)"
+      name="sport" ariaLabel="Lọc theo môn" leadingIcon="trophy"></app-select>
+    <app-select class="toolbar__select" [options]="venueOptions()" [ngModel]="venueId()" (ngModelChange)="setVenue($event)"
+      name="venue" ariaLabel="Lọc theo cơ sở" leadingIcon="map-pin"></app-select>
+    @if (hasFilters()) {
+    <button type="button" class="btn btn--ghost" (click)="clearFilters()"><lucide-icon name="x" />Xóa lọc</button>
+    }
+  </div>
 
   @if (loading()) {
   <app-loading-skeleton variant="table" [count]="5" [columns]="6" label="Đang tải giải đấu" />
@@ -20,6 +48,12 @@
   <div class="state state--error" role="alert">
     <lucide-icon name="alert-circle" /><strong>Chưa tải được giải đấu</strong><p>{{ error() }}</p>
     <button type="button" class="btn" (click)="load()"><lucide-icon name="rotate-ccw" />Thử lại</button>
+  </div>
+  } @else if (!items().length && hasFilters()) {
+  <div class="state">
+    <lucide-icon name="filter" /><strong>Không có giải khớp bộ lọc</strong>
+    <p>Thử đổi trạng thái, môn hoặc cơ sở, hoặc xóa bộ lọc để xem tất cả giải.</p>
+    <button type="button" class="btn" (click)="clearFilters()"><lucide-icon name="x" />Xóa lọc</button>
   </div>
   } @else if (!items().length) {
   <div class="state">

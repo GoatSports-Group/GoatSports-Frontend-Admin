@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { BaseResponse } from '@application/dto/base/base-response';
 import {
-  EligibilityRule, MatchSchedule, OwnerTournament, OwnerTournamentPage, OwnerTournamentRevenue, PlayFormat, ScheduleMatchRequest,
+  EligibilityRule, MatchSchedule, OwnerTournament, OwnerTournamentFilter, OwnerTournamentPage, OwnerTournamentRevenue, OwnerTournamentSummary, PlayFormat, ScheduleMatchRequest,
   TournamentFixture, TournamentRegistration, TournamentSport, TournamentStanding, TournamentStatus, TournamentUpsert
 } from '@application/dto/owner-tournament/owner-tournament.dto';
 import { OwnerTournamentRepository } from '@application/ports/persistence/owner-tournament.repository';
@@ -17,9 +17,13 @@ export class OwnerTournamentRepositoryImpl implements OwnerTournamentRepository 
   private readonly baseUrl = `${environment.apiUrl}/club-service/api/v1/tournaments`;
 
   /** club-service phan trang 0-based. */
-  getMine(page: number, size: number): Observable<OwnerTournamentPage> {
-    const params = new HttpParams().set('role', 'ORGANIZING').set('page', page).set('size', size)
+  getMine(page: number, size: number, filter: OwnerTournamentFilter = {}): Observable<OwnerTournamentPage> {
+    let params = new HttpParams().set('role', 'ORGANIZING').set('page', page).set('size', size)
       .set('sort', 'startDate,desc');
+    if (filter.status) params = params.set('status', filter.status);
+    if (filter.sportType) params = params.set('sportType', filter.sportType);
+    if (filter.venueId) params = params.set('venueId', filter.venueId);
+    if (filter.keyword?.trim()) params = params.set('keyword', filter.keyword.trim());
     return this.http.get<BaseResponse<PagedModel<OwnerTournament>>>(`${this.baseUrl}/me`, { params }).pipe(map(response => ({
       items: response.data?.content ?? [],
       total: response.data?.page?.totalElements ?? 0,
@@ -31,6 +35,10 @@ export class OwnerTournamentRepositoryImpl implements OwnerTournamentRepository 
     if (venueId) params = params.set('venueId', venueId);
     return this.http.get<BaseResponse<OwnerTournamentRevenue>>(`${this.baseUrl}/revenue/me`, { params })
       .pipe(map(response => response.data ?? { feeIncome: 0, prizeExpense: 0, net: 0, paidRegistrations: 0, entries: [] }));
+  }
+  getSummary(): Observable<OwnerTournamentSummary> {
+    return this.http.get<BaseResponse<OwnerTournamentSummary>>(`${this.baseUrl}/me/summary`)
+      .pipe(map(response => response.data ?? { byStatus: {}, total: 0, seatsHeld: 0 }));
   }
   get(tournamentId: string) { return this.data<OwnerTournament>(this.http.get(`${this.baseUrl}/${tournamentId}`)); }
   getPlayFormats(sport: TournamentSport) {
