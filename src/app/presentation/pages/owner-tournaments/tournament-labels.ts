@@ -46,6 +46,11 @@ export const PAYMENT_META: Readonly<Record<FeePaymentStatus, { label: string; to
 export const HOLDING: ReadonlySet<RegistrationStatus> =
   new Set(['PENDING_MEMBERS', 'PENDING_ELIGIBILITY', 'PENDING_PAYMENT', 'CONFIRMED']);
 
+/** Luôn in số tiền (kể cả 0 đ), dùng cho số liệu đã thu. */
+export function formatMoney(amount: number | null | undefined): string {
+  return `${new Intl.NumberFormat('vi-VN').format(amount ?? 0)} đ`;
+}
+
 export function formatVnd(amount: number | null | undefined): string {
   if (!amount) return 'Miễn phí';
   return `${new Intl.NumberFormat('vi-VN').format(amount)} đ`;

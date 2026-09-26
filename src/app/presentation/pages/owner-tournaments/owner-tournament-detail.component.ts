@@ -18,7 +18,7 @@ import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-ic
 import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
 import { OwnerTournamentFormComponent } from './owner-tournament-form.component';
 import {
-  FORMAT_LABEL, HOLDING, PAYMENT_META, REGISTRATION_META, SPORT_LABEL, STATUS_META, formatVnd, minutesOf, timeOf
+  FORMAT_LABEL, HOLDING, PAYMENT_META, REGISTRATION_META, SPORT_LABEL, STATUS_META, formatMoney, formatVnd, minutesOf, timeOf
 } from './tournament-labels';
 
 type Tab = 'REGISTRATIONS' | 'FIXTURES' | 'SCHEDULE' | 'STANDINGS';
@@ -47,6 +47,7 @@ export class OwnerTournamentDetailComponent {
   readonly registrationMeta = REGISTRATION_META;
   readonly paymentMeta = PAYMENT_META;
   readonly formatVnd = formatVnd;
+  readonly formatMoney = formatMoney;
 
   readonly tournament = signal<OwnerTournament | null>(null);
   readonly registrations = signal<TournamentRegistration[]>([]);

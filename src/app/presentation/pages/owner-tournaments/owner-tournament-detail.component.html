@@ -41,7 +41,7 @@
       <small>{{ t.participantType === 'TEAM' ? 'Đội ' + t.rosterMin + '–' + t.rosterMax + ' người' : 'Đăng ký cá nhân' }}</small></div>
     <div class="kpi"><span>Đã xác nhận</span><strong>{{ confirmed().length }}</strong></div>
     <div class="kpi"><span>Chờ đóng phí</span><strong>{{ awaitingPayment().length }}</strong><small>hạn 24 giờ, quá hạn tự trả suất</small></div>
-    <div class="kpi"><span>Lệ phí đã thu</span><strong>{{ formatVnd(feeCollected()) }}</strong><small>{{ formatVnd(t.entryFee) }} / đăng ký</small></div>
+    <div class="kpi"><span>Lệ phí đã thu</span><strong>{{ t.entryFee ? formatMoney(feeCollected()) : 'Miễn phí' }}</strong><small>{{ t.entryFee ? formatVnd(t.entryFee) + ' / đăng ký' : 'Không thu lệ phí' }}</small></div>
   </section>
 
   <nav class="tabs" role="tablist">
