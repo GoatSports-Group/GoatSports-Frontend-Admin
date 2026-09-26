@@ -106,3 +106,19 @@
   .match { grid-template-columns: 32px minmax(0, 1fr) auto minmax(0, 1fr); }
   .match__when, .match > .btn { grid-column: 2 / -1; }
 }
+
+.champion-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0 !important;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #fff6db;
+  color: #7a5200 !important;
+  font-size: 14px !important;
+  font-weight: 700;
+
+  lucide-icon { width: 16px; height: 16px; color: #c98a00; }
+  strong { color: #4d3400; }
+}

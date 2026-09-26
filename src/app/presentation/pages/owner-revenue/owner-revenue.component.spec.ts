@@ -1,3 +1,4 @@
+import { OWNER_TOURNAMENT_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-tournament.repository';
 import { TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -50,6 +51,7 @@ describe('OwnerRevenueComponent', () => {
     await TestBed.configureTestingModule({
       imports: [OwnerRevenueComponent],
       providers: [
+        { provide: OWNER_TOURNAMENT_REPOSITORY_TOKEN, useValue: { getRevenue: () => of(null) } },
         provideLucideIcons(
           LucideAlertCircle, LucideCalendar, LucideCircleCheck, LucideCreditCard,
           LucideFileText, LucideFilter, LucideInbox, LucideInfo, LucideLandPlot,

@@ -99,8 +99,9 @@ export class OwnerTournamentDetailComponent {
   readonly canGenerate = computed(() => !this.hasResults() && this.confirmed().length >= 2
     && !['DRAFT', 'COMPLETED', 'CANCELLED'].includes(this.status() ?? ''));
   /** Gio bat dau cho duoc trong khung thi dau, buoc = thoi luong mot tran. */
+  /** Giải đang diễn ra thì mỗi lịch sân phải gắn một trận cụ thể (lịch không bỏ được nữa). */
   readonly fixtureOptions = computed<SelectOption[]>(() => [
-    { value: '', label: 'Không gắn trận (giữ trước)' },
+    ...(this.status() === 'IN_PROGRESS' ? [] : [{ value: '', label: 'Không gắn trận (giữ trước)' }]),
     ...this.unscheduled().map(item => ({ value: item.fixtureId, label: this.fixtureLabel(item) }))
   ]);
   readonly courtOptions = computed<SelectOption[]>(() => this.tournamentCourts().map(court => ({ value: court.id, label: court.name })));
@@ -204,7 +205,8 @@ export class OwnerTournamentDetailComponent {
 
   /** Lịch của giải đã khép lại hoặc của trận đã có kết quả là lịch sử, không bỏ được. */
   canRelease(item: MatchSchedule): boolean {
-    if (this.status() === 'COMPLETED' || this.status() === 'CANCELLED') return false;
+    // Giải đang diễn ra: người chơi đã nhận lịch, không bỏ giữa chừng.
+    if (this.status() === 'IN_PROGRESS' || this.status() === 'COMPLETED' || this.status() === 'CANCELLED') return false;
     return !this.fixtures().some(fixture => fixture.reservationId === item.reservationId && fixture.status === 'COMPLETED');
   }
 
@@ -280,6 +282,10 @@ export class OwnerTournamentDetailComponent {
     const t = this.tournament();
     if (!t || !this.plan.courtId || !this.plan.playDate || !this.plan.slot) {
       this.notify.warning('Chọn sân, ngày và khung giờ.');
+      return;
+    }
+    if (t.status === 'IN_PROGRESS' && !this.plan.fixtureId) {
+      this.notify.warning('Giải đang diễn ra: chọn trận cần xếp sân.');
       return;
     }
     const [startTime, endTime] = this.plan.slot.split('|');

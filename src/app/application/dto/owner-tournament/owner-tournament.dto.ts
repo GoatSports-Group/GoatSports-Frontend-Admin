@@ -49,6 +49,10 @@ export interface OwnerTournament {
   participantType: ParticipantType;
   rosterMin: number;
   rosterMax: number;
+  /** Chỉ có khi giải đã kết thúc. */
+  championRegistrationId?: string | null;
+  championName?: string | null;
+  completedAt?: string | null;
 }
 
 export interface EligibilityRule {
@@ -155,4 +159,24 @@ export interface OwnerTournamentPage {
   items: OwnerTournament[];
   total: number;
   totalPages: number;
+}
+
+/** Doanh thu giải đấu của chủ sân (club-service /tournaments/revenue/me). */
+export interface TournamentRevenueEntry {
+  date: string;
+  tournamentId: string;
+  tournamentName: string;
+  venueId?: string | null;
+  /** FEE: lệ phí thu (cộng) · PRIZE: giải thưởng trả khi kết thúc (trừ). */
+  kind: 'FEE' | 'PRIZE';
+  amount: number;
+  count: number;
+}
+
+export interface OwnerTournamentRevenue {
+  feeIncome: number;
+  prizeExpense: number;
+  net: number;
+  paidRegistrations: number;
+  entries: TournamentRevenueEntry[];
 }

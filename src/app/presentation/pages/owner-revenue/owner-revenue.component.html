@@ -95,11 +95,13 @@
         <span>Doanh thu xác nhận</span>
         <lucide-icon name="info" />
       </div>
-      <strong>{{ money(data.currentPeriod.totalRevenue) }}</strong>
-      <p>Chỉ cộng các giao dịch đã thanh toán thành công.</p>
+      <strong>{{ money(combinedRevenue()) }}</strong>
+      <p>Đặt sân {{ money(data.currentPeriod.totalRevenue) }}
+        @if (tournamentRevenue(); as tr) { · Giải đấu {{ signedMoney(tr.net) }} }.
+        Chỉ cộng các giao dịch đã thanh toán thành công.</p>
       <span class="trend-badge" [class]="trendClass(data.revenueChangePercentage)">
         <lucide-icon [name]="trendIcon(data.revenueChangePercentage)" />
-        {{ percentage(data.revenueChangePercentage) }} so với kỳ trước
+        Đặt sân {{ percentage(data.revenueChangePercentage) }} so với kỳ trước
       </span>
     </article>
 
@@ -125,6 +127,42 @@
       </article>
     </div>
   </section>
+
+  @if (tournamentRevenue(); as tr) {
+  <section class="panel tournament-revenue" aria-labelledby="tournament-revenue-title">
+    <header class="panel-heading">
+      <div>
+        <p class="eyebrow">Lệ phí theo ngày thanh toán · giải thưởng theo ngày kết thúc</p>
+        <h2 id="tournament-revenue-title">Doanh thu giải đấu</h2>
+      </div>
+      <lucide-icon name="trophy" />
+    </header>
+    <div class="tournament-revenue__stats">
+      <div><span>Lệ phí đã thu</span><strong class="positive-value">+{{ money(tr.feeIncome) }}</strong>
+        <small>{{ tr.paidRegistrations }} lượt đóng phí</small></div>
+      <div><span>Giải thưởng đã trả</span><strong class="negative-value">−{{ money(tr.prizeExpense) }}</strong>
+        <small>Trừ khi giải kết thúc</small></div>
+      <div><span>Thực nhận từ giải</span><strong [class.negative-value]="tr.net < 0">{{ signedMoney(tr.net) }}</strong>
+        <small>Đã cộng vào doanh thu xác nhận</small></div>
+    </div>
+    @if (tr.entries.length) {
+    <ul class="tournament-revenue__list">
+      @for (entry of tr.entries; track entry.tournamentId + entry.kind + entry.date) {
+      <li>
+        <time>{{ entry.date | date:'dd/MM' }}</time>
+        <div><strong>{{ entry.tournamentName }}</strong>
+          <span>{{ entry.kind === 'FEE' ? 'Lệ phí · ' + entry.count + ' lượt' : 'Giải thưởng khi kết thúc giải' }}</span></div>
+        <b [class.positive-value]="entry.kind === 'FEE'" [class.negative-value]="entry.kind === 'PRIZE'">
+          {{ entry.kind === 'FEE' ? '+' : '−' }}{{ money(entry.amount) }}</b>
+      </li>
+      }
+    </ul>
+    } @else {
+    <p class="tournament-revenue__empty">Không có lệ phí hay giải thưởng nào trong kỳ này.</p>
+    }
+    <p class="tournament-revenue__note">Lệ phí đã hoàn cho người chơi (rút đội, bị từ chối, hủy giải) không được tính.</p>
+  </section>
+  }
 
   <section class="analytics-grid">
     <article class="panel trend-panel">

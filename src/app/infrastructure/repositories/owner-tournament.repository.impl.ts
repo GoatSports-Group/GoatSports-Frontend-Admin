@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { BaseResponse } from '@application/dto/base/base-response';
 import {
-  EligibilityRule, MatchSchedule, OwnerTournament, OwnerTournamentPage, PlayFormat, ScheduleMatchRequest,
+  EligibilityRule, MatchSchedule, OwnerTournament, OwnerTournamentPage, OwnerTournamentRevenue, PlayFormat, ScheduleMatchRequest,
   TournamentFixture, TournamentRegistration, TournamentSport, TournamentStanding, TournamentStatus, TournamentUpsert
 } from '@application/dto/owner-tournament/owner-tournament.dto';
 import { OwnerTournamentRepository } from '@application/ports/persistence/owner-tournament.repository';
@@ -25,6 +25,12 @@ export class OwnerTournamentRepositoryImpl implements OwnerTournamentRepository 
       total: response.data?.page?.totalElements ?? 0,
       totalPages: response.data?.page?.totalPages ?? 0
     })));
+  }
+  getRevenue(fromDate: string, toDate: string, venueId?: string): Observable<OwnerTournamentRevenue> {
+    let params = new HttpParams().set('fromDate', fromDate).set('toDate', toDate);
+    if (venueId) params = params.set('venueId', venueId);
+    return this.http.get<BaseResponse<OwnerTournamentRevenue>>(`${this.baseUrl}/revenue/me`, { params })
+      .pipe(map(response => response.data ?? { feeIncome: 0, prizeExpense: 0, net: 0, paidRegistrations: 0, entries: [] }));
   }
   get(tournamentId: string) { return this.data<OwnerTournament>(this.http.get(`${this.baseUrl}/${tournamentId}`)); }
   getPlayFormats(sport: TournamentSport) {

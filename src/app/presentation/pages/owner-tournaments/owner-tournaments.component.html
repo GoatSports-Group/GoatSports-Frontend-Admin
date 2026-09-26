@@ -31,7 +31,7 @@
   <section class="card table-wrap">
     <table class="table">
       <thead>
-        <tr><th>Giải đấu</th><th>Thời gian</th><th class="num">Đăng ký</th><th class="num">Lệ phí</th><th>Trạng thái</th><th></th></tr>
+        <tr><th>Giải đấu</th><th>Thời gian</th><th class="num">Đăng ký</th><th class="num">Lệ phí</th><th>Trạng thái</th><th>Vô địch</th><th></th></tr>
       </thead>
       <tbody class="goat-stagger">
         @for (item of items(); track item.tournamentId) {
@@ -46,6 +46,11 @@
           <td class="num">{{ item.currentParticipants }}/{{ item.maxParticipants }}</td>
           <td class="num">{{ formatVnd(item.entryFee) }}</td>
           <td><span class="badge" [class]="'badge badge--' + statusMeta[item.status].tone">{{ statusMeta[item.status].label }}</span></td>
+          <td class="champion-cell">
+            @if (item.status === 'COMPLETED' && item.championName) {
+            <span class="champion"><lucide-icon name="trophy" />{{ item.championName }}</span>
+            } @else { <span class="muted">—</span> }
+          </td>
           <td class="row-action"><a class="btn btn--sm" [routerLink]="['/admin/tournaments', item.tournamentId]">Điều hành<lucide-icon name="arrow-right" /></a></td>
         </tr>
         }

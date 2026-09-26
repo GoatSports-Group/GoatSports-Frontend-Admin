@@ -2,3 +2,17 @@
 @include t.tournament-ops;
 
 .row-action { text-align: right; white-space: nowrap; }
+
+// Nhà vô địch của giải đã kết thúc: cúp vàng + tên đội / người chơi.
+.champion {
+  display: inline-flex;
+  max-width: 220px;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink);
+  font-weight: 800;
+
+  lucide-icon { width: 16px; height: 16px; flex: none; color: #c98a00; }
+}
+
+.champion-cell .muted { color: var(--body); }

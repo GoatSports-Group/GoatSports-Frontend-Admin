@@ -1,7 +1,7 @@
 import { InjectionToken } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
-  EligibilityRule, MatchSchedule, OwnerTournament, OwnerTournamentPage, PlayFormat, ScheduleMatchRequest,
+  EligibilityRule, MatchSchedule, OwnerTournament, OwnerTournamentPage, OwnerTournamentRevenue, PlayFormat, ScheduleMatchRequest,
   TournamentFixture, TournamentRegistration, TournamentSport, TournamentStanding, TournamentStatus, TournamentUpsert
 } from '@application/dto/owner-tournament/owner-tournament.dto';
 
@@ -23,6 +23,8 @@ export interface OwnerTournamentRepository {
   getSchedules(tournamentId: string): Observable<MatchSchedule[]>;
   scheduleMatch(tournamentId: string, request: ScheduleMatchRequest): Observable<MatchSchedule>;
   releaseSchedule(tournamentId: string, reservationId: string): Observable<void>;
+  /** Lệ phí thu được (theo ngày thanh toán) và giải thưởng đã trả (ngày kết thúc) trong khoảng ngày. */
+  getRevenue(fromDate: string, toDate: string, venueId?: string): Observable<OwnerTournamentRevenue>;
 }
 
 export const OWNER_TOURNAMENT_REPOSITORY_TOKEN =

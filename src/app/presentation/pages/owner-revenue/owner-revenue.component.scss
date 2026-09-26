@@ -1269,3 +1269,57 @@ select:focus {
     transition-duration: .01ms !important;
   }
 }
+
+// ---- Doanh thu giải đấu: lệ phí (+) và giải thưởng (−), cộng vào doanh thu xác nhận ----
+.tournament-revenue {
+  display: grid;
+  gap: 16px;
+}
+
+.tournament-revenue__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+
+  > div {
+    display: grid;
+    gap: 4px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: var(--surface-subtle);
+  }
+
+  span, small { color: var(--body); font-size: 13px; font-weight: 600; }
+  strong { color: var(--ink); font-size: 22px; font-variant-numeric: tabular-nums; font-weight: 900; }
+}
+
+.tournament-revenue__list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-top: 1px solid var(--hairline);
+  }
+
+  time { color: var(--body); font-size: 13px; font-variant-numeric: tabular-nums; font-weight: 700; }
+  div { display: grid; min-width: 0; }
+  strong { overflow: hidden; color: var(--ink); font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+  span { color: var(--body); font-size: 13px; }
+  b { font-variant-numeric: tabular-nums; font-weight: 800; white-space: nowrap; }
+}
+
+.tournament-revenue__empty,
+.tournament-revenue__note { margin: 0; color: var(--body); font-size: 13px; }
+
+.positive-value { color: var(--success) !important; }
+
+@media (max-width: 767px) {
+  .tournament-revenue__stats { grid-template-columns: minmax(0, 1fr); }
+}

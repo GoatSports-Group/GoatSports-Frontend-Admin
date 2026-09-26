@@ -15,12 +15,15 @@ import {
   OwnerRevenueStatusBreakdown
 } from '@application/dto/owner-revenue/owner-revenue.dto';
 import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
+import { OwnerTournamentRevenue } from '@application/dto/owner-tournament/owner-tournament.dto';
+import { OWNER_TOURNAMENT_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-tournament.repository';
 import { GetOwnerRevenueUseCase } from '@application/usecase/owner-revenue/get-owner-revenue.usecase';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-loading.component';
 import { RouterLink } from '@angular/router';
+import { DatePipe } from '@angular/common';
 
 type RevenuePreset = 'today' | 'week' | 'month' | 'quarter' | 'year' | 'custom';
 
@@ -47,12 +50,14 @@ interface RevenueChartPoint {
 interface RevenueLoadResult {
   report: OwnerRevenueReport | null;
   ranking: VenueRevenueRanking[];
+  /** Lệ phí giải (+) và giải thưởng (−) của chủ sân trong kỳ; null nếu club-service chưa trả được. */
+  tournaments?: OwnerTournamentRevenue | null;
 }
 
 @Component({
   selector: 'app-owner-revenue',
   standalone: true,
-  imports: [LucideIconComponent, PageLoadingComponent, RouterLink],
+  imports: [DatePipe, LucideIconComponent, PageLoadingComponent, RouterLink],
   templateUrl: './owner-revenue.component.html',
   styleUrl: './owner-revenue.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -60,6 +65,7 @@ interface RevenueLoadResult {
 export class OwnerRevenueComponent {
   private readonly getVenues = inject(GetMyOwnerVenuesUseCase);
   private readonly getRevenue = inject(GetOwnerRevenueUseCase);
+  private readonly tournamentRepository = inject(OWNER_TOURNAMENT_REPOSITORY_TOKEN);
   private readonly destroyRef = inject(DestroyRef);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly notify = inject(NotifyService);
@@ -70,6 +76,10 @@ export class OwnerRevenueComponent {
   readonly fromDate = signal(this.monthStart());
   readonly toDate = signal(this.monthEnd());
   readonly report = signal<OwnerRevenueReport | null>(null);
+  readonly tournamentRevenue = signal<OwnerTournamentRevenue | null>(null);
+  /** Doanh thu tổng = đặt sân + phần ròng từ giải đấu (lệ phí trừ giải thưởng). */
+  readonly combinedRevenue = computed(() =>
+    (this.report()?.currentPeriod.totalRevenue ?? 0) + (this.tournamentRevenue()?.net ?? 0));
   readonly venueRanking = signal<VenueRevenueRanking[]>([]);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
@@ -383,9 +393,12 @@ export class OwnerRevenueComponent {
   }
 
   private revenueRequest(venues: readonly OwnerVenueOverview[]): Observable<RevenueLoadResult> {
+    const filter = this.filter();
     return forkJoin({
-      report: this.getRevenue.execute(this.filter()),
-      ranking: this.rankingRequest(venues)
+      report: this.getRevenue.execute(filter),
+      ranking: this.rankingRequest(venues),
+      tournaments: this.tournamentRepository.getRevenue(filter.fromDate, filter.toDate, filter.venueId)
+        .pipe(catchError(() => of(null)))
     });
   }
 
@@ -419,6 +432,7 @@ export class OwnerRevenueComponent {
   private applyResult(result: RevenueLoadResult): void {
     this.report.set(result.report);
     this.venueRanking.set(result.ranking);
+    this.tournamentRevenue.set(result.tournaments ?? null);
     if (result.report) this.appliedPeriodLabel = this.periodName();
   }
 

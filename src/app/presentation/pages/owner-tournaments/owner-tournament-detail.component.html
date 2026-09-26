@@ -15,6 +15,9 @@
       <p class="meta"><span class="badge" [class]="'badge badge--' + statusMeta[t.status].tone">{{ statusMeta[t.status].label }}</span>
         {{ sportLabel[t.sportType] }} · {{ t.playFormatLabel }} · {{ formatLabel[t.format] }}</p>
       <h1>{{ t.name }}</h1>
+      @if (t.status === 'COMPLETED' && t.championName) {
+      <p class="champion-line"><lucide-icon name="trophy" />Vô địch: <strong>{{ t.championName }}</strong></p>
+      }
       <p>{{ venue()?.name ?? 'Cơ sở' }} · {{ tournamentCourts().length }} sân · {{ t.dailyStartTime?.slice(0, 5) }}–{{ t.dailyEndTime?.slice(0, 5) }}
         mỗi ngày · {{ t.startDate | date:'dd/MM' }} – {{ t.endDate | date:'dd/MM/yyyy' }}</p>
     </div>
@@ -27,7 +30,7 @@
       } @else if (t.status === 'IN_PROGRESS' && allPlayed()) {
       <button type="button" class="btn btn--primary" [disabled]="busy()" (click)="askComplete()"><lucide-icon name="trophy" />Kết thúc giải</button>
       }
-      @if (t.status !== 'COMPLETED' && t.status !== 'CANCELLED') {
+      @if (notStarted()) {
       <button type="button" class="btn btn--danger-ghost" [disabled]="busy()" (click)="askCancel()"><lucide-icon name="ban" />Hủy giải</button>
       }
     </div>
