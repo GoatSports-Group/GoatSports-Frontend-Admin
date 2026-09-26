@@ -47,10 +47,6 @@ export class OwnerTournamentRepositoryImpl implements OwnerTournamentRepository 
   getRegistrations(tournamentId: string) {
     return this.list<TournamentRegistration>(this.http.get(`${this.baseUrl}/${tournamentId}/teams`));
   }
-  reject(tournamentId: string, registrationId: string, reason: string): Observable<void> {
-    return this.http.delete(`${this.baseUrl}/${tournamentId}/registrations/${registrationId}`,
-      { params: reason.trim() ? { reason: reason.trim() } : {} }).pipe(map(() => void 0));
-  }
   getFixtures(tournamentId: string) { return this.list<TournamentFixture>(this.http.get(`${this.baseUrl}/${tournamentId}/fixtures`)); }
   generateFixtures(tournamentId: string) {
     return this.list<TournamentFixture>(this.http.post(`${this.baseUrl}/${tournamentId}/generate-fixtures`, {}));

@@ -15,7 +15,6 @@ export interface OwnerTournamentRepository {
   changeStatus(tournamentId: string, status: TournamentStatus): Observable<OwnerTournament>;
   getRules(tournamentId: string): Observable<EligibilityRule[]>;
   getRegistrations(tournamentId: string): Observable<TournamentRegistration[]>;
-  reject(tournamentId: string, registrationId: string, reason: string): Observable<void>;
   getFixtures(tournamentId: string): Observable<TournamentFixture[]>;
   generateFixtures(tournamentId: string): Observable<TournamentFixture[]>;
   updateScore(tournamentId: string, fixtureId: string, score1: number, score2: number): Observable<TournamentFixture>;

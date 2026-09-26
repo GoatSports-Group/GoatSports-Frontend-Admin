@@ -63,7 +63,7 @@
   @if (registrations().length) {
   <section class="card table-wrap">
     <table class="table">
-      <thead><tr><th>Đăng ký</th><th class="num">Thành viên</th><th>Trạng thái</th><th>Lệ phí</th><th>Ghi chú</th><th></th></tr></thead>
+      <thead><tr><th>Đăng ký</th><th class="num">Thành viên</th><th>Trạng thái</th><th>Lệ phí</th><th>Ghi chú</th></tr></thead>
       <tbody>
         @for (item of registrations(); track item.registrationId) {
         <tr>
@@ -76,11 +76,6 @@
             @if (item.status === 'PENDING_PAYMENT' && item.paymentDeadline) { <small class="deadline">hạn {{ item.paymentDeadline | date:'HH:mm dd/MM' }}</small> }
           </td>
           <td class="reason">{{ item.statusReason ?? '' }}</td>
-          <td class="row-action">
-            @if (notStarted() && (item.status === 'PENDING_MEMBERS' || item.status === 'PENDING_PAYMENT' || item.status === 'CONFIRMED')) {
-            <button type="button" class="btn btn--sm btn--danger-ghost" [disabled]="busy()" (click)="askReject(item)">Từ chối</button>
-            }
-          </td>
         </tr>
         }
       </tbody>
@@ -213,10 +208,6 @@
       <header class="modal__header"><div><h2 id="confirm-title">{{ state.title }}</h2></div></header>
       <div class="modal__body">
         <p class="confirm-text">{{ state.message }}</p>
-        @if (state.reason) {
-        <label class="field"><span class="field__label">Lý do</span>
-          <textarea class="field__control" rows="3" maxlength="300" [(ngModel)]="confirmReason" name="reason"></textarea></label>
-        }
       </div>
       <footer class="modal__footer">
         <button type="button" class="btn" (click)="closeConfirm()" [disabled]="busy()">Quay lại</button>

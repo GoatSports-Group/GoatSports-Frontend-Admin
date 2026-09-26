@@ -23,7 +23,7 @@ import {
 
 type Tab = 'REGISTRATIONS' | 'FIXTURES' | 'SCHEDULE' | 'STANDINGS';
 
-interface Confirm { title: string; message: string; label: string; danger: boolean; reason?: boolean; run: (reason: string) => void; }
+interface Confirm { title: string; message: string; label: string; danger: boolean; run: () => void; }
 
 @Component({
   selector: 'app-owner-tournament-detail',
@@ -61,7 +61,6 @@ export class OwnerTournamentDetailComponent {
   readonly tab = signal<Tab>(this.initialTab());
   readonly showEdit = signal(false);
   readonly confirm = signal<Confirm | null>(null);
-  confirmReason = '';
   scores: Record<string, { score1: number | null; score2: number | null }> = {};
   /** slot là khoá 'HH:mm|HH:mm' của một slot đã sinh ở Lịch và bảng giá. */
   plan = { fixtureId: '', courtId: '', playDate: '', slot: '' };
@@ -260,16 +259,6 @@ export class OwnerTournamentDetailComponent {
     });
   }
 
-  askReject(registration: TournamentRegistration): void {
-    this.openConfirm({
-      title: `Từ chối ${this.names().get(registration.registrationId)}?`, label: 'Từ chối', danger: true, reason: true,
-      message: registration.paymentStatus === 'SUCCEEDED'
-        ? 'Lệ phí đã thu sẽ được tự động yêu cầu hoàn. Người đăng ký thấy lý do bạn nhập.'
-        : 'Người đăng ký thấy lý do bạn nhập.',
-      run: reason => this.run(this.repository.reject(this.tournamentId, registration.registrationId, reason), 'Đã từ chối đăng ký.')
-    });
-  }
-
   saveScore(fixture: TournamentFixture): void {
     const value = this.scores[fixture.fixtureId];
     const [a, b] = [Number(value?.score1), Number(value?.score2)];
@@ -300,11 +289,11 @@ export class OwnerTournamentDetailComponent {
 
   onEdited(): void { this.showEdit.set(false); this.refresh(); }
 
-  runConfirm(): void { const state = this.confirm(); if (state && !this.busy()) state.run(this.confirmReason.trim()); }
+  runConfirm(): void { const state = this.confirm(); if (state && !this.busy()) state.run(); }
 
   closeConfirm(): void { if (!this.busy()) this.confirm.set(null); }
 
-  private openConfirm(state: Confirm): void { this.confirmReason = ''; this.confirm.set(state); }
+  private openConfirm(state: Confirm): void { this.confirm.set(state); }
 
   private run(request: Observable<unknown>, success: string, after?: () => void): void {
     if (this.busy()) return;
