@@ -174,8 +174,9 @@ export class OwnerBookingsComponent {
     });
   });
   readonly availableCreateSlots = computed(() =>
+    // Slot giữ cho giải vẫn có status AVAILABLE; tournamentId mới cho biết nó không bán được.
     this.createSlots().filter(slot =>
-      slot.status === 'AVAILABLE' && this.slotEndTimestamp(slot) > this.currentTimestamp()
+      slot.status === 'AVAILABLE' && !slot.tournamentId && this.slotEndTimestamp(slot) > this.currentTimestamp()
     )
   );
   readonly selectedCreateSlot = computed(() => {

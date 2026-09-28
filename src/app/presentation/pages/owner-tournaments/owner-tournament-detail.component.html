@@ -130,13 +130,23 @@
   }
 
   @case ('SCHEDULE') {
-  <section class="card">
+  <section class="card" id="schedule-plan" [class.is-rescheduling]="rescheduling()">
+    @if (rescheduling(); as moving) {
+    <header class="card__head"><div><h2>Xếp lại sân</h2>
+      <p>Đổi sân, ngày hoặc giờ cho lịch {{ moving.playDate | date:'dd/MM' }} · {{ moving.startTime.slice(0, 5) }}–{{ moving.endTime.slice(0, 5) }}
+        · {{ courtNames().get(moving.courtId) ?? 'Sân' }}. Trận giữ nguyên, chỉ lịch thay đổi.</p></div></header>
+    } @else {
     <header class="card__head"><div><h2>Xếp trận vào sân</h2>
       <p>Chỉ trong các sân và khung giờ giải đã giữ, người chơi thường không đặt được nên không cần giữ thêm.</p></div></header>
+    }
     <div class="plan">
       <div class="field"><span class="field__label">Trận</span>
+        @if (rescheduling(); as moving) {
+        <span class="field__control field__control--static">@if (fixtureOfSchedule(moving); as fixture) { {{ fixtureLabel(fixture) }} } @else { Giữ trước, chưa gắn trận }</span>
+        } @else {
         <app-select [options]="fixtureOptions()" [(ngModel)]="plan.fixtureId" name="fixture" [searchable]="true"
-          searchPlaceholder="Tìm trận..." ariaLabel="Trận"></app-select></div>
+          searchPlaceholder="Tìm trận..." ariaLabel="Trận"></app-select>
+        }</div>
       <div class="field"><span class="field__label">Sân</span>
         <app-select [options]="courtOptions()" [ngModel]="plan.courtId" (ngModelChange)="onPlanChange('courtId', $event)"
           name="court" placeholder="Chọn sân" ariaLabel="Sân"></app-select></div>
@@ -146,8 +156,13 @@
       <div class="field"><span class="field__label">Khung giờ</span>
         <app-select [options]="timeOptions()" [(ngModel)]="plan.slot" name="time" ariaLabel="Khung giờ"
           [placeholder]="courtSlotsLoading() ? 'Đang tải khung giờ...' : 'Chọn khung giờ'"></app-select></div>
-      <button type="button" class="btn btn--primary" [disabled]="busy() || !plan.slot || !notStarted() && t.status !== 'IN_PROGRESS'"
-        (click)="scheduleMatch()">Xếp sân</button>
+      <div class="plan__actions">
+        @if (rescheduling()) {
+        <button type="button" class="btn" [disabled]="busy()" (click)="cancelReschedule()">Hủy</button>
+        }
+        <button type="button" class="btn btn--primary" [disabled]="busy() || !plan.slot || !notStarted() && t.status !== 'IN_PROGRESS'"
+          (click)="scheduleMatch()">{{ rescheduling() ? 'Lưu lịch mới' : 'Xếp sân' }}</button>
+      </div>
     </div>
     @if (plan.courtId && plan.playDate && !courtSlotsLoading() && !timeOptions().length) {
     <p class="plan-hint"><lucide-icon name="calendar-x" />Sân này chưa có khung giờ nào trong ngày {{ plan.playDate | date:'dd/MM/yyyy' }}.
@@ -163,12 +178,16 @@
       <tbody>
         @for (item of schedules(); track item.reservationId) {
         @if (item.status === 'CONFIRMED' || item.status === 'PENDING') {
-        <tr>
+        <tr [class.is-rescheduling]="rescheduling()?.reservationId === item.reservationId">
           <td>{{ item.playDate | date:'dd/MM/yyyy' }}</td>
           <td>{{ item.startTime.slice(0, 5) }}–{{ item.endTime.slice(0, 5) }}</td>
           <td>{{ courtNames().get(item.courtId) ?? 'Sân' }}</td>
           <td>@for (fixture of fixtures(); track fixture.fixtureId) { @if (fixture.reservationId === item.reservationId) { {{ fixtureLabel(fixture) }} } }</td>
           <td class="row-action">
+            @if (canReschedule(item)) {
+            <button type="button" class="btn btn--sm btn--ghost" [disabled]="busy() || rescheduling()?.reservationId === item.reservationId"
+              (click)="startReschedule(item)"><lucide-icon name="calendar-clock" />Xếp lại sân</button>
+            }
             @if (canRelease(item)) {
             <button type="button" class="btn btn--sm btn--danger-ghost" [disabled]="busy()" (click)="releaseSchedule(item)">Bỏ lịch</button>
             }

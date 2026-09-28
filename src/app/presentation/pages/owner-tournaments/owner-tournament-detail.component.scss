@@ -99,6 +99,23 @@
 
 .plan-hint--muted { color: var(--body); font-weight: 500; }
 
+.plan__actions { display: flex; gap: 8px; }
+
+// Xếp lại sân: viền primary cho form, tô dòng đang đổi để chủ sân thấy đang sửa lịch nào.
+.card.is-rescheduling { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+
+tr.is-rescheduling td { background: var(--primary-light); }
+
+.field__control--static {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  background: var(--surface-strong);
+  color: var(--ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .confirm-text { margin: 0; color: var(--ink); font-size: 15px; line-height: 1.6; }
 
 @media (max-width: 1023px) {

@@ -68,6 +68,9 @@ export class OwnerTournamentRepositoryImpl implements OwnerTournamentRepository 
   scheduleMatch(tournamentId: string, request: ScheduleMatchRequest) {
     return this.data<MatchSchedule>(this.http.post(`${this.baseUrl}/${tournamentId}/reservations`, request));
   }
+  rescheduleMatch(tournamentId: string, reservationId: string, request: ScheduleMatchRequest) {
+    return this.data<MatchSchedule>(this.http.put(`${this.baseUrl}/${tournamentId}/reservations/${reservationId}`, request));
+  }
   releaseSchedule(tournamentId: string, reservationId: string): Observable<void> {
     return this.http.delete(`${this.baseUrl}/${tournamentId}/reservations/${reservationId}`).pipe(map(() => void 0));
   }

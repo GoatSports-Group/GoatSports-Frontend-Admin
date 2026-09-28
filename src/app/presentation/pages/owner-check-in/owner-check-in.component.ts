@@ -102,7 +102,8 @@ export class OwnerCheckInComponent implements OnDestroy {
   readonly detailError = signal<string | null>(null);
   readonly requestedBookingId = signal<string | null>(null);
 
-  readonly availableSlots = computed(() => this.slots().filter(slot => slot.status === 'AVAILABLE'));
+  // Slot giữ cho giải vẫn AVAILABLE; tournamentId mới cho biết không bán được.
+  readonly availableSlots = computed(() => this.slots().filter(slot => slot.status === 'AVAILABLE' && !slot.tournamentId));
   readonly availableSlotPreview = computed(() => this.availableSlots().slice(0, 4));
   readonly todayBookingPreview = computed(() => this.todayBookings().slice(0, 5));
   readonly lookupForm = this.formBuilder.nonNullable.group({

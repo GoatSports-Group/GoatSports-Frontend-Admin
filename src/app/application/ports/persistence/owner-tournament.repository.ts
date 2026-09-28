@@ -23,6 +23,8 @@ export interface OwnerTournamentRepository {
   getSchedules(tournamentId: string): Observable<MatchSchedule[]>;
   scheduleMatch(tournamentId: string, request: ScheduleMatchRequest): Observable<MatchSchedule>;
   releaseSchedule(tournamentId: string, reservationId: string): Observable<void>;
+  /** Đổi sân/ngày/giờ của một lịch đang hiệu lực, giữ nguyên trận gắn với nó. */
+  rescheduleMatch(tournamentId: string, reservationId: string, request: ScheduleMatchRequest): Observable<MatchSchedule>;
   /** Lệ phí thu được (theo ngày thanh toán) và giải thưởng đã trả (ngày kết thúc) trong khoảng ngày. */
   getRevenue(fromDate: string, toDate: string, venueId?: string): Observable<OwnerTournamentRevenue>;
 }

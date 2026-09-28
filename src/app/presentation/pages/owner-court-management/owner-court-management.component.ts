@@ -836,7 +836,7 @@ export class OwnerCourtManagementComponent implements OnDestroy {
 
   maintenanceSlotSelectable(slot: OwnerTimeSlot): boolean {
     return this.maintenanceMode() === 'START'
-      ? slot.status === 'AVAILABLE'
+      ? slot.status === 'AVAILABLE' && !slot.tournamentId // backend không cho bảo trì khung đang giữ cho giải
       : slot.status === 'MAINTENANCE';
   }
 
