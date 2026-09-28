@@ -17,6 +17,14 @@
 
 .champion-cell .muted { color: var(--body); }
 
+// Giải thưởng: số tiền đậm như số liệu, giải không có thưởng thì mờ.
+.prize-cell {
+  white-space: nowrap;
+
+  strong { color: var(--ink); font-weight: 800; }
+  .muted { color: var(--body); }
+}
+
 // ---- Bộ lọc: tab trạng thái (có số đếm) + ô tìm tên, môn, cơ sở ----
 .kpi--link {
   border: 1px solid var(--hairline);

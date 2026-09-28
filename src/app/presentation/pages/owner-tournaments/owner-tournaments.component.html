@@ -65,7 +65,7 @@
   <section class="card table-wrap">
     <table class="table">
       <thead>
-        <tr><th>Giải đấu</th><th>Thời gian</th><th class="num">Đăng ký</th><th class="num">Lệ phí</th><th>Trạng thái</th><th>Vô địch</th><th></th></tr>
+        <tr><th>Giải đấu</th><th>Thời gian</th><th class="num">Đăng ký</th><th class="num">Lệ phí</th><th class="num">Giải thưởng</th><th>Trạng thái</th><th>Vô địch</th><th></th></tr>
       </thead>
       <tbody class="goat-stagger">
         @for (item of items(); track item.tournamentId) {
@@ -79,6 +79,9 @@
           <td>{{ item.startDate | date:'dd/MM' }} – {{ item.endDate | date:'dd/MM/yyyy' }}</td>
           <td class="num">{{ item.currentParticipants }}/{{ item.maxParticipants }}</td>
           <td class="num">{{ formatVnd(item.entryFee) }}</td>
+          <td class="num prize-cell">
+            @if (item.prizePool) { <strong>{{ formatVnd(item.prizePool) }}</strong> } @else { <span class="muted">Không có</span> }
+          </td>
           <td><span class="badge" [class]="'badge badge--' + statusMeta[item.status].tone">{{ statusMeta[item.status].label }}</span></td>
           <td class="champion-cell">
             @if (item.status === 'COMPLETED' && item.championName) {

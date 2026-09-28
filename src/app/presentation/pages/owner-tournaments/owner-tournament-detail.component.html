@@ -19,7 +19,8 @@
       <p class="champion-line"><lucide-icon name="trophy" />Vô địch: <strong>{{ t.championName }}</strong></p>
       }
       <p>{{ venue()?.name ?? 'Cơ sở' }} · {{ tournamentCourts().length }} sân · {{ t.dailyStartTime?.slice(0, 5) }}–{{ t.dailyEndTime?.slice(0, 5) }}
-        mỗi ngày · {{ t.startDate | date:'dd/MM' }} – {{ t.endDate | date:'dd/MM/yyyy' }}</p>
+        mỗi ngày · {{ t.startDate | date:'dd/MM' }} – {{ t.endDate | date:'dd/MM/yyyy' }}
+        · {{ t.prizePool ? 'Giải thưởng ' + formatVnd(t.prizePool) : 'Không có giải thưởng' }}</p>
     </div>
     <div class="actions">
       @if (t.status === 'DRAFT') { <button type="button" class="btn" (click)="showEdit.set(true)"><lucide-icon name="pencil" />Chỉnh sửa</button> }
