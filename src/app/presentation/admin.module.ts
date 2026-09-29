@@ -16,6 +16,8 @@ import { OwnerApplicationsComponent } from '@presentation/pages/owner-applicatio
 import { DocumentPreviewDialogComponent } from '@presentation/pages/owner-applications/document-preview-dialog/document-preview-dialog.component';
 import { LogsComponent } from '@presentation/pages/logs/logs.component';
 import { AdminBookingsComponent } from '@presentation/pages/bookings/bookings.component';
+import { PlatformVenuesComponent } from '@presentation/pages/platform-venues/platform-venues.component';
+import { PlatformReviewsComponent } from '@presentation/pages/platform-reviews/platform-reviews.component';
 import { StatusBadgeComponent } from '@shared/components/ui/status-badge/status-badge.component';
 import { OverviewStatsComponent } from '@presentation/pages/logs/components/overview-stats/overview-stats.component';
 import { LogFilterComponent } from '@presentation/pages/logs/components/log-filter/log-filter.component';
@@ -41,7 +43,6 @@ import { OverlayModule } from '@angular/cdk/overlay';
     OwnerApplicationsComponent,
     DocumentPreviewDialogComponent,
     LogsComponent,
-    AdminBookingsComponent,
     UserDetailsComponent,
     CreateUserDrawerComponent,
     EditUserDrawerComponent,
@@ -58,7 +59,10 @@ import { OverlayModule } from '@angular/cdk/overlay';
     OverlayModule,
     OverviewStatsComponent,
     LogFilterComponent,
-    LogTableComponent
+    LogTableComponent,
+    AdminBookingsComponent,
+    PlatformVenuesComponent,
+    PlatformReviewsComponent
   ]
 })
 export class AdminModule { }

@@ -8,7 +8,8 @@
       (edit)="editUser($event)"
       (assignRole)="openAssignRoleDialog($event)"
       (changePassword)="changePassword($event)"
-      (toggleVerification)="toggleVerification($event.user, $event.verified)">
+      (toggleVerification)="toggleVerification($event.user, $event.verified)"
+      (changeStatus)="changeStatus($event.user, $event.status)">
     </app-user-details>
   } @else {
   <!-- Page Header -->
@@ -159,11 +160,15 @@
               </span>
             </td>
             <td class="py-4 px-6">
+              @if (user.status === 'BLOCKED') {
+              <span class="px-3 py-1 bg-rose-100 text-rose-800 text-xs font-bold rounded-full border border-rose-200">Đã khóa</span>
+              } @else {
               <span [class]="user.status === 'ACTIVE' || user.status === 'ACTIVATED' 
                   ? 'px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-100' 
                   : 'px-3 py-1 bg-rose-50 text-rose-700 text-xs font-bold rounded-full border border-rose-100'">
                 {{ user.status === 'ACTIVE' || user.status === 'ACTIVATED' ? 'Đã xác thực' : 'Chưa xác thực' }}
               </span>
+              }
             </td>
             <td class="py-4 px-6 text-slate-600 font-semibold">
               {{ user.createdAt ? (user.createdAt | date: 'dd/MM/yyyy HH:mm') : 'Chưa có' }}
@@ -193,12 +198,23 @@
                     <lucide-icon name="key" class="h-5 w-5 mr-2"></lucide-icon>
                     <span>Đổi mật khẩu</span>
                   </button>
+                  @if (user.status === 'BLOCKED') {
+                  <button mat-menu-item (click)="changeStatus(user, 'ACTIVE')">
+                    <lucide-icon name="lock-open" class="h-5 w-5 mr-2 text-emerald-600"></lucide-icon>
+                    <span class="text-emerald-700 font-bold">Mở khóa tài khoản</span>
+                  </button>
+                  } @else if (user.role.name !== 'ADMIN') {
+                  <button mat-menu-item (click)="changeStatus(user, 'BLOCKED')" class="danger-item">
+                    <lucide-icon name="lock" class="h-5 w-5 mr-2"></lucide-icon>
+                    <span>Khóa tài khoản</span>
+                  </button>
+                  }
                   @if (user.status === 'ACTIVE' || user.status === 'ACTIVATED') {
                   <button mat-menu-item (click)="toggleVerification(user, false)" class="danger-item">
                     <lucide-icon name="shield-alert" class="h-5 w-5 mr-2"></lucide-icon>
                     <span>Bỏ xác thực</span>
                   </button>
-                  } @else {
+                  } @else if (user.status !== 'BLOCKED') {
                   <button mat-menu-item (click)="toggleVerification(user, true)">
                     <lucide-icon name="shield-check" class="h-5 w-5 mr-2 text-emerald-600"></lucide-icon>
                     <span class="text-emerald-700 font-bold">Xác thực tài khoản</span>

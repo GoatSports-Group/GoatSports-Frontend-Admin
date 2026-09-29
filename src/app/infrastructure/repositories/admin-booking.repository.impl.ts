@@ -1,25 +1,24 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-import { AdminBookingRepository } from '@application/ports/persistence/admin-booking.repository';
+import { Observable, map } from 'rxjs';
+import { AdminBookingFilter, AdminBookingRepository } from '@application/ports/persistence/admin-booking.repository';
+import { OwnerBooking, OwnerBookingPage } from '@application/dto/owner-booking/owner-booking.dto';
 import { AdminBookingApi } from '@infrastructure/api/admin-booking.api';
-import { Booking, BookingCancellation, ProcessCancellationRequest } from '@application/dto/booking/booking.dto';
-import { BaseResponse } from '@application/dto/base/base-response';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class AdminBookingRepositoryImpl implements AdminBookingRepository {
-  private api = inject(AdminBookingApi);
+  private readonly api = inject(AdminBookingApi);
 
-  getBookings(status?: string, page?: number, size?: number): Observable<BaseResponse<Booking[]>> {
-    return this.api.getBookings(status, page, size);
+  getBookings(filter: AdminBookingFilter): Observable<OwnerBookingPage> {
+    return this.api.getBookings(filter).pipe(map(response => ({
+      items: response.data?.result ?? [],
+      page: response.data?.meta.page ?? filter.page,
+      pageSize: response.data?.meta.pageSize ?? filter.size,
+      pages: response.data?.meta.pages ?? 0,
+      total: response.data?.meta.total ?? 0
+    })));
   }
 
-  getBookingById(bookingId: string): Observable<BaseResponse<Booking>> {
-    return this.api.getBookingById(bookingId);
-  }
-
-  processCancellation(cancellationId: string, request: ProcessCancellationRequest): Observable<BaseResponse<BookingCancellation>> {
-    return this.api.processCancellation(cancellationId, request);
+  getBooking(bookingId: string): Observable<OwnerBooking> {
+    return this.api.getBooking(bookingId).pipe(map(response => response.data));
   }
 }

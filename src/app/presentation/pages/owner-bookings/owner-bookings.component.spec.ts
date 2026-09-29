@@ -2,17 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  LucideAlertCircle, LucideAlertTriangle, LucideArrowRight, LucideBadgeCheck, LucideBanknote,
-  LucideCalendarDays, LucideCalendarX, LucideCheck, LucideChevronLeft, LucideChevronRight,
-  LucideChevronsLeft, LucideChevronsRight,
-  LucideCircleCheck, LucideCircleCheckBig, LucideClock, LucideCreditCard, LucideDownload,
-  LucideExternalLink, LucideFilePlus2, LucideFileSpreadsheet, LucideFileText, LucideFileWarning,
-  LucideFilter, LucideGlobe, LucideHistory, LucideInbox, LucideLandPlot, LucideListFilter,
-  LucidePlus, LucidePrinter, LucideQrCode, LucideRefreshCw, LucideSearch, LucideShieldAlert,
-  LucideStore, LucideUser, LucideUserPlus, LucideUserRound, LucideWalletCards, LucideX,
-  provideLucideIcons
-} from '@lucide/angular';
+import { provideLucideIcons } from '@lucide/angular';
+import { APP_ICONS } from '../../../app-icons';
 import { OwnerBooking } from '@application/dto/owner-booking/owner-booking.dto';
 import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { ManageOwnerBookingsUseCase } from '@application/usecase/owner-booking/manage-owner-bookings.usecase';
@@ -64,16 +55,7 @@ describe('OwnerBookingsComponent', () => {
       imports: [OwnerBookingsComponent],
       providers: [
         provideRouter([]),
-        provideLucideIcons(
-          LucideAlertCircle, LucideAlertTriangle, LucideArrowRight, LucideBadgeCheck, LucideBanknote,
-          LucideCalendarDays, LucideCalendarX, LucideCheck, LucideChevronLeft, LucideChevronRight,
-          LucideChevronsLeft, LucideChevronsRight,
-          LucideCircleCheck, LucideCircleCheckBig, LucideClock, LucideCreditCard, LucideDownload,
-          LucideExternalLink, LucideFilePlus2, LucideFileSpreadsheet, LucideFileText, LucideFileWarning,
-          LucideFilter, LucideGlobe, LucideHistory, LucideInbox, LucideLandPlot, LucideListFilter,
-          LucidePlus, LucidePrinter, LucideQrCode, LucideRefreshCw, LucideSearch, LucideShieldAlert,
-          LucideStore, LucideUser, LucideUserPlus, LucideUserRound, LucideWalletCards, LucideX
-        ),
+        provideLucideIcons(...APP_ICONS),
         { provide: GetMyOwnerVenuesUseCase, useValue: getVenues },
         { provide: ManageOwnerVenueCourtsUseCase, useValue: manageCourts },
         { provide: ManageOwnerBookingsUseCase, useValue: manageBookings },

@@ -8,6 +8,8 @@ import { AssignPermissionsComponent } from '@presentation/pages/roles/assign-per
 import { OwnerApplicationsComponent } from '@presentation/pages/owner-applications/owner-applications.component';
 import { LogsComponent } from '@presentation/pages/logs/logs.component';
 import { AdminBookingsComponent } from '@presentation/pages/bookings/bookings.component';
+import { PlatformVenuesComponent } from '@presentation/pages/platform-venues/platform-venues.component';
+import { PlatformReviewsComponent } from '@presentation/pages/platform-reviews/platform-reviews.component';
 import { AdminGuard } from '@presentation/guards/admin.guard';
 import { VenueOwnerApplicationsComponent } from '@presentation/pages/venue-owner-applications/venue-owner-applications.component';
 import { OwnerVenueManagementComponent } from '@presentation/pages/owner-venue-management/owner-venue-management.component';
@@ -34,6 +36,8 @@ const routes: Routes = [
         data: { allowedRoles: ['ADMIN', 'VENUE_OWNER'] }
       },
       { path: 'bookings', component: AdminBookingsComponent, canActivate: [AdminGuard], data: { allowedRoles: ['ADMIN'] } },
+      { path: 'platform-venues', component: PlatformVenuesComponent, canActivate: [AdminGuard], data: { allowedRoles: ['ADMIN'] } },
+      { path: 'platform-reviews', component: PlatformReviewsComponent, canActivate: [AdminGuard], data: { allowedRoles: ['ADMIN'] } },
       { path: 'owner-applications', component: OwnerApplicationsComponent, canActivate: [AdminGuard], data: { allowedRoles: ['ADMIN'] } },
       { path: 'applications', component: VenueOwnerApplicationsComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
       { path: 'users', component: UsersComponent, canActivate: [AdminGuard], data: { allowedRoles: ['ADMIN'] } },

@@ -2,12 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  LucideAlertCircle, LucideChevronLeft, LucideChevronRight, LucideCircleCheck, LucideClipboardCheck,
-  LucideClock, LucideImage, LucideInbox, LucideMapPin, LucidePhone, LucidePlus, LucideReceipt,
-  LucideRefreshCw, LucideSave, LucideSearch, LucideSparkles, LucideStar, LucideStore, LucideUpload, LucideX,
-  provideLucideIcons
-} from '@lucide/angular';
+import { provideLucideIcons } from '@lucide/angular';
+import { APP_ICONS } from '../../../app-icons';
 import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { SearchAddressSuggestionsUseCase } from '@application/usecase/owner-application/search-address-suggestions.usecase';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
@@ -55,11 +51,7 @@ describe('OwnerVenueManagementComponent', () => {
       imports: [OwnerVenueManagementComponent],
       providers: [
         provideRouter([]),
-        provideLucideIcons(
-          LucideAlertCircle, LucideChevronLeft, LucideChevronRight, LucideCircleCheck, LucideClipboardCheck,
-          LucideClock, LucideImage, LucideInbox, LucideMapPin, LucidePhone, LucidePlus, LucideReceipt,
-          LucideRefreshCw, LucideSave, LucideSearch, LucideSparkles, LucideStar, LucideStore, LucideUpload, LucideX
-        ),
+        provideLucideIcons(...APP_ICONS),
         { provide: GetMyOwnerVenuesUseCase, useValue: getMyVenues },
         { provide: GetOwnerVenueOverviewUseCase, useValue: getVenueOverview },
         { provide: UpdateOwnerVenueUseCase, useValue: updateVenue },

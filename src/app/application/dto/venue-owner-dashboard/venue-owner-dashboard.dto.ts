@@ -85,4 +85,7 @@ export interface OwnerVenueOverview {
   amenities: string[];
   cancellationPolicy?: CancellationPolicy | null;
   courts: OwnerVenueCourt[];
+  /** Admin đình chỉ: cơ sở bị ẩn và chủ sân không tự mở lại được. */
+  suspendedAt?: string | null;
+  suspensionReason?: string | null;
 }

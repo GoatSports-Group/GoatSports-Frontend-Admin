@@ -62,12 +62,23 @@
               <lucide-icon name="key" class="h-5 w-5 mr-2"></lucide-icon>
               <span>Đổi mật khẩu</span>
             </button>
+            @if (selectedUser.status === 'BLOCKED') {
+              <button mat-menu-item (click)="changeStatus.emit({ user: selectedUser, status: 'ACTIVE' })">
+                <lucide-icon name="lock-open" class="h-5 w-5 mr-2 text-emerald-600"></lucide-icon>
+                <span class="text-emerald-700 font-bold">Mở khóa tài khoản</span>
+              </button>
+            } @else if (selectedUser.role.name !== 'ADMIN') {
+              <button mat-menu-item (click)="changeStatus.emit({ user: selectedUser, status: 'BLOCKED' })" class="danger-item">
+                <lucide-icon name="lock" class="h-5 w-5 mr-2"></lucide-icon>
+                <span>Khóa tài khoản</span>
+              </button>
+            }
             @if (selectedUser.status === 'ACTIVE' || selectedUser.status === 'ACTIVATED') {
               <button mat-menu-item (click)="toggleVerification.emit({ user: selectedUser, verified: false })" class="danger-item">
                 <lucide-icon name="shield-alert" class="h-5 w-5 mr-2"></lucide-icon>
                 <span>Bỏ xác thực</span>
               </button>
-            } @else {
+            } @else if (selectedUser.status !== 'BLOCKED') {
               <button mat-menu-item (click)="toggleVerification.emit({ user: selectedUser, verified: true })">
                 <lucide-icon name="shield-check" class="h-5 w-5 mr-2 text-emerald-600"></lucide-icon>
                 <span class="text-emerald-700 font-bold">Xác thực tài khoản</span>
@@ -88,7 +99,7 @@
           <div class="flex flex-col gap-0.5">
             <span class="text-[12px] font-bold text-emerald-600 uppercase tracking-wider">Trạng thái tài khoản</span>
             <span class="text-sm font-bold text-slate-800">
-              {{ selectedUser.status === 'ACTIVE' || selectedUser.status === 'ACTIVATED' ? 'Xác thực' : 'Chưa xác thực' }}
+              {{ selectedUser.status === 'BLOCKED' ? 'Đã khóa' : selectedUser.status === 'ACTIVE' || selectedUser.status === 'ACTIVATED' ? 'Xác thực' : 'Chưa xác thực' }}
             </span>
           </div>
         </div>

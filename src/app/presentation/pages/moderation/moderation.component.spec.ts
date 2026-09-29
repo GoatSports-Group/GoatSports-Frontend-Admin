@@ -1,12 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  LucideAlertCircle, LucideCheck, LucideCheckCircle, LucideChevronLeft, LucideChevronRight,
-  LucideClock, LucideFileText, LucideFlag, LucideGavel, LucideInfo, LucideList,
-  LucideLoader2, LucidePaperclip, LucideRefreshCw, LucideRotateCcw, LucideShield,
-  LucideShieldCheck, LucideUndo2, LucideUser, LucideX, provideLucideIcons
-} from '@lucide/angular';
+import { provideLucideIcons } from '@lucide/angular';
+import { APP_ICONS } from '../../../app-icons';
 import {
   ContentAppeal,
   ContentReport,
@@ -52,12 +48,7 @@ describe('ModerationComponent', () => {
     await TestBed.configureTestingModule({
       imports: [ModerationComponent],
       providers: [
-        provideLucideIcons(
-          LucideAlertCircle, LucideCheck, LucideCheckCircle, LucideChevronLeft, LucideChevronRight,
-          LucideClock, LucideFileText, LucideFlag, LucideGavel, LucideInfo, LucideList,
-          LucideLoader2, LucidePaperclip, LucideRefreshCw, LucideRotateCcw, LucideShield,
-          LucideShieldCheck, LucideUndo2, LucideUser, LucideX
-        ),
+        provideLucideIcons(...APP_ICONS),
         { provide: GetReportQueueUseCase, useValue: getReports },
         { provide: ActOnReportUseCase, useValue: actOnReport },
         { provide: GetAppealQueueUseCase, useValue: getAppeals },

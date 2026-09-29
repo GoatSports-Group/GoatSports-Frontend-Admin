@@ -1,22 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  LucideAlertTriangle,
-  LucideArrowLeft,
-  LucideBan,
-  LucideCheck,
-  LucideChevronLeft,
-  LucideChevronRight,
-  LucideCircleCheck,
-  LucideClock,
-  LucideFilePlus2,
-  LucideInfo,
-  LucidePlus,
-  LucideSearch,
-  LucideX,
-  provideLucideIcons
-} from '@lucide/angular';
+import { provideLucideIcons } from '@lucide/angular';
+import { APP_ICONS } from '../../../app-icons';
 import { BusinessType, OwnerApplication, OwnerApplicationStatus } from '@application/dto/owner-application/owner-application.dto';
 import { GetMyOwnerApplicationsUseCase } from '@application/usecase/owner-application/get-my-owner-applications.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
@@ -55,21 +41,7 @@ describe('VenueOwnerApplicationsComponent', () => {
     await TestBed.configureTestingModule({
       imports: [VenueOwnerApplicationsComponent],
       providers: [
-        provideLucideIcons(
-          LucideAlertTriangle,
-          LucideArrowLeft,
-          LucideBan,
-          LucideCheck,
-          LucideChevronLeft,
-          LucideChevronRight,
-          LucideCircleCheck,
-          LucideClock,
-          LucideFilePlus2,
-          LucideInfo,
-          LucidePlus,
-          LucideSearch,
-          LucideX
-        ),
+        provideLucideIcons(...APP_ICONS),
         { provide: GetMyOwnerApplicationsUseCase, useValue: getApplications },
         { provide: NotifyService, useValue: notify }
       ]

@@ -1,11 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import {
-  LucideAlertTriangle,
-  LucideCloud,
-  LucideMapPin,
-  LucideRotateCcw,
-  provideLucideIcons
-} from '@lucide/angular';
+import { provideLucideIcons } from '@lucide/angular';
+import { APP_ICONS } from '../../../../../app-icons';
 import { describe, expect, it, vi } from 'vitest';
 import { WeatherWidgetComponent } from './weather-widget.component';
 
@@ -14,12 +9,7 @@ describe('WeatherWidgetComponent', () => {
     await TestBed.configureTestingModule({
       imports: [WeatherWidgetComponent],
       providers: [
-        provideLucideIcons(
-          LucideAlertTriangle,
-          LucideCloud,
-          LucideMapPin,
-          LucideRotateCcw
-        )
+        provideLucideIcons(...APP_ICONS)
       ]
     }).compileComponents();
 

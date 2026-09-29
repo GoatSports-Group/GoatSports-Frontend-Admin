@@ -411,3 +411,24 @@ h1 {
   background: var(--primary-light);
   color: var(--venue-primary-dark);
 }
+
+.status-pill.is-suspended {
+  border-color: var(--danger-soft);
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.suspension-banner {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--danger);
+  border-radius: 14px;
+  background: var(--danger-soft);
+  color: var(--ink);
+
+  > lucide-icon { width: 20px; height: 20px; flex: none; margin-top: 2px; color: var(--danger); }
+  strong { color: var(--danger); font-size: 15px; }
+  p { margin: 4px 0 0; color: var(--body); font-size: 14px; line-height: 1.5; }
+}

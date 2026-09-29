@@ -4,9 +4,8 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  LucideActivity, LucideAlertCircle, LucideCalendar, LucideCalendarX, LucideCheckCircle, LucideChevronDown, LucideChevronLeft, LucideChevronRight, LucideChevronUp, LucideCircleAlert, LucideInfo, LucideLandPlot, LucidePencil, LucidePlus, LucideReceipt, LucideRotateCcw, LucideShieldOff, LucideTrash2, LucideTrendingDown, LucideTrendingUp, LucideChartNoAxesColumnIncreasing, LucideX, provideLucideIcons
-} from '@lucide/angular';
+import { provideLucideIcons } from '@lucide/angular';
+import { APP_ICONS } from '../../../app-icons';
 import { CourtPricingRule } from '@application/dto/owner-schedule/owner-schedule.dto';
 import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { ManageOwnerScheduleUseCase } from '@application/usecase/owner-schedule/manage-owner-schedule.usecase';
@@ -14,6 +13,12 @@ import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashbo
 import { ManageOwnerVenueCourtsUseCase } from '@application/usecase/venue-owner-dashboard/manage-owner-venue-courts.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { OwnerScheduleComponent } from './owner-schedule.component';
+
+// Ngày hiệu lực phải từ hôm nay trở đi, nên không dùng ngày cố định (test cũ hỏng khi ngày đó trôi qua).
+function dayFromNow(days: number): string {
+  const value = new Date(Date.now() + days * 86_400_000);
+  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
+}
 
 describe('OwnerScheduleComponent', () => {
   const venue: OwnerVenueOverview = {
@@ -23,7 +28,7 @@ describe('OwnerScheduleComponent', () => {
   const rule: CourtPricingRule = {
     pricingRuleId: 'rule-1', courtId: 'court-1', dayOfWeek: 'MONDAY',
     startTime: '08:00:00', endTime: '10:00:00', basePricePerHour: 150000,
-    pricePerHour: 180000, effectiveFrom: '2026-08-30', effectiveTo: '2026-12-31'
+    pricePerHour: 180000, effectiveFrom: dayFromNow(1), effectiveTo: dayFromNow(90)
   };
   const getVenues = { execute: vi.fn() };
   const manageCourts = { list: vi.fn() };
@@ -53,9 +58,7 @@ describe('OwnerScheduleComponent', () => {
       imports: [OwnerScheduleComponent],
       providers: [
         provideRouter([]),
-        provideLucideIcons(
-          LucideActivity, LucideAlertCircle, LucideCalendar, LucideCalendarX, LucideCheckCircle, LucideChevronDown, LucideChevronLeft, LucideChevronRight, LucideChevronUp, LucideCircleAlert, LucideInfo, LucideLandPlot, LucidePencil, LucidePlus, LucideReceipt, LucideRotateCcw, LucideShieldOff, LucideTrash2, LucideTrendingDown, LucideTrendingUp, LucideChartNoAxesColumnIncreasing, LucideX
-        ),
+        provideLucideIcons(...APP_ICONS),
         { provide: GetMyOwnerVenuesUseCase, useValue: getVenues },
         { provide: ManageOwnerVenueCourtsUseCase, useValue: manageCourts },
         { provide: ManageOwnerScheduleUseCase, useValue: manageSchedule },
@@ -72,7 +75,7 @@ describe('OwnerScheduleComponent', () => {
 
     expect(manageSchedule.listRules).toHaveBeenCalledWith('court-1');
     expect(fixture.componentInstance.rules()).toEqual([rule]);
-    expect(fixture.nativeElement.textContent).toContain('180.000 ₫');
+    expect(fixture.nativeElement.textContent).toContain(fixture.componentInstance.compactMoney(180000));
   });
 
   it('chặn double submit khi tạo quy tắc giá', () => {
@@ -85,7 +88,7 @@ describe('OwnerScheduleComponent', () => {
     component.ruleForm.patchValue({
       dayOfWeek: 'MONDAY', startTime: '08:00', endTime: '10:00',
       pricePerHour: 180000,
-      effectiveFrom: '2026-08-30', effectiveTo: '2026-12-31'
+      effectiveFrom: dayFromNow(1), effectiveTo: dayFromNow(90)
     });
 
     component.saveRule();

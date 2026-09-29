@@ -1,0 +1,163 @@
+@use '../../ops' as t;
+@include t.ops;
+
+// Kỳ thống kê: nhóm nút liền nhau, nút đang chọn nền trắng chữ primary (như công tắc loại bài ở client).
+.range {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--surface-subtle);
+
+  button {
+    min-height: 36px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--body);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  button.is-active { background: var(--surface); color: var(--primary); box-shadow: var(--shadow-sm); }
+}
+
+.kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+.kpi--link {
+  color: inherit;
+  text-decoration: none;
+
+  small { display: inline-flex; align-items: center; gap: 4px; color: var(--primary); font-weight: 700; }
+  lucide-icon { width: 14px; height: 14px; }
+}
+
+.kpi__error { color: var(--danger) !important; }
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.top-venues { grid-column: 1 / -1; }
+
+.empty { margin: 0; padding: 24px 20px; color: var(--body); font-size: 14px; }
+
+// ---- Biểu đồ cột theo ngày: một chuỗi, một màu (primary-fill, đã kiểm validator ở cả hai chế độ). ----
+.chart {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  grid-template-rows: 220px auto;
+  gap: 8px 8px;
+  padding: 20px;
+}
+
+.chart__axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: var(--body);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.chart__plot {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  border-bottom: 1px solid var(--hairline);
+  background: linear-gradient(to bottom, var(--hairline) 1px, transparent 1px) 0 0 / 100% 50%;
+}
+
+.chart__bar {
+  display: flex;
+  height: 100%;
+  flex: 1 1 0;
+  align-items: flex-end;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: default;
+
+  i {
+    width: 100%;
+    min-height: 2px;
+    border-radius: 4px 4px 0 0;
+    background: var(--primary-fill);
+  }
+
+  &:hover i { opacity: .8; }
+}
+
+.is-dense .chart__plot { gap: 1px; }
+.is-dense .chart__bar i { border-radius: 2px 2px 0 0; }
+
+.chart__tip {
+  position: absolute;
+  bottom: calc(100% - 8px);
+  z-index: 1;
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  color: var(--ink);
+  font-size: 13px;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+
+  span { color: var(--body); font-variant-numeric: tabular-nums; }
+}
+
+.chart__dates {
+  display: flex;
+  grid-column: 2;
+  justify-content: space-between;
+  color: var(--body);
+  font-size: 12px;
+}
+
+// ---- Trạng thái đơn: thanh ngang, nhãn và số là chữ thường, không mang màu chuỗi. ----
+.hbars {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 16px 20px 20px;
+  list-style: none;
+
+  li { display: grid; grid-template-columns: 120px minmax(0, 1fr) 48px; align-items: center; gap: 10px; }
+  span { color: var(--ink); font-size: 14px; }
+  i { height: 8px; overflow: hidden; border-radius: 9999px; background: var(--surface-strong); }
+  b { display: block; height: 100%; border-radius: inherit; background: var(--primary-fill); }
+  strong { font-size: 14px; font-variant-numeric: tabular-nums; text-align: right; }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 1023px) {
+  .grid { grid-template-columns: minmax(0, 1fr); }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 639px) {
+  .kpis { grid-template-columns: minmax(0, 1fr); }
+  .actions { width: 100%; margin-left: 0; }
+  .range { width: 100%; button { flex: 1; } }
+  .chart { padding: 16px 12px; grid-template-rows: 180px auto; }
+}

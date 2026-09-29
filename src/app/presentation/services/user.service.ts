@@ -11,6 +11,7 @@ import { GetUserByIdUseCase } from '@application/usecase/user/get-user-by-id.use
 import { UpdateUserUseCase } from '@application/usecase/user/update-user.usecase';
 import { UpdateUserAvatarUseCase } from '@application/usecase/user/update-user-avatar.usecase';
 import { UpdateUserPasswordByAdminUseCase } from '@application/usecase/user/update-user-password-by-admin.usecase';
+import { ChangeUserStatusUseCase } from '@application/usecase/user/change-user-status.usecase';
 import { VerifyUserUseCase } from '@application/usecase/user/verify-user.usecase';
 import { CreateUserRequest } from '@application/dto/user/user.dto';
 import { BaseListResponse } from '@application/dto/base/base-response';
@@ -29,6 +30,7 @@ export class UserService {
   private updateUserAvatarUseCase = inject(UpdateUserAvatarUseCase);
   private updateUserPasswordByAdminUseCase = inject(UpdateUserPasswordByAdminUseCase);
   private verifyUserUseCase = inject(VerifyUserUseCase);
+  private changeUserStatusUseCase = inject(ChangeUserStatusUseCase);
 
   createUser(request: CreateUserRequest): Observable<User> {
     return this.createUserUseCase.execute(request);
@@ -68,5 +70,9 @@ export class UserService {
 
   verifyUser(userId: string, verified: boolean): Observable<void> {
     return this.verifyUserUseCase.execute(userId, verified);
+  }
+
+  changeStatus(userId: string, status: 'ACTIVE' | 'BLOCKED'): Observable<void> {
+    return this.changeUserStatusUseCase.execute(userId, status);
   }
 }

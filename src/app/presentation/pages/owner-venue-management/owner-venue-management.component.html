@@ -96,10 +96,20 @@
       } @else if (venue(); as selectedVenue) {
       <header class="selected-venue-heading">
         <h2>Thông tin cơ sở</h2>
-        <span class="status-pill" [class.is-active]="selectedVenue.active">
-          <span></span>{{ selectedVenue.active ? 'Đang hoạt động' : 'Tạm ngưng' }}
+        <span class="status-pill" [class.is-active]="selectedVenue.active" [class.is-suspended]="selectedVenue.suspendedAt">
+          <span></span>{{ selectedVenue.suspendedAt ? 'Bị đình chỉ' : selectedVenue.active ? 'Đang hoạt động' : 'Tạm ngưng' }}
         </span>
       </header>
+      @if (selectedVenue.suspendedAt) {
+      <section class="suspension-banner" role="alert">
+        <lucide-icon name="shield-alert" />
+        <div>
+          <strong>Quản trị viên đã đình chỉ cơ sở từ {{ selectedVenue.suspendedAt | date:'dd/MM/yyyy' }}</strong>
+          <p>Lý do: {{ selectedVenue.suspensionReason }}</p>
+          <p>Cơ sở đang ẩn khỏi tìm kiếm và không nhận đơn mới; đơn đã đặt vẫn giữ nguyên. Bạn vẫn sửa được thông tin, nhưng chỉ quản trị viên mở lại được cơ sở.</p>
+        </div>
+      </section>
+      }
 
       <form id="venue-management-form" class="venue-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <section class="venue-gallery" [class.venue-gallery--cover-only]="visibleSecondaryImages().length === 0"
@@ -291,7 +301,9 @@
           <section class="form-section form-section--status">
             <header><lucide-icon name="circle-check" /><span>Trạng thái cơ sở</span></header>
             <label class="switch-field">
-              <input type="checkbox" formControlName="active" />
+              <!-- Đang bị đình chỉ: không cho bật, backend cũng chặn. -->
+              <input type="checkbox" formControlName="active" [attr.aria-disabled]="!!selectedVenue.suspendedAt"
+                (click)="selectedVenue.suspendedAt && $event.preventDefault()" />
               <span class="switch" aria-hidden="true"></span>
               <span><strong>{{ form.controls.active.value ? 'Đang hoạt động' : 'Tạm ngưng' }}</strong><small>Cho phép
                   khách hàng tìm và đặt sân tại cơ sở này.</small></span>

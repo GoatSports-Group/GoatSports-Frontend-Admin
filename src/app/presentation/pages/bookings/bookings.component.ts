@@ -1,108 +1,151 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Subject, Subscription, debounceTime, distinctUntilChanged, finalize } from 'rxjs';
+import { OwnerBooking, OwnerBookingStatus, OwnerPayment } from '@application/dto/owner-booking/owner-booking.dto';
 import { ADMIN_BOOKING_REPOSITORY_TOKEN } from '@application/ports/persistence/admin-booking.repository';
-import {
-  Booking,
-  BookingStatus,
-  BOOKING_STATUS_LABELS,
-  BOOKING_STATUS_COLORS
-} from '@application/dto/booking/booking.dto';
-import { NotifyService } from '@shared/components/notify/notify.service';
+import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/loading-skeleton.component';
+import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
+import { PaginationComponent } from '@shared/components/ui/pagination/pagination.component';
 
+type Tone = 'success' | 'warning' | 'danger' | 'info' | 'primary' | 'neutral';
+
+const STATUS_META: Record<OwnerBookingStatus, { label: string; tone: Tone }> = {
+  PENDING_PAYMENT: { label: 'Chờ thanh toán', tone: 'warning' },
+  CONFIRMED: { label: 'Đã xác nhận', tone: 'primary' },
+  CHECKED_IN: { label: 'Đã nhận sân', tone: 'info' },
+  COMPLETED: { label: 'Hoàn tất', tone: 'success' },
+  CANCELLED: { label: 'Đã hủy', tone: 'danger' },
+  REFUND_PENDING: { label: 'Chờ hoàn tiền', tone: 'warning' },
+  REFUNDED: { label: 'Đã hoàn tiền', tone: 'neutral' },
+  EXPIRED: { label: 'Hết hạn', tone: 'neutral' }
+};
+
+/** Đơn đặt sân của mọi cơ sở trên nền tảng. Admin chỉ xem; duyệt hủy, thu tiền, check-in vẫn là việc của chủ sân. */
 @Component({
   selector: 'app-admin-bookings',
   templateUrl: './bookings.component.html',
   styleUrls: ['./bookings.component.scss'],
-  standalone: false
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [DatePipe, FormsModule, LucideIconComponent, LoadingSkeletonComponent, PaginationComponent]
 })
 export class AdminBookingsComponent implements OnInit {
-  private bookingRepo = inject(ADMIN_BOOKING_REPOSITORY_TOKEN);
-  private notifyService = inject(NotifyService);
+  private readonly repository = inject(ADMIN_BOOKING_REPOSITORY_TOKEN);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly search$ = new Subject<string>();
+  private request?: Subscription;
 
-  bookings: Booking[] = [];
-  loading = true;
-  selectedStatus = 'ALL';
-  searchQuery = '';
+  readonly pageSize = 20;
+  readonly statusMeta = STATUS_META;
+  readonly statusTabs = Object.keys(STATUS_META) as OwnerBookingStatus[];
 
-  selectedBooking: Booking | null = null;
-  showProcessModal = false;
-  processApproved = true;
-  processNote = '';
-  processing = false;
+  readonly status = signal<OwnerBookingStatus | ''>('');
+  readonly keyword = signal('');
+  readonly fromDate = signal('');
+  readonly toDate = signal('');
+  readonly pageIndex = signal(0);
 
-  statusLabels = BOOKING_STATUS_LABELS;
-  statusColors = BOOKING_STATUS_COLORS;
+  readonly items = signal<OwnerBooking[]>([]);
+  readonly total = signal(0);
+  readonly loading = signal(true);
+  readonly paging = signal(false);
+  readonly error = signal<string | null>(null);
+  readonly selected = signal<OwnerBooking | null>(null);
 
-  statusTabs = [
-    { value: 'ALL', label: 'Tất cả' },
-    { value: 'CONFIRMED', label: 'Đã xác nhận' },
-    { value: 'CHECKED_IN', label: 'Đã nhận sân' },
-    { value: 'CANCELLED', label: 'Đã hủy / Yêu cầu hoàn cọc' },
-    { value: 'REFUNDED', label: 'Đã hoàn tiền' }
-  ];
+  readonly hasFilters = computed(() => !!(this.status() || this.keyword() || this.fromDate() || this.toDate()));
 
   ngOnInit(): void {
-    this.loadBookings();
+    this.search$.pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe(value => { this.keyword.set(value.trim()); this.reload(); });
+    this.load();
   }
 
-  loadBookings(): void {
-    this.loading = true;
-    this.bookingRepo.getBookings(this.selectedStatus).subscribe({
-      next: res => {
-        this.bookings = res?.data || [];
-        this.loading = false;
-      },
-      error: err => {
-        console.error('Error loading admin bookings:', err);
-        this.bookings = [];
-        this.loading = false;
-      }
-    });
+  onKeyword(value: string): void { this.search$.next(value); }
+
+  setStatus(value: OwnerBookingStatus | ''): void {
+    this.status.set(value);
+    this.reload();
   }
 
-  onTabChange(status: string): void {
-    this.selectedStatus = status;
-    this.loadBookings();
+  setDate(which: 'from' | 'to', value: string): void {
+    (which === 'from' ? this.fromDate : this.toDate).set(value);
+    this.reload();
   }
 
-  formatPrice(price: number): string {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+  clearFilters(): void {
+    this.status.set('');
+    this.keyword.set('');
+    this.fromDate.set('');
+    this.toDate.set('');
+    this.reload();
   }
 
-  openProcessModal(booking: Booking, approved: boolean): void {
-    this.selectedBooking = booking;
-    this.processApproved = approved;
-    this.processNote = '';
-    this.showProcessModal = true;
+  goToPage(index: number): void {
+    this.pageIndex.set(index);
+    this.load(true);
   }
 
-  closeProcessModal(): void {
-    this.showProcessModal = false;
-    this.selectedBooking = null;
+  reload(): void {
+    this.pageIndex.set(0);
+    this.load();
   }
 
-  submitProcess(): void {
-    if (!this.selectedBooking) return;
-
-    this.processing = true;
-    this.bookingRepo.processCancellation(this.selectedBooking.bookingId, {
-      approved: this.processApproved,
-      processNote: this.processNote
-    }).subscribe({
-      next: res => {
-        this.processing = false;
-        this.showProcessModal = false;
-        this.notifyService.success(
-          this.processApproved
-            ? 'Đã chấp thuận hoàn cọc cho khách hàng.'
-            : 'Đã từ chối yêu cầu hủy sân.'
-        );
-        this.loadBookings();
-      },
-      error: (err: any) => {
-        this.processing = false;
-        const msg = err?.error?.message || 'Có lỗi xảy ra trong quá trình xử lý.';
-        this.notifyService.error(msg);
-      }
-    });
+  load(keepList = false): void {
+    this.request?.unsubscribe();
+    this.error.set(null);
+    (keepList ? this.paging : this.loading).set(true);
+    this.request = this.repository.getBookings({
+      status: this.status() || undefined,
+      query: this.keyword() || undefined,
+      fromDate: this.fromDate() || undefined,
+      toDate: this.toDate() || undefined,
+      page: this.pageIndex(),
+      size: this.pageSize
+    }).pipe(finalize(() => { this.loading.set(false); this.paging.set(false); }))
+      .subscribe({
+        next: page => {
+          this.items.set(page.items);
+          this.total.set(page.total);
+        },
+        error: err => this.error.set(err?.error?.message ?? 'Không tải được danh sách đơn đặt sân.')
+      });
   }
+
+  open(booking: OwnerBooking): void { this.selected.set(booking); }
+  close(): void { this.selected.set(null); }
+
+  customerName(booking: OwnerBooking): string {
+    return booking.walkInCustomerName?.trim() || `Khách #${(booking.playerId ?? '').slice(0, 8)}`;
+  }
+
+  sourceLabel(source: OwnerBooking['source']): string {
+    return source === 'WALK_IN' ? 'Khách tại quầy' : source === 'DIRECT' ? 'Đặt trực tuyến' : 'Ghép trận AI';
+  }
+
+  paidAmount(booking: OwnerBooking): number {
+    return booking.payments.filter(item => item.status === 'SUCCEEDED').reduce((sum, item) => sum + item.amount, 0);
+  }
+
+  paymentLabel(payment: OwnerPayment): string {
+    const purpose = payment.purpose === 'BOOKING_DEPOSIT' ? 'Tiền cọc' : 'Phần còn lại';
+    const via = payment.method === 'CASH' ? 'tiền mặt' : payment.provider === 'PAYOS' ? 'payOS' : '';
+    return via ? `${purpose} · ${via}` : purpose;
+  }
+
+  paymentStatus(status: string): { label: string; tone: Tone } {
+    switch (status) {
+      case 'SUCCEEDED': return { label: 'Đã thanh toán', tone: 'success' };
+      case 'PENDING': case 'PROCESSING': return { label: 'Đang chờ', tone: 'warning' };
+      case 'REFUNDED': return { label: 'Đã hoàn', tone: 'neutral' };
+      default: return { label: 'Không thành công', tone: 'danger' };
+    }
+  }
+
+  vnd(value: number | null | undefined): string {
+    return `${new Intl.NumberFormat('vi-VN').format(Math.round(value ?? 0))} ₫`;
+  }
+
+  time(value: string): string { return value?.slice(0, 5) ?? ''; }
 }

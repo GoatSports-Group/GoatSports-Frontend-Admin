@@ -1,16 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, Subject } from 'rxjs';
+import { ManageOwnerScheduleUseCase } from '@application/usecase/owner-schedule/manage-owner-schedule.usecase';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  LucideActivity, LucideAlertCircle, LucideAlertTriangle, LucideArrowRight, LucideBan,
-  LucideCalendar, LucideCar, LucideCheck, LucideCheckCircle, LucideChevronDown, LucideChevronLeft,
-  LucideChevronRight, LucideClock, LucideConstruction, LucideFilePlus2, LucideFilter,
-  LucideFolderOpen, LucideGripVertical, LucideInbox, LucideInfo, LucideLandPlot,
-  LucideLayoutGrid, LucideMoreVertical, LucidePencil, LucidePlus, LucideReceipt,
-  LucideDroplets, LucideRotateCcw, LucideSave, LucideSearch, LucideStore, LucideSun, LucideTable,
-  LucideTrash2, LucideUsers, LucideX, provideLucideIcons
-} from '@lucide/angular';
+import { ManageOwnerCheckInUseCase } from '@application/usecase/owner-check-in/manage-owner-check-in.usecase';
+import { provideLucideIcons } from '@lucide/angular';
+import { APP_ICONS } from '../../../app-icons';
 import { OwnerBooking } from '@application/dto/owner-booking/owner-booking.dto';
 import { OwnerVenueCourt, OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
@@ -54,17 +49,12 @@ describe('OwnerCourtManagementComponent', () => {
       imports: [OwnerCourtManagementComponent],
       providers: [
         provideRouter([]),
-        provideLucideIcons(
-          LucideActivity, LucideAlertCircle, LucideAlertTriangle, LucideArrowRight, LucideBan,
-          LucideCalendar, LucideCar, LucideCheck, LucideCheckCircle, LucideChevronDown, LucideChevronLeft,
-          LucideChevronRight, LucideClock, LucideConstruction, LucideFilePlus2, LucideFilter,
-          LucideFolderOpen, LucideGripVertical, LucideInbox, LucideInfo, LucideLandPlot,
-          LucideLayoutGrid, LucideMoreVertical, LucidePencil, LucidePlus, LucideReceipt,
-          LucideDroplets, LucideRotateCcw, LucideSave, LucideSearch, LucideStore, LucideSun, LucideTable,
-          LucideTrash2, LucideUsers, LucideX
-        ),
+        provideLucideIcons(...APP_ICONS),
         { provide: GetMyOwnerVenuesUseCase, useValue: getMyVenues },
         { provide: ManageOwnerVenueCourtsUseCase, useValue: manageCourts },
+        // Check-in ngay trên sơ đồ sân: các test này không mở hộp check-in.
+        { provide: ManageOwnerCheckInUseCase, useValue: { lookup: vi.fn(), confirm: vi.fn() } },
+        { provide: ManageOwnerScheduleUseCase, useValue: { listSlots: vi.fn(() => of([])), setSlotStatus: vi.fn() } },
         { provide: ManageOwnerBookingsUseCase, useValue: manageBookings },
         { provide: ManageOwnerVenueFacilityLayoutUseCase, useValue: manageFacilityLayout },
         { provide: NotifyService, useValue: notify }

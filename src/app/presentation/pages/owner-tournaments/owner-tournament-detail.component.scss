@@ -1,5 +1,5 @@
-@use 'tournament-ops' as t;
-@include t.tournament-ops;
+@use '../ops' as t;
+@include t.ops;
 
 .crumbs {
   display: flex;

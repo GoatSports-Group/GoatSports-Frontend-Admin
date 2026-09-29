@@ -63,6 +63,10 @@ export class UserRepositoryImpl implements UserRepository {
     );
   }
 
+  changeStatus(userId: string, status: 'ACTIVE' | 'BLOCKED'): Observable<void> {
+    return this.userApi.changeStatus(userId, status).pipe(map(() => undefined));
+  }
+
   verifyUser(userId: string, verified: boolean): Observable<void> {
     return this.userApi.verifyUser(userId, verified).pipe(
       map(response => response.data)

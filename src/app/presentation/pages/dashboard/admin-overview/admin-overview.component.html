@@ -1,0 +1,150 @@
+<section class="page" aria-labelledby="overview-title">
+  <header class="page-head">
+    <div>
+      <h1 id="overview-title">Tổng quan hệ thống</h1>
+      <p>Người dùng, đặt sân và cộng đồng trên toàn nền tảng. Số liệu đặt sân tính theo ngày tạo đơn trong kỳ.</p>
+    </div>
+    <div class="actions">
+      <div class="range" role="group" aria-label="Kỳ thống kê">
+        @for (value of ranges; track value) {
+        <button type="button" [class.is-active]="range() === value" [attr.aria-pressed]="range() === value"
+          (click)="setRange(value)">{{ value }} ngày</button>
+        }
+      </div>
+    </div>
+  </header>
+
+  <section class="kpis" aria-label="Chỉ số chính">
+    <div class="kpi">
+      <span>Người dùng</span>
+      @if (users().loading && !users().data) { <app-loading-skeleton variant="text" [lines]="1" [decorative]="true" /> }
+      @else if (users().error) { <strong>—</strong><small class="kpi__error">Không tải được</small> }
+      @else {
+      <strong>{{ count(users().data?.total) }}</strong>
+      <small>+{{ count(users().data?.newUsers) }} mới trong {{ range() }} ngày · {{ count(users().data?.byStatus?.['BLOCKED']) }} bị khóa</small>
+      }
+    </div>
+    <div class="kpi">
+      <span>Chủ sân · cơ sở hoạt động</span>
+      @if (bookings().loading && !bookings().data) { <app-loading-skeleton variant="text" [lines]="1" [decorative]="true" /> }
+      @else if (bookings().error || users().error) { <strong>—</strong><small class="kpi__error">Không tải được</small> }
+      @else {
+      <strong>{{ count(users().data?.byRole?.['VENUE_OWNER']) }} · {{ count(bookings().data?.activeVenues) }}</strong>
+      <small>{{ count(bookings().data?.activeCourts) }} sân đang hoạt động</small>
+      }
+    </div>
+    <div class="kpi">
+      <span>Đơn đặt sân trong kỳ</span>
+      @if (bookings().loading && !bookings().data) { <app-loading-skeleton variant="text" [lines]="1" [decorative]="true" /> }
+      @else if (bookings().error) { <strong>—</strong><small class="kpi__error">Không tải được</small> }
+      @else {
+      <strong>{{ count(bookings().data?.bookings) }}</strong>
+      <small>{{ cancelRate() === null ? 'Chưa có đơn' : 'Hủy / hết hạn / hoàn: ' + percent(cancelRate())  }}</small>
+      }
+    </div>
+    <div class="kpi">
+      <span>Giá trị giao dịch (GMV)</span>
+      @if (bookings().loading && !bookings().data) { <app-loading-skeleton variant="text" [lines]="1" [decorative]="true" /> }
+      @else if (bookings().error) { <strong>—</strong><small class="kpi__error">Không tải được</small> }
+      @else {
+      <strong>{{ vnd(bookings().data?.gmv) }}</strong>
+      <small>Đơn đã xác nhận, đã nhận sân, hoàn tất</small>
+      }
+    </div>
+    <div class="kpi">
+      <span>CLB · giải đang mở / diễn ra</span>
+      @if (community().loading && !community().data) { <app-loading-skeleton variant="text" [lines]="1" [decorative]="true" /> }
+      @else if (community().error) { <strong>—</strong><small class="kpi__error">Không tải được</small> }
+      @else {
+      <strong>{{ count(community().data?.activeClubs) }} · {{ count(liveTournaments()) }}</strong>
+      <small>{{ count(community().data?.tournaments) }} giải trên nền tảng</small>
+      }
+    </div>
+    <a class="kpi kpi--link" routerLink="/admin/owner-applications">
+      <span>Đơn chủ sân chờ duyệt</span>
+      <strong>{{ count(pendingApplications) }}</strong>
+      <small>Mở trang duyệt <lucide-icon name="arrow-right" /></small>
+    </a>
+  </section>
+
+  <div class="grid">
+    <section class="card chart-card" aria-labelledby="bookings-chart-title">
+      <header class="card__head">
+        <div>
+          <h2 id="bookings-chart-title">Đơn đặt sân theo ngày</h2>
+          <p>{{ range() }} ngày gần nhất · rê chuột vào cột để xem GMV</p>
+        </div>
+      </header>
+      @if (bookings().loading && !bookings().data) {
+      <app-loading-skeleton variant="block" height="220px" [flush]="true" label="Đang tải biểu đồ" />
+      } @else if (bookings().error) {
+      <div class="state state--error" role="alert"><lucide-icon name="alert-circle" /><strong>Không tải được số liệu đặt sân</strong>
+        <button type="button" class="btn" (click)="load()"><lucide-icon name="rotate-ccw" />Thử lại</button></div>
+      } @else {
+      <div class="chart" [class.is-dense]="bars().days.length > 45" (mouseleave)="hovered.set(null)">
+        <div class="chart__axis" aria-hidden="true"><span>{{ bars().max }}</span><span>0</span></div>
+        <div class="chart__plot" aria-hidden="true">
+          @for (day of bars().days; track day.date; let i = $index) {
+          <button type="button" class="chart__bar" tabindex="-1" (mouseenter)="hovered.set(i)" (focus)="hovered.set(i)">
+            <i [style.height.%]="day.height"></i>
+          </button>
+          }
+          @if (hovered() !== null) {
+          @let day = bars().days[hovered()!];
+          <div class="chart__tip" [style.left.%]="((hovered()! + .5) / bars().days.length) * 100">
+            <strong>{{ dayLabel(day.date) }}</strong>
+            <span>{{ count(day.bookings) }} đơn</span>
+            <span>GMV {{ vnd(day.gmv) }}</span>
+          </div>
+          }
+        </div>
+        <div class="chart__dates" aria-hidden="true">
+          <span>{{ bars().days[0]?.date | date:'dd/MM' }}</span>
+          <span>{{ bars().days[bars().days.length - 1]?.date | date:'dd/MM' }}</span>
+        </div>
+      </div>
+      <table class="sr-only">
+        <caption>Đơn đặt sân và GMV theo ngày</caption>
+        <thead><tr><th scope="col">Ngày</th><th scope="col">Số đơn</th><th scope="col">GMV</th></tr></thead>
+        <tbody>
+          @for (day of bars().days; track day.date) { <tr><td>{{ day.date | date:'dd/MM/yyyy' }}</td><td>{{ day.bookings }}</td><td>{{ vnd(day.gmv) }}</td></tr> }
+        </tbody>
+      </table>
+      }
+    </section>
+
+    <section class="card" aria-labelledby="status-title">
+      <header class="card__head"><div><h2 id="status-title">Đơn theo trạng thái</h2><p>Trong {{ range() }} ngày</p></div></header>
+      @if (bookings().loading && !bookings().data) {
+      <app-loading-skeleton variant="rows" [count]="4" [flush]="true" label="Đang tải trạng thái đơn" />
+      } @else if (!statusRows().length) {
+      <p class="empty">Chưa có đơn nào trong kỳ.</p>
+      } @else {
+      <ul class="hbars">
+        @for (row of statusRows(); track row.label) {
+        <li><span>{{ row.label }}</span><i><b [style.width.%]="row.width"></b></i><strong>{{ count(row.count) }}</strong></li>
+        }
+      </ul>
+      }
+    </section>
+
+    <section class="card top-venues" aria-labelledby="top-title">
+      <header class="card__head"><div><h2 id="top-title">Cơ sở nhiều đơn nhất</h2><p>Top 5 trong {{ range() }} ngày</p></div>
+        <a class="btn btn--sm" routerLink="/admin/bookings">Xem đơn<lucide-icon name="arrow-right" /></a></header>
+      @if (bookings().loading && !bookings().data) {
+      <app-loading-skeleton variant="rows" [count]="5" [flush]="true" label="Đang tải cơ sở" />
+      } @else if (!bookings().data?.topVenues?.length) {
+      <p class="empty">Chưa có đơn nào trong kỳ.</p>
+      } @else {
+      <table class="table">
+        <thead><tr><th>Cơ sở</th><th class="num">Đơn</th><th class="num">GMV</th></tr></thead>
+        <tbody>
+          @for (venue of bookings().data!.topVenues; track venue.venueId) {
+          <tr><td><strong>{{ venue.name }}</strong></td><td class="num">{{ count(venue.bookings) }}</td><td class="num">{{ vnd(venue.gmv) }}</td></tr>
+          }
+        </tbody>
+      </table>
+      }
+    </section>
+  </div>
+</section>

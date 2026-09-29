@@ -5,6 +5,7 @@ import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Overlay, OverlayRef } from '@angular/cdk/overlay';
 import { TemplatePortal } from '@angular/cdk/portal';
 import { MatDialog } from '@angular/material/dialog';
+import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { User } from '@application/dto/user/user.dto';
 import { UserService } from '@presentation/services/user.service';
 import { getDisplayAvatar, getGenderLabel, getRoleLabel } from '@shared/utils/user-display.utils';
@@ -291,6 +292,37 @@ export class UsersComponent implements OnInit {
       }
       this.passwordEditingUser = null;
     }, 300);
+  }
+
+  /** Khóa: người đó không đăng nhập được và phiên hiện tại hết hiệu lực khi access token hết hạn (vài phút). */
+  changeStatus(user: User, status: 'ACTIVE' | 'BLOCKED'): void {
+    if (!user.userId) return;
+    const name = user.fullName || user.username;
+    const blocking = status === 'BLOCKED';
+    const data: ConfirmDialogData = {
+      title: blocking ? 'Khóa tài khoản?' : 'Mở khóa tài khoản?',
+      message: blocking
+        ? `${name} sẽ không đăng nhập được nữa và bị đăng xuất khỏi mọi thiết bị trong vài phút. Dữ liệu của tài khoản được giữ nguyên.`
+        : `${name} sẽ đăng nhập và sử dụng lại được như bình thường.`,
+      confirmText: blocking ? 'Khóa tài khoản' : 'Mở khóa',
+      cancelText: 'Hủy',
+      confirmColor: blocking ? 'warn' : 'primary'
+    };
+    this.dialog.open(ConfirmDialogComponent, { width: '450px', data, panelClass: 'custom-premium-dialog' })
+      .afterClosed().subscribe(confirmed => {
+        if (!confirmed) return;
+        this.userAdminService.changeStatus(user.userId!, status).subscribe({
+          next: () => {
+            this.snackBar.open(blocking ? `Đã khóa tài khoản ${name}.` : `Đã mở khóa tài khoản ${name}.`, 'Đóng', {
+              duration: 3000, horizontalPosition: 'end', verticalPosition: 'top', panelClass: ['snackbar-success']
+            });
+            this.onUserUpdated();
+          },
+          error: err => this.snackBar.open(err.error?.message || 'Không đổi được trạng thái tài khoản.', 'Đóng', {
+            duration: 4000, horizontalPosition: 'end', verticalPosition: 'top', panelClass: ['snackbar-error']
+          })
+        });
+      });
   }
 
   toggleVerification(user: User, verified: boolean): void {

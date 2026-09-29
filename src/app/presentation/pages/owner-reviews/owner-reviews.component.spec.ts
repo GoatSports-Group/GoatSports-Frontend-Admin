@@ -1,12 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { Subject, of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  LucideActivity, LucideAlertCircle, LucideCalendar, LucideChevronLeft,
-  LucideChevronRight, LucideClock, LucideFilter, LucideHash, LucideInfo,
-  LucideLandPlot, LucideLoader2, LucideMessageSquare, LucideRotateCcw,
-  LucideShieldCheck, LucideStar, provideLucideIcons
-} from '@lucide/angular';
+import { provideLucideIcons } from '@lucide/angular';
+import { APP_ICONS } from '../../../app-icons';
 import { OwnerReviewPage } from '@application/dto/owner-review/owner-review.dto';
 import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { GetOwnerReviewsUseCase } from '@application/usecase/owner-review/get-owner-reviews.usecase';
@@ -40,12 +36,7 @@ describe('OwnerReviewsComponent', () => {
     await TestBed.configureTestingModule({
       imports: [OwnerReviewsComponent],
       providers: [
-        provideLucideIcons(
-          LucideActivity, LucideAlertCircle, LucideCalendar, LucideChevronLeft,
-          LucideChevronRight, LucideClock, LucideFilter, LucideHash, LucideInfo,
-          LucideLandPlot, LucideLoader2, LucideMessageSquare, LucideRotateCcw,
-          LucideShieldCheck, LucideStar
-        ),
+        provideLucideIcons(...APP_ICONS),
         { provide: GetMyOwnerVenuesUseCase, useValue: getVenues },
         { provide: GetOwnerReviewsUseCase, useValue: getReviews }
       ]

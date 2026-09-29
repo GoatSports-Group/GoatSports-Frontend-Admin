@@ -1,11 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
+import { provideRouter } from '@angular/router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  LucideAlertCircle, LucideCalendar, LucideCamera, LucideCircleCheck, LucideClock,
-  LucideCreditCard, LucideFilePlus2, LucideHash, LucideLandPlot, LucideLoader2,
-  LucideReceipt, LucideSearch, LucideShieldCheck, LucideUserCheck, provideLucideIcons
-} from '@lucide/angular';
+import { ManageOwnerBookingsUseCase } from '@application/usecase/owner-booking/manage-owner-bookings.usecase';
+import { provideLucideIcons } from '@lucide/angular';
+import { APP_ICONS } from '../../../app-icons';
 import { OwnerBooking } from '@application/dto/owner-booking/owner-booking.dto';
 import { OwnerCheckInResult } from '@application/dto/owner-check-in/owner-check-in.dto';
 import { OwnerTimeSlot } from '@application/dto/owner-schedule/owner-schedule.dto';
@@ -72,15 +71,16 @@ describe('OwnerCheckInComponent', () => {
     await TestBed.configureTestingModule({
       imports: [OwnerCheckInComponent],
       providers: [
-        provideLucideIcons(
-          LucideAlertCircle, LucideCalendar, LucideCamera, LucideCircleCheck, LucideClock,
-          LucideCreditCard, LucideFilePlus2, LucideHash, LucideLandPlot, LucideLoader2,
-          LucideReceipt, LucideSearch, LucideShieldCheck, LucideUserCheck
-        ),
+        provideLucideIcons(...APP_ICONS),
         { provide: GetMyOwnerVenuesUseCase, useValue: getVenues },
         { provide: ManageOwnerVenueCourtsUseCase, useValue: manageCourts },
         { provide: ManageOwnerScheduleUseCase, useValue: manageSchedule },
+        provideRouter([]),
         { provide: ManageOwnerCheckInUseCase, useValue: manageCheckIn },
+        // Lịch sử đơn trong ngày: trống, các test tập trung vào tra cứu và check-in.
+        { provide: ManageOwnerBookingsUseCase, useValue: {
+          list: vi.fn(() => of({ items: [], page: 0, pageSize: 20, pages: 0, total: 0 })), detail: vi.fn()
+        } },
         { provide: NotifyService, useValue: notify }
       ]
     }).compileComponents();

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, HostListener, computed, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
@@ -42,7 +43,7 @@ interface VenueCoordinates {
 @Component({
   selector: 'app-owner-venue-management',
   standalone: true,
-  imports: [LoadingSkeletonComponent, ReactiveFormsModule, RouterLink, LucideIconComponent, PageLoadingComponent],
+  imports: [DatePipe, LoadingSkeletonComponent, ReactiveFormsModule, RouterLink, LucideIconComponent, PageLoadingComponent],
   templateUrl: './owner-venue-management.component.html',
   styleUrls: [
     './owner-venue-management.component.scss',

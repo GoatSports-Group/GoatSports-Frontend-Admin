@@ -15,9 +15,3 @@ export interface DistrictBreakdownItem {
   name: string;
   count: number;
 }
-
-export interface CalendarGrid {
-  days: number[];
-  offsetCells: null[];
-  currentDay: number;
-}

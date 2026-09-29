@@ -1,0 +1,92 @@
+<main class="page">
+  <header class="page-head">
+    <div>
+      <h1>Đánh giá cơ sở</h1>
+      <p>Đánh giá của người chơi sau khi đơn hoàn tất. Ẩn tạm thời để xem xét, gỡ khi vi phạm rõ ràng; cả hai đều không tính vào điểm của cơ sở.</p>
+    </div>
+  </header>
+
+  @if (notice()) {
+  <div class="notice" role="status">
+    <lucide-icon name="circle-check-big" /><span>{{ notice() }}</span>
+    <button type="button" class="icon-btn" aria-label="Ẩn thông báo" (click)="notice.set(null)"><lucide-icon name="x" /></button>
+  </div>
+  }
+
+  <nav class="tabs" role="tablist" aria-label="Lọc theo trạng thái">
+    <button type="button" role="tab" class="tab" [class.is-active]="!status()" [attr.aria-selected]="!status()" (click)="setStatus('')">Tất cả</button>
+    @for (value of statusTabs; track value) {
+    <button type="button" role="tab" class="tab" [class.is-active]="status() === value" [attr.aria-selected]="status() === value"
+      (click)="setStatus(value)">{{ statusMeta[value].label }}</button>
+    }
+  </nav>
+
+  <div class="toolbar">
+    <app-select [options]="ratingOptions" [ngModel]="rating()" (ngModelChange)="setRating($event)" name="rating"
+      leadingIcon="star" ariaLabel="Lọc theo số sao" />
+    @if (venueId()) {
+    <span class="chip">
+      <lucide-icon name="store" />{{ venueName() || 'Một cơ sở' }}
+      <button type="button" aria-label="Bỏ lọc theo cơ sở" (click)="clearVenue()"><lucide-icon name="x" /></button>
+    </span>
+    }
+    @if (hasFilters()) {
+    <button type="button" class="btn btn--ghost" (click)="clearFilters()"><lucide-icon name="x" />Xóa lọc</button>
+    }
+  </div>
+
+  @if (error() && items().length) { <p class="field__error" role="alert">{{ error() }}</p> }
+
+  @if (loading()) {
+  <app-loading-skeleton variant="rows" [count]="5" label="Đang tải đánh giá" />
+  } @else if (error() && !items().length) {
+  <div class="state state--error" role="alert">
+    <lucide-icon name="alert-circle" /><strong>Chưa tải được đánh giá</strong><p>{{ error() }}</p>
+    <button type="button" class="btn" (click)="load()"><lucide-icon name="rotate-ccw" />Thử lại</button>
+  </div>
+  } @else if (!items().length) {
+  <div class="state">
+    <lucide-icon [name]="hasFilters() ? 'filter' : 'star'" />
+    <strong>{{ hasFilters() ? 'Không có đánh giá khớp bộ lọc' : 'Chưa có đánh giá nào' }}</strong>
+    <p>{{ hasFilters() ? 'Thử đổi trạng thái, số sao hoặc bỏ lọc cơ sở.' : 'Đánh giá xuất hiện khi người chơi chấm điểm đơn đã hoàn tất.' }}</p>
+    @if (hasFilters()) { <button type="button" class="btn" (click)="clearFilters()"><lucide-icon name="x" />Xóa lọc</button> }
+  </div>
+  } @else {
+  <p class="result-count">{{ total() }} đánh giá</p>
+  <ul class="reviews" [class.is-paging]="paging()">
+    @for (item of items(); track item.reviewId) {
+    <li class="card review" [class.is-muted]="item.status !== 'PUBLISHED'">
+      <div class="review__head">
+        <span class="stars" [attr.aria-label]="item.rating + ' trên 5 sao'">
+          @for (filled of stars(item.rating); track $index) { <lucide-icon name="star" [class.is-filled]="filled" /> }
+        </span>
+        <span [class]="'badge badge--' + statusMeta[item.status].tone">{{ statusMeta[item.status].label }}</span>
+      </div>
+      @if (item.content) { <p class="review__content">{{ item.content }}</p> }
+      @else { <p class="review__content muted">Không có nội dung, chỉ chấm sao.</p> }
+      <p class="review__meta">
+        <strong>{{ item.venueName }}</strong> · {{ item.courtName }} · Đơn {{ item.bookingCode }} ·
+        chơi {{ item.playDate | date:'dd/MM/yyyy' }} {{ time(item.startTime) }}–{{ time(item.endTime) }} ·
+        viết {{ item.createdAt | date:'HH:mm dd/MM/yyyy' }}
+      </p>
+      <div class="review__actions">
+        @switch (item.status) {
+        @case ('PUBLISHED') {
+        <button type="button" class="btn btn--sm" [disabled]="busyId() === item.reviewId" (click)="moderate(item, 'HIDDEN')"><lucide-icon name="eye-off" />Ẩn</button>
+        <button type="button" class="btn btn--sm btn--danger-ghost" [disabled]="busyId() === item.reviewId" (click)="moderate(item, 'REMOVED')"><lucide-icon name="trash-2" />Gỡ</button>
+        }
+        @case ('HIDDEN') {
+        <button type="button" class="btn btn--sm" [disabled]="busyId() === item.reviewId" (click)="moderate(item, 'PUBLISHED')"><lucide-icon name="eye" />Hiện lại</button>
+        <button type="button" class="btn btn--sm btn--danger-ghost" [disabled]="busyId() === item.reviewId" (click)="moderate(item, 'REMOVED')"><lucide-icon name="trash-2" />Gỡ</button>
+        }
+        @default { <span class="muted">Đã gỡ vĩnh viễn</span> }
+        }
+      </div>
+    </li>
+    }
+  </ul>
+  @if (total() > pageSize) {
+  <app-pagination [pageIndex]="pageIndex()" [pageSize]="pageSize" [totalItems]="total()" (pageChange)="goToPage($event)" />
+  }
+  }
+</main>

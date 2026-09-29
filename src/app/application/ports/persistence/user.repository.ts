@@ -15,6 +15,8 @@ export interface UserRepository {
   updateAvatar(userId: string, tempKey: string): Observable<void>;
   updatePasswordByAdmin(userId: string, data: any): Observable<void>;
   verifyUser(userId: string, verified: boolean): Observable<void>;
+  /** Khóa (BLOCKED) hoặc mở khóa (ACTIVE); khóa thì thu hồi phiên đăng nhập của người đó. */
+  changeStatus(userId: string, status: 'ACTIVE' | 'BLOCKED'): Observable<void>;
 }
 
 export const USER_REPOSITORY_TOKEN = new InjectionToken<UserRepository>('UserRepository');

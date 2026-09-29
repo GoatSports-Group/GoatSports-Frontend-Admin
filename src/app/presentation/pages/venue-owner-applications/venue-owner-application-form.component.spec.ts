@@ -1,23 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  LucideArrowLeft,
-  LucideArrowRight,
-  LucideCheck,
-  LucideCircleCheck,
-  LucideEye,
-  LucideHistory,
-  LucideImageUp,
-  LucideScanFace,
-  LucideScanQrCode,
-  LucideShieldCheck,
-  LucideSun,
-  LucideUpload,
-  LucideUserCheck,
-  LucideX,
-  provideLucideIcons
-} from '@lucide/angular';
+import { provideLucideIcons } from '@lucide/angular';
+import { APP_ICONS } from '../../../app-icons';
 import { SearchAddressSuggestionsUseCase } from '@application/usecase/owner-application/search-address-suggestions.usecase';
 import { SubmitOwnerApplicationUseCase } from '@application/usecase/owner-application/submit-owner-application.usecase';
 import { AnalyzeOwnerFaceReadinessUseCase } from '@application/usecase/owner-application/analyze-owner-face-readiness.usecase';
@@ -46,22 +31,7 @@ describe('VenueOwnerApplicationFormComponent', () => {
     await TestBed.configureTestingModule({
       imports: [VenueOwnerApplicationFormComponent],
       providers: [
-        provideLucideIcons(
-          LucideArrowLeft,
-          LucideArrowRight,
-          LucideCheck,
-          LucideCircleCheck,
-          LucideEye,
-          LucideHistory,
-          LucideImageUp,
-          LucideScanFace,
-          LucideScanQrCode,
-          LucideShieldCheck,
-          LucideSun,
-          LucideUpload,
-          LucideUserCheck,
-          LucideX
-        ),
+        provideLucideIcons(...APP_ICONS),
         { provide: SubmitOwnerApplicationUseCase, useValue: submitApplication },
         { provide: AnalyzeOwnerFaceReadinessUseCase, useValue: analyzeFaceReadiness },
         { provide: VerifyOwnerIdentityUseCase, useValue: verifyIdentity },

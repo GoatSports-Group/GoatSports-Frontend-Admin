@@ -1,145 +1,129 @@
-<div class="admin-bookings-page p-6">
-  <!-- Header -->
-  <div class="page-header flex justify-between items-center mb-6">
+<main class="page">
+  <header class="page-head">
     <div>
-      <h1 class="text-2xl font-extrabold text-slate-900">Quản Lý Đơn Đặt Sân</h1>
-      <p class="text-sm text-slate-500">Xem và đối soát danh sách đặt sân, xử lý hủy/hoàn cọc cho khách hàng</p>
+      <h1>Đơn đặt sân</h1>
+      <p>Mọi đơn trên nền tảng, của tất cả cơ sở. Admin theo dõi và tra cứu; duyệt hủy, thu tiền và check-in vẫn do chủ sân thực hiện.</p>
     </div>
-  </div>
+  </header>
 
-  <!-- Status Filter Tabs -->
-  <div class="flex gap-2 bg-slate-100 p-1 rounded-xl w-fit mb-6">
-    @for (tab of statusTabs; track tab.value) {
-      <button
-        type="button"
-        class="px-4 py-2 text-sm font-semibold rounded-lg transition-all"
-        [class.bg-white]="selectedStatus === tab.value"
-        [class.shadow-sm]="selectedStatus === tab.value"
-        [class.text-slate-900]="selectedStatus === tab.value"
-        [class.text-slate-600]="selectedStatus !== tab.value"
-        (click)="onTabChange(tab.value)"
-      >
-        {{ tab.label }}
-      </button>
+  <nav class="tabs" role="tablist" aria-label="Lọc theo trạng thái">
+    <button type="button" role="tab" class="tab" [class.is-active]="!status()" [attr.aria-selected]="!status()" (click)="setStatus('')">Tất cả</button>
+    @for (value of statusTabs; track value) {
+    <button type="button" role="tab" class="tab" [class.is-active]="status() === value" [attr.aria-selected]="status() === value"
+      (click)="setStatus(value)">{{ statusMeta[value].label }}</button>
+    }
+  </nav>
+
+  <div class="toolbar" role="search">
+    <label class="search">
+      <lucide-icon name="search" />
+      <input type="search" [ngModel]="keyword()" (ngModelChange)="onKeyword($event)" name="keyword"
+        placeholder="Mã đơn, tên / SĐT khách, tên cơ sở..." aria-label="Tìm đơn đặt sân" />
+    </label>
+    <label class="date-field">
+      <span>Từ ngày</span>
+      <input type="date" [ngModel]="fromDate()" (ngModelChange)="setDate('from', $event)" name="fromDate" />
+    </label>
+    <label class="date-field">
+      <span>Đến ngày</span>
+      <input type="date" [ngModel]="toDate()" (ngModelChange)="setDate('to', $event)" name="toDate" />
+    </label>
+    @if (hasFilters()) {
+    <button type="button" class="btn btn--ghost" (click)="clearFilters()"><lucide-icon name="x" />Xóa lọc</button>
     }
   </div>
 
-  <!-- Data Table Card -->
-  <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-    @if (loading) {
-      <app-loading-skeleton variant="table" [flush]="true" [count]="8" [columns]="6" label="Đang tải danh sách đơn đặt"></app-loading-skeleton>
-    } @else if (bookings.length > 0) {
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm text-slate-600">
-          <thead class="bg-slate-50 text-xs font-bold text-slate-500 uppercase border-b border-slate-200">
-            <tr>
-              <th class="px-6 py-4">Mã Vé</th>
-              <th class="px-6 py-4">Sân Con</th>
-              <th class="px-6 py-4">Ngày & Giờ</th>
-              <th class="px-6 py-4">Tổng Tiền</th>
-              <th class="px-6 py-4">Cọc Đã Nhận</th>
-              <th class="px-6 py-4">Trạng Thái</th>
-              <th class="px-6 py-4 text-right">Thao Tác</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
-            @for (b of bookings; track b.bookingId) {
-              <tr class="hover:bg-slate-50/80 transition-colors">
-                <td class="px-6 py-4 font-mono font-bold text-slate-900">
-                  {{ b.bookingCode }}
-                </td>
-                <td class="px-6 py-4 font-semibold text-slate-800">
-                  {{ b.courtName || 'Sân tiêu chuẩn' }}
-                </td>
-                <td class="px-6 py-4">
-                  <div class="font-medium text-slate-900">{{ b.bookingDate }}</div>
-                  <div class="text-xs text-slate-400">{{ b.startTime.slice(0, 5) }} - {{ b.endTime.slice(0, 5) }}</div>
-                </td>
-                <td class="px-6 py-4 font-bold text-slate-900">
-                  {{ formatPrice(b.totalPrice) }}
-                </td>
-                <td class="px-6 py-4 font-bold text-emerald-600">
-                  {{ formatPrice(b.depositAmount) }}
-                </td>
-                <td class="px-6 py-4">
-                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold"
-                    [class.bg-emerald-50]="statusColors[b.status] === 'emerald'"
-                    [class.text-emerald-700]="statusColors[b.status] === 'emerald'"
-                    [class.bg-blue-50]="statusColors[b.status] === 'blue'"
-                    [class.text-blue-700]="statusColors[b.status] === 'blue'"
-                    [class.bg-amber-50]="statusColors[b.status] === 'amber'"
-                    [class.text-amber-700]="statusColors[b.status] === 'amber'"
-                    [class.bg-rose-50]="statusColors[b.status] === 'rose'"
-                    [class.text-rose-700]="statusColors[b.status] === 'rose'"
-                    [class.bg-purple-50]="statusColors[b.status] === 'purple'"
-                    [class.text-purple-700]="statusColors[b.status] === 'purple'"
-                    [class.bg-slate-100]="statusColors[b.status] === 'slate'"
-                    [class.text-slate-700]="statusColors[b.status] === 'slate'"
-                  >
-                    {{ statusLabels[b.status] || b.status }}
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-right">
-                  @if (b.status === 'REFUND_REQUESTED' || b.status === 'CANCELLED') {
-                    <button
-                      mat-stroked-button
-                      color="primary"
-                      class="text-xs h-8 px-3 rounded-lg mr-2"
-                      (click)="openProcessModal(b, true)"
-                    >
-                      Duyệt Hoàn Cọc
-                    </button>
-                  }
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    } @else {
-      <div class="text-center py-12">
-        <lucide-icon name="receipt" class="w-10 h-10 text-slate-300 mx-auto mb-2"></lucide-icon>
-        <p class="text-sm font-semibold text-slate-700">Chưa có đơn đặt sân nào trong mục này</p>
-      </div>
-    }
+  @if (loading()) {
+  <app-loading-skeleton variant="table" [count]="6" [columns]="7" label="Đang tải đơn đặt sân" />
+  } @else if (error()) {
+  <div class="state state--error" role="alert">
+    <lucide-icon name="alert-circle" /><strong>Chưa tải được đơn đặt sân</strong><p>{{ error() }}</p>
+    <button type="button" class="btn" (click)="load()"><lucide-icon name="rotate-ccw" />Thử lại</button>
   </div>
-
-  <!-- Process Cancellation Dialog -->
-  @if (showProcessModal && selectedBooking) {
-    <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" (click)="closeProcessModal()">
-      <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl" (click)="$event.stopPropagation()">
-        <h3 class="text-lg font-bold text-slate-900 mb-2">Xử Lý Hoàn Tiền Cọc</h3>
-        <p class="text-xs text-slate-500 mb-4">Đơn đặt: <strong>{{ selectedBooking.bookingCode }}</strong> (Cọc: {{ formatPrice(selectedBooking.depositAmount) }})</p>
-
-        <div class="space-y-4 mb-6">
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">Ghi chú đối soát ngân hàng / hoàn tiền</label>
-            <textarea
-              [(ngModel)]="processNote"
-              rows="3"
-              placeholder="Nhập mã giao dịch hoàn tiền hoặc lý do..."
-              class="w-full p-3 border border-slate-200 rounded-xl text-sm outline-none focus:border-emerald-500"
-            ></textarea>
-          </div>
-        </div>
-
-        <div class="flex justify-end gap-3">
-          <button mat-button (click)="closeProcessModal()" [disabled]="processing">Đóng</button>
-          <button
-            mat-flat-button
-            color="primary"
-            class="rounded-xl"
-            (click)="submitProcess()"
-            [disabled]="processing"
-          >
-            @if (processing) {
-              <span>Đang xử lý...</span>
-            } @else {
-              <span>Xác Nhận Đã Hoàn Cọc</span>
-            }
-          </button>
-        </div>
-      </div>
-    </div>
+  } @else if (!items().length) {
+  <div class="state">
+    <lucide-icon [name]="hasFilters() ? 'filter' : 'calendar-x'" />
+    <strong>{{ hasFilters() ? 'Không có đơn khớp bộ lọc' : 'Chưa có đơn đặt sân nào' }}</strong>
+    <p>{{ hasFilters() ? 'Thử đổi trạng thái, khoảng ngày hoặc từ khóa.' : 'Đơn đặt sân của mọi cơ sở sẽ xuất hiện tại đây.' }}</p>
+    @if (hasFilters()) { <button type="button" class="btn" (click)="clearFilters()"><lucide-icon name="x" />Xóa lọc</button> }
+  </div>
+  } @else {
+  <p class="result-count">{{ total() }} đơn</p>
+  <section class="card table-wrap" [class.is-paging]="paging()">
+    <table class="table">
+      <thead>
+        <tr><th>Mã đơn</th><th>Cơ sở · sân</th><th>Giờ chơi</th><th>Khách</th><th class="num">Tổng tiền</th><th class="num">Đã thu</th><th>Trạng thái</th><th></th></tr>
+      </thead>
+      <tbody>
+        @for (item of items(); track item.bookingId) {
+        <tr>
+          <td><div class="cell-title"><strong>{{ item.bookingCode }}</strong><small>{{ item.createdAt | date:'HH:mm dd/MM/yyyy' }}</small></div></td>
+          <td><div class="cell-title"><strong>{{ item.venueName }}</strong><small>{{ item.courtName }}</small></div></td>
+          <td><div class="cell-title"><strong>{{ item.playDate | date:'dd/MM/yyyy' }}</strong><small>{{ time(item.startTime) }}–{{ time(item.endTime) }}</small></div></td>
+          <td><div class="cell-title"><strong>{{ customerName(item) }}</strong><small>{{ sourceLabel(item.source) }}</small></div></td>
+          <td class="num">{{ vnd(item.totalPrice) }}</td>
+          <td class="num">{{ vnd(paidAmount(item)) }}</td>
+          <td><span [class]="'badge badge--' + statusMeta[item.status].tone">{{ statusMeta[item.status].label }}</span></td>
+          <td class="row-action"><button type="button" class="btn btn--sm" (click)="open(item)" [attr.aria-label]="'Xem đơn ' + item.bookingCode">Chi tiết<lucide-icon name="arrow-right" /></button></td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </section>
+  @if (total() > pageSize) {
+  <app-pagination [pageIndex]="pageIndex()" [pageSize]="pageSize" [totalItems]="total()" (pageChange)="goToPage($event)" />
   }
-</div>
+  }
+
+  @if (selected(); as booking) {
+  <div class="modal-backdrop" (click)="close()">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="booking-detail-title" (click)="$event.stopPropagation()">
+      <header class="modal__header">
+        <div>
+          <h2 id="booking-detail-title">Đơn {{ booking.bookingCode }}</h2>
+          <span [class]="'badge badge--' + statusMeta[booking.status].tone">{{ statusMeta[booking.status].label }}</span>
+        </div>
+        <button type="button" class="icon-btn" aria-label="Đóng" (click)="close()"><lucide-icon name="x" /></button>
+      </header>
+      <div class="modal__body">
+        <dl class="facts">
+          <div><dt>Cơ sở</dt><dd>{{ booking.venueName }} · {{ booking.courtName }}</dd></div>
+          <div><dt>Giờ chơi</dt><dd>{{ booking.playDate | date:'dd/MM/yyyy' }}, {{ time(booking.startTime) }}–{{ time(booking.endTime) }}</dd></div>
+          <div><dt>Khách</dt><dd>{{ customerName(booking) }}@if (booking.walkInCustomerPhone) { · {{ booking.walkInCustomerPhone }} }</dd></div>
+          <div><dt>Nguồn</dt><dd>{{ sourceLabel(booking.source) }}</dd></div>
+          <div><dt>Tổng tiền</dt><dd>{{ vnd(booking.totalPrice) }}</dd></div>
+          <div><dt>Cọc / còn lại</dt><dd>{{ vnd(booking.depositAmount) }} / {{ vnd(booking.remainingAmount) }}</dd></div>
+          <div><dt>Tạo lúc</dt><dd>{{ booking.createdAt | date:'HH:mm dd/MM/yyyy' }}</dd></div>
+        </dl>
+
+        <h3 class="section-title">Thanh toán</h3>
+        @if (booking.payments.length) {
+        <ul class="list">
+          @for (payment of booking.payments; track payment.paymentId) {
+          <li>
+            <span><strong>{{ paymentLabel(payment) }}</strong><small>{{ (payment.paidAt || payment.createdAt) | date:'HH:mm dd/MM/yyyy' }}</small></span>
+            <span class="num">{{ vnd(payment.amount) }}</span>
+            <span [class]="'badge badge--' + paymentStatus(payment.status).tone">{{ paymentStatus(payment.status).label }}</span>
+          </li>
+          }
+        </ul>
+        } @else {
+        <p class="muted">Chưa có khoản thanh toán nào.</p>
+        }
+
+        @if (booking.cancellation; as cancellation) {
+        <h3 class="section-title">Yêu cầu hủy</h3>
+        <dl class="facts">
+          <div><dt>Lý do</dt><dd>{{ cancellation.reason || '—' }}</dd></div>
+          <div><dt>Hoàn</dt><dd>{{ cancellation.refundPercentage }}% · {{ vnd(cancellation.refundAmount) }}</dd></div>
+          <div><dt>Tình trạng</dt><dd>{{ cancellation.status }}</dd></div>
+        </dl>
+        }
+      </div>
+      <footer class="modal__footer">
+        <button type="button" class="btn" (click)="close()">Đóng</button>
+      </footer>
+    </section>
+  </div>
+  }
+</main>

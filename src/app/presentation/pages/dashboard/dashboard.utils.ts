@@ -2,7 +2,7 @@ import {
   OwnerApplication,
   OwnerApplicationStatus
 } from '@application/dto/owner-application/owner-application.dto';
-import { CalendarGrid, DistrictBreakdownItem, VenueMapMarker } from './dashboard.models';
+import { DistrictBreakdownItem, VenueMapMarker } from './dashboard.models';
 
 export const HCM_CENTER: [number, number] = [10.7760, 106.7009];
 
@@ -15,18 +15,6 @@ const VIETNAMESE_WEEKDAYS = [
   'Thứ Sáu',
   'Thứ Bảy'
 ];
-
-export function formatVietnameseDate(date: Date): string {
-  const dayName = VIETNAMESE_WEEKDAYS[date.getDay()];
-  const day = date.getDate().toString().padStart(2, '0');
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  return `${dayName}, ngày ${day} tháng ${month} năm ${date.getFullYear()}`;
-}
-
-export function formatVietnameseMonthYear(date: Date): string {
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  return `Tháng ${month} năm ${date.getFullYear()}`;
-}
 
 export function buildDistrictBreakdown(districts: string[]): DistrictBreakdownItem[] {
   const counts = districts.reduce<Record<string, number>>((result, district) => {
@@ -91,17 +79,6 @@ export function buildVenueTooltipContent(marker: VenueMapMarker): string {
       ${locationNotice}
     </div>
   `;
-}
-
-export function createCalendarGrid(date: Date): CalendarGrid {
-  const totalDays = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-  const startDayOfWeek = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-
-  return {
-    currentDay: date.getDate(),
-    offsetCells: Array(startDayOfWeek).fill(null),
-    days: Array.from({ length: totalDays }, (_, index) => index + 1)
-  };
 }
 
 function getHcmFallbackCoordinates(index: number): [number, number] {

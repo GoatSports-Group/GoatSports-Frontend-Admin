@@ -1,4 +1,72 @@
-.admin-bookings-page {
-  min-height: 100vh;
-  background: var(--surface-subtle);
+@use '../ops' as t;
+@include t.ops;
+
+.toolbar { grid-template-columns: minmax(0, 1fr) 180px 180px auto; }
+
+.date-field {
+  display: grid;
+  gap: 4px;
+  color: var(--body);
+  font-size: 12px;
+  font-weight: 700;
+
+  input {
+    height: 44px;
+    padding: 0 12px;
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+    font-size: 14px;
+  }
+}
+
+.result-count { margin: 0; color: var(--body); font-size: 14px; font-weight: 600; }
+
+// Đổi trang không làm trống bảng: giữ trang cũ mờ đi cho tới khi trang mới về (§ Pagination).
+.is-paging { opacity: .55; pointer-events: none; }
+
+.facts {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+
+  div { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 12px; }
+  dt { color: var(--body); font-size: 14px; }
+  dd { margin: 0; color: var(--ink); font-size: 14px; font-weight: 700; }
+}
+
+.section-title { margin: 20px 0 8px; color: var(--ink); font-size: 15px; font-weight: 800; }
+
+.list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  span:first-child { display: grid; gap: 2px; }
+  strong { font-size: 14px; }
+  small { color: var(--body); font-size: 12px; }
+  .num { font-variant-numeric: tabular-nums; font-weight: 800; }
+}
+
+
+@media (max-width: 1023px) {
+  .toolbar { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .search { grid-column: 1 / -1; }
+}
+
+@media (max-width: 639px) {
+  .toolbar { grid-template-columns: minmax(0, 1fr); }
+  .facts div { grid-template-columns: 1fr; gap: 2px; }
 }

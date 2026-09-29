@@ -14,10 +14,12 @@ export interface AdminNavigationGroup {
 export const PLATFORM_ADMIN_NAVIGATION: readonly AdminNavigationItem[] = [
   { title: 'Tổng quan', description: 'Số liệu và tình trạng toàn hệ thống', icon: 'layout-dashboard', route: '/dashboard' },
   { title: 'Đơn đặt sân', description: 'Quản lý lịch đặt sân và trạng thái thanh toán', icon: 'receipt', route: '/bookings' },
+  { title: 'Cơ sở', description: 'Mọi cơ sở trên nền tảng, đình chỉ cơ sở vi phạm', icon: 'store', route: '/platform-venues' },
   { title: 'Chủ sân', description: 'Duyệt đơn và quản lý hồ sơ đối tác chủ sân', icon: 'land-plot', route: '/owner-applications' },
+  { title: 'Đánh giá', description: 'Ẩn hoặc gỡ đánh giá cơ sở vi phạm', icon: 'star', route: '/platform-reviews' },
   { title: 'Người dùng', description: 'Quản lý tài khoản thành viên hệ thống', icon: 'users', route: '/users' },
   { title: 'Vai trò', description: 'Quản lý nhóm vai trò và quyền hạn', icon: 'shield', route: '/roles' },
-  { title: 'Kiểm duyệt', description: 'Xử lý báo cáo nội dung và khiếu nại của tác giả', icon: 'shield', route: '/moderation' },
+  { title: 'Kiểm duyệt', description: 'Xử lý báo cáo nội dung và khiếu nại của tác giả', icon: 'shield-alert', route: '/moderation' },
   { title: 'Nhật ký', description: 'Theo dõi nhật ký hoạt động hệ thống', icon: 'activity', route: '/logs' }
 ];
 
@@ -35,8 +37,13 @@ export const VENUE_OWNER_NAVIGATION: readonly AdminNavigationItem[] = [
   { title: 'Đánh giá', description: 'Phản hồi thật từ booking đã hoàn tất', icon: 'star', route: '/reviews' }
 ];
 
+const platformItems = (routes: readonly string[]) => PLATFORM_ADMIN_NAVIGATION.filter(item => routes.includes(item.route));
+
 export const PLATFORM_ADMIN_NAVIGATION_GROUPS: readonly AdminNavigationGroup[] = [
-  { label: 'Quản trị nền tảng', items: PLATFORM_ADMIN_NAVIGATION }
+  { label: 'Tổng quan', items: platformItems(['/dashboard']) },
+  { label: 'Sân và đặt sân', items: platformItems(['/bookings', '/platform-venues', '/owner-applications', '/platform-reviews']) },
+  { label: 'Cộng đồng', items: platformItems(['/moderation']) },
+  { label: 'Hệ thống', items: platformItems(['/users', '/roles', '/logs']) }
 ];
 
 export const VENUE_OWNER_NAVIGATION_GROUPS: readonly AdminNavigationGroup[] = [

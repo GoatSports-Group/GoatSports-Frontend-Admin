@@ -2,12 +2,9 @@ import { OWNER_TOURNAMENT_REPOSITORY_TOKEN } from '@application/ports/persistenc
 import { TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  LucideAlertCircle, LucideCalendar, LucideCircleCheck, LucideCreditCard,
-  LucideFileText, LucideFilter, LucideInbox, LucideInfo, LucideLandPlot,
-  LucideLoader2, LucideReceipt, LucideRotateCcw, LucideShieldCheck,
-  LucideTrendingDown, LucideTrendingUp, provideLucideIcons
-} from '@lucide/angular';
+import { provideRouter } from '@angular/router';
+import { provideLucideIcons } from '@lucide/angular';
+import { APP_ICONS } from '../../../app-icons';
 import { OwnerRevenueReport } from '@application/dto/owner-revenue/owner-revenue.dto';
 import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { GetOwnerRevenueUseCase } from '@application/usecase/owner-revenue/get-owner-revenue.usecase';
@@ -51,13 +48,9 @@ describe('OwnerRevenueComponent', () => {
     await TestBed.configureTestingModule({
       imports: [OwnerRevenueComponent],
       providers: [
+        provideRouter([]),
         { provide: OWNER_TOURNAMENT_REPOSITORY_TOKEN, useValue: { getRevenue: () => of(null) } },
-        provideLucideIcons(
-          LucideAlertCircle, LucideCalendar, LucideCircleCheck, LucideCreditCard,
-          LucideFileText, LucideFilter, LucideInbox, LucideInfo, LucideLandPlot,
-          LucideLoader2, LucideReceipt, LucideRotateCcw, LucideShieldCheck,
-          LucideTrendingDown, LucideTrendingUp
-        ),
+        provideLucideIcons(...APP_ICONS),
         { provide: GetMyOwnerVenuesUseCase, useValue: getVenues },
         { provide: GetOwnerRevenueUseCase, useValue: getRevenue }
       ]

@@ -1,0 +1,86 @@
+@use '../ops' as t;
+@include t.ops;
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+
+  app-select { width: 200px; }
+}
+
+.chip {
+  display: inline-flex;
+  height: 36px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px 0 12px;
+  border-radius: 9999px;
+  background: var(--primary-light);
+  color: var(--primary-strong);
+  font-size: 14px;
+  font-weight: 700;
+
+  lucide-icon { width: 16px; height: 16px; }
+
+  button {
+    display: grid;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    border: 0;
+    border-radius: 9999px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+
+    &:hover { background: var(--surface); }
+  }
+}
+
+.result-count { margin: 0; color: var(--body); font-size: 14px; font-weight: 600; }
+
+.is-paging { opacity: .55; pointer-events: none; }
+
+.reviews {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.review {
+  display: grid;
+  gap: 8px;
+  padding: 16px 20px;
+
+  // Đánh giá đang ẩn / đã gỡ: lùi xuống nhưng vẫn đọc được.
+  &.is-muted .review__content { color: var(--body); }
+}
+
+.review__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+.stars {
+  display: inline-flex;
+  gap: 2px;
+
+  lucide-icon { width: 16px; height: 16px; color: var(--hairline); }
+  lucide-icon.is-filled { color: var(--warning); fill: currentColor; }
+}
+
+.review__content { margin: 0; color: var(--ink); font-size: 15px; line-height: 1.6; white-space: pre-line; overflow-wrap: anywhere; }
+
+.review__meta { margin: 0; color: var(--body); font-size: 13px; line-height: 1.5; }
+
+.review__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (max-width: 639px) {
+  .toolbar app-select { width: 100%; }
+  .review { padding: 14px 16px; }
+  .review__actions { justify-content: stretch; .btn { flex: 1; } }
+}

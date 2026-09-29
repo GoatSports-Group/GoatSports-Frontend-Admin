@@ -1,38 +1,26 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Booking, BookingCancellation, ProcessCancellationRequest } from '@application/dto/booking/booking.dto';
-import { BaseResponse } from '@application/dto/base/base-response';
+import { BaseListResponse, BaseResponse } from '@application/dto/base/base-response';
+import { OwnerBooking } from '@application/dto/owner-booking/owner-booking.dto';
+import { AdminBookingFilter } from '@application/ports/persistence/admin-booking.repository';
 import { environment } from '@environments/environment';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class AdminBookingApi {
-  private http = inject(HttpClient);
-  private apiBase = environment.apiUrl;
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = `${environment.apiUrl}/venue-service/api/v1/admin/bookings`;
 
-  getBookings(status?: string, page: number = 0, size: number = 20): Observable<BaseResponse<Booking[]>> {
-    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
-    if (status && status !== 'ALL') {
-      params = params.set('status', status);
-    }
-    return this.http.get<BaseResponse<Booking[]>>(
-      `${this.apiBase}/venue-service/api/v1/bookings/my-history`,
-      { params }
-    );
+  getBookings(filter: AdminBookingFilter): Observable<BaseResponse<BaseListResponse<OwnerBooking>>> {
+    let params = new HttpParams().set('page', filter.page).set('size', filter.size);
+    if (filter.status) params = params.set('status', filter.status);
+    if (filter.query) params = params.set('query', filter.query);
+    if (filter.fromDate) params = params.set('fromDate', filter.fromDate);
+    if (filter.toDate) params = params.set('toDate', filter.toDate);
+    return this.http.get<BaseResponse<BaseListResponse<OwnerBooking>>>(this.baseUrl, { params });
   }
 
-  getBookingById(bookingId: string): Observable<BaseResponse<Booking>> {
-    return this.http.get<BaseResponse<Booking>>(
-      `${this.apiBase}/venue-service/api/v1/bookings/${bookingId}`
-    );
-  }
-
-  processCancellation(cancellationId: string, request: ProcessCancellationRequest): Observable<BaseResponse<BookingCancellation>> {
-    return this.http.post<BaseResponse<BookingCancellation>>(
-      `${this.apiBase}/venue-service/api/v1/bookings/cancellations/${cancellationId}/process`,
-      request
-    );
+  getBooking(bookingId: string): Observable<BaseResponse<OwnerBooking>> {
+    return this.http.get<BaseResponse<OwnerBooking>>(`${this.baseUrl}/${bookingId}`);
   }
 }
