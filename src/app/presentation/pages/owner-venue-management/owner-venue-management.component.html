@@ -53,7 +53,7 @@
             <strong>{{ item.name }}</strong>
             <small>{{ venueAddress(item) }}</small>
             <span class="venue-option__status" [class.is-active]="item.active">
-              {{ item.active ? 'Đang hoạt động' : 'Tạm ngưng' }}
+              {{ item.suspendedAt ? 'Bị đình chỉ' : item.active ? 'Đang hoạt động' : 'Tạm ngưng' }}
             </span>
           </span>
           <span class="venue-option__dot" [class.is-active]="item.active" aria-hidden="true"></span>
