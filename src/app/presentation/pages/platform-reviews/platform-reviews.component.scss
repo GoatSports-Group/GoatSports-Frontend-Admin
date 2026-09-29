@@ -65,7 +65,9 @@
   gap: 2px;
 
   lucide-icon { width: 16px; height: 16px; color: var(--hairline); }
-  lucide-icon.is-filled { color: var(--warning); fill: currentColor; }
+  lucide-icon.is-filled { color: var(--warning); }
+  // svg nằm trong view của lucide-icon nên phải xuyên encapsulation mới tô được.
+  lucide-icon.is-filled ::ng-deep svg { fill: currentColor; }
 }
 
 .review__content { margin: 0; color: var(--ink); font-size: 15px; line-height: 1.6; white-space: pre-line; overflow-wrap: anywhere; }
