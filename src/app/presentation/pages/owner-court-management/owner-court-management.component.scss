@@ -1445,15 +1445,15 @@ select:disabled {
   display: grid;
   place-items: center;
   padding: 24px;
-  background: rgba(20, 32, 27, .38);
-  backdrop-filter: blur(2px);
+  background: rgb(16 26 44 / 55%);
+  backdrop-filter: blur(3px);
 }
 
 .custom-object-dialog {
   width: min(460px, 100%);
   overflow: hidden;
   border: 1px solid var(--border-strong);
-  border-radius: 14px;
+  border-radius: 24px;
   background: var(--surface);
   box-shadow: 0 24px 70px rgba(18, 48, 34, .24);
 }
@@ -2270,8 +2270,8 @@ select:disabled {
   display: grid;
   place-items: center;
   padding: 24px;
-  background: rgba(20, 34, 27, .48);
-  backdrop-filter: blur(2px);
+  background: rgb(16 26 44 / 55%);
+  backdrop-filter: blur(3px);
 }
 
 .court-editor-backdrop .court-editor {
@@ -2305,8 +2305,8 @@ select:disabled {
   display: grid;
   place-items: center;
   padding: 24px;
-  background: rgba(20, 34, 27, .48);
-  backdrop-filter: blur(2px);
+  background: rgb(16 26 44 / 55%);
+  backdrop-filter: blur(3px);
 }
 
 .court-checkin-backdrop {
@@ -2318,7 +2318,7 @@ select:disabled {
   max-height: min(820px, calc(100dvh - 48px));
   overflow-y: auto;
   border: 1px solid var(--border-strong);
-  border-radius: 16px;
+  border-radius: 24px;
   background: var(--surface);
   box-shadow: 0 26px 80px rgba(16, 38, 28, .28);
 }
@@ -2630,7 +2630,7 @@ select:disabled {
   max-height: min(760px, calc(100dvh - 48px));
   overflow: hidden;
   border: 1px solid var(--border-strong);
-  border-radius: 14px;
+  border-radius: 24px;
   background: var(--surface);
   box-shadow: 0 24px 70px rgba(16, 38, 28, .24);
 }
@@ -3842,7 +3842,7 @@ select:disabled {
   .court-checkin-dialog {
     width: 100%;
     max-height: 92dvh;
-    border-radius: 16px 16px 0 0;
+    border-radius: 24px 24px 0 0;
   }
 
   .court-scanner {
@@ -3885,7 +3885,7 @@ select:disabled {
   .maintenance-dialog {
     width: 100%;
     max-height: 90dvh;
-    border-radius: 16px 16px 0 0;
+    border-radius: 24px 24px 0 0;
   }
 
   .maintenance-toolbar,

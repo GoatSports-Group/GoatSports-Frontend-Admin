@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, HostListener, computed, inject, signal } from '@angular/core';
+import { InfiniteScrollDirective, LIST_CHUNK } from '@shared/directives/infinite-scroll.directive';
 import { DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -43,7 +44,7 @@ interface VenueCoordinates {
 @Component({
   selector: 'app-owner-venue-management',
   standalone: true,
-  imports: [DatePipe, LoadingSkeletonComponent, ReactiveFormsModule, RouterLink, LucideIconComponent, PageLoadingComponent],
+  imports: [InfiniteScrollDirective, DatePipe, LoadingSkeletonComponent, ReactiveFormsModule, RouterLink, LucideIconComponent, PageLoadingComponent],
   templateUrl: './owner-venue-management.component.html',
   styleUrls: [
     './owner-venue-management.component.scss',
@@ -75,7 +76,7 @@ export class OwnerVenueManagementComponent {
   readonly selectedVenueId = signal<string | null>(null);
   readonly venue = signal<OwnerVenueOverview | null>(null);
   readonly venueSearch = signal('');
-  readonly venuePage = signal(1);
+  readonly venueShown = signal(LIST_CHUNK);
   readonly addingAmenity = signal(false);
   readonly selectedAddressValue = signal('');
   readonly selectedAddressCoordinates = signal<VenueCoordinates | null>(null);
@@ -91,7 +92,6 @@ export class OwnerVenueManagementComponent {
   readonly images = signal<VenueImageItem[]>([]);
   readonly primaryImageId = signal<string | null>(null);
   private readonly venueThumbnails = signal<Record<string, VenueThumbnailState>>({});
-  readonly venuePageSize = 5;
   readonly uploadingImages = computed(() => this.images().some(image => image.uploading));
   readonly activeVenueCount = computed(() => this.venues().filter(venue => venue.active).length);
   readonly selectionLocked = computed(() => this.saving() || this.savingPolicy() || this.uploadingImages()
@@ -102,12 +102,8 @@ export class OwnerVenueManagementComponent {
     return this.venues().filter(venue => [venue.name, this.venueAddress(venue)]
       .some(value => value.toLocaleLowerCase('vi').includes(query)));
   });
-  readonly venuePageCount = computed(() => Math.max(1, Math.ceil(this.filteredVenues().length / this.venuePageSize)));
-  readonly pagedVenues = computed(() => {
-    const page = Math.min(this.venuePage(), this.venuePageCount());
-    const start = (page - 1) * this.venuePageSize;
-    return this.filteredVenues().slice(start, start + this.venuePageSize);
-  });
+  /** Danh sach co so trong cot ben cuon doc va render dan tung LIST_CHUNK muc. */
+  readonly pagedVenues = computed(() => this.filteredVenues().slice(0, this.venueShown()));
   readonly primaryImage = computed(() => this.images().find(image => image.id === this.primaryImageId()) ?? this.images()[0] ?? null);
   readonly secondaryImages = computed(() => {
     const primaryId = this.primaryImage()?.id;
@@ -303,15 +299,11 @@ export class OwnerVenueManagementComponent {
 
   updateVenueSearch(event: Event): void {
     this.venueSearch.set((event.target as HTMLInputElement).value);
-    this.venuePage.set(1);
+    this.venueShown.set(LIST_CHUNK);
   }
 
-  previousVenuePage(): void {
-    this.venuePage.update(page => Math.max(1, page - 1));
-  }
-
-  nextVenuePage(): void {
-    this.venuePage.update(page => Math.min(this.venuePageCount(), page + 1));
+  showMoreVenues(): void {
+    this.venueShown.update(count => count + LIST_CHUNK);
   }
 
   venueThumbnail(venue: OwnerVenueOverview): string | null {

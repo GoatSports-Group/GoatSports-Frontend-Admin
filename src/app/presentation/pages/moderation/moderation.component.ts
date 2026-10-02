@@ -18,6 +18,7 @@ import { GetReportQueueUseCase } from '@application/usecase/moderation/get-repor
 import { ReviewAppealUseCase } from '@application/usecase/moderation/review-appeal.usecase';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-loading.component';
+import { PaginationComponent } from '@shared/components/ui/pagination/pagination.component';
 
 type Lane = 'REPORTS' | 'APPEALS';
 
@@ -33,12 +34,13 @@ const MIN_REASON = 10;
 @Component({
   selector: 'app-moderation',
   standalone: true,
-  imports: [DatePipe, LucideIconComponent, PageLoadingComponent],
+  imports: [DatePipe, LucideIconComponent, PageLoadingComponent, PaginationComponent],
   templateUrl: './moderation.component.html',
   styleUrl: './moderation.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ModerationComponent {
+  readonly pageSize = PAGE_SIZE;
   private readonly getReports = inject(GetReportQueueUseCase);
   private readonly actOnReport = inject(ActOnReportUseCase);
   private readonly getAppeals = inject(GetAppealQueueUseCase);
@@ -65,6 +67,8 @@ export class ModerationComponent {
   readonly page = signal(0);
   readonly pages = signal(0);
   readonly loading = signal(false);
+  /** Doi trang: giu trang hien tai (lam mo) thay vi skeleton. */
+  readonly paging = signal(false);
   readonly submitting = signal(false);
   readonly error = signal<string | null>(null);
   readonly notice = signal<string | null>(null);
@@ -98,9 +102,9 @@ export class ModerationComponent {
     this.load(0);
   }
 
-  load(page = 0): void {
-    if (this.loading()) return;
-    this.loading.set(true);
+  load(page = 0, keepCurrent = false): void {
+    if (this.loading() || this.paging()) return;
+    (keepCurrent ? this.paging : this.loading).set(true);
     this.error.set(null);
 
     const filter = {
@@ -116,9 +120,10 @@ export class ModerationComponent {
     request$.pipe(
       take(1),
       takeUntilDestroyed(this.destroyRef),
-      finalize(() => this.loading.set(false))
+      finalize(() => { this.loading.set(false); this.paging.set(false); })
     ).subscribe({
       next: result => {
+        if (keepCurrent) queueMicrotask(() => this.scrollListIntoView());
         if (this.lane() === 'REPORTS') {
           this.reports.set(result.items as ContentReport[]);
           this.appeals.set([]);
@@ -139,7 +144,7 @@ export class ModerationComponent {
   goToPage(next: number): void {
     if (next < 0 || next >= this.pages() || next === this.page()) return;
     this.openReportId.set(null);
-    this.load(next);
+    this.load(next, true);
   }
 
   toggleReport(reportId: string): void {
@@ -243,5 +248,11 @@ export class ModerationComponent {
     this.error.set(typeof message === 'string' && message
       ? message
       : 'Không thể kết nối tới dịch vụ kiểm duyệt. Vui lòng thử lại.');
+  }
+
+  /** Doi trang xong: dua dau danh sach vao tam nhin neu no da troi len tren. */
+  private scrollListIntoView(): void {
+    const element = document.querySelector<HTMLElement>('[data-list-top]');
+    if (element && element.getBoundingClientRect().top < 0) element.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 }

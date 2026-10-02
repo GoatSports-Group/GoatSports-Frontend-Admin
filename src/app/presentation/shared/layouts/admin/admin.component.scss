@@ -652,15 +652,15 @@
   align-items: flex-start;
   justify-content: center;
   padding: 92px 16px 16px;
-  background: rgb(15 23 42 / 38%);
-  backdrop-filter: blur(4px);
+  background: rgb(16 26 44 / 55%);
+  backdrop-filter: blur(3px);
 }
 
 .command-dialog {
   width: min(620px, 100%);
   overflow: hidden;
   border: 1px solid var(--shell-border);
-  border-radius: 20px;
+  border-radius: 24px;
   background: var(--surface);
   box-shadow: 0 28px 80px rgb(15 23 42 / 24%);
 }
@@ -857,8 +857,8 @@
     z-index: 10;
     display: block;
     border: 0;
-    background: rgb(15 23 42 / 34%);
-    backdrop-filter: blur(2px);
+    background: rgb(16 26 44 / 55%);
+    backdrop-filter: blur(3px);
   }
 
   .admin-content,

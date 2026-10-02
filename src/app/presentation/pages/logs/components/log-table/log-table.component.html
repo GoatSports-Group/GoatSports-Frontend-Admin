@@ -87,7 +87,7 @@
   </div>
 
   <!-- Pagination Bottom Bar -->
-  <app-pagination *ngIf="!loading && logs.length > 0"
+  <app-pagination class="is-embedded" *ngIf="!loading && logs.length > 0"
     [pageIndex]="pageIndex"
     [pageSize]="pageSize"
     [totalItems]="totalItems"

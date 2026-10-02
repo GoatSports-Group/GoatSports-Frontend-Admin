@@ -484,8 +484,8 @@ body div.cdk-overlay-pane.custom-assign-role-dialog .mat-mdc-dialog-content {
 }
 
 .owner-submission-backdrop.cdk-overlay-backdrop {
-  background: rgb(15 23 42 / 58%);
-  backdrop-filter: blur(4px);
+  background: rgb(16 26 44 / 55%);
+  backdrop-filter: blur(3px);
 }
 
 .owner-profile-menu.mat-mdc-menu-panel {
@@ -527,3 +527,9 @@ body div.cdk-overlay-pane.custom-assign-role-dialog .mat-mdc-dialog-content {
   height: 18px;
   margin-right: 10px;
 }
+
+/* Diem moc cuon vo han (appInfiniteScroll): 1px de IntersectionObserver luon thay. */
+.list-sentinel { height: 1px; }
+
+/* Doi trang (GOAT-DESIGN Pagination): giu trang hien tai, lam mo va chan bam toi khi trang moi ve. */
+.is-paging { opacity: .55; pointer-events: none; transition: opacity .2s ease; }

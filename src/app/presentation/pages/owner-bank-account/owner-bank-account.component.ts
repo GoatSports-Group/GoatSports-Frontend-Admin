@@ -11,8 +11,9 @@ import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-ic
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { CryptoService } from '@presentation/services/crypto.service';
 import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/loading-skeleton.component';
+import { InfiniteScrollDirective, LIST_CHUNK } from '@shared/directives/infinite-scroll.directive';
 
-@Component({ selector: 'app-owner-bank-account', standalone: true, imports: [LoadingSkeletonComponent, CommonModule, FormsModule, LucideIconComponent], templateUrl: './owner-bank-account.component.html', styleUrl: './owner-bank-account.component.scss', changeDetection: ChangeDetectionStrategy.OnPush })
+@Component({ selector: 'app-owner-bank-account', standalone: true, imports: [LoadingSkeletonComponent, CommonModule, FormsModule, LucideIconComponent, InfiniteScrollDirective], templateUrl: './owner-bank-account.component.html', styleUrl: './owner-bank-account.component.scss', changeDetection: ChangeDetectionStrategy.OnPush })
 export class OwnerBankAccountComponent {
   private readonly repository: BankAccountRepository = inject(BANK_ACCOUNT_REPOSITORY_TOKEN);
   private readonly notify = inject(NotifyService);
@@ -25,6 +26,9 @@ export class OwnerBankAccountComponent {
   readonly showForm = signal(false);
   readonly balance = signal<PayoutBalance | null>(null);
   readonly withdrawals = signal<Withdrawal[]>([]);
+  /** Lich su rut tien tra ve ca mang; chi render dan tung LIST_CHUNK dong khi cuon. */
+  readonly withdrawalsShown = signal(LIST_CHUNK);
+  readonly listChunk = LIST_CHUNK;
   readonly withdrawing = signal(false);
   readonly payoutAccount = computed(() => this.accounts().find(item => item.isDefault && (item.status === 'VERIFIED' || item.status === 'PENDING_VERIFICATION')));
   readonly canWithdraw = computed(() => { const balance = this.balance(); return !!balance && !!this.payoutAccount() && balance.available >= balance.minimumWithdrawal; });

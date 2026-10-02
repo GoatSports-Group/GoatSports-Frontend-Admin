@@ -1292,8 +1292,8 @@ input:focus-visible {
   place-items: center;
   padding: 24px;
   overflow: hidden;
-  background: rgba(17, 29, 24, .48);
-  backdrop-filter: blur(2px);
+  background: rgb(16 26 44 / 55%);
+  backdrop-filter: blur(3px);
   animation: modal-backdrop-in .16s ease-out;
 }
 

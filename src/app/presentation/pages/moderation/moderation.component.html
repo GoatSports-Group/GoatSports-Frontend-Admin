@@ -80,7 +80,7 @@
     </section>
 
     @if (lane() === 'REPORTS') {
-      <ul class="queue">
+      <ul class="queue" data-list-top [class.is-paging]="paging()" [attr.aria-busy]="paging()">
         @for (report of reports(); track report.reportId) {
           <li class="queue-card">
             <header>
@@ -157,7 +157,7 @@
         }
       </ul>
     } @else {
-      <ul class="queue">
+      <ul class="queue" data-list-top [class.is-paging]="paging()" [attr.aria-busy]="paging()">
         @for (appeal of appeals(); track appeal.appealId) {
           <li class="queue-card">
             <header>
@@ -201,15 +201,7 @@
     }
 
     @if (pages() > 1) {
-      <nav class="pagination" aria-label="Phân trang">
-        <button type="button" class="secondary" [disabled]="page() === 0" (click)="goToPage(page() - 1)">
-          <lucide-icon name="chevron-left" /> Trước
-        </button>
-        <span>{{ page() + 1 }} / {{ pages() }}</span>
-        <button type="button" class="secondary" [disabled]="page() + 1 >= pages()" (click)="goToPage(page() + 1)">
-          Sau <lucide-icon name="chevron-right" />
-        </button>
-      </nav>
+      <app-pagination [pageIndex]="page()" [pageSize]="pageSize" [totalItems]="total()" (pageChange)="goToPage($event)" />
     }
   }
 </main>

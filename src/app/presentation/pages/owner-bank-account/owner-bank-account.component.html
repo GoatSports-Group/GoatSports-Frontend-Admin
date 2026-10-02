@@ -18,9 +18,12 @@
   }
   @if (withdrawals().length) {
     <section class="history"><h2><app-lucide-icon name="history" /> Lịch sử rút tiền</h2>
-      @for (item of withdrawals(); track item.settlementId) {
+      @for (item of withdrawals() | slice:0:withdrawalsShown(); track item.settlementId) {
         <div class="history-row"><div><b>{{ money(item.amount) }}</b><span>{{ item.requestedAt | date: 'dd/MM/yyyy HH:mm' }} · {{ item.destinationAccount }}</span>@if (item.status === 'FAILED' && item.failureReason) { <em>{{ item.failureReason }}</em> }</div>
           <span class="pill" [class.green]="item.status === 'PAID'" [class.red]="item.status === 'FAILED' || item.status === 'CANCELLED'">{{ withdrawalStatus(item.status) }}</span></div>
+      }
+      @if (withdrawals().length > withdrawalsShown()) {
+        <div class="list-sentinel" appInfiniteScroll (reached)="withdrawalsShown.update(count => count + listChunk)" aria-hidden="true"></div>
       }
     </section>
   }

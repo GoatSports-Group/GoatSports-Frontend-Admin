@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { InfiniteScrollDirective, LIST_CHUNK } from '@shared/directives/infinite-scroll.directive';
 import { CommonModule } from '@angular/common';
 import { OwnerApplication, OwnerApplicationStatus } from '@application/dto/owner-application/owner-application.dto';
 import { GetMyOwnerApplicationsUseCase } from '@application/usecase/owner-application/get-my-owner-applications.usecase';
@@ -17,7 +18,7 @@ import { VenueOwnerApplicationFormComponent } from './venue-owner-application-fo
 @Component({
   selector: 'app-venue-owner-applications',
   standalone: true,
-  imports: [
+  imports: [InfiniteScrollDirective, 
     CommonModule,
     LucideIconComponent,
     PageLoadingComponent,
@@ -29,7 +30,6 @@ import { VenueOwnerApplicationFormComponent } from './venue-owner-application-fo
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class VenueOwnerApplicationsComponent implements OnInit {
-  private readonly pageSize = 5;
   private readonly getApplications = inject(GetMyOwnerApplicationsUseCase);
   private readonly notify = inject(NotifyService);
 
@@ -41,7 +41,8 @@ export class VenueOwnerApplicationsComponent implements OnInit {
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   readonly searchQuery = signal('');
-  readonly currentPage = signal(1);
+  /** Danh sach ho so trong cot ben cuon doc va render dan tung LIST_CHUNK muc. */
+  readonly shown = signal(LIST_CHUNK);
   readonly selectedApplicationId = signal<string | null>(null);
   readonly hasPendingApplication = computed(() => this.applications().some(
     application => application.status === OwnerApplicationStatus.PENDING
@@ -57,11 +58,7 @@ export class VenueOwnerApplicationsComponent implements OnInit {
       this.getStatusLabel(application.status)
     ].some(value => value.toLocaleLowerCase('vi').includes(query)));
   });
-  readonly totalPages = computed(() => Math.max(1, Math.ceil(this.filteredApplications().length / this.pageSize)));
-  readonly pagedApplications = computed(() => {
-    const start = (this.currentPage() - 1) * this.pageSize;
-    return this.filteredApplications().slice(start, start + this.pageSize);
-  });
+  readonly pagedApplications = computed(() => this.filteredApplications().slice(0, this.shown()));
   readonly selectedApplication = computed(() => {
     const visibleApplications = this.filteredApplications();
     return visibleApplications.find(application => application.ownerApplicationId === this.selectedApplicationId())
@@ -96,7 +93,7 @@ export class VenueOwnerApplicationsComponent implements OnInit {
 
   updateSearch(query: string): void {
     this.searchQuery.set(query);
-    this.currentPage.set(1);
+    this.shown.set(LIST_CHUNK);
     const firstMatch = this.filteredApplications()[0];
     this.selectedApplicationId.set(firstMatch?.ownerApplicationId ?? null);
   }
@@ -105,16 +102,8 @@ export class VenueOwnerApplicationsComponent implements OnInit {
     this.selectedApplicationId.set(application.ownerApplicationId);
   }
 
-  previousPage(): void {
-    if (this.currentPage() <= 1) return;
-    this.currentPage.update(page => page - 1);
-    this.selectFirstApplicationOnPage();
-  }
-
-  nextPage(): void {
-    if (this.currentPage() >= this.totalPages()) return;
-    this.currentPage.update(page => page + 1);
-    this.selectFirstApplicationOnPage();
+  showMore(): void {
+    this.shown.update(count => count + LIST_CHUNK);
   }
 
   getStatusIcon(status: OwnerApplicationStatus): string {
@@ -135,7 +124,7 @@ export class VenueOwnerApplicationsComponent implements OnInit {
       next: response => {
         const applications = this.newestFirst(response.result ?? []);
         this.applications.set(applications);
-        this.currentPage.set(1);
+        this.shown.set(LIST_CHUNK);
         this.selectedApplicationId.set(applications[0]?.ownerApplicationId ?? null);
         this.loading.set(false);
       },
@@ -151,10 +140,6 @@ export class VenueOwnerApplicationsComponent implements OnInit {
     return [...applications].sort((left, right) =>
       this.timestamp(right.createdAt) - this.timestamp(left.createdAt)
     );
-  }
-
-  private selectFirstApplicationOnPage(): void {
-    this.selectedApplicationId.set(this.pagedApplications()[0]?.ownerApplicationId ?? null);
   }
 
   private timestamp(value?: string): number {

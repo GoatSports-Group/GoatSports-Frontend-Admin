@@ -66,20 +66,13 @@
           <span>Thử tìm bằng tên hoặc khu vực khác.</span>
         </div>
         }
+        @if (filteredVenues().length > venueShown()) {
+        <div class="list-sentinel" appInfiniteScroll (reached)="showMoreVenues()" aria-hidden="true"></div>
+        }
       </nav>
 
       <footer class="venue-selector__footer">
-        <p>Hiển thị <strong>{{ pagedVenues().length }}/{{ filteredVenues().length }}</strong> cơ sở</p>
-        <nav aria-label="Phân trang danh sách cơ sở">
-          <button type="button" (click)="previousVenuePage()" [disabled]="venuePage() === 1" aria-label="Trang trước">
-            <lucide-icon name="chevron-left" />
-          </button>
-          <span>{{ venuePage() }}</span>
-          <button type="button" (click)="nextVenuePage()" [disabled]="venuePage() === venuePageCount()"
-            aria-label="Trang sau">
-            <lucide-icon name="chevron-right" />
-          </button>
-        </nav>
+        <p><strong>{{ filteredVenues().length }}</strong> cơ sở</p>
       </footer>
     </aside>
 

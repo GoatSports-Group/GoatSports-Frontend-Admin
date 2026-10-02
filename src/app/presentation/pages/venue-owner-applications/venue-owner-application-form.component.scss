@@ -446,8 +446,8 @@
   inset: 0;
   place-items: center;
   padding: 24px;
-  background: rgb(7 20 17 / 76%);
-  backdrop-filter: blur(5px);
+  background: rgb(16 26 44 / 55%);
+  backdrop-filter: blur(3px);
 }
 
 .face-modal {
@@ -455,7 +455,7 @@
   max-height: calc(100vh - 48px);
   overflow-y: auto;
   border: 1px solid rgb(255 255 255 / 18%);
-  border-radius: 18px;
+  border-radius: 24px;
   background: var(--surface);
   box-shadow: 0 28px 80px rgb(0 0 0 / 32%);
 }

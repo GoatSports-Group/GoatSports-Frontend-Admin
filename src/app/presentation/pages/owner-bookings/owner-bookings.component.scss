@@ -517,8 +517,8 @@ button:disabled {
   z-index: 1000;
   display: flex;
   justify-content: flex-end;
-  background: rgba(15, 23, 42, .42);
-  backdrop-filter: blur(4px);
+  background: rgb(16 26 44 / 55%);
+  backdrop-filter: blur(3px);
 }
 
 .detail-panel {
@@ -782,8 +782,8 @@ button:disabled {
   place-items: center;
   padding: 20px;
   overflow-y: auto;
-  background: rgba(15, 23, 42, .52);
-  backdrop-filter: blur(5px);
+  background: rgb(16 26 44 / 55%);
+  backdrop-filter: blur(3px);
 }
 
 .booking-modal,
@@ -1296,7 +1296,7 @@ button:disabled {
   .booking-modal,
   .payment-modal {
     max-height: calc(100vh - 20px);
-    border-radius: 18px;
+    border-radius: 24px;
   }
 
   .modal-header,
@@ -2596,7 +2596,7 @@ button:disabled {
 .report-preview-backdrop {
   padding: 20px;
   overflow: hidden;
-  background: rgba(6, 32, 25, .68);
+  background: rgb(16 26 44 / 55%); backdrop-filter: blur(3px);
 }
 
 .report-preview-modal {
@@ -2826,7 +2826,7 @@ button:disabled {
   z-index: 1120;
   padding: 16px;
   overflow: hidden;
-  background: rgba(8, 38, 30, .58);
+  background: rgb(16 26 44 / 55%); backdrop-filter: blur(3px);
 }
 
 .booking-detail-modal {
@@ -2837,7 +2837,7 @@ button:disabled {
   min-height: 0;
   overflow: hidden;
   border: 1px solid var(--border-strong);
-  border-radius: 18px;
+  border-radius: 24px;
   background: var(--surface);
   box-shadow: 0 28px 80px rgba(3, 35, 26, .3);
 }
@@ -3134,7 +3134,7 @@ button:disabled {
 
   .booking-detail-modal {
     height: calc(100vh - 16px);
-    border-radius: 14px;
+    border-radius: 24px;
   }
 
   .booking-detail-modal .booking-overview {

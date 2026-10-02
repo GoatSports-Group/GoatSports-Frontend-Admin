@@ -139,6 +139,14 @@ h1 {
   display: grid;
   align-content: start;
   border-top: 1px solid var(--hairline);
+  /* Cuon trong cot ben (GOAT-DESIGN Scroll areas): lap day cot, mep duoi mo. */
+  flex: 1 1 0;
+  height: 0;
+  min-height: 390px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  grid-auto-rows: max-content;
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
 }
 
 .venue-option {
@@ -326,40 +334,6 @@ h1 {
   color: var(--venue-muted);
   font-size: 13px;
   line-height: 1.5;
-}
-
-.venue-selector__footer nav {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.venue-selector__footer nav button,
-.venue-selector__footer nav span {
-  display: grid;
-  width: 32px;
-  height: 32px;
-  place-items: center;
-  border-radius: 8px;
-}
-
-.venue-selector__footer nav button {
-  cursor: pointer;
-  border: 1px solid var(--venue-border);
-  background: var(--surface);
-  color: var(--body);
-}
-
-.venue-selector__footer nav button:disabled {
-  cursor: not-allowed;
-  opacity: .42;
-}
-
-.venue-selector__footer nav span {
-  background: var(--primary-fill);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 750;
 }
 
 .venue-editor {

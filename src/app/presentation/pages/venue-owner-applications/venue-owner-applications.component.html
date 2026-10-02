@@ -71,23 +71,14 @@
             <app-lucide-icon class="application-list__chevron" name="chevron-right" [size]="17" aria-hidden="true" />
           </button>
           }
+          @if (filteredApplications().length > shown()) {
+          <div class="list-sentinel" appInfiniteScroll (reached)="showMore()" aria-hidden="true"></div>
+          }
         </div>
         }
 
         <footer class="application-browser__footer">
-          <p>Hiển thị {{ pagedApplications().length }} trong tổng số {{ filteredApplications().length }} hồ sơ</p>
-          @if (totalPages() > 1) {
-          <nav aria-label="Phân trang hồ sơ">
-            <button type="button" aria-label="Trang trước" [disabled]="currentPage() === 1" (click)="previousPage()">
-              <app-lucide-icon name="chevron-left" [size]="17" />
-            </button>
-            <span aria-current="page">{{ currentPage() }}</span>
-            <button type="button" aria-label="Trang sau" [disabled]="currentPage() === totalPages()"
-              (click)="nextPage()">
-              <app-lucide-icon name="chevron-right" [size]="17" />
-            </button>
-          </nav>
-          }
+          <p>{{ filteredApplications().length }} hồ sơ</p>
         </footer>
       </aside>
 

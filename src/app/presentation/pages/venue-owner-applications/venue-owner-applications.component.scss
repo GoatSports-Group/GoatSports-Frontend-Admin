@@ -162,6 +162,15 @@
 .application-list {
   display: grid;
   border-top: 1px solid var(--hairline);
+  align-content: start;
+  /* Cuon trong cot ben (GOAT-DESIGN Scroll areas): lap day cot, mep duoi mo. */
+  flex: 1 1 0;
+  height: 0;
+  min-height: 390px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  grid-auto-rows: max-content;
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
 }
 
 .application-list__item {
@@ -285,44 +294,6 @@
     line-height: 1.5;
   }
 
-  nav {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  nav button,
-  nav span {
-    display: grid;
-    width: 44px;
-    height: 44px;
-    place-items: center;
-    border-radius: 8px;
-  }
-
-  nav button {
-    cursor: pointer;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--body);
-  }
-
-  nav button:disabled {
-    cursor: not-allowed;
-    opacity: .4;
-  }
-
-  nav button:focus-visible {
-    outline: 3px solid rgb(5 150 105 / 18%);
-    outline-offset: 2px;
-  }
-
-  nav span {
-    background: var(--primary-fill);
-    color: #fff;
-    font-size: 13px;
-    font-weight: 700;
-  }
 }
 
 .application-browser__empty {
@@ -709,8 +680,10 @@
   }
 
   .application-list {
+    flex: none;
+    height: auto;
+    min-height: 0;
     max-height: 286px;
-    overflow-y: auto;
   }
 
   .application-browser__footer {

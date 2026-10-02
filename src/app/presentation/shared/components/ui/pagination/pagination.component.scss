@@ -1,5 +1,109 @@
-/* Pagination Styles */
+// Tokens: GOAT-DESIGN.md §6 Pagination (44px controls, radius 12, current page = primary, card radius 16).
 :host {
   display: block;
-  width: 100%;
+}
+
+.pagination {
+  display: flex;
+  min-height: 68px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px 12px 20px;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+.pagination__summary {
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.pagination__controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pagination__button,
+.pagination__ellipsis {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  place-items: center;
+}
+
+.pagination__button {
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text-dark);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: border-color .2s ease, background-color .2s ease, color .2s ease;
+}
+
+.pagination__button:hover:not(:disabled):not(.pagination__button--active) {
+  border-color: var(--border-strong);
+  color: var(--primary);
+}
+
+.pagination__button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.pagination__button--active {
+  border-color: var(--primary);
+  background: var(--primary-fill);
+  color: #fff;
+}
+
+.pagination__button:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+.pagination__ellipsis {
+  color: var(--text-muted);
+  font-weight: 800;
+}
+
+@media (max-width: 640px) {
+  .pagination {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 12px;
+  }
+
+  .pagination__summary {
+    text-align: center;
+  }
+
+  .pagination__controls {
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .pagination__button,
+  .pagination__ellipsis {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+  }
+}
+
+// Thanh day ben trong mot the bang co san: bo khung the, chi giu duong ke tren.
+:host(.is-embedded) .pagination {
+  border: 0;
+  border-top: 1px solid var(--border-color);
+  border-radius: 0;
+  background: transparent;
 }

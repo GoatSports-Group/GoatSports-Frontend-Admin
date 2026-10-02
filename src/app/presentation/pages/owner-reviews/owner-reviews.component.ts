@@ -9,11 +9,12 @@ import { GetOwnerReviewsUseCase } from '@application/usecase/owner-review/get-ow
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-loading.component';
+import { PaginationComponent } from '@shared/components/ui/pagination/pagination.component';
 
 @Component({
   selector: 'app-owner-reviews',
   standalone: true,
-  imports: [LucideIconComponent, PageLoadingComponent],
+  imports: [LucideIconComponent, PageLoadingComponent, PaginationComponent],
   templateUrl: './owner-reviews.component.html',
   styleUrl: './owner-reviews.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -32,6 +33,9 @@ export class OwnerReviewsComponent {
   readonly fromDate = signal(this.monthStart());
   readonly toDate = signal(this.today());
   readonly total = signal(0);
+  readonly pageSize = 12;
+  /** Doi trang: giu trang hien tai (lam mo) thay vi skeleton. */
+  readonly paging = signal(false);
   readonly page = signal(0);
   readonly pages = signal(0);
   readonly loading = signal(false);
@@ -91,8 +95,14 @@ export class OwnerReviewsComponent {
   }
 
   goToPage(page: number): void {
-    if (page < 0 || page >= this.pages() || page === this.page()) return;
-    this.loadReviews(page);
+    if (page < 0 || page >= this.pages() || page === this.page() || this.paging()) return;
+    this.paging.set(true);
+    this.getReviews.execute(this.filter(page)).pipe(
+      take(1), takeUntilDestroyed(this.destroyRef), finalize(() => this.paging.set(false))
+    ).subscribe({
+      next: result => { this.applyPage(result); queueMicrotask(() => this.scrollListIntoView()); },
+      error: error => this.fail(error)
+    });
   }
 
   statusLabel(status: string): string {
@@ -136,7 +146,7 @@ export class OwnerReviewsComponent {
       rating: this.selectedRating() ?? undefined,
       fromDate: this.fromDate() || undefined,
       toDate: this.toDate() || undefined,
-      page, size: 12
+      page, size: this.pageSize
     };
   }
   private today(): string { return this.localDate(new Date()); }
@@ -150,5 +160,11 @@ export class OwnerReviewsComponent {
     const start = new Date(`${this.fromDate()}T00:00:00`);
     const end = new Date(`${this.toDate()}T00:00:00`);
     return Math.floor((end.getTime() - start.getTime()) / 86_400_000) + 1;
+  }
+
+  /** Doi trang xong: dua dau danh sach vao tam nhin neu no da troi len tren. */
+  private scrollListIntoView(): void {
+    const element = document.querySelector<HTMLElement>('[data-list-top]');
+    if (element && element.getBoundingClientRect().top < 0) element.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 }
