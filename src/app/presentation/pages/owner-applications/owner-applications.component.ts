@@ -1,3 +1,4 @@
+import { PAGE_SIZE } from '@shared/constants/page-size';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -75,7 +76,7 @@ export class OwnerApplicationsComponent implements OnInit {
   searchQuery = '';
 
   totalItems = 0;
-  pageSize = 10;
+  pageSize = PAGE_SIZE.table;
   pageIndex = 0;
 
   ngOnInit() {

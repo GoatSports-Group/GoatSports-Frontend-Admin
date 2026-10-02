@@ -1,3 +1,4 @@
+import { PAGE_SIZE } from '@shared/constants/page-size';
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -33,7 +34,7 @@ export class AssignPermissionsComponent implements OnInit {
   searchQuery = '';
 
   totalItems = 0;
-  pageSize = 10;
+  pageSize = PAGE_SIZE.table;
   pageIndex = 0;
 
   ngOnInit(): void {
@@ -62,11 +63,7 @@ export class AssignPermissionsComponent implements OnInit {
           this.selectedPermissionIds = new Set(this.role?.permissions?.map(p => p.permissionId) || []);
           this.permissions = res.permissionsPage.result || [];
 
-          if (this.permissions.length < this.pageSize) {
-            this.totalItems = this.pageIndex * this.pageSize + this.permissions.length;
-          } else {
-            this.totalItems = (this.pageIndex + 2) * this.pageSize;
-          }
+          this.totalItems = res.permissionsPage.meta?.total ?? this.permissions.length;
           this.loading = false;
         },
         error: (err) => this.handleLoadError(err)
@@ -79,11 +76,7 @@ export class AssignPermissionsComponent implements OnInit {
       }).subscribe({
         next: (res) => {
           this.permissions = res.result || [];
-          if (res.result.length < this.pageSize) {
-            this.totalItems = this.pageIndex * this.pageSize + res.result.length;
-          } else {
-            this.totalItems = (this.pageIndex + 2) * this.pageSize;
-          }
+          this.totalItems = res.meta?.total ?? this.permissions.length;
           this.loading = false;
         },
         error: (err) => this.handleLoadError(err)

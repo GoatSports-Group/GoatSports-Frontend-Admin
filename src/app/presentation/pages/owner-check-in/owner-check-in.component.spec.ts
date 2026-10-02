@@ -93,7 +93,7 @@ describe('OwnerCheckInComponent', () => {
     expect(manageCourts.list).toHaveBeenCalledWith('venue-1');
     expect(manageSchedule.listSlots).toHaveBeenCalledWith('court-1', expect.any(String), expect.any(String));
     expect(manageCheckIn.history).toHaveBeenCalledWith(expect.objectContaining({
-      venueId: 'venue-1', venueCourtId: 'court-1', page: 0, size: 10
+      venueId: 'venue-1', venueCourtId: 'court-1', page: 0, size: 20
     }));
     expect(fixture.componentInstance.availableSlots()).toEqual([slot]);
     expect(fixture.nativeElement.textContent).toContain('Check-in khách');

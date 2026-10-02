@@ -1,3 +1,4 @@
+import { PAGE_SIZE } from '@shared/constants/page-size';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
@@ -35,7 +36,7 @@ export class OwnerTournamentsComponent {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
-  readonly pageSize = 10;
+  readonly pageSize = PAGE_SIZE.table;
   readonly sportLabel = SPORT_LABEL;
   readonly formatLabel = FORMAT_LABEL;
   readonly statusMeta = STATUS_META;

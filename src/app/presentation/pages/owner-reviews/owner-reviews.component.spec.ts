@@ -48,7 +48,7 @@ describe('OwnerReviewsComponent', () => {
     fixture.detectChanges();
 
     expect(getReviews.execute).toHaveBeenCalledWith(expect.objectContaining({
-      venueId: undefined, venueCourtId: undefined, page: 0, size: 12
+      venueId: undefined, venueCourtId: undefined, page: 0, size: 20
     }));
     expect(fixture.nativeElement.textContent).toContain('Sân sạch và đúng giờ');
     expect(fixture.nativeElement.textContent).toContain('GS123456');
@@ -67,7 +67,7 @@ describe('OwnerReviewsComponent', () => {
 
     expect(getReviews.execute).toHaveBeenLastCalledWith({
       venueId: 'venue-1', venueCourtId: 'court-1', rating: 4,
-      fromDate: '2026-08-01', toDate: '2026-08-30', page: 0, size: 12
+      fromDate: '2026-08-01', toDate: '2026-08-30', page: 0, size: 20
     });
   });
 

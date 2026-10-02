@@ -1,3 +1,4 @@
+import { PAGE_SIZE } from '@shared/constants/page-size';
 import { Component, OnInit, inject, ViewChild, TemplateRef, ViewContainerRef } from '@angular/core';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { AssignRoleDialogComponent } from '@presentation/pages/users/assign-role-dialog/assign-role-dialog.component';
@@ -7,6 +8,7 @@ import { TemplatePortal } from '@angular/cdk/portal';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { User } from '@application/dto/user/user.dto';
+import { ADMIN_STATS_REPOSITORY_TOKEN } from '@application/ports/persistence/admin-stats.repository';
 import { UserService } from '@presentation/services/user.service';
 import { getDisplayAvatar, getGenderLabel, getRoleLabel } from '@shared/utils/user-display.utils';
 
@@ -28,6 +30,7 @@ export class UsersComponent implements OnInit {
   private dialog = inject(MatDialog);
   private snackBar = inject(NotifyService);
   private userAdminService = inject(UserService);
+  private statsRepository = inject(ADMIN_STATS_REPOSITORY_TOKEN);
 
   private overlayRef?: OverlayRef;
 
@@ -38,7 +41,7 @@ export class UsersComponent implements OnInit {
 
   // Pagination states
   totalItems = 0;
-  pageSize = 10;
+  pageSize = PAGE_SIZE.table;
   pageIndex = 0;
 
   // Custom filter models
@@ -47,15 +50,11 @@ export class UsersComponent implements OnInit {
   filterFromDate = '';
   filterToDate = '';
 
-  // Stats Card data
-  totalUsersCount = 0;
-  verifiedUsersCount = 0;
-  unverifiedUsersCount = 0;
-
-  statCards = [
-    { id: 'total', title: 'Tổng số tài khoản', count: 0, icon: 'users' },
-    { id: 'unverified', title: 'Chưa xác thực', count: 0, icon: 'shield-alert' },
-    { id: 'verified', title: 'Đã xác thực', count: 0, icon: 'check-circle' }
+  /** So dem that tu auth-service (/admin/stats/users, COUNT o DB); null = chua tai duoc, hien "—". */
+  statCards: Array<{ id: 'total' | 'unverified' | 'verified'; title: string; count: number | null; icon: string }> = [
+    { id: 'total', title: 'Tổng số tài khoản', count: null, icon: 'users' },
+    { id: 'unverified', title: 'Chưa xác thực', count: null, icon: 'shield-alert' },
+    { id: 'verified', title: 'Đã xác thực', count: null, icon: 'check-circle' }
   ];
 
   isCreateDrawerOpen = false;
@@ -121,43 +120,25 @@ export class UsersComponent implements OnInit {
     });
   }
 
+  /**
+   * Truoc day tai 1000 nguoi dung de dem o client va tu "dien" 15/12/3 khi rong hoac loi.
+   * Gio dem bang API thong ke: tong, ACTIVE (da xac thuc), PENDING (chua xac thuc). Loi thi hien "—".
+   */
   loadStats(): void {
-    this.userAdminService.getUsers({ page: 0, size: 1000 }).subscribe({
-      next: (response) => {
-        if (response && response.result) {
-          const allUsers = response.result || [];
-          this.totalUsersCount = allUsers.length;
-
-          this.verifiedUsersCount = allUsers.filter(u => u.status === 'ACTIVE' || u.status === 'ACTIVATED').length;
-          this.unverifiedUsersCount = allUsers.filter(u => u.status !== 'ACTIVE' && u.status !== 'ACTIVATED' && u.status !== 'DELETED').length;
-
-          if (this.totalUsersCount === 0) {
-            this.totalUsersCount = 15;
-            this.verifiedUsersCount = 12;
-            this.unverifiedUsersCount = 3;
-          }
-          this.updateStatCards();
-        }
-      },
-      error: (err) => {
-        console.error('Failed to load stats:', err);
-        this.totalUsersCount = 15;
-        this.verifiedUsersCount = 12;
-        this.unverifiedUsersCount = 3;
-        this.updateStatCards();
-      }
+    const today = new Date();
+    const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    this.statsRepository.getUserStats(iso, iso).subscribe({
+      next: stats => this.setStatCounts({
+        total: stats.total,
+        verified: stats.byStatus['ACTIVE'] ?? 0,
+        unverified: stats.byStatus['PENDING'] ?? 0
+      }),
+      error: () => this.setStatCounts({ total: null, verified: null, unverified: null })
     });
   }
 
-  updateStatCards(): void {
-    const totalCard = this.statCards.find(c => c.id === 'total');
-    if (totalCard) totalCard.count = this.totalUsersCount;
-
-    const unverifiedCard = this.statCards.find(c => c.id === 'unverified');
-    if (unverifiedCard) unverifiedCard.count = this.unverifiedUsersCount;
-
-    const verifiedCard = this.statCards.find(c => c.id === 'verified');
-    if (verifiedCard) verifiedCard.count = this.verifiedUsersCount;
+  private setStatCounts(counts: Record<'total' | 'verified' | 'unverified', number | null>): void {
+    this.statCards = this.statCards.map(card => ({ ...card, count: counts[card.id] }));
   }
 
   onSearch(): void {

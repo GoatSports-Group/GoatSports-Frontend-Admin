@@ -1,3 +1,4 @@
+import { PAGE_SIZE } from '@shared/constants/page-size';
 import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -38,7 +39,7 @@ export class AdminBookingsComponent implements OnInit {
   private readonly search$ = new Subject<string>();
   private request?: Subscription;
 
-  readonly pageSize = 20;
+  readonly pageSize = PAGE_SIZE.table;
   readonly statusMeta = STATUS_META;
   readonly statusTabs = Object.keys(STATUS_META) as OwnerBookingStatus[];
 

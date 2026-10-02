@@ -120,6 +120,7 @@ export class VenueOwnerApplicationsComponent implements OnInit {
   loadApplications(showLoading = true): void {
     if (showLoading) this.loading.set(true);
     this.error.set(null);
+    // ponytail: ho so cua chinh chu san (thuc te vai ho so) nen tai mot lan 100; tim kiem tai client.
     this.getApplications.execute({ page: 0, size: 100 }).subscribe({
       next: response => {
         const applications = this.newestFirst(response.result ?? []);

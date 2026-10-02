@@ -1,3 +1,4 @@
+import { PAGE_SIZE } from '@shared/constants/page-size';
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
@@ -38,7 +39,7 @@ export class PlatformVenuesComponent implements OnInit {
   private readonly search$ = new Subject<string>();
   private request?: Subscription;
 
-  readonly pageSize = 20;
+  readonly pageSize = PAGE_SIZE.table;
   readonly tabs = STATUS_TABS;
   readonly minReason = 10;
 

@@ -1,3 +1,4 @@
+import { PAGE_SIZE } from '@shared/constants/page-size';
 import { FormsModule } from '@angular/forms';
 import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
 import {
@@ -35,7 +36,7 @@ export class OwnerReviewsComponent {
   readonly fromDate = signal(this.monthStart());
   readonly toDate = signal(this.today());
   readonly total = signal(0);
-  readonly pageSize = 12;
+  readonly pageSize = PAGE_SIZE.table;
   /** Doi trang: giu trang hien tai (lam mo) thay vi skeleton. */
   readonly paging = signal(false);
   readonly page = signal(0);

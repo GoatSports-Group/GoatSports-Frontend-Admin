@@ -1,3 +1,4 @@
+import { PAGE_SIZE } from '@shared/constants/page-size';
 import {
   ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal
 } from '@angular/core';
@@ -28,7 +29,7 @@ interface ActionChoice {
   readonly hint: string;
 }
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE_TABLE = PAGE_SIZE.table;
 const MIN_REASON = 10;
 
 @Component({
@@ -40,7 +41,7 @@ const MIN_REASON = 10;
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ModerationComponent {
-  readonly pageSize = PAGE_SIZE;
+  readonly pageSize = PAGE_SIZE_TABLE;
   private readonly getReports = inject(GetReportQueueUseCase);
   private readonly actOnReport = inject(ActOnReportUseCase);
   private readonly getAppeals = inject(GetAppealQueueUseCase);
@@ -110,7 +111,7 @@ export class ModerationComponent {
     const filter = {
       status: this.currentStatusFilter(),
       page,
-      size: PAGE_SIZE
+      size: PAGE_SIZE_TABLE
     };
     const request$: Observable<ModerationPage<ContentReport | ContentAppeal>> =
       this.lane() === 'REPORTS'

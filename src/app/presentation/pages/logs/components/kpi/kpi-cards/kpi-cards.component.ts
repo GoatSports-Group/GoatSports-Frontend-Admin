@@ -28,21 +28,21 @@ export class KpiCardsComponent implements OnChanges {
     this.statCards = [
       {
         id: 'total',
-        title: 'Tổng số yêu cầu',
+        title: 'Yêu cầu hôm nay',
         count: this.stats.totalRequests.toLocaleString('vi-VN'),
         icon: 'activity',
         iconColor: 'text-emerald-500'
       },
       {
         id: 'error',
-        title: 'Tỷ lệ lỗi',
+        title: 'Tỷ lệ lỗi hôm nay',
         count: this.stats.errorRate.toFixed(2) + '%',
         icon: 'alert-triangle',
         iconColor: 'text-rose-500'
       },
       {
         id: 'actions',
-        title: 'Loại nghiệp vụ',
+        title: 'Loại nghiệp vụ hôm nay',
         count: this.stats.activeApis.toLocaleString('vi-VN'),
         icon: 'layout-grid',
         iconColor: 'text-amber-500'

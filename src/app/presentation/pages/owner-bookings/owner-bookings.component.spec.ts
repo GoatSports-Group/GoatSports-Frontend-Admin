@@ -70,7 +70,7 @@ describe('OwnerBookingsComponent', () => {
     fixture.detectChanges();
 
     expect(manageBookings.list).toHaveBeenCalledWith(expect.objectContaining({
-      venueId: undefined, venueCourtId: undefined, page: 0, size: 12
+      venueId: undefined, venueCourtId: undefined, page: 0, size: 20
     }));
     expect(fixture.nativeElement.textContent).toContain('GS123456');
     expect(fixture.nativeElement.textContent).toContain('Chưa thanh toán đủ');

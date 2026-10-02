@@ -1,29 +1,13 @@
 import { Log } from '@application/dto/log/log.dto';
+import { LogStatsResult } from '@application/dto/log/log-stats.dto';
 import { ChartDataPoint, LogStats } from './components/models';
 import { LogFilters } from './logs.models';
 
-const EMPTY_LOG_STATS: LogStats = {
-  totalRequests: 125483,
-  errorRate: 0.62,
-  avgResponseTime: 183,
-  p95ResponseTime: 652,
-  p99ResponseTime: 914,
-  maxResponseTime: 1250,
-  activeUsers: 328,
-  activeApis: 126,
-  trafficTrend: [
-    { label: '09:00:00', value: 120 },
-    { label: '10:00:00', value: 240 },
-    { label: '11:00:00', value: 180 },
-    { label: '12:00:00', value: 310 },
-    { label: '13:00:00', value: 290 },
-    { label: '14:00:00', value: 450 },
-    { label: '15:00:00', value: 380 },
-    { label: '16:00:00', value: 220 },
-    { label: '17:00:00', value: 170 },
-    { label: '18:00:00', value: 290 }
-  ],
-  statusDistribution: { status2xx: 485, status3xx: 10, status4xx: 4, status5xx: 1 }
+/** Chua co du lieu: tat ca bang 0 (khong bao gio dien so minh hoa). */
+export const EMPTY_LOG_STATS: LogStats = {
+  totalRequests: 0, errorRate: 0, avgResponseTime: 0, p95ResponseTime: 0, p99ResponseTime: 0, maxResponseTime: 0,
+  activeUsers: 0, activeApis: 0, trafficTrend: [],
+  statusDistribution: { status2xx: 0, status3xx: 0, status4xx: 0, status5xx: 0 }
 };
 
 export function buildLogFilter(filters: LogFilters): string {
@@ -47,63 +31,34 @@ export function mergeUniqueLogActions(current: string[], logs: Log[]): string[] 
   return [...actions].sort();
 }
 
-export function computeLogStats(logs: Log[]): LogStats {
-  if (!logs.length) return { ...EMPTY_LOG_STATS };
-
-  const totalRequests = logs.length;
-  const uniqueUsers = new Set(logs.map(log => log.userId).filter(id => id && id !== 'anonymous'));
-  const uniqueApis = new Set(logs.map(log => log.action).filter(action => action?.trim()));
-
+/** Ket qua /logs/stats cho "hom nay" (bat dau 00:00 gio may) thanh du lieu cua KPI va bieu do. */
+export function toLogStats(result: LogStatsResult, dayStart: Date): LogStats {
+  const total = result.totalRequests;
   return {
-    totalRequests,
-    errorRate: logs.filter(log => log.statusCode >= 400).length / totalRequests * 100,
-    avgResponseTime: 0,
-    p95ResponseTime: 0,
-    p99ResponseTime: 0,
-    maxResponseTime: 0,
-    activeUsers: uniqueUsers.size || 328,
-    activeApis: uniqueApis.size || 12,
-    trafficTrend: generateTrafficTrend(logs),
+    ...EMPTY_LOG_STATS,
+    totalRequests: total,
+    errorRate: total ? result.errorRequests / total * 100 : 0,
+    activeUsers: result.activeUsers,
+    activeApis: result.actions.length,
+    trafficTrend: result.hourly.map((value, index) => {
+      const hour = new Date(dayStart.getTime() + index * 3_600_000).getHours();
+      return { label: `${String(hour).padStart(2, '0')}:00`, value };
+    }),
     statusDistribution: {
-      status2xx: countStatuses(logs, 200, 300),
-      status3xx: countStatuses(logs, 300, 400),
-      status4xx: countStatuses(logs, 400, 500),
-      status5xx: logs.filter(log => log.statusCode >= 500).length
+      status2xx: result.status2xx, status3xx: result.status3xx, status4xx: result.status4xx, status5xx: result.status5xx
     }
   };
 }
 
-export function generateTrafficTrend(logs: Log[], now = new Date()): ChartDataPoint[] {
-  const hourlyCounts = Array.from({ length: 24 }, (_, hour) => ({
-    label: `${String(hour).padStart(2, '0')}:00`,
-    value: 0
-  }));
-
-  logs.forEach(log => {
-    const date = parseUtcDate(log.timestamp);
-    if (!date || !isSameDay(date, now)) return;
-    hourlyCounts[date.getHours()].value++;
-  });
-
-  return hourlyCounts;
+/** [00:00 hom nay, 00:00 ngay mai) theo gio may, doi sang UTC 'yyyy-MM-ddTHH:mm:ss' nhu timestamp da luu. */
+export function todayUtcRange(now = new Date()): { from: string; to: string; dayStart: Date } {
+  const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dayEnd = new Date(dayStart.getTime() + 86_400_000);
+  const utc = (date: Date) => date.toISOString().slice(0, 19);
+  return { from: utc(dayStart), to: utc(dayEnd), dayStart };
 }
 
 function escapeFilterValue(value: string): string {
   return value.trim().replace(/'/g, "\\'");
 }
 
-function countStatuses(logs: Log[], min: number, max: number): number {
-  return logs.filter(log => log.statusCode >= min && log.statusCode < max).length;
-}
-
-function parseUtcDate(value: string): Date | null {
-  const normalized = value && !value.endsWith('Z') && !value.includes('+') ? `${value}Z` : value;
-  const date = new Date(normalized);
-  return Number.isNaN(date.getTime()) ? null : date;
-}
-
-function isSameDay(left: Date, right: Date): boolean {
-  return left.getFullYear() === right.getFullYear()
-    && left.getMonth() === right.getMonth()
-    && left.getDate() === right.getDate();
-}

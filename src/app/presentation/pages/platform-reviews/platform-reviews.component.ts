@@ -1,3 +1,4 @@
+import { PAGE_SIZE } from '@shared/constants/page-size';
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
@@ -39,7 +40,7 @@ export class PlatformReviewsComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private request?: Subscription;
 
-  readonly pageSize = 20;
+  readonly pageSize = PAGE_SIZE.table;
   readonly statusMeta = STATUS_META;
   readonly statusTabs = Object.keys(STATUS_META) as OwnerReviewStatus[];
   readonly ratingOptions: readonly SelectOption[] = [

@@ -1,3 +1,4 @@
+import { PAGE_SIZE } from '@shared/constants/page-size';
 import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
 import {
   ChangeDetectionStrategy,
@@ -224,7 +225,7 @@ export class OwnerCourtManagementComponent implements OnDestroy {
   readonly sportMenuOpen = signal(false);
   readonly actionMenuId = signal<string | null>(null);
   readonly page = signal(1);
-  readonly pageSize = 8;
+  readonly pageSize = PAGE_SIZE.grid;
   readonly sortKey = signal<'NAME' | 'STATUS' | 'PRICE'>('NAME');
   readonly sortDirection = signal<'ASC' | 'DESC'>('ASC');
 

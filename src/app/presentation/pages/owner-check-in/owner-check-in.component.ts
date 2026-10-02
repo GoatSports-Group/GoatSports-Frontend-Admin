@@ -1,3 +1,4 @@
+import { PAGE_SIZE } from '@shared/constants/page-size';
 import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
 import {
   ChangeDetectionStrategy,
@@ -81,7 +82,7 @@ export class OwnerCheckInComponent implements OnDestroy {
   readonly historyPage = signal(0);
   readonly historyPages = signal(0);
   readonly historyTotal = signal(0);
-  readonly historyPageSize = 10;
+  readonly historyPageSize = PAGE_SIZE.table;
   readonly reconciliation = signal<OwnerCheckInResult | null>(null);
   readonly reconciliationMethod = signal<CheckInMethod>('BOOKING_CODE');
   readonly loadingContext = signal(true);
@@ -489,7 +490,7 @@ export class OwnerCheckInComponent implements OnDestroy {
     return {
       date: this.historyDate() || undefined,
       page: this.historyPage(),
-      size: 10
+      size: this.historyPageSize
     };
   }
 

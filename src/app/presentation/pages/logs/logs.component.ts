@@ -1,9 +1,10 @@
+import { PAGE_SIZE } from '@shared/constants/page-size';
 import { Component, OnInit, inject } from '@angular/core';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { Log } from '@application/dto/log/log.dto';
 import { LogService } from '@presentation/services/log.service';
 import { LogStats } from './components/models';
-import { buildLogFilter, computeLogStats, mergeUniqueLogActions } from './logs.utils';
+import { EMPTY_LOG_STATS, buildLogFilter, mergeUniqueLogActions, toLogStats, todayUtcRange } from './logs.utils';
 
 @Component({
   selector: 'app-logs',
@@ -20,7 +21,7 @@ export class LogsComponent implements OnInit {
 
   // Pagination states
   totalItems = 0;
-  pageSize = 10;
+  pageSize = PAGE_SIZE.table;
   pageIndex = 0;
 
   // Custom filter models
@@ -79,20 +80,19 @@ export class LogsComponent implements OnInit {
     });
   }
 
+  /** KPI va bieu do cua hom nay, dem o audit-service (truoc day: mau 500 log gan nhat + so minh hoa khi rong). */
   loadStats(): void {
     this.loadingStats = true;
-
-    // Load last 500 logs to perform live stats calculations
-    this.logService.getLogs({ page: 0, size: 500 }).subscribe({
-      next: (response) => {
-        const allLogs = response?.result || [];
-        this.stats = computeLogStats(allLogs);
+    const { from, to, dayStart } = todayUtcRange();
+    this.logService.getStats(from, to).subscribe({
+      next: result => {
+        this.stats = toLogStats(result, dayStart);
+        this.uniqueActions = [...new Set([...this.uniqueActions, ...result.actions.map(action => action.toUpperCase())])].sort();
         this.loadingStats = false;
-        this.uniqueActions = mergeUniqueLogActions(this.uniqueActions, allLogs);
       },
       error: (err) => {
         console.error('Failed to load log stats:', err);
-        this.stats = computeLogStats([]);
+        this.stats = EMPTY_LOG_STATS;
         this.loadingStats = false;
       }
     });

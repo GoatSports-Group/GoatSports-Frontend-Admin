@@ -1,3 +1,5 @@
+import { PAGE_SIZE } from '@shared/constants/page-size';
+import { forkJoin } from 'rxjs';
 import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { RoleService } from '@presentation/services/role.service';
@@ -29,7 +31,7 @@ export class RolesComponent implements OnInit {
   searchQuery = '';
 
   totalItems = 0;
-  pageSize = 10;
+  pageSize = PAGE_SIZE.table;
   pageIndex = 0;
 
   // Stats Card data
@@ -47,16 +49,17 @@ export class RolesComponent implements OnInit {
     moveItemInArray(this.statCards, event.previousIndex, event.currentIndex);
   }
 
+  /** Dem bang meta.total cua hai truy van size=1 (tat ca / active) thay vi tai 1000 vai tro. */
   loadStats(): void {
-    this.roleAdminService.getRoles({ page: 0, size: 1000 }).subscribe({
-      next: (response) => {
-        if (response && response.result) {
-          const allRoles = response.result || [];
-          this.totalRolesCount = allRoles.length;
-          this.activeRolesCount = allRoles.filter(r => r.active).length;
-          this.inactiveRolesCount = allRoles.filter(r => !r.active).length;
-          this.updateStatCards();
-        }
+    forkJoin({
+      all: this.roleAdminService.getRoles({ page: 0, size: 1 }),
+      active: this.roleAdminService.getRoles({ page: 0, size: 1, filter: 'active : true' })
+    }).subscribe({
+      next: ({ all, active }) => {
+        this.totalRolesCount = all.meta?.total ?? 0;
+        this.activeRolesCount = active.meta?.total ?? 0;
+        this.inactiveRolesCount = Math.max(0, this.totalRolesCount - this.activeRolesCount);
+        this.updateStatCards();
       },
       error: (err) => {
         console.error('Failed to load role stats:', err);
@@ -90,11 +93,8 @@ export class RolesComponent implements OnInit {
       next: (response) => {
         this.roles = response.result || [];
 
-        if (this.roles.length < this.pageSize) {
-          this.totalItems = this.pageIndex * this.pageSize + this.roles.length;
-        } else {
-          this.totalItems = (this.pageIndex + 2) * this.pageSize;
-        }
+        // Tong that tu server (truoc day doan "(trang + 2) * size" nen pagination hien sai so trang).
+        this.totalItems = response.meta?.total ?? this.roles.length;
 
         this.loading = false;
       },

@@ -1,3 +1,4 @@
+import { PAGE_SIZE } from '@shared/constants/page-size';
 import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
@@ -43,7 +44,7 @@ type ResolvedPaymentMethod = 'CASH' | 'PAYOS';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OwnerBookingsComponent {
-  readonly pageSize = 12;
+  readonly pageSize = PAGE_SIZE.table;
   private readonly formBuilder = inject(FormBuilder);
   private readonly getVenues = inject(GetMyOwnerVenuesUseCase);
   private readonly manageCourts = inject(ManageOwnerVenueCourtsUseCase);
