@@ -1,3 +1,4 @@
+import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
@@ -29,7 +30,7 @@ interface Confirm { title: string; message: string; label: string; danger: boole
 @Component({
   selector: 'app-owner-tournament-detail',
   standalone: true,
-  imports: [DatePipe, FormsModule, RouterLink, LucideIconComponent, LoadingSkeletonComponent, OwnerTournamentFormComponent, SelectComponent],
+  imports: [DatePickerComponent, DatePipe, FormsModule, RouterLink, LucideIconComponent, LoadingSkeletonComponent, OwnerTournamentFormComponent, SelectComponent],
   templateUrl: './owner-tournament-detail.component.html',
   styleUrl: './owner-tournament-detail.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

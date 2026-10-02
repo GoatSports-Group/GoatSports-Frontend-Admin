@@ -30,8 +30,8 @@
         @for (star of stars; track star) { <option [value]="star">{{ star }} sao</option> }
       </select>
     </label>
-    <label>Từ ngày<input type="date" [value]="fromDate()" [disabled]="loading()" (change)="selectFromDate($event)" /></label>
-    <label>Đến ngày<input type="date" [value]="toDate()" [disabled]="loading()" (change)="selectToDate($event)" /></label>
+    <label>Từ ngày<app-date-picker ariaLabel="Từ ngày" [max]="toDate()" [ngModel]="fromDate()" [disabled]="loading()" (dateChange)="selectFromDate($event)"></app-date-picker></label>
+    <label>Đến ngày<app-date-picker ariaLabel="Đến ngày" [min]="fromDate()" [ngModel]="toDate()" [disabled]="loading()" (dateChange)="selectToDate($event)"></app-date-picker></label>
     <button type="button" class="primary" [disabled]="loading() || invalidRange() || !venues().length" (click)="loadReviews(0)">
       @if (loading()) { <lucide-icon name="loader-2" class="spin" /> Đang tải }
       @else { <lucide-icon name="filter" /> Áp dụng }

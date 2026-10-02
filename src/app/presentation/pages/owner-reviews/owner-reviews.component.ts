@@ -1,3 +1,5 @@
+import { FormsModule } from '@angular/forms';
+import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
 import {
   ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal
 } from '@angular/core';
@@ -14,7 +16,7 @@ import { PaginationComponent } from '@shared/components/ui/pagination/pagination
 @Component({
   selector: 'app-owner-reviews',
   standalone: true,
-  imports: [LucideIconComponent, PageLoadingComponent, PaginationComponent],
+  imports: [FormsModule, DatePickerComponent, LucideIconComponent, PageLoadingComponent, PaginationComponent],
   templateUrl: './owner-reviews.component.html',
   styleUrl: './owner-reviews.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -87,11 +89,11 @@ export class OwnerReviewsComponent {
     const value = (event.target as HTMLSelectElement).value;
     this.selectedRating.set(value ? Number(value) : null);
   }
-  selectFromDate(event: Event): void {
-    this.fromDate.set((event.target as HTMLInputElement).value);
+  selectFromDate(value: string): void {
+    this.fromDate.set(value);
   }
-  selectToDate(event: Event): void {
-    this.toDate.set((event.target as HTMLInputElement).value);
+  selectToDate(value: string): void {
+    this.toDate.set(value);
   }
 
   goToPage(page: number): void {

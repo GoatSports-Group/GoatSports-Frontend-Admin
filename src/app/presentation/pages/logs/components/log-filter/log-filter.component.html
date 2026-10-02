@@ -71,37 +71,15 @@
     <!-- Date From -->
     <div class="flex flex-col gap-1.5">
       <label class="text-sm font-bold text-emerald-800">Từ ngày</label>
-      <div class="relative w-full h-11 bg-slate-50/70 rounded-2xl flex items-center px-4 border-0 focus-within:ring-2 focus-within:ring-emerald-600 focus-within:bg-slate-100/80 transition-all cursor-pointer"
-           (click)="fromPicker.showPicker()">
-        <lucide-icon name="calendar" class="text-slate-400 h-4 w-4 mr-2.5 shrink-0"></lucide-icon>
-        <span class="text-xs font-semibold" [ngClass]="filterFromDate ? 'text-slate-800' : 'text-slate-400'">
-          {{ filterFromDate ? formatDateToVietnamese(filterFromDate) : 'dd/mm/yyyy' }}
-        </span>
-        <input type="date"
-               #fromPicker
-               [ngModel]="filterFromDate"
-               (ngModelChange)="filterFromDateChange.emit($event)"
-               (click)="$event.stopPropagation(); fromPicker.showPicker()"
-               class="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10" />
-      </div>
+      <app-date-picker ariaLabel="Từ ngày" placeholder="dd/mm/yyyy" [ngModel]="filterFromDate"
+        (ngModelChange)="filterFromDateChange.emit($event)"></app-date-picker>
     </div>
 
     <!-- Date To -->
     <div class="flex flex-col gap-1.5">
       <label class="text-sm font-bold text-emerald-800">Đến ngày</label>
-      <div class="relative w-full h-11 bg-slate-50/70 rounded-2xl flex items-center px-4 border-0 focus-within:ring-2 focus-within:ring-emerald-600 focus-within:bg-slate-100/80 transition-all cursor-pointer"
-           (click)="toPicker.showPicker()">
-        <lucide-icon name="calendar" class="text-slate-400 h-4 w-4 mr-2.5 shrink-0"></lucide-icon>
-        <span class="text-xs font-semibold" [ngClass]="filterToDate ? 'text-slate-800' : 'text-slate-400'">
-          {{ filterToDate ? formatDateToVietnamese(filterToDate) : 'dd/mm/yyyy' }}
-        </span>
-        <input type="date"
-               #toPicker
-               [ngModel]="filterToDate"
-               (ngModelChange)="filterToDateChange.emit($event)"
-               (click)="$event.stopPropagation(); toPicker.showPicker()"
-               class="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10" />
-      </div>
+      <app-date-picker ariaLabel="Đến ngày" placeholder="dd/mm/yyyy" [ngModel]="filterToDate"
+        (ngModelChange)="filterToDateChange.emit($event)"></app-date-picker>
     </div>
   </div>
 

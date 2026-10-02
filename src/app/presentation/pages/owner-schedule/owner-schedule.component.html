@@ -263,8 +263,8 @@
           <span>Sinh lịch từ bảng giá</span>
           <strong>{{ selectedCourt()?.name }}</strong>
         </div>
-        <label><span>Từ ngày</span><input type="date" formControlName="fromDate" /></label>
-        <label><span>Đến ngày</span><input type="date" formControlName="toDate" /></label>
+        <label><span>Từ ngày</span><app-date-picker ariaLabel="Từ ngày" formControlName="fromDate"></app-date-picker></label>
+        <label><span>Đến ngày</span><app-date-picker ariaLabel="Đến ngày" formControlName="toDate"></app-date-picker></label>
         <label><span>Thời lượng</span><select formControlName="slotDurationMinutes">
             <option [value]="30">30 phút</option>
             <option [value]="60">60 phút</option>
@@ -420,10 +420,10 @@
         <section class="editor-section">
           <h3>Thời gian hiệu lực</h3>
           <div class="editor-date-row">
-            <label><span>Từ ngày</span><input type="date" [attr.min]="ruleEffectiveFromMin()"
-                formControlName="effectiveFrom" /></label>
-            <label><span>Đến ngày</span><input type="date" [attr.min]="ruleForm.controls.effectiveFrom.value"
-                formControlName="effectiveTo" /></label>
+            <label><span>Từ ngày</span><app-date-picker ariaLabel="Hiệu lực từ ngày" [min]="ruleEffectiveFromMin()"
+                formControlName="effectiveFrom"></app-date-picker></label>
+            <label><span>Đến ngày</span><app-date-picker ariaLabel="Hiệu lực đến ngày" [min]="ruleForm.controls.effectiveFrom.value"
+                formControlName="effectiveTo"></app-date-picker></label>
           </div>
           <div class="rule-time-notice"
             [class.rule-time-notice--error]="ruleForm.hasError('pastEffectiveStart') || ruleForm.hasError('dayOutsideEffectiveRange') || ruleForm.hasError('pricingRuleOverlap')"

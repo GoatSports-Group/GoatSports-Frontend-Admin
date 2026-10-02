@@ -1,9 +1,3 @@
-export function formatInputDate(date: string): string {
-  if (!date) return '';
-  const parts = date.split('-');
-  return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : date;
-}
-
 export function formatLogTimestamp(date: string, dateFirst = false): string {
   if (!date) return '';
 

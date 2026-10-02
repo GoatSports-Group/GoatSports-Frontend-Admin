@@ -1,3 +1,4 @@
+import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -10,7 +11,7 @@ import {
   signal
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { EMPTY, Observable, expand, finalize, reduce, take } from 'rxjs';
 import { BrowserQRCodeReader, IScannerControls } from '@zxing/browser';
@@ -46,7 +47,7 @@ interface ResolvedCheckInScope {
 @Component({
   selector: 'app-owner-check-in',
   standalone: true,
-  imports: [LoadingSkeletonComponent, ReactiveFormsModule, LucideIconComponent, PaginationComponent, PageLoadingComponent],
+  imports: [FormsModule, DatePickerComponent, LoadingSkeletonComponent, ReactiveFormsModule, LucideIconComponent, PaginationComponent, PageLoadingComponent],
   templateUrl: './owner-check-in.component.html',
   styleUrl: './owner-check-in.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

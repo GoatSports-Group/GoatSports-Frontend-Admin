@@ -80,8 +80,8 @@
         <div class="revenue-actions">
           <label>
             <span class="sr-only">Chọn ngày thống kê doanh thu</span>
-            <input type="date" [value]="revenueDateDraft()" [max]="maximumRevenueDate"
-              [disabled]="dailyRevenueLoading()" (change)="selectRevenueDate($event)">
+            <app-date-picker ariaLabel="Ngày thống kê doanh thu" [clearable]="false" [ngModel]="revenueDateDraft()" [max]="maximumRevenueDate"
+              [disabled]="dailyRevenueLoading()" (dateChange)="selectRevenueDate($event)"></app-date-picker>
           </label>
           <button type="button" [disabled]="dailyRevenueLoading() || !revenueDateDraft()" (click)="applyRevenueDate()">
             <lucide-icon name="bar-chart-3" /> Thống kê

@@ -1,3 +1,4 @@
+import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
@@ -29,7 +30,7 @@ const STATUS_META: Record<OwnerBookingStatus, { label: string; tone: Tone }> = {
   styleUrls: ['./bookings.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [DatePipe, FormsModule, LucideIconComponent, LoadingSkeletonComponent, PaginationComponent]
+  imports: [DatePickerComponent, DatePipe, FormsModule, LucideIconComponent, LoadingSkeletonComponent, PaginationComponent]
 })
 export class AdminBookingsComponent implements OnInit {
   private readonly repository = inject(ADMIN_BOOKING_REPOSITORY_TOKEN);

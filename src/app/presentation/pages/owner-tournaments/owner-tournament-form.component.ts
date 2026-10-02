@@ -1,3 +1,4 @@
+import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
@@ -25,7 +26,7 @@ const RULE_TYPES: ReadonlyArray<SelectOption & { value: EligibilityRuleType }> =
 @Component({
   selector: 'app-owner-tournament-form',
   standalone: true,
-  imports: [FormsModule, LucideIconComponent, SelectComponent],
+  imports: [DatePickerComponent, FormsModule, LucideIconComponent, SelectComponent],
   templateUrl: './owner-tournament-form.component.html',
   styleUrl: './owner-tournament-form.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

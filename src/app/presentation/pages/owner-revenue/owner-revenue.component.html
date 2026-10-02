@@ -34,11 +34,11 @@
       </label>
       <label>
         <span>Từ ngày</span>
-        <input type="date" [value]="fromDate()" [disabled]="loading()" (change)="selectFromDate($event)" />
+        <app-date-picker ariaLabel="Từ ngày" [max]="toDate()" [ngModel]="fromDate()" [disabled]="loading()" (dateChange)="selectFromDate($event)"></app-date-picker>
       </label>
       <label>
         <span>Đến ngày</span>
-        <input type="date" [value]="toDate()" [disabled]="loading()" (change)="selectToDate($event)" />
+        <app-date-picker ariaLabel="Đến ngày" [min]="fromDate()" [ngModel]="toDate()" [disabled]="loading()" (dateChange)="selectToDate($event)"></app-date-picker>
       </label>
       <div class="filter-actions">
         <button type="button" class="primary apply-button"

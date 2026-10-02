@@ -121,13 +121,13 @@
           </div>
           <div class="grid grid--4">
             <label class="field"><span class="field__label">Mở đăng ký</span>
-              <input class="field__control" type="date" [(ngModel)]="form.registrationOpenDate" name="open" /></label>
+              <app-date-picker ariaLabel="Mở đăng ký" [max]="form.registrationCloseDate" [(ngModel)]="form.registrationOpenDate" name="open"></app-date-picker></label>
             <label class="field"><span class="field__label">Đóng đăng ký</span>
-              <input class="field__control" type="date" [(ngModel)]="form.registrationCloseDate" name="close" /></label>
+              <app-date-picker ariaLabel="Đóng đăng ký" [min]="form.registrationOpenDate" [max]="form.startDate" [(ngModel)]="form.registrationCloseDate" name="close"></app-date-picker></label>
             <label class="field"><span class="field__label">Khai mạc</span>
-              <input class="field__control" type="date" [(ngModel)]="form.startDate" (ngModelChange)="touch()" name="start" /></label>
+              <app-date-picker ariaLabel="Khai mạc" [min]="form.registrationCloseDate" [(ngModel)]="form.startDate" (ngModelChange)="touch()" name="start"></app-date-picker></label>
             <label class="field"><span class="field__label">Kết thúc</span>
-              <input class="field__control" type="date" [(ngModel)]="form.endDate" (ngModelChange)="touch()" name="end" /></label>
+              <app-date-picker ariaLabel="Kết thúc" [min]="form.startDate" [(ngModel)]="form.endDate" (ngModelChange)="touch()" name="end"></app-date-picker></label>
           </div>
           @if (errors().dates) { <span class="field__error" role="alert">{{ errors().dates }}</span> }
         </section>

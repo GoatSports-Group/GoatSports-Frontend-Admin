@@ -1,3 +1,5 @@
+import { By } from '@angular/platform-browser';
+import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { NEVER, of, Subject, throwError } from 'rxjs';
@@ -495,10 +497,12 @@ describe('VenueOwnerDashboardComponent', () => {
       fixture.detectChanges();
       getRevenue.execute.mockClear();
 
-      const input = fixture.nativeElement.querySelector('.revenue-actions input') as HTMLInputElement;
-      input.value = '2026-09-01';
-      input.dispatchEvent(new Event('change'));
-      (fixture.nativeElement.querySelector('.revenue-actions button') as HTMLButtonElement).click();
+      // Ngay thong ke la app-date-picker: chon ngay qua component, roi bam nut "Thong ke".
+      const picker = fixture.debugElement.query(By.directive(DatePickerComponent)).componentInstance as DatePickerComponent;
+      picker.pick('2026-09-01');
+      fixture.detectChanges();
+      const buttons = Array.from(fixture.nativeElement.querySelectorAll('.revenue-actions button')) as HTMLButtonElement[];
+      buttons.find(button => button.textContent?.includes('Thống kê'))!.click();
 
       expect(getRevenue.execute).toHaveBeenCalledWith({
         venueId: 'venue-primary', fromDate: '2026-09-01', toDate: '2026-09-01'

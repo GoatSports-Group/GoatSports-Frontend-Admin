@@ -1,3 +1,4 @@
+import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -70,7 +71,8 @@ const COMPONENT_DECLARATIONS = [
     ...MATERIAL_MODULES,
     LucideIconComponent,
     LoadingSkeletonComponent,
-    PaginationComponent
+    PaginationComponent,
+    DatePickerComponent
   ],
   exports: [
     CommonModule,
@@ -81,6 +83,7 @@ const COMPONENT_DECLARATIONS = [
     LucideIconComponent,
     LoadingSkeletonComponent,
     PaginationComponent,
+    DatePickerComponent,
     ...COMPONENT_DECLARATIONS
   ]
 })

@@ -22,11 +22,11 @@
     </label>
     <label class="date-field">
       <span>Từ ngày</span>
-      <input type="date" [ngModel]="fromDate()" (ngModelChange)="setDate('from', $event)" name="fromDate" />
+      <app-date-picker ariaLabel="Từ ngày" placeholder="Từ ngày" [max]="toDate()" [ngModel]="fromDate()" (ngModelChange)="setDate('from', $event)"></app-date-picker>
     </label>
     <label class="date-field">
       <span>Đến ngày</span>
-      <input type="date" [ngModel]="toDate()" (ngModelChange)="setDate('to', $event)" name="toDate" />
+      <app-date-picker ariaLabel="Đến ngày" placeholder="Đến ngày" [min]="fromDate()" [ngModel]="toDate()" (ngModelChange)="setDate('to', $event)"></app-date-picker>
     </label>
     @if (hasFilters()) {
     <button type="button" class="btn btn--ghost" (click)="clearFilters()"><lucide-icon name="x" />Xóa lọc</button>

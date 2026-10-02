@@ -1,3 +1,4 @@
+import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -36,7 +37,7 @@ type ResolvedPaymentMethod = 'CASH' | 'PAYOS';
 @Component({
   selector: 'app-owner-bookings',
   standalone: true,
-  imports: [LoadingSkeletonComponent, ReactiveFormsModule, LucideIconComponent, PageLoadingComponent, PaginationComponent],
+  imports: [DatePickerComponent, LoadingSkeletonComponent, ReactiveFormsModule, LucideIconComponent, PageLoadingComponent, PaginationComponent],
   templateUrl: './owner-bookings.component.html',
   styleUrl: './owner-bookings.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

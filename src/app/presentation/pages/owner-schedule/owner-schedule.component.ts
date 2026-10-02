@@ -1,3 +1,4 @@
+import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -88,7 +89,7 @@ interface HeldTournament {
 @Component({
   selector: 'app-owner-schedule',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, LucideIconComponent, PageLoadingComponent],
+  imports: [DatePickerComponent, ReactiveFormsModule, RouterLink, LucideIconComponent, PageLoadingComponent],
   templateUrl: './owner-schedule.component.html',
   styleUrl: './owner-schedule.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

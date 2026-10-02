@@ -1,3 +1,4 @@
+import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -11,7 +12,7 @@ import {
   signal
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { EMPTY, Observable, expand, finalize, forkJoin, interval, reduce, take } from 'rxjs';
 import { BrowserQRCodeReader, IScannerControls } from '@zxing/browser';
@@ -96,7 +97,7 @@ type PointerOperation = PointerOperationBase & (
 @Component({
   selector: 'app-owner-court-management',
   standalone: true,
-  imports: [LoadingSkeletonComponent, 
+  imports: [FormsModule, DatePickerComponent, LoadingSkeletonComponent, 
     ReactiveFormsModule,
     RouterLink,
     LucideIconComponent,
@@ -120,7 +121,6 @@ export class OwnerCourtManagementComponent implements OnDestroy {
   private readonly destroyRef = inject(DestroyRef);
 
   @ViewChild('facilityCanvas') private facilityCanvas?: ElementRef<HTMLElement>;
-  @ViewChild('bookingDateInput') private bookingDateInput?: ElementRef<HTMLInputElement>;
   @ViewChild('courtCheckInVideo') private courtCheckInVideo?: ElementRef<HTMLVideoElement>;
 
   readonly baseCanvasWidth = FACILITY_CANVAS_WIDTH;
@@ -522,8 +522,8 @@ export class OwnerCourtManagementComponent implements OnDestroy {
     if (!this.layoutMode()) this.selectedCourtId.set(null);
   }
 
-  changeBookingDate(event: Event): void {
-    const date = (event.target as HTMLInputElement).value || this.todayIso();
+  changeBookingDate(value: string): void {
+    const date = value || this.todayIso();
     if (date === this.selectedBookingDate()) return;
 
     this.selectedBookingDate.set(date);
@@ -536,20 +536,6 @@ export class OwnerCourtManagementComponent implements OnDestroy {
     const selectedCourt = this.selectedCourt();
     if (selectedCourt && this.panelMode() === 'DETAIL') {
       this.loadCourtBookings(selectedCourt.venueCourtId, true);
-    }
-  }
-
-  openBookingDatePicker(event: Event): void {
-    event.preventDefault();
-    const input = this.bookingDateInput?.nativeElement;
-    if (!input) return;
-
-    input.focus({ preventScroll: true });
-    try {
-      if (typeof input.showPicker === 'function') input.showPicker();
-      else input.click();
-    } catch {
-      input.focus({ preventScroll: true });
     }
   }
 
@@ -808,10 +794,9 @@ export class OwnerCourtManagementComponent implements OnDestroy {
     this.maintenanceError.set(null);
   }
 
-  changeMaintenanceDate(event: Event): void {
-    const requestedDate = (event.target as HTMLInputElement).value || this.minimumMaintenanceDate;
+  changeMaintenanceDate(value: string): void {
+    const requestedDate = value || this.minimumMaintenanceDate;
     const date = requestedDate < this.minimumMaintenanceDate ? this.minimumMaintenanceDate : requestedDate;
-    (event.target as HTMLInputElement).value = date;
     this.maintenanceDate.set(date);
     this.selectedMaintenanceSlotIds.set([]);
     this.loadMaintenanceSlots();

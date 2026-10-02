@@ -1,18 +1,17 @@
+import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
 import { Component, Input, Output, EventEmitter, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
-import { formatInputDate } from '@shared/utils/log-display.utils';
 
 @Component({
   selector: 'app-log-filter',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideIconComponent],
+  imports: [DatePickerComponent, CommonModule, FormsModule, LucideIconComponent],
   templateUrl: './log-filter.component.html',
   styleUrls: ['./log-filter.component.scss']
 })
 export class LogFilterComponent {
-  readonly formatDateToVietnamese = formatInputDate;
   @Input() filterDescription = '';
   @Input() filterAction = '';
   @Input() filterFromDate = '';

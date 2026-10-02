@@ -313,8 +313,8 @@
         <p class="step">Theo dõi vận hành</p>
         <h2>Lịch sử nhận sân</h2>
       </div>
-      <label class="date-filter"><span>Ngày</span><input type="date" [value]="historyDate()"
-          (change)="historyDate.set($any($event.target).value); loadHistory(0)" /></label>
+      <label class="date-filter"><span>Ngày</span><app-date-picker ariaLabel="Ngày nhận sân" [ngModel]="historyDate()"
+          (ngModelChange)="historyDate.set($event); loadHistory(0)"></app-date-picker></label>
     </div>
     @if (historyLoading()) {
     <div class="loading-lines"><span class="skeleton wide"></span><span class="skeleton"></span></div>

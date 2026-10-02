@@ -1,3 +1,5 @@
+import { FormsModule } from '@angular/forms';
+import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -57,7 +59,7 @@ interface RevenueLoadResult {
 @Component({
   selector: 'app-owner-revenue',
   standalone: true,
-  imports: [DatePipe, LucideIconComponent, PageLoadingComponent, RouterLink],
+  imports: [FormsModule, DatePickerComponent, DatePipe, LucideIconComponent, PageLoadingComponent, RouterLink],
   templateUrl: './owner-revenue.component.html',
   styleUrl: './owner-revenue.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -292,14 +294,14 @@ export class OwnerRevenueComponent {
     this.loadReport();
   }
 
-  selectFromDate(event: Event): void {
+  selectFromDate(value: string): void {
     this.selectedPreset.set('custom');
-    this.fromDate.set((event.target as HTMLInputElement).value);
+    this.fromDate.set(value);
   }
 
-  selectToDate(event: Event): void {
+  selectToDate(value: string): void {
     this.selectedPreset.set('custom');
-    this.toDate.set((event.target as HTMLInputElement).value);
+    this.toDate.set(value);
   }
 
   money(value: number): string {

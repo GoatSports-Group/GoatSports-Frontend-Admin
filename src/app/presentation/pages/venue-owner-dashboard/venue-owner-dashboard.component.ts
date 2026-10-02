@@ -1,3 +1,5 @@
+import { FormsModule } from '@angular/forms';
+import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -69,7 +71,7 @@ const COURT_AVAILABILITY_POLL_INTERVAL_MS = 30_000;
 @Component({
   selector: 'app-venue-owner-dashboard',
   standalone: true,
-  imports: [RouterModule, LucideIconComponent, PageLoadingComponent, OwnerApplicationProgressComponent],
+  imports: [FormsModule, DatePickerComponent, RouterModule, LucideIconComponent, PageLoadingComponent, OwnerApplicationProgressComponent],
   templateUrl: './venue-owner-dashboard.component.html',
   styleUrl: './venue-owner-dashboard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -348,8 +350,8 @@ export class VenueOwnerDashboardComponent {
     this.loadDailyRevenue();
   }
 
-  selectRevenueDate(event: Event): void {
-    this.revenueDateDraft.set((event.target as HTMLInputElement).value);
+  selectRevenueDate(value: string): void {
+    this.revenueDateDraft.set(value);
   }
 
   applyRevenueDate(): void {

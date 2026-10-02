@@ -152,8 +152,8 @@
         <app-select [options]="courtOptions()" [ngModel]="plan.courtId" (ngModelChange)="onPlanChange('courtId', $event)"
           name="court" placeholder="Chọn sân" ariaLabel="Sân"></app-select></div>
       <label class="field"><span class="field__label">Ngày</span>
-        <input class="field__control" type="date" [min]="t.startDate" [max]="t.endDate" [ngModel]="plan.playDate"
-          (ngModelChange)="onPlanChange('playDate', $event)" name="date" /></label>
+        <app-date-picker ariaLabel="Ngày thi đấu" [clearable]="false" [min]="t.startDate" [max]="t.endDate" [ngModel]="plan.playDate"
+          (ngModelChange)="onPlanChange('playDate', $event)"></app-date-picker></label>
       <div class="field"><span class="field__label">Khung giờ</span>
         <app-select [options]="timeOptions()" [(ngModel)]="plan.slot" name="time" ariaLabel="Khung giờ"
           [placeholder]="courtSlotsLoading() ? 'Đang tải khung giờ...' : 'Chọn khung giờ'"></app-select></div>

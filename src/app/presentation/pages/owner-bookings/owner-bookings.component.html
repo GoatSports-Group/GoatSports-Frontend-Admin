@@ -22,8 +22,8 @@
   } @else {
   <form class="filter-panel" [formGroup]="filterForm" (ngSubmit)="applyFilters()">
     <div class="filter-row filter-row--primary">
-      <label><span>Từ ngày</span><input type="date" formControlName="fromDate" /></label>
-      <label><span>Đến ngày</span><input type="date" formControlName="toDate" /></label>
+      <label><span>Từ ngày</span><app-date-picker ariaLabel="Từ ngày" formControlName="fromDate"></app-date-picker></label>
+      <label><span>Đến ngày</span><app-date-picker ariaLabel="Đến ngày" formControlName="toDate"></app-date-picker></label>
       <label><span>Cơ sở</span><select formControlName="venueId"
           (change)="selectVenue($any($event.target).value)">
           <option value="">Tất cả cơ sở</option>
@@ -564,7 +564,8 @@
         </label>
         <label>
           <span>Ngày chơi</span>
-          <input type="date" formControlName="playDate" [min]="today()" (change)="loadCreateSlots()" />
+          <app-date-picker ariaLabel="Ngày chơi" [clearable]="false" formControlName="playDate" [min]="today()"
+            (dateChange)="loadCreateSlots()"></app-date-picker>
         </label>
         <label>
           <span>Khung giờ còn trống</span>

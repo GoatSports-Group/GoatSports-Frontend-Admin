@@ -327,7 +327,7 @@ describe('OwnerCourtManagementComponent', () => {
     fixture.detectChanges();
     manageBookings.list.mockClear();
 
-    fixture.componentInstance.changeBookingDate({ target: { value: '2030-05-10' } } as unknown as Event);
+    fixture.componentInstance.changeBookingDate('2030-05-10');
 
     expect(manageBookings.list).toHaveBeenCalledWith(expect.objectContaining({
       venueId: 'venue-1', fromDate: '2030-05-10', toDate: '2030-05-10', page: 0, size: 20
@@ -337,16 +337,12 @@ describe('OwnerCourtManagementComponent', () => {
     }));
   });
 
-  it('mở date picker native khi nhấn vào toàn bộ bộ lọc ngày', () => {
+  it('bộ lọc ngày dùng app-date-picker thay cho input date native', () => {
     manageCourts.list.mockReturnValue(of([savedCourt]));
     const fixture = TestBed.createComponent(OwnerCourtManagementComponent);
     fixture.detectChanges();
-    const input = fixture.nativeElement.querySelector('.booking-date-filter input') as HTMLInputElement;
-    const showPicker = vi.fn();
-    Object.defineProperty(input, 'showPicker', { configurable: true, value: showPicker });
 
-    fixture.componentInstance.openBookingDatePicker(new MouseEvent('click'));
-
-    expect(showPicker).toHaveBeenCalledOnce();
+    expect(fixture.nativeElement.querySelector('.booking-date-filter app-date-picker')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('input[type="date"]')).toBeNull();
   });
 });
