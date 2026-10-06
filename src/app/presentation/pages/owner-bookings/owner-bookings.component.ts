@@ -68,7 +68,8 @@ export class OwnerBookingsComponent {
     { value: 'CANCELLED', label: 'Đã hủy' },
     { value: 'REFUND_PENDING', label: 'Chờ hoàn tiền' },
     { value: 'REFUNDED', label: 'Đã hoàn tiền' },
-    { value: 'EXPIRED', label: 'Hết hạn' }
+    { value: 'EXPIRED', label: 'Hết hạn' },
+    { value: 'NO_SHOW', label: 'Không đến nhận sân' }
   ];
   readonly paymentStatuses: readonly { value: PaymentFilter; label: string }[] = [
     { value: '', label: 'Tất cả thanh toán' },

@@ -1,6 +1,6 @@
 export type OwnerBookingStatus =
   | 'PENDING_PAYMENT' | 'CONFIRMED' | 'CHECKED_IN' | 'COMPLETED'
-  | 'CANCELLED' | 'REFUND_PENDING' | 'REFUNDED' | 'EXPIRED';
+  | 'CANCELLED' | 'REFUND_PENDING' | 'REFUNDED' | 'EXPIRED' | 'NO_SHOW';
 
 export type OwnerBookingSource = 'DIRECT' | 'AI_MATCHMAKING' | 'WALK_IN';
 export type OwnerBookingPaymentMethod = 'CASH' | 'PAYOS';

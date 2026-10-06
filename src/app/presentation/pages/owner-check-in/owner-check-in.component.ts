@@ -398,7 +398,8 @@ export class OwnerCheckInComponent implements OnDestroy {
       CANCELLED: 'Đã hủy',
       REFUND_PENDING: 'Chờ hoàn tiền',
       REFUNDED: 'Đã hoàn tiền',
-      EXPIRED: 'Hết hạn'
+      EXPIRED: 'Hết hạn',
+      NO_SHOW: 'Không đến nhận sân'
     }[status];
   }
 

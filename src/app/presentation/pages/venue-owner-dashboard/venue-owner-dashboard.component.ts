@@ -441,7 +441,7 @@ export class VenueOwnerDashboardComponent {
     const labels: Record<string, string> = {
       PENDING_PAYMENT: 'Chờ thanh toán', CONFIRMED: 'Đã xác nhận', CHECKED_IN: 'Đã check-in',
       COMPLETED: 'Hoàn tất', CANCELLED: 'Đã hủy', EXPIRED: 'Hết hạn',
-      REFUND_PENDING: 'Chờ hoàn tiền', REFUNDED: 'Đã hoàn tiền'
+      REFUND_PENDING: 'Chờ hoàn tiền', REFUNDED: 'Đã hoàn tiền', NO_SHOW: 'Không đến nhận sân'
     };
     return labels[status] ?? status;
   }

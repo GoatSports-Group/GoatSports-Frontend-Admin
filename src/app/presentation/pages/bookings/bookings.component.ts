@@ -21,7 +21,8 @@ const STATUS_META: Record<OwnerBookingStatus, { label: string; tone: Tone }> = {
   CANCELLED: { label: 'Đã hủy', tone: 'danger' },
   REFUND_PENDING: { label: 'Chờ hoàn tiền', tone: 'warning' },
   REFUNDED: { label: 'Đã hoàn tiền', tone: 'neutral' },
-  EXPIRED: { label: 'Hết hạn', tone: 'neutral' }
+  EXPIRED: { label: 'Hết hạn', tone: 'neutral' },
+  NO_SHOW: { label: 'Không đến nhận sân', tone: 'neutral' }
 };
 
 /** Đơn đặt sân của mọi cơ sở trên nền tảng. Admin chỉ xem; duyệt hủy, thu tiền, check-in vẫn là việc của chủ sân. */

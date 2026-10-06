@@ -12,7 +12,8 @@ type Section<T> = { loading: boolean; error: boolean; data: T | null };
 
 const BOOKING_STATUS_LABEL: Record<string, string> = {
   PENDING_PAYMENT: 'Chờ thanh toán', CONFIRMED: 'Đã xác nhận', CHECKED_IN: 'Đã nhận sân', COMPLETED: 'Hoàn tất',
-  CANCELLED: 'Đã hủy', REFUND_PENDING: 'Chờ hoàn tiền', REFUNDED: 'Đã hoàn tiền', EXPIRED: 'Hết hạn'
+  CANCELLED: 'Đã hủy', REFUND_PENDING: 'Chờ hoàn tiền', REFUNDED: 'Đã hoàn tiền', EXPIRED: 'Hết hạn',
+  NO_SHOW: 'Không đến nhận sân'
 };
 
 /**
