@@ -42,13 +42,13 @@
 .compact-application__hero h3,
 .compact-application__hero p { display: block; margin: 0; }
 .compact-application__hero span { color: var(--primary-hover); font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
-.compact-application__hero h3 { margin-top: 3px; color: var(--primary) !important; font-size: 17px; font-weight: 750; line-height: 1.4; }
+.compact-application__hero h3 { margin-top: 3px; color: var(--primary) !important; font-size: 17px; font-weight: 700; line-height: 1.4; }
 .compact-application__hero p { margin-top: 2px; overflow: hidden; color: var(--body); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
 
 .compact-application__hero--danger,
 .compact-application__hero--rejected { border-color: var(--danger-soft); background: var(--danger-soft); }
 .compact-application__hero--danger .compact-application__icon,
-.compact-application__hero--rejected .compact-application__icon { border-color: var(--danger-soft); background: #e11d48; box-shadow: 0 0 0 5px rgb(225 29 72 / 9%); }
+.compact-application__hero--rejected .compact-application__icon { border-color: var(--danger-soft); background: var(--danger); box-shadow: 0 0 0 5px rgb(225 29 72 / 9%); }
 
 .compact-progress {
   display: grid;
@@ -94,11 +94,11 @@
 .compact-progress__step--completed .compact-progress__dot { border-color: var(--primary); background: var(--primary-fill); }
 .compact-progress__step--current .compact-progress__dot { border: 5px solid var(--primary-light); background: var(--primary-fill); }
 .compact-progress__step--rejected .compact-progress__dot,
-.compact-progress__step--cancelled .compact-progress__dot { border-color: var(--danger); background: #e11d48; }
+.compact-progress__step--cancelled .compact-progress__dot { border-color: var(--danger); background: var(--danger); }
 .compact-progress__step strong,
 .compact-progress__step time { display: block; }
-.compact-progress__step strong { color: var(--ink-2); font-size: 13px; font-weight: 650; line-height: 1.45; }
-.compact-progress__step time { margin-top: 3px; color: var(--body); font-size: 12px; }
+.compact-progress__step strong { color: var(--ink-2); font-size: 13px; font-weight: 600; line-height: 1.45; }
+.compact-progress__step time { margin-top: 3px; color: var(--body); font-size: 13px; }
 
 .compact-application__update {
   display: grid;
@@ -108,14 +108,14 @@
   gap: 9px;
   margin: 0 16px 16px;
   padding: 11px;
-  border-radius: 11px;
+  border-radius: 12px;
   background: var(--surface-strong);
 }
 
 .compact-application__update > lucide-icon { width: 15px; height: 15px; justify-self: center; color: var(--primary); }
 .compact-application__update span,
 .compact-application__update strong { display: block; }
-.compact-application__update span { color: var(--body); font-size: 12px; }
+.compact-application__update span { color: var(--body); font-size: 13px; }
 .compact-application__update strong { display: -webkit-box; margin-top: 2px; overflow: hidden; color: var(--ink-2); font-size: 13px; line-height: 1.5; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 
 .compact-application__rejection {
@@ -125,7 +125,7 @@
   margin: 12px 16px 0;
   padding: 10px;
   border: 1px solid var(--danger-soft);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--danger-soft);
   color: var(--danger);
 }
@@ -133,7 +133,7 @@
 .compact-application__rejection lucide-icon { width: 16px; height: 16px; }
 .compact-application__rejection span,
 .compact-application__rejection strong { display: block; }
-.compact-application__rejection span { font-size: 12px; font-weight: 700; }
+.compact-application__rejection span { font-size: 13px; font-weight: 700; }
 .compact-application__rejection strong { margin-top: 2px; color: var(--danger); font-size: 13px; line-height: 1.5; }
 
 @media (max-width: 640px) {

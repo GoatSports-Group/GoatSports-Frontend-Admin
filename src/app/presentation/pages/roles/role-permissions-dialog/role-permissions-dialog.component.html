@@ -1,15 +1,15 @@
-<div class="p-6 flex flex-col gap-6 max-h-[90vh] w-[700px] max-w-full overflow-hidden select-none bg-white rounded-2xl">
+<div class="p-6 flex flex-col gap-6 max-h-[90vh] w-[700px] max-w-full overflow-hidden select-none bg-surface rounded-2xl">
 
   <!-- Dialog Header -->
   <div class="flex items-center justify-between border-b border-slate-100 pb-4">
     <div class="flex flex-col gap-0.5">
-      <h2 class="text-lg font-bold text-slate-900 font-display flex items-center gap-2">
+      <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
         Phân quyền vai trò: <span class="text-emerald-950 font-black tracking-wider">{{ role.name }}</span>
       </h2>
       <p class="text-sm font-semibold text-slate-400">Xem và thiết lập quyền truy cập cho vai trò này</p>
     </div>
     <button type="button" (click)="onCancel()"
-      class="text-slate-400 hover:text-slate-600 p-1.5 rounded-full hover:bg-slate-50 transition-all cursor-pointer">
+      class="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-50 transition-all cursor-pointer">
       <lucide-icon name="x" class="h-5 w-5"></lucide-icon>
     </button>
   </div>
@@ -26,11 +26,11 @@
     @if (permissionGroups.length > 0) {
     <div class="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl">
       <div class="flex flex-col gap-0.5">
-        <span class="text-sm font-medium text-emerald-800 font-display">Tất cả quyền hạn</span>
+        <span class="text-sm font-medium text-emerald-800">Tất cả quyền hạn</span>
       </div>
       <input type="checkbox" [checked]="isAllSelected()" [indeterminate]="isAllIndeterminate()"
         (change)="toggleAll($any($event.target).checked)"
-        class="w-4.5 h-4.5 rounded-lg border-slate-350 text-emerald-600 focus:ring-emerald-500 cursor-pointer transition-all">
+        class="w-4.5 h-4.5 rounded-xl border-slate-350 text-emerald-600 focus:ring-emerald-500 cursor-pointer transition-all">
     </div>
     }
 
@@ -38,7 +38,7 @@
     <div class="space-y-3">
       @for (group of permissionGroups; track group.moduleName) {
       <div
-        class="border border-slate-100 rounded-2xl bg-white overflow-hidden transition-all shadow-[0_2px_8px_rgba(0,0,0,0.01)]">
+        class="border border-slate-100 rounded-2xl bg-surface overflow-hidden transition-all shadow-[0_2px_8px_rgba(0,0,0,0.01)]">
 
         <!-- Accordion Header -->
         <div
@@ -51,11 +51,11 @@
               [class.rotate-90]="group.expanded">
             </lucide-icon>
 
-            <span class="font-display font-medium text-emerald-800 text-sm tracking-wider">
+            <span class="font-medium text-emerald-800 text-sm tracking-wider">
               {{ group.moduleName }}
             </span>
 
-            <span class="text-xs font-medium text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full ml-2">
+            <span class="text-[13px] font-medium text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full ml-2">
               {{ group.permissions.length }} quyền
             </span>
           </div>
@@ -64,7 +64,7 @@
           <div (click)="$event.stopPropagation();" class="flex items-center">
             <input type="checkbox" [checked]="isGroupAllSelected(group)" [indeterminate]="isGroupIndeterminate(group)"
               (change)="toggleGroup(group, $any($event.target).checked)"
-              class="w-4.5 h-4.5 rounded-lg border-slate-350 text-emerald-600 focus:ring-emerald-500 cursor-pointer transition-all">
+              class="w-4.5 h-4.5 rounded-xl border-slate-350 text-emerald-600 focus:ring-emerald-500 cursor-pointer transition-all">
           </div>
         </div>
 
@@ -72,7 +72,7 @@
         <div class="grid transition-[grid-template-rows] duration-250 ease-in-out"
           [class.grid-rows-[0fr]]="!group.expanded" [class.grid-rows-[1fr]]="group.expanded">
           <div class="overflow-hidden">
-            <div class="p-2 border-t border-slate-100/60 bg-white">
+            <div class="p-2 border-t border-slate-100/60 bg-surface">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                 @for (p of group.permissions; track p.permissionId) {
                 <label
@@ -81,7 +81,7 @@
                     (change)="togglePermission(p.permissionId, $any($event.target).checked)"
                     class="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer transition-all">
 
-                  <span class="text-xs font-medium text-emerald-700 leading-normal">
+                  <span class="text-[13px] font-medium text-emerald-700 leading-normal">
                     {{ p.name }}
                   </span>
                 </label>
@@ -107,11 +107,11 @@
   <!-- Dialog Footer -->
   <div class="flex justify-end items-center gap-3 border-t border-slate-100 pt-4 mt-2">
     <button type="button" (click)="onCancel()"
-      class="px-5 py-2 text-xs font-bold text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 rounded-full cursor-pointer transition-all active:scale-[0.98]">
+      class="px-5 py-2 text-[13px] font-bold text-slate-600 bg-surface hover:bg-slate-50 border border-slate-200 rounded-xl cursor-pointer transition-all">
       Đóng
     </button>
     <button type="button" (click)="onSave()" [disabled]="saving"
-      class="bg-primary hover:bg-emerald-800 active:scale-[0.98] text-white text-xs font-bold px-5 py-2.5 rounded-full flex items-center gap-1.5 transition-all cursor-pointer">
+      class="bg-primary hover:bg-emerald-800 text-white text-[13px] font-bold px-5 py-2.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer">
       <lucide-icon name="save" class="h-3.5 w-3.5" *ngIf="!saving"></lucide-icon>
       @if (saving) {
       <span>Đang lưu...</span>

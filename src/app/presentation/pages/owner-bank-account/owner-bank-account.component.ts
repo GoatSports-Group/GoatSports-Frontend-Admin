@@ -1,3 +1,4 @@
+import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -13,13 +14,14 @@ import { CryptoService } from '@presentation/services/crypto.service';
 import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/loading-skeleton.component';
 import { InfiniteScrollDirective, LIST_CHUNK } from '@shared/directives/infinite-scroll.directive';
 
-@Component({ selector: 'app-owner-bank-account', standalone: true, imports: [LoadingSkeletonComponent, CommonModule, FormsModule, LucideIconComponent, InfiniteScrollDirective], templateUrl: './owner-bank-account.component.html', styleUrl: './owner-bank-account.component.scss', changeDetection: ChangeDetectionStrategy.OnPush })
+@Component({ selector: 'app-owner-bank-account', standalone: true, imports: [LoadingSkeletonComponent, CommonModule, FormsModule, LucideIconComponent, InfiniteScrollDirective, SelectComponent], templateUrl: './owner-bank-account.component.html', styleUrl: './owner-bank-account.component.scss', changeDetection: ChangeDetectionStrategy.OnPush })
 export class OwnerBankAccountComponent {
   private readonly repository: BankAccountRepository = inject(BANK_ACCOUNT_REPOSITORY_TOKEN);
   private readonly notify = inject(NotifyService);
   private readonly cryptoService = inject(CryptoService);
   private readonly destroyRef = inject(DestroyRef);
   readonly banks = signal<BankDirectoryEntry[]>([]);
+  readonly bankOptions = computed<SelectOption[]>(() => this.banks().map(item => ({ value: item.bin, label: `${item.shortName} — ${item.name}` })));
   readonly accounts = signal<BankAccount[]>([]);
   readonly loading = signal(true);
   readonly saving = signal(false);

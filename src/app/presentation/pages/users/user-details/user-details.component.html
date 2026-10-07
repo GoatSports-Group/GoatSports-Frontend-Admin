@@ -7,11 +7,11 @@
     <!-- Header with Back Button -->
     <div class="flex items-center gap-4">
       <button (click)="close.emit()"
-        class="h-10 w-10 rounded-full bg-white hover:bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600 active:scale-[0.98] transition-all cursor-pointer shadow-xs">
+        class="h-10 w-10 rounded-xl bg-surface hover:bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600 transition-all cursor-pointer shadow-xs">
         <lucide-icon name="arrow-left" class="h-5 w-5"></lucide-icon>
       </button>
       <div>
-        <h1 class="text-2xl font-bold tracking-tight font-display text-slate-900 flex items-center gap-2">
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
           Chi tiết người dùng <span class="text-emerald-950 font-extrabold">{{ selectedUser.fullName ||
             selectedUser.username }}</span>
         </h1>
@@ -20,7 +20,7 @@
     </div>
 
     <!-- Main Profile Card with Quick Info Cards Inside -->
-    <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs flex flex-col gap-6">
+    <div class="bg-surface border border-slate-100 rounded-2xl p-6 shadow-xs flex flex-col gap-6">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div class="flex items-center gap-5">
           <!-- Profile Avatar -->
@@ -45,7 +45,7 @@
         <div class="flex items-center gap-3 self-start sm:self-center">
           <!-- Dropdown Menu trigger button -->
           <button [matMenuTriggerFor]="detailActionMenu"
-            class="w-9 h-9 rounded-full border border-slate-200 bg-white hover:bg-emerald-50 flex items-center justify-center text-emerald-600 transition-colors cursor-pointer">
+            class="w-9 h-9 rounded-xl border border-slate-200 bg-surface hover:bg-emerald-50 flex items-center justify-center text-emerald-600 transition-colors cursor-pointer">
             <lucide-icon name="more-vertical" class="h-4.5 w-4.5"></lucide-icon>
           </button>
 
@@ -93,7 +93,7 @@
         <!-- Status Card -->
         <div class="flex items-center gap-2">
           <div
-            class="w-8 h-8 rounded-lg bg-white flex items-center justify-center shrink-0 border border-slate-100 text-emerald-500">
+            class="w-8 h-8 rounded-lg bg-surface flex items-center justify-center shrink-0 border border-slate-100 text-emerald-500">
             <lucide-icon name="shield" class="w-4.5 h-4.5"></lucide-icon>
           </div>
           <div class="flex flex-col gap-0.5">
@@ -107,7 +107,7 @@
         <!-- Phone Card -->
         <div class="flex items-center gap-2">
           <div
-            class="w-8 h-8 rounded-lg bg-white flex items-center justify-center shrink-0 border border-slate-100 text-blue-500">
+            class="w-8 h-8 rounded-lg bg-surface flex items-center justify-center shrink-0 border border-slate-100 text-blue-500">
             <lucide-icon name="phone" class="w-4.5 h-4.5"></lucide-icon>
           </div>
           <div class="flex flex-col gap-0.5">
@@ -121,7 +121,7 @@
         <!-- Country Card -->
         <div class="flex items-center gap-2">
           <div
-            class="w-8 h-8 rounded-lg bg-white flex items-center justify-center shrink-0 border border-slate-100 text-amber-500">
+            class="w-8 h-8 rounded-lg bg-surface flex items-center justify-center shrink-0 border border-slate-100 text-amber-500">
             <lucide-icon name="globe" class="w-4.5 h-4.5"></lucide-icon>
           </div>
           <div class="flex flex-col gap-0.5">
@@ -137,7 +137,7 @@
     <!-- Details Columns Container -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Column 1: Account Details -->
-      <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs flex flex-col gap-5">
+      <div class="bg-surface border border-slate-100 rounded-2xl p-6 shadow-xs flex flex-col gap-5">
         <h3 class="text-sm font-bold text-emerald-600 flex items-center gap-2 border-b border-slate-100 pb-3">
           <lucide-icon name="shield" class="w-4.5 h-4.5 text-emerald-400"></lucide-icon> Chi tiết tài khoản
         </h3>
@@ -151,7 +151,7 @@
             </div>
             <div>
               <p class="text-[13px] font-semibold text-emerald-600 uppercase tracking-wider font-sans">Mã tài khoản</p>
-              <p class="text-xs font-medium text-slate-800 break-all select-all">{{ selectedUser.userId }}</p>
+              <p class="text-[13px] font-medium text-slate-800 break-all select-all">{{ selectedUser.userId }}</p>
             </div>
           </div>
 
@@ -163,7 +163,7 @@
             </div>
             <div>
               <p class="text-[13px] font-semibold text-emerald-600 uppercase tracking-wider font-sans">Tên đăng nhập</p>
-              <p class="text-xs font-medium text-slate-800">{{ selectedUser.username }}</p>
+              <p class="text-[13px] font-medium text-slate-800">{{ selectedUser.username }}</p>
             </div>
           </div>
 
@@ -179,13 +179,13 @@
                 @if (selectedUser.authProviders && selectedUser.authProviders.length > 0) {
                   @for (p of selectedUser.authProviders; track p) {
                     <span
-                      class="px-2 py-0.5 bg-slate-50 border border-slate-150 text-slate-800 text-xs font-medium rounded-full tracking-wide">
+                      class="px-2 py-0.5 bg-slate-50 border border-slate-150 text-slate-800 text-[13px] font-medium rounded-full tracking-wide">
                       {{ p }}
                     </span>
                   }
                 } @else {
                   <span
-                    class="px-2 py-0.5 bg-slate-50 border border-slate-150 text-slate-800 text-xs font-medium rounded-full tracking-wide">
+                    class="px-2 py-0.5 bg-slate-50 border border-slate-150 text-slate-800 text-[13px] font-medium rounded-full tracking-wide">
                     LOCAL
                   </span>
                 }
@@ -201,7 +201,7 @@
             </div>
             <div>
               <p class="text-[13px] font-semibold text-emerald-600 uppercase tracking-wider font-sans">Ngày tạo</p>
-              <p class="text-xs font-medium text-slate-800 font-sans">
+              <p class="text-[13px] font-medium text-slate-800 font-sans">
                 {{ selectedUser.createdAt ? (selectedUser.createdAt | date: 'dd/MM/yyyy HH:mm') : 'Chưa cập nhật' }}
               </p>
             </div>
@@ -215,7 +215,7 @@
             </div>
             <div>
               <p class="text-[13px] font-semibold text-emerald-600 uppercase tracking-wider font-sans">Cập nhật</p>
-              <p class="text-xs font-medium text-slate-800 font-sans">
+              <p class="text-[13px] font-medium text-slate-800 font-sans">
                 {{ selectedUser.updatedAt ? (selectedUser.updatedAt | date: 'dd/MM/yyyy HH:mm') : 'Chưa cập nhật' }}
               </p>
             </div>
@@ -224,7 +224,7 @@
       </div>
 
       <!-- Column 2: Contact Information -->
-      <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-xs flex flex-col gap-5">
+      <div class="bg-surface border border-slate-100 rounded-2xl p-6 shadow-xs flex flex-col gap-5">
         <h3 class="text-sm font-bold text-emerald-600 flex items-center gap-2 border-b border-slate-100 pb-3">
           <lucide-icon name="mail" class="w-4.5 h-4.5 text-emerald-400"></lucide-icon> Thông tin liên hệ
         </h3>
@@ -239,7 +239,7 @@
             <div>
               <p class="text-[13px] font-semibold text-emerald-600 uppercase tracking-wider font-sans">Email</p>
               <div class="flex flex-wrap items-center gap-1.5 mt-0.5">
-                <span class="text-xs font-medium text-slate-800 select-all">{{ selectedUser.email }}</span>
+                <span class="text-[13px] font-medium text-slate-800 select-all">{{ selectedUser.email }}</span>
               </div>
             </div>
           </div>
@@ -252,7 +252,7 @@
             </div>
             <div>
               <p class="text-[13px] font-semibold text-emerald-600 uppercase tracking-wider font-sans">Vai trò</p>
-              <p class="text-xs font-medium text-slate-800 tracking-wider mt-0.5">
+              <p class="text-[13px] font-medium text-slate-800 tracking-wider mt-0.5">
                 {{ getFallbackRole(selectedUser.role.name) || 'CHƯA GÁN VAI TRÒ' }}
               </p>
             </div>
@@ -266,7 +266,7 @@
             </div>
             <div>
               <p class="text-[13px] font-semibold text-emerald-600 uppercase tracking-wider font-sans">Giới tính</p>
-              <p class="text-xs font-medium text-slate-800 mt-0.5">
+              <p class="text-[13px] font-medium text-slate-800 mt-0.5">
                 {{ getFallbackGender(selectedUser.gender) || 'Chưa cập nhật' }}
               </p>
             </div>

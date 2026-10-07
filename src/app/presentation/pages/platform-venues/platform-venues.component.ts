@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, injec
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { Subject, Subscription, debounceTime, distinctUntilChanged, finalize } from 'rxjs';
 import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
@@ -36,6 +36,7 @@ export class PlatformVenuesComponent implements OnInit {
   private readonly repository = inject(ADMIN_VENUE_REPOSITORY_TOKEN);
   private readonly dialog = inject(MatDialog);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly route = inject(ActivatedRoute);
   private readonly search$ = new Subject<string>();
   private request?: Subscription;
 
@@ -65,6 +66,9 @@ export class PlatformVenuesComponent implements OnInit {
   readonly hasFilters = computed(() => !!(this.status() || this.keyword()));
 
   ngOnInit(): void {
+    // Tu Tin nhan ("Xem co so cua chu san"): loc san theo email chu san.
+    const keyword = this.route.snapshot.queryParamMap.get('keyword')?.trim();
+    if (keyword) this.keyword.set(keyword);
     this.search$.pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
       .subscribe(value => { this.keyword.set(value.trim()); this.reload(); });
     this.load();

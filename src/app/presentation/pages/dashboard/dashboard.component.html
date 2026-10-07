@@ -11,21 +11,21 @@
 
     <!-- Admin Map & District Breakdown -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div class="lg:col-span-2 rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm">
+      <div class="lg:col-span-2 rounded-2xl border border-slate-200/80 bg-surface p-6 shadow-sm">
         <div class="flex items-center justify-between mb-4">
           <div>
-            <h3 class="text-base font-black text-slate-900 font-display">Bản Đồ Phân Bố Sân Bãi & Đơn Đăng Ký</h3>
-            <p class="text-xs text-slate-400">Mật độ các cơ sở thể thao và yêu cầu xét duyệt trên địa bàn</p>
+            <h3 class="text-base font-black text-slate-900">Bản Đồ Phân Bố Sân Bãi & Đơn Đăng Ký</h3>
+            <p class="text-[13px] text-slate-400">Mật độ các cơ sở thể thao và yêu cầu xét duyệt trên địa bàn</p>
           </div>
           <div class="flex items-center gap-2">
             <button (click)="toggleMapStatus(OwnerApplicationStatus.APPROVED)"
               [class]="selectedMapStatus() === OwnerApplicationStatus.APPROVED ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-700'"
-              class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all">
+              class="px-3 py-1.5 rounded-xl text-[13px] font-bold transition-all">
               Đã duyệt ({{ getMapMarkerCount(OwnerApplicationStatus.APPROVED) }})
             </button>
             <button (click)="toggleMapStatus(OwnerApplicationStatus.PENDING)"
               [class]="selectedMapStatus() === OwnerApplicationStatus.PENDING ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-700'"
-              class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all">
+              class="px-3 py-1.5 rounded-xl text-[13px] font-bold transition-all">
               Chờ duyệt ({{ getMapMarkerCount(OwnerApplicationStatus.PENDING) }})
             </button>
           </div>
@@ -35,14 +35,14 @@
       </div>
 
       <!-- District Breakdown List -->
-      <div class="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm">
-        <h3 class="text-base font-black text-slate-900 font-display mb-4">Cơ Sở Theo Quận / Huyện</h3>
+      <div class="rounded-2xl border border-slate-200/80 bg-surface p-6 shadow-sm">
+        <h3 class="text-base font-black text-slate-900 mb-4">Cơ Sở Theo Quận / Huyện</h3>
         <div class="space-y-3 max-h-[300px] overflow-y-auto pr-1">
           @for (item of districtBreakdown(); track item.name) {
           <div class="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 transition-colors">
-            <span class="text-xs font-bold text-slate-700">{{ item.name }}</span>
+            <span class="text-[13px] font-bold text-slate-700">{{ item.name }}</span>
             <div class="flex items-center gap-2">
-              <span class="text-xs font-black text-emerald-600">{{ item.count }} sân</span>
+              <span class="text-[13px] font-black text-emerald-600">{{ item.count }} sân</span>
               <div class="w-16 h-2 bg-slate-100 rounded-full overflow-hidden">
                 <div class="h-full bg-emerald-500 rounded-full" [style.width.%]="(item.count / districtMax()) * 100"></div>
               </div>

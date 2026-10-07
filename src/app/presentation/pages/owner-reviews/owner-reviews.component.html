@@ -1,7 +1,6 @@
 <main class="reviews-page">
   <section class="hero">
     <div>
-      <p class="eyebrow"><lucide-icon name="star" /> Phản hồi từ booking thật</p>
       <h1>Đánh giá cơ sở</h1>
       <p>Theo dõi chất lượng Venue và sân thi đấu từ người chơi đã hoàn tất booking.</p>
     </div>
@@ -13,22 +12,16 @@
 
   <section class="filter-panel" aria-label="Bộ lọc đánh giá">
     <label>Cơ sở
-      <select [value]="selectedVenueId()" [disabled]="loading()" (change)="selectVenue($event)">
-        <option value="">Tất cả cơ sở</option>
-        @for (venue of venues(); track venue.venueId) { <option [value]="venue.venueId">{{ venue.name }}</option> }
-      </select>
+      <app-select [ngModel]="selectedVenueId()" (ngModelChange)="selectVenue($event)" [disabled]="loading()"
+        [options]="venueOptions()" leadingIcon="land-plot" ariaLabel="Cơ sở"></app-select>
     </label>
     <label>Sân thi đấu
-      <select [value]="selectedCourtId()" [disabled]="loading() || !selectedVenueId()" (change)="selectCourt($event)">
-        <option value="">Tất cả sân</option>
-        @for (court of courts(); track court.venueCourtId) { <option [value]="court.venueCourtId">{{ court.name }}</option> }
-      </select>
+      <app-select [ngModel]="selectedCourtId()" (ngModelChange)="selectCourt($event)" [disabled]="loading() || !selectedVenueId()"
+        [options]="courtOptions()" ariaLabel="Sân thi đấu"></app-select>
     </label>
     <label>Số sao
-      <select [value]="selectedRating() ?? ''" [disabled]="loading()" (change)="selectRating($event)">
-        <option value="">Tất cả mức</option>
-        @for (star of stars; track star) { <option [value]="star">{{ star }} sao</option> }
-      </select>
+      <app-select [ngModel]="selectedRating() ?? ''" (ngModelChange)="selectRating($event)" [disabled]="loading()"
+        [options]="ratingOptions" leadingIcon="star" ariaLabel="Số sao"></app-select>
     </label>
     <label>Từ ngày<app-date-picker ariaLabel="Từ ngày" [max]="toDate()" [ngModel]="fromDate()" [disabled]="loading()" (dateChange)="selectFromDate($event)"></app-date-picker></label>
     <label>Đến ngày<app-date-picker ariaLabel="Đến ngày" [min]="fromDate()" [ngModel]="toDate()" [disabled]="loading()" (dateChange)="selectToDate($event)"></app-date-picker></label>

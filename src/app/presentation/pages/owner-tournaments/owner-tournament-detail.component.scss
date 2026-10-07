@@ -97,7 +97,7 @@
   a { color: var(--primary); font-weight: 700; }
 }
 
-.plan-hint--muted { color: var(--body); font-weight: 500; }
+.plan-hint--muted { color: var(--body); font-weight: 600; }
 
 .plan__actions { display: flex; gap: 8px; }
 
@@ -131,7 +131,7 @@ tr.is-rescheduling td { background: var(--primary-light); }
   margin: 8px 0 0 !important;
   padding: 6px 12px;
   border-radius: 999px;
-  background: #fff6db;
+  background: var(--warning-soft);
   color: #7a5200 !important;
   font-size: 14px !important;
   font-weight: 700;

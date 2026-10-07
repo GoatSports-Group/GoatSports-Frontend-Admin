@@ -8,6 +8,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { AuthService } from '@presentation/services/auth.service';
 import { NotificationService } from '@presentation/services/notification.service';
+import { notificationRoute } from '@shared/utils/notification-view';
+import { ChatInboxService } from '@presentation/services/chat-inbox.service';
 import { GetCurrentUserUseCase } from '@application/usecase/auth/get-current-user.usecase';
 import { User } from '@application/dto/user/user.dto';
 import { Notification, NotificationStatus, NotificationType } from '@application/dto/notification/notification.dto';
@@ -49,6 +51,7 @@ export class AdminComponent implements OnInit {
   readonly getRelativeTime = formatRelativeTime;
   public authService = inject(AuthService);
   public notificationService = inject(NotificationService);
+  readonly chatInbox = inject(ChatInboxService);
   private router = inject(Router);
   private getCurrentUser = inject(GetCurrentUserUseCase);
   private destroyRef = inject(DestroyRef);
@@ -159,6 +162,7 @@ export class AdminComponent implements OnInit {
   isNotificationLoading = false;
 
   ngOnInit() {
+    this.chatInbox.start(this.destroyRef);
     this.userProfile = this.authService.currentUser;
     this.userRole.set(this.userProfile?.role?.name?.toUpperCase() ?? '');
     if (window.innerWidth < 1024) {
@@ -232,21 +236,20 @@ export class AdminComponent implements OnInit {
   }
 
   private navigateFromNotification(notification: Notification): void {
-    if (notification.type === NotificationType.OWNER_APPLICATION) {
-      const route = this.isPlatformAdmin() ? '/admin/owner-applications' : '/admin/dashboard';
-      this.router.navigate([route]);
-    }
+    const route = notificationRoute(notification, this.isPlatformAdmin());
+    if (route) this.router.navigateByUrl(route);
+  }
+
+  /** Nut "da doc" tren tung dong: chi danh dau, khong mo trang. */
+  markOneRead(notification: Notification): void {
+    this.notificationService.markAsRead(notification.notificationId).subscribe({
+      error: (err) => console.error('Failed to mark notification as read:', err)
+    });
   }
 
   markAllRead() {
     this.notificationService.markAllRead().subscribe({
       error: (err) => console.error('Failed to mark all as read:', err)
-    });
-  }
-
-  deleteNotification(notification: Notification) {
-    this.notificationService.deleteNotification(notification.notificationId).subscribe({
-      error: (err) => console.error('Failed to delete notification:', err)
     });
   }
 

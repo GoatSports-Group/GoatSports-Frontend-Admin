@@ -1,3 +1,4 @@
+import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
 import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
 import {
   ChangeDetectionStrategy,
@@ -9,7 +10,7 @@ import {
   signal
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { EMPTY, Observable, catchError, expand, finalize, forkJoin, of, reduce, switchMap, take } from 'rxjs';
 import { OwnerBooking, OwnerBookingFilter } from '@application/dto/owner-booking/owner-booking.dto';
@@ -89,7 +90,7 @@ interface HeldTournament {
 @Component({
   selector: 'app-owner-schedule',
   standalone: true,
-  imports: [DatePickerComponent, ReactiveFormsModule, RouterLink, LucideIconComponent, PageLoadingComponent],
+  imports: [DatePickerComponent, ReactiveFormsModule, RouterLink, LucideIconComponent, PageLoadingComponent, SelectComponent, FormsModule],
   templateUrl: './owner-schedule.component.html',
   styleUrl: './owner-schedule.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -119,6 +120,9 @@ export class OwnerScheduleComponent {
   ];
   readonly venues = signal<OwnerVenueOverview[]>([]);
   readonly courts = signal<OwnerVenueCourt[]>([]);
+  readonly venueOptions = computed<SelectOption[]>(() => this.venues().map(venue => ({ value: venue.venueId, label: venue.name })));
+  readonly courtOptions = computed<SelectOption[]>(() => this.courts().map(court => ({ value: court.venueCourtId, label: court.name })));
+  readonly durationOptions: readonly SelectOption[] = [30, 60, 90, 120].map(minutes => ({ value: minutes, label: `${minutes} phút` }));
   readonly selectedVenueId = signal('');
   readonly selectedCourtId = signal('');
   readonly rules = signal<CourtPricingRule[]>([]);

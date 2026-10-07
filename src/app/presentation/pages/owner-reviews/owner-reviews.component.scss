@@ -1,3 +1,4 @@
+@use '../ops' as t;
 :host { display: block; }
 .reviews-page { color: var(--ink); display: grid; gap: 20px; }
 .hero { background: linear-gradient(135deg, #052e2b, var(--primary-fill)); border-radius: 24px; color: white; padding: 28px; display: flex; justify-content: space-between; gap: 24px; align-items: center; }
@@ -7,9 +8,9 @@
 .privacy-note { display: flex; gap: 12px; padding: 14px 16px; border: 1px solid rgba(255,255,255,.22); background: rgba(255,255,255,.1); border-radius: 16px; max-width: 360px; }
 .privacy-note strong, .privacy-note span { display: block; }
 .privacy-note span { color: #ccfbf1; margin-top: 3px; font-size: .82rem; }
-.filter-panel { background: var(--surface); border: 1px solid var(--hairline); border-radius: 20px; padding: 18px; display: grid; grid-template-columns: repeat(5, minmax(120px, 1fr)) auto; gap: 12px; align-items: end; box-shadow: 0 8px 24px var(--hairline); }
+.filter-panel { background: var(--surface); border: 1px solid var(--hairline); border-radius: 16px; padding: 18px; display: grid; grid-template-columns: repeat(5, minmax(120px, 1fr)) auto; gap: 12px; align-items: end; box-shadow: 0 8px 24px var(--hairline); }
 label { color: var(--body); font-size: .76rem; font-weight: 800; display: grid; gap: 7px; }
-select, input, button { min-height: 44px; border-radius: 11px; font: inherit; }
+select, input, button { min-height: 44px; border-radius: 12px; font: inherit; }
 select, input { width: 100%; border: 1px solid var(--border-strong); padding: 0 11px; background: var(--surface); color: var(--ink); }
 select:focus, input:focus, button:focus-visible { outline: 3px solid rgba(16,185,129,.25); outline-offset: 1px; }
 button { border: 0; padding: 0 16px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
@@ -17,7 +18,7 @@ button:disabled { opacity: .55; cursor: not-allowed; }
 .primary { background: var(--primary-fill); color: white; }
 .secondary { background: var(--primary-light); color: var(--primary-hover); border: 1px solid var(--primary-light); }
 .filter-error { grid-column: 1 / -1; margin: 0; color: var(--danger); font-size: .8rem; font-weight: 700; }
-.state-card { min-height: 160px; border: 1px dashed var(--border-strong); border-radius: 20px; padding: 24px; background: var(--surface); display: flex; align-items: center; justify-content: center; gap: 16px; text-align: left; }
+.state-card { min-height: 160px; border: 1px dashed var(--border-strong); border-radius: 16px; padding: 24px; background: var(--surface); display: flex; align-items: center; justify-content: center; gap: 16px; text-align: left; }
 .state-card h2, .state-card p { margin: 0; }
 .state-card p { color: var(--body); margin-top: 5px; }
 .error-state { border-color: var(--danger-soft); background: var(--danger-soft); }
@@ -26,10 +27,10 @@ button:disabled { opacity: .55; cursor: not-allowed; }
 .result-strip span { color: var(--body); font-size: .72rem; font-weight: 800; text-transform: uppercase; }
 .result-strip p { display: flex; align-items: center; gap: 6px; color: var(--body); margin: 0; font-size: .82rem; }
 .review-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-.review-card { min-width: 0; background: var(--surface); border: 1px solid var(--hairline); border-radius: 20px; padding: 18px; display: grid; gap: 16px; box-shadow: 0 8px 24px var(--hairline); }
+.review-card { min-width: 0; background: var(--surface); border: 1px solid var(--hairline); border-radius: 16px; padding: 18px; display: grid; gap: 16px; box-shadow: 0 8px 24px var(--hairline); }
 .review-card header { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .rating { display: flex; align-items: center; gap: 3px; color: var(--muted); }
-.rating lucide-icon.filled { color: #f59e0b; fill: #f59e0b; }
+.rating lucide-icon.filled { color: var(--warning); fill: var(--warning); }
 .rating strong { color: var(--warning); margin-left: 5px; font-size: .83rem; }
 .status { border-radius: 999px; padding: 5px 9px; font-size: .68rem; font-weight: 900; background: var(--success-soft); color: var(--success); }
 .status--hidden { background: var(--warning-soft); color: var(--warning); }
@@ -38,9 +39,9 @@ blockquote { margin: 0; min-height: 54px; color: var(--ink-2); line-height: 1.6;
 dl { margin: 0; display: grid; gap: 9px; }
 dl div { display: grid; grid-template-columns: 95px minmax(0, 1fr); gap: 10px; align-items: start; }
 dt { color: var(--body); display: flex; gap: 5px; align-items: center; font-size: .75rem; }
-dd { margin: 0; font-weight: 750; font-size: .8rem; overflow-wrap: anywhere; }
+dd { margin: 0; font-weight: 700; font-size: .8rem; overflow-wrap: anywhere; }
 .review-card footer { border-top: 1px solid var(--hairline); padding-top: 12px; color: var(--body); display: flex; align-items: center; gap: 6px; font-size: .75rem; }
-.skeleton { height: 280px; border-radius: 20px; background: linear-gradient(90deg, var(--surface-strong) 25%, var(--hairline) 45%, var(--surface-strong) 65%); background-size: 300% 100%; animation: shimmer 1.2s infinite; }
+.skeleton { height: 280px; border-radius: 16px; background: linear-gradient(90deg, var(--surface-strong) 25%, var(--hairline) 45%, var(--surface-strong) 65%); background-size: 300% 100%; animation: shimmer 1.2s infinite; }
 .spin { animation: spin .8s linear infinite; }
 @keyframes shimmer { to { background-position: -150% 0; } }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -52,9 +53,9 @@ dd { margin: 0; font-weight: 750; font-size: .8rem; overflow-wrap: anywhere; }
 .hero { padding: 4px 0 24px; border-bottom: 1px solid var(--hairline); border-radius: 0; background: transparent; color: var(--ink); }
 .hero p, .privacy-note span { color: var(--body); }
 .privacy-note { border: 1px solid var(--hairline); border-radius: 12px; background: var(--surface); }
-.filter-panel { border-radius: 14px; box-shadow: none; }
+.filter-panel { border-radius: 12px; box-shadow: none; }
 .result-strip { border-color: var(--hairline); border-radius: 12px; background: var(--surface); }
-.review-grid { grid-template-columns: 1fr; gap: 0; overflow: hidden; border: 1px solid var(--hairline); border-radius: 14px; background: var(--surface); }
+.review-grid { grid-template-columns: 1fr; gap: 0; overflow: hidden; border: 1px solid var(--hairline); border-radius: 12px; background: var(--surface); }
 .review-card { grid-template-columns: minmax(150px, .35fr) minmax(280px, 1fr) minmax(260px, .75fr); align-items: start; gap: 20px; padding: 20px; border: 0; border-bottom: 1px solid var(--hairline); border-radius: 0; box-shadow: none; }
 .review-card:last-child { border-bottom: 0; }
 .review-card header { align-items: flex-start; flex-direction: column; }
@@ -63,3 +64,12 @@ dd { margin: 0; font-weight: 750; font-size: .8rem; overflow-wrap: anywhere; }
 .skeleton { height: 150px; border-radius: 0; }
 @media (max-width: 900px) { .review-card { grid-template-columns: 1fr 1.5fr; } .review-card dl, .review-card footer { grid-column: 1 / -1; } }
 @media (max-width: 680px) { .reviews-page { padding: 20px 14px 48px; } .review-card { grid-template-columns: 1fr; } .review-card dl, .review-card footer { grid-column: auto; } }
+
+// GOAT-DESIGN §7: khong kicker tren H1, khong hero; cung le voi cac trang khac (khung noi dung cua shell).
+:host .reviews-page { max-width: none; margin: 0; padding: 0; }
+:host .hero { @include t.page-head; align-items: center; }
+:host .privacy-note { max-width: 380px; padding: 12px 14px; border: 1px solid var(--hairline); border-radius: 12px; background: var(--surface-subtle); color: var(--ink); }
+:host .filter-panel { @include t.filter-grid(170px); padding: 16px; }
+:host .error-state, :host .state-card { @include t.state-panel; }
+:host .filter-panel { @include t.filter-grid(220px); }
+:host .filter-panel > button { justify-self: start; }

@@ -26,6 +26,11 @@ export class StorageApi {
     );
   }
 
+  /** Nhieu file mot lan; contentLength de storage-service chan anh qua gioi han thu muc (vd. 10 MB cho chat). */
+  getPresignedUrls(files: { fileName: string; contentType: string; folder: string; contentLength: number }[]): Observable<BaseResponse<PresignedUrlResponse[]>> {
+    return this.http.post<BaseResponse<PresignedUrlResponse[]>>(`${this.apiBase}/storage-service/api/v1/files/presigned-url`, files);
+  }
+
   uploadToPresignedUrl(uploadUrl: string, file: File): Observable<any> {
     return this.bypassHttp.put(uploadUrl, file, {
       headers: {

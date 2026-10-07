@@ -1,12 +1,12 @@
 <div
-  class="w-[440px] max-w-[100vw] h-screen bg-white shadow-2xl flex flex-col justify-between overflow-hidden transform transition-transform duration-300 ease-out"
+  class="w-[440px] max-w-[100vw] h-screen bg-surface shadow-2xl flex flex-col justify-between overflow-hidden transform transition-transform duration-300 ease-out"
   [class.translate-x-0]="isEditDrawerOpen" [class.translate-x-full]="!isEditDrawerOpen">
 
   <!-- Drawer Header -->
-  <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-white">
-    <h2 class="text-lg font-bold text-slate-900 font-display">Chỉnh sửa tài khoản</h2>
+  <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-surface">
+    <h2 class="text-lg font-bold text-slate-900">Chỉnh sửa tài khoản</h2>
     <button type="button" (click)="close.emit()"
-      class="text-slate-400 hover:text-slate-600 p-1.5 rounded-full hover:bg-slate-100 transition-colors cursor-pointer">
+      class="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer">
       <lucide-icon name="x" class="h-5 w-5"></lucide-icon>
     </button>
   </div>
@@ -27,10 +27,10 @@
         <div
           class="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <lucide-icon name="camera" class="w-5 h-5 text-white mb-0.5"></lucide-icon>
-          <span class="text-[9px] font-bold text-white uppercase tracking-wider">Thay đổi</span>
+          <span class="text-[12px] font-bold text-white uppercase tracking-wider">Thay đổi</span>
         </div>
       </label>
-      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ảnh đại diện</span>
+      <span class="text-[12px] font-bold text-slate-400 uppercase tracking-wider">Ảnh đại diện</span>
     </div>
 
     <!-- Username -->
@@ -38,21 +38,21 @@
       <label class="text-sm font-bold text-emerald-600">Username / Tên đăng nhập <span
           class="text-rose-500">*</span></label>
       <input type="text" [(ngModel)]="editUsername" placeholder="Nhập username"
-        class="w-full h-11 px-4 bg-slate-50/70 border border-slate-100 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-slate-100/80 transition-all">
+        class="w-full h-11 px-4 bg-slate-50/70 border border-slate-100 rounded-xl text-[13px] font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-slate-100/80 transition-all">
     </div>
 
     <!-- Full Name -->
     <div class="flex flex-col gap-1.5">
       <label class="text-sm font-bold text-emerald-600">Họ và tên <span class="text-rose-500">*</span></label>
       <input type="text" [(ngModel)]="editFullName" placeholder="Nhập họ và tên đầy đủ"
-        class="w-full h-11 px-4 bg-slate-50/70 border border-slate-100 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-slate-100/80 transition-all">
+        class="w-full h-11 px-4 bg-slate-50/70 border border-slate-100 rounded-xl text-[13px] font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-slate-100/80 transition-all">
     </div>
 
     <!-- Phone -->
     <div class="flex flex-col gap-1.5">
       <label class="text-sm font-bold text-emerald-600">Số điện thoại</label>
       <input type="text" [(ngModel)]="editPhone" placeholder="Nhập số điện thoại"
-        class="w-full h-11 px-4 bg-slate-50/70 border border-slate-100 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-slate-100/80 transition-all">
+        class="w-full h-11 px-4 bg-slate-50/70 border border-slate-100 rounded-xl text-[13px] font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-slate-100/80 transition-all">
     </div>
 
     <!-- Country (Custom Search Dropdown) -->
@@ -61,7 +61,7 @@
 
       <!-- Dropdown Trigger Button -->
       <div (click)="toggleCountryDropdown($event)"
-        class="w-full h-11 px-4 bg-slate-50/70 border border-slate-100 rounded-xl text-xs font-semibold text-slate-800 flex items-center justify-between cursor-pointer hover:bg-slate-100/80 transition-all select-none">
+        class="w-full h-11 px-4 bg-slate-50/70 border border-slate-100 rounded-xl text-[13px] font-semibold text-slate-800 flex items-center justify-between cursor-pointer hover:bg-slate-100/80 transition-all select-none">
         <span [class.text-slate-400]="!editCountry">
           {{ editCountry || 'Chọn quốc gia' }}
         </span>
@@ -71,19 +71,19 @@
 
       <!-- Dropdown Menu Panel -->
       <div *ngIf="isCountryDropdownOpen" (click)="$event.stopPropagation()"
-        class="absolute top-[70px] left-0 right-0 bg-white border border-slate-100 rounded-xl shadow-xl z-50 flex flex-col max-h-60 overflow-hidden transform origin-top transition-all duration-200">
+        class="absolute top-[70px] left-0 right-0 bg-surface border border-slate-100 rounded-xl shadow-xl z-50 flex flex-col max-h-60 overflow-hidden transform origin-top transition-all duration-200">
 
         <!-- Search Input -->
-        <div class="p-2 border-b border-slate-100 sticky top-0 bg-white z-10 flex items-center gap-2">
+        <div class="p-2 border-b border-slate-100 sticky top-0 bg-surface z-10 flex items-center gap-2">
           <lucide-icon name="search" class="w-3.5 h-3.5 text-slate-400 ml-1"></lucide-icon>
           <input type="text" [(ngModel)]="countrySearchQuery" placeholder="Tìm kiếm quốc gia..."
-            class="w-full h-8 px-2 bg-slate-50 border border-slate-100 rounded-lg text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-600 focus:bg-white transition-all">
+            class="w-full h-8 px-2 bg-slate-50 border border-slate-100 rounded-xl text-[13px] font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-600 focus:bg-surface transition-all">
         </div>
 
         <!-- Countries List -->
         <div class="flex-1 overflow-y-auto max-h-48 py-1 scrollbar-thin">
           <div *ngFor="let country of filteredCountries" (click)="selectCountry(country.name)"
-            class="px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer flex items-center justify-between transition-colors"
+            class="px-4 py-2 text-[13px] font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer flex items-center justify-between transition-colors"
             [class.bg-emerald-50/50]="editCountry === country.name"
             [class.text-emerald-600]="editCountry === country.name">
             <span>{{ country.name }}</span>
@@ -91,7 +91,7 @@
               class="w-3.5 h-3.5 text-emerald-600"></lucide-icon>
           </div>
           <div *ngIf="filteredCountries.length === 0"
-            class="px-4 py-3 text-xs text-slate-400 text-center font-medium">
+            class="px-4 py-3 text-[13px] text-slate-400 text-center font-medium">
             Không tìm thấy quốc gia nào
           </div>
         </div>
@@ -119,13 +119,13 @@
   </div>
 
   <!-- Drawer Footer Buttons -->
-  <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 bg-white">
+  <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 bg-surface">
     <button type="button" (click)="close.emit()" [disabled]="isSubmittingEdit"
-      class="px-6 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-full font-bold text-xs transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50">
+      class="px-6 py-2.5 bg-surface hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl font-bold text-[13px] transition-all cursor-pointer disabled:opacity-50">
       Hủy
     </button>
     <button type="button" (click)="submitEditUser()" [disabled]="isSubmittingEdit"
-      class="px-6 py-2.5 bg-primary hover:bg-emerald-800 disabled:opacity-50 text-white rounded-full font-bold text-xs transition-all active:scale-[0.98] shadow-xs cursor-pointer inline-flex items-center gap-2">
+      class="px-6 py-2.5 bg-primary hover:bg-emerald-800 disabled:opacity-50 text-white rounded-xl font-bold text-[13px] transition-all shadow-xs cursor-pointer inline-flex items-center gap-2">
       @if (isSubmittingEdit) {
         <lucide-icon name="loader-2" class="h-4 w-4 animate-spin"></lucide-icon>
         <span>Đang lưu...</span>

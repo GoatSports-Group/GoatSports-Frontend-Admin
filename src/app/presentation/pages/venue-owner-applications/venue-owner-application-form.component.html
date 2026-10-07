@@ -152,10 +152,7 @@
             </label>
             <label>
               <span class="field-label">Loại hình kinh doanh <em>*</em></span>
-              <select name="businessType" [(ngModel)]="form.businessType">
-                <option value="INDIVIDUAL">Cá nhân</option>
-                <option value="COMPANY">Doanh nghiệp</option>
-              </select>
+              <app-select name="businessType" [(ngModel)]="form.businessType" [options]="businessTypeOptions" ariaLabel="Loại hình kinh doanh"></app-select>
             </label>
             <label>
               <span class="field-label">Mã số thuế <em>*</em></span>

@@ -67,7 +67,7 @@
   min-width: 0;
   overflow: hidden;
   border: 1px solid var(--hairline);
-  border-radius: 9px;
+  border-radius: 12px;
   background: var(--surface-strong);
 }
 
@@ -122,12 +122,12 @@
   padding: 0 11px;
   cursor: pointer;
   border: 1px solid rgb(255 255 255 / 65%);
-  border-radius: 8px;
+  border-radius: 12px;
   background: rgb(23 32 51 / 78%);
   box-shadow: 0 5px 16px var(--hairline);
   color: #fff;
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   backdrop-filter: blur(6px);
 }
@@ -191,7 +191,7 @@
   height: 32px;
   place-items: center;
   border: 0;
-  border-radius: 8px;
+  border-radius: 12px;
   background: color-mix(in srgb, var(--surface) 90%, transparent);
   box-shadow: 0 5px 14px var(--hairline);
   color: var(--danger);
@@ -239,7 +239,7 @@
   gap: 4px;
   cursor: pointer;
   border: 1px dashed #afc8bf;
-  border-radius: 9px;
+  border-radius: 12px;
   background: var(--surface-subtle);
   color: var(--venue-primary-dark);
   text-align: center;
@@ -278,7 +278,7 @@
 
 .gallery-more small {
   margin-top: 2px;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .gallery-add-tile:hover,
@@ -293,13 +293,13 @@
 }
 
 .gallery-add-tile span {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
 }
 
 .gallery-add-tile small {
   color: var(--venue-muted);
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .gallery-empty {
@@ -353,7 +353,7 @@
 .form-section > header span {
   color: var(--ink-2);
   font-size: 14px;
-  font-weight: 750;
+  font-weight: 700;
   line-height: 1.45;
   white-space: nowrap;
 }
@@ -382,7 +382,7 @@
 .policy-section__intro p {
   margin: 4px 0 12px;
   color: var(--venue-muted);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.55;
 }
 
@@ -395,7 +395,7 @@
   grid-template-columns: minmax(0, 1fr) auto;
   overflow: hidden;
   border: 1px solid var(--border-strong);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--surface);
 }
 
@@ -422,7 +422,7 @@
   border-left: 1px solid var(--hairline);
   background: var(--surface-subtle);
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -432,7 +432,7 @@
   gap: 9px;
   margin-top: 12px;
   padding: 11px 12px;
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--surface-strong);
   color: var(--primary);
 }
@@ -446,7 +446,7 @@
 
 .policy-preview p {
   margin: 0;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.55;
 }
 
@@ -461,12 +461,12 @@
   min-height: 38px;
   padding: 0 16px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--primary-fill);
   color: #fff;
   font: inherit;
   font-size: 13px;
-  font-weight: 750;
+  font-weight: 700;
   cursor: pointer;
 }
 
@@ -537,15 +537,15 @@
 
 .field > span {
   color: var(--body);
-  font-size: 12px;
-  font-weight: 650;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .address-field > label {
   width: fit-content;
   color: var(--body);
-  font-size: 12px;
-  font-weight: 650;
+  font-size: 13px;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -559,7 +559,7 @@
   width: 100%;
   min-width: 0;
   border: 1px solid var(--border-strong);
-  border-radius: 8px;
+  border-radius: 12px;
   outline: none;
   background: var(--surface);
   color: var(--ink-2);
@@ -590,12 +590,12 @@
 
 .field input.ng-invalid.ng-touched,
 .field textarea.ng-invalid.ng-touched {
-  border-color: #e33c57;
+  border-color: var(--danger);
 }
 
 .field small {
   color: var(--danger);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .field em {
@@ -603,7 +603,7 @@
   right: 9px;
   bottom: 7px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 13px;
   font-style: normal;
 }
 
@@ -623,8 +623,8 @@
   padding-left: 8px;
   background: var(--surface);
   color: var(--venue-muted);
-  font-size: 11px;
-  font-weight: 650;
+  font-size: 13px;
+  font-weight: 600;
   line-height: 1;
   transform: translateY(-50%);
 }
@@ -640,10 +640,10 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   border: 1px solid var(--border-strong);
-  border-radius: 9px;
+  border-radius: 12px;
   background: var(--surface);
   box-shadow: 0 16px 34px var(--hairline);
-  scrollbar-color: #94a3b8 #f8fafc;
+  scrollbar-color: var(--body) var(--surface-subtle);
   scrollbar-width: thin;
 }
 
@@ -684,20 +684,20 @@
 }
 
 .address-suggestions strong {
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .address-suggestions span {
   color: var(--venue-muted);
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .address-suggestions__message {
   margin: 0;
   padding: 11px 12px;
   color: var(--warning);
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.5;
 }
 
@@ -706,8 +706,8 @@
   align-items: center;
   gap: 5px;
   color: var(--venue-primary-dark);
-  font-size: 11px;
-  font-weight: 650;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .address-selection-status lucide-icon {
@@ -733,11 +733,11 @@
   gap: 2px;
   padding: 0 5px 0 7px;
   border: 1px solid var(--warning-soft);
-  border-radius: 7px;
+  border-radius: 6px;
   background: var(--warning-soft);
   color: var(--body);
-  font-size: 12px;
-  font-weight: 650;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .amenity-chip button {
@@ -795,11 +795,11 @@
   padding: 0 7px;
   cursor: pointer;
   border: 1px solid #80cbb2;
-  border-radius: 7px;
+  border-radius: 6px;
   background: var(--surface);
   color: var(--venue-primary-dark);
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -872,7 +872,7 @@
 .switch-field small {
   margin-top: 2px;
   color: var(--venue-muted);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .form-actions {
@@ -929,10 +929,10 @@
   gap: 8px;
   padding: 0 18px;
   cursor: pointer;
-  border-radius: 9px;
+  border-radius: 12px;
   font: inherit;
   font-size: 14px;
-  font-weight: 750;
+  font-weight: 700;
   text-decoration: none;
 }
 
@@ -1008,7 +1008,7 @@
   align-content: center;
   padding: 40px 24px;
   border: 1px solid var(--venue-border);
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--surface);
   text-align: center;
 }
@@ -1136,7 +1136,7 @@
 }
 
 .gallery-lightbox__placeholder--error {
-  color: #fecaca;
+  color: var(--danger);
 }
 
 .gallery-lightbox__nav {

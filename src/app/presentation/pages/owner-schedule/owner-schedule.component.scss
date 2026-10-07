@@ -1,3 +1,4 @@
+@use '../ops' as t;
 :host {
   display: block;
   min-width: 0;
@@ -97,7 +98,7 @@ input:focus-visible {
   justify-content: center;
   gap: 7px;
   padding: 0 17px;
-  border-radius: 9px;
+  border-radius: 12px;
   font-size: 14px;
   font-weight: 700;
   text-decoration: none;
@@ -153,7 +154,7 @@ input:focus-visible {
 .context-select>span {
   color: var(--body);
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .context-select select,
@@ -166,7 +167,7 @@ input:focus-visible {
   height: 44px;
   padding: 0 13px;
   border: 1px solid var(--border-strong);
-  border-radius: 9px;
+  border-radius: 12px;
   background: var(--surface);
   color: var(--ink-2);
   font-size: 14px;
@@ -182,7 +183,7 @@ input:focus-visible {
   padding: 0 13px;
   overflow: visible;
   border: 1px solid var(--border-strong);
-  border-radius: 9px;
+  border-radius: 12px;
   background: var(--surface);
   color: var(--ink-2);
   cursor: pointer;
@@ -212,7 +213,7 @@ input:focus-visible {
 .date-range-picker strong {
   overflow: hidden;
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -263,7 +264,7 @@ input:focus-visible {
 .calendar-picker-popover > header button {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
 .calendar-picker-popover > header button:hover {
@@ -281,7 +282,7 @@ input:focus-visible {
 .calendar-picker-weekdays {
   margin-bottom: 4px;
   color: var(--body);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   text-align: center;
 }
@@ -290,8 +291,8 @@ input:focus-visible {
   width: 100%;
   min-width: 0;
   aspect-ratio: 1;
-  border-radius: 7px;
-  font-size: 12px;
+  border-radius: 6px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -330,17 +331,17 @@ input:focus-visible {
 
 .calendar-picker-popover > footer span {
   color: var(--body);
-  font-size: 10px;
+  font-size: 13px;
 }
 
 .calendar-picker-popover > footer button {
   flex: none;
   padding: 5px 8px;
   border: 0;
-  border-radius: 7px;
+  border-radius: 6px;
   background: var(--surface-strong);
   color: var(--primary);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -360,12 +361,12 @@ input:focus-visible {
 }
 
 .week-navigation button:first-child {
-  border-radius: 9px 0 0 9px;
+  border-radius: 12px 0 0 12px;
 }
 
 .week-navigation button:last-child {
   margin-left: -1px;
-  border-radius: 0 9px 9px 0;
+  border-radius: 0 12px 12px 0;
 }
 
 .week-navigation lucide-icon {
@@ -395,7 +396,7 @@ input:focus-visible {
   background: transparent;
   color: var(--body);
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .schedule-tabs button::after {
@@ -422,7 +423,7 @@ input:focus-visible {
   margin-top: 18px;
   padding: 14px;
   border: 1px solid var(--hairline);
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--surface);
   box-shadow: 0 8px 24px var(--hairline);
 }
@@ -455,11 +456,11 @@ input:focus-visible {
 
 .calendar-legend i[data-status='AVAILABLE'] { background: #57a93d; }
 .calendar-legend i[data-status='AWAITING_CHECK_IN'] { background: #d99a1d; }
-.calendar-legend i[data-status='OCCUPIED'] { background: #2f78c4; }
+.calendar-legend i[data-status='OCCUPIED'] { background: var(--info); }
 .calendar-legend i[data-status='PAYMENT_DUE'] { background: #b35a27; }
 .calendar-legend i[data-status='UPCOMING'] { background: #e68a18; }
 .calendar-legend i[data-status='COMPLETED'] { background: var(--primary-fill); }
-.calendar-legend i[data-status='MAINTENANCE'] { background: #db443e; }
+.calendar-legend i[data-status='MAINTENANCE'] { background: var(--danger); }
 .calendar-legend i[data-status='DISABLED'] { background: #8f9893; }
 .calendar-legend i[data-status='TOURNAMENT'] { border: 1.5px dashed var(--info); background: var(--surface); }
 .calendar-legend i[data-status='TOURNAMENT_MATCH'] { background: var(--sports-navy); }
@@ -495,7 +496,7 @@ input:focus-visible {
 
 .time-heading {
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .day-heading strong {
@@ -506,7 +507,7 @@ input:focus-visible {
 
 .day-heading span {
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .day-heading--today {
@@ -540,7 +541,7 @@ input:focus-visible {
   right: 10px;
   z-index: 1;
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   transform: translateY(-8px);
 }
@@ -590,12 +591,12 @@ input:focus-visible {
   border-radius: 6px;
   background: var(--primary-light);
   color: var(--primary-strong);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.3;
 }
 
 .calendar-slot strong {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -608,7 +609,7 @@ input:focus-visible {
 }
 
 .calendar-slot>small {
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .calendar-slot[data-status='AWAITING_CHECK_IN'] {
@@ -716,7 +717,7 @@ input:focus-visible {
   place-items: center;
   padding: 0;
   border: 1px solid var(--border-strong);
-  border-radius: 4px;
+  border-radius: 6px;
   background: var(--surface);
   color: var(--body);
 }
@@ -764,7 +765,7 @@ input:focus-visible {
   border-radius: 999px;
   background: var(--surface-strong);
   color: var(--primary);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .active-rules header button {
@@ -774,11 +775,11 @@ input:focus-visible {
   gap: 5px;
   padding: 0 11px;
   border: 1px solid var(--border-strong);
-  border-radius: 7px;
+  border-radius: 6px;
   background: var(--surface);
   color: var(--ink-2);
-  font-size: 12px;
-  font-weight: 650;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .active-rules header button.active-rules__count {
@@ -788,7 +789,7 @@ input:focus-visible {
   border-radius: 999px;
   background: var(--surface-strong);
   color: var(--primary);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .active-rules__count lucide-icon {
@@ -827,7 +828,7 @@ input:focus-visible {
 
 .active-rule-details>section>strong {
   color: var(--primary);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .active-rule-details>section>div {
@@ -845,7 +846,7 @@ input:focus-visible {
 .active-rule-details b,
 .active-rule-details span,
 .active-rule-details small {
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .active-rule-details b {
@@ -854,7 +855,7 @@ input:focus-visible {
 
 .active-rule-details span {
   color: var(--primary);
-  font-weight: 750;
+  font-weight: 700;
 }
 
 .active-rule-details small {
@@ -908,7 +909,7 @@ input:focus-visible {
 
 .rule-summary-grid span {
   color: var(--body);
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .rule-summary-grid b {
@@ -928,7 +929,7 @@ input:focus-visible {
   margin-top: 18px;
   padding: 16px;
   border: 1px solid var(--hairline);
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--surface);
   box-shadow: 0 8px 24px var(--hairline);
 }
@@ -941,7 +942,7 @@ input:focus-visible {
   margin-bottom: 18px;
   padding: 13px;
   border: 1px solid var(--hairline);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--surface-subtle);
 }
 
@@ -968,8 +969,8 @@ input:focus-visible {
 
 .generation-strip label>span {
   color: var(--body);
-  font-size: 12px;
-  font-weight: 650;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .pricing-heading {
@@ -1037,7 +1038,7 @@ input:focus-visible {
   align-self: center;
   place-content: center;
   border: 1px solid #aab8b1;
-  border-radius: 4px;
+  border-radius: 6px;
   background: var(--surface);
   cursor: pointer;
   transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
@@ -1103,7 +1104,7 @@ input:focus-visible {
 .rule-group {
   overflow: hidden;
   border: 1px solid var(--hairline);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--surface);
 }
 
@@ -1141,8 +1142,8 @@ input:focus-visible {
 
 .rule-group__toggle span {
   color: var(--body);
-  font-size: 12px;
-  font-weight: 650;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .rule-group__toggle lucide-icon {
@@ -1221,8 +1222,8 @@ input:focus-visible {
 
 .rule-card__day span {
   color: var(--primary);
-  font-size: 12px;
-  font-weight: 750;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .rule-card__day strong {
@@ -1232,7 +1233,7 @@ input:focus-visible {
 .rule-card small,
 .rule-card__price span {
   color: var(--body);
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .rule-card__price strong {
@@ -1242,9 +1243,9 @@ input:focus-visible {
 
 .rule-card__price em {
   color: var(--body);
-  font-size: 11px;
+  font-size: 13px;
   font-style: normal;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .rule-card__dates span {
@@ -1254,9 +1255,9 @@ input:focus-visible {
 
 .rule-card__dates em {
   color: var(--warning);
-  font-size: 11px;
+  font-size: 13px;
   font-style: normal;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .rule-card__actions {
@@ -1306,7 +1307,7 @@ input:focus-visible {
   overflow: hidden auto;
   overscroll-behavior: contain;
   border: 1px solid var(--border-strong);
-  border-radius: 18px;
+  border-radius: 16px;
   background: var(--surface);
   box-shadow: 0 24px 70px rgba(10, 28, 20, .24);
   animation: modal-content-in .18s ease-out;
@@ -1376,13 +1377,13 @@ input:focus-visible {
 
 .editor-section label>span {
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 
 .editor-section .field-hint,
 .editor-section .field-error {
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.35;
 }
 
@@ -1392,7 +1393,7 @@ input:focus-visible {
 
 .editor-section .field-error {
   color: var(--danger);
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .rule-time-notice {
@@ -1402,7 +1403,7 @@ input:focus-visible {
   gap: 9px;
   padding: 11px 12px;
   border: 1px solid var(--primary-light);
-  border-radius: 9px;
+  border-radius: 12px;
   background: var(--primary-light);
   color: var(--primary);
 }
@@ -1419,13 +1420,13 @@ input:focus-visible {
 }
 
 .rule-time-notice strong {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.35;
 }
 
 .rule-time-notice span {
   color: var(--body);
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.45;
 }
 
@@ -1458,10 +1459,10 @@ input:focus-visible {
   height: 34px;
   padding: 0;
   border: 1px solid var(--border-strong);
-  border-radius: 7px;
+  border-radius: 6px;
   background: var(--surface);
   color: var(--body);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -1501,7 +1502,7 @@ input:focus-visible {
   border-radius: 6px;
   background: var(--surface-strong);
   color: var(--body);
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.45;
 }
 
@@ -1537,7 +1538,7 @@ input:focus-visible {
   place-items: center;
   padding: 28px;
   border: 1px dashed var(--border-strong);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--surface);
   text-align: center;
 }
@@ -1796,3 +1797,6 @@ input:focus-visible {
     animation-duration: .01ms !important;
   }
 }
+
+// GOAT-DESIGN §7: dau trang van hanh (chu ink, khong to mau thuong hieu).
+:host .page-heading { @include t.page-head; }

@@ -1,6 +1,7 @@
+import { SelectComponent } from '@shared/components/ui/select/select.component';
 import { By } from '@angular/platform-browser';
 import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { NEVER, of, Subject, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -114,7 +115,7 @@ describe('VenueOwnerDashboardComponent', () => {
     }
   });
 
-  it('hiển thị đầy đủ các khối vận hành theo layout dashboard mới', () => {
+  it('hiển thị đầy đủ các khối vận hành theo layout dashboard mới', async () => {
     getApplications.execute.mockReturnValue(of(pageOf([
       createApplication('application-approved', 'GOAT Arena', 'venue-primary', '2026-08-28T08:00:00Z')
     ])));
@@ -136,7 +137,9 @@ describe('VenueOwnerDashboardComponent', () => {
     expect(root.querySelector('.dev-badge')?.textContent).toContain('DEV');
     expect(root.querySelectorAll('.reviews-preview__list article')).toHaveLength(2);
     expect(root.querySelectorAll('.live-courts-list article')).toHaveLength(2);
-    expect((root.querySelector('.venue-selector select') as HTMLSelectElement).value).toBe('venue-primary');
+    // ngModel ghi gia tri vao app-select sau mot microtask (spec dung fake timers nen khong cho whenStable).
+    await Promise.resolve();
+    expect(venueSelect(fixture).value).toBe('venue-primary');
     expect(getVenues.execute).toHaveBeenCalledTimes(1);
   });
 
@@ -223,10 +226,7 @@ describe('VenueOwnerDashboardComponent', () => {
     getCustomerMetrics.execute.mockClear();
     manageBookings.list.mockClear();
 
-    const venueSelect = fixture.nativeElement.querySelector('.venue-selector select') as HTMLSelectElement;
-    venueSelect.value = 'venue-secondary';
-    venueSelect.dispatchEvent(new Event('change'));
-    fixture.detectChanges();
+    chooseVenue(fixture, 'venue-secondary');
 
     expect(fixture.componentInstance.selectedVenueId()).toBe('venue-secondary');
     expect(getRevenue.execute).toHaveBeenCalledWith(expect.objectContaining({ venueId: 'venue-secondary' }));
@@ -247,13 +247,10 @@ describe('VenueOwnerDashboardComponent', () => {
     const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
     fixture.detectChanges();
 
-    const venueSelect = fixture.nativeElement.querySelector('.venue-selector select') as HTMLSelectElement;
     expect(fixture.componentInstance.businessLoading()).toBe(true);
-    expect(venueSelect.disabled).toBe(false);
+    expect(venueSelect(fixture).disabled).toBe(false);
 
-    venueSelect.value = 'venue-secondary';
-    venueSelect.dispatchEvent(new Event('change'));
-    fixture.detectChanges();
+    chooseVenue(fixture, 'venue-secondary');
 
     expect(fixture.componentInstance.selectedVenueId()).toBe('venue-secondary');
     expect(getRevenue.execute).toHaveBeenCalledWith(expect.objectContaining({ venueId: 'venue-secondary' }));
@@ -728,4 +725,15 @@ function kpiMap(root: HTMLElement): Map<string, { value: string; detail: string 
 
 function pageOf(result: OwnerApplication[]) {
   return { meta: { page: 0, pageSize: 20, pages: 1, total: result.length }, result };
+}
+
+/** O chon co so la app-select (GOAT-DESIGN §6), khong con <select> goc. */
+function venueSelect(fixture: ComponentFixture<VenueOwnerDashboardComponent>): SelectComponent {
+  return fixture.debugElement.query(By.css('.venue-selector app-select')).componentInstance as SelectComponent;
+}
+
+/** Chon nhu nguoi dung bam vao mot muc trong danh sach. */
+function chooseVenue(fixture: ComponentFixture<VenueOwnerDashboardComponent>, venueId: string): void {
+  venueSelect(fixture).select({ value: venueId, label: venueId }, new MouseEvent('click'));
+  fixture.detectChanges();
 }

@@ -1,3 +1,4 @@
+import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
 import { PAGE_SIZE } from '@shared/constants/page-size';
 import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
@@ -38,7 +39,7 @@ type ResolvedPaymentMethod = 'CASH' | 'PAYOS';
 @Component({
   selector: 'app-owner-bookings',
   standalone: true,
-  imports: [DatePickerComponent, LoadingSkeletonComponent, ReactiveFormsModule, LucideIconComponent, PageLoadingComponent, PaginationComponent],
+  imports: [DatePickerComponent, LoadingSkeletonComponent, ReactiveFormsModule, LucideIconComponent, PageLoadingComponent, PaginationComponent, SelectComponent],
   templateUrl: './owner-bookings.component.html',
   styleUrl: './owner-bookings.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -126,7 +127,8 @@ export class OwnerBookingsComponent {
 
   readonly filterForm = this.formBuilder.nonNullable.group({
     venueId: [''], venueCourtId: [''], status: ['' as '' | OwnerBookingStatus],
-    paymentStatus: ['' as PaymentFilter], query: [''], fromDate: [''], toDate: ['']
+    // ?query=<ma ve> (vd. tu Tin nhan "Khach dang hoi ve"): mo san bo loc theo ma ve do.
+    paymentStatus: ['' as PaymentFilter], query: [this.route.snapshot.queryParamMap.get('query') ?? ''], fromDate: [''], toDate: ['']
   });
   readonly createForm = this.formBuilder.nonNullable.group({
     venueId: ['', Validators.required],
@@ -182,6 +184,16 @@ export class OwnerBookingsComponent {
       slot.status === 'AVAILABLE' && !slot.tournamentId && this.slotEndTimestamp(slot) > this.currentTimestamp()
     )
   );
+  readonly venueOptions = computed<SelectOption[]>(() => this.venues().map(venue => ({ value: venue.venueId, label: venue.name })));
+  readonly venueFilterOptions = computed<SelectOption[]>(() => [{ value: '', label: 'Tất cả cơ sở' }, ...this.venueOptions()]);
+  readonly courtFilterOptions = computed<SelectOption[]>(() => [
+    { value: '', label: 'Tất cả sân' }, ...this.courts().map(court => ({ value: court.venueCourtId, label: court.name }))
+  ]);
+  readonly createCourtOptions = computed<SelectOption[]>(() => this.createCourts().map(court => ({ value: court.venueCourtId, label: court.name })));
+  readonly createSlotOptions = computed<SelectOption[]>(() => this.availableCreateSlots().map(slot => ({
+    value: slot.timeSlotId,
+    label: `${this.timeValue(slot.startTime)} – ${this.timeValue(slot.endTime)} · ${this.formatMoney(this.slotTotal(slot))}`
+  })));
   readonly selectedCreateSlot = computed(() => {
     const slotId = this.selectedCreateSlotId();
     return this.availableCreateSlots().find(slot => slot.timeSlotId === slotId) ?? null;

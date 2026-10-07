@@ -1,0 +1,76 @@
+<main class="page">
+  <header class="page-head">
+    <div>
+      <h1>Thông báo</h1>
+      <p>Hồ sơ, đặt sân, thanh toán và hoạt động trên cơ sở của bạn.</p>
+    </div>
+    @if (hasUnread()) {
+    <div class="actions">
+      <button type="button" class="btn" [disabled]="markingAll()" (click)="readAll()">
+        <lucide-icon [name]="markingAll() ? 'loader-2' : 'check-check'" [class.spin]="markingAll()" />
+        {{ markingAll() ? 'Đang cập nhật...' : 'Đánh dấu tất cả đã đọc' }}
+      </button>
+    </div>
+    }
+  </header>
+
+  <nav #listAnchor class="tabs" role="tablist" aria-label="Lọc thông báo">
+    <button type="button" role="tab" class="tab" [class.is-active]="filter() === 'ALL'" [attr.aria-selected]="filter() === 'ALL'"
+      (click)="setFilter('ALL')">Tất cả<span class="count">{{ allCount() ?? '—' }}</span></button>
+    <button type="button" role="tab" class="tab" [class.is-active]="filter() === 'UNREAD'" [attr.aria-selected]="filter() === 'UNREAD'"
+      (click)="setFilter('UNREAD')">Chưa đọc<span class="count" [class.count--alert]="unreadCount() > 0">{{ unreadCount() }}</span></button>
+  </nav>
+
+  <section aria-live="polite">
+    @if (loading()) {
+    <app-loading-skeleton variant="rows" [count]="6" label="Đang tải thông báo" />
+    } @else if (failed() && !items().length) {
+    <div class="state state--error" role="alert">
+      <lucide-icon name="alert-triangle" /><strong>Chưa tải được thông báo</strong><p>Kiểm tra kết nối rồi thử lại.</p>
+      <button type="button" class="btn" (click)="load()"><lucide-icon name="rotate-ccw" />Thử lại</button>
+    </div>
+    } @else if (!items().length) {
+    <div class="state">
+      <lucide-icon name="inbox" /><strong>Không có thông báo</strong>
+      <p>{{ filter() === 'UNREAD' ? 'Bạn đã đọc tất cả thông báo.' : 'Thông báo mới từ GOAT Sports sẽ xuất hiện tại đây.' }}</p>
+    </div>
+    } @else {
+    <div class="notif-list" [class.is-paging]="paging()" [attr.aria-busy]="paging()">
+      @for (item of items(); track item.notificationId) {
+      @let type = view(item.type);
+      <article class="notif-row" [class.is-unread]="item.status === UNREAD" [class.is-actionable]="canOpen(item)"
+        [attr.tabindex]="canOpen(item) ? 0 : null" [attr.aria-label]="item.title || 'Thông báo'"
+        (click)="open(item)" (keydown.enter)="open(item)">
+        <span class="notif-icon" [attr.data-tone]="type.tone"><lucide-icon [name]="type.icon" /></span>
+        <div class="notif-copy">
+          <span class="notif-type">{{ type.label }}</span>
+          <h2>{{ item.title || 'Thông báo' }}</h2>
+          <p>{{ item.content }}</p>
+        </div>
+        <div class="notif-side" (click)="$event.stopPropagation()">
+          <time [attr.datetime]="item.createdAt">{{ relativeTime(item.createdAt) }}</time>
+          @if (item.status === UNREAD) { <span class="unread-dot" aria-label="Chưa đọc"></span> }
+          <button type="button" class="icon-btn icon-btn--danger" [disabled]="isPending(item.notificationId)"
+            [attr.aria-label]="'Xóa thông báo ' + (item.title || '')" (click)="askDelete(item, $event)">
+            <lucide-icon name="trash-2" />
+          </button>
+        </div>
+        @if (confirmingId() === item.notificationId) {
+        <div class="notif-confirm" role="alert" (click)="$event.stopPropagation()">
+          <span>Xóa thông báo này?</span>
+          <button type="button" class="btn btn--sm" (click)="cancelDelete($event)">Hủy</button>
+          <button type="button" class="btn btn--sm btn--danger" [disabled]="isPending(item.notificationId)" (click)="confirmDelete(item, $event)">
+            {{ isPending(item.notificationId) ? 'Đang xóa...' : 'Xóa' }}
+          </button>
+        </div>
+        }
+      </article>
+      }
+    </div>
+    @if (total() > pageSize) {
+    <app-pagination [class.is-paging]="paging()" [pageIndex]="pageIndex()" [pageSize]="pageSize" [totalItems]="total()"
+      itemLabel="thông báo" (pageChange)="changePage($event)" />
+    }
+    }
+  </section>
+</main>

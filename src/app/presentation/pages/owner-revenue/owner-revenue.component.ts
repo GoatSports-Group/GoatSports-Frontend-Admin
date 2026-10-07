@@ -1,3 +1,4 @@
+import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
 import { FormsModule } from '@angular/forms';
 import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
 import {
@@ -59,7 +60,7 @@ interface RevenueLoadResult {
 @Component({
   selector: 'app-owner-revenue',
   standalone: true,
-  imports: [FormsModule, DatePickerComponent, DatePipe, LucideIconComponent, PageLoadingComponent, RouterLink],
+  imports: [FormsModule, DatePickerComponent, DatePipe, LucideIconComponent, PageLoadingComponent, RouterLink, SelectComponent],
   templateUrl: './owner-revenue.component.html',
   styleUrl: './owner-revenue.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -73,6 +74,9 @@ export class OwnerRevenueComponent {
   private readonly notify = inject(NotifyService);
 
   readonly venues = signal<OwnerVenueOverview[]>([]);
+  readonly venueOptions = computed<SelectOption[]>(() => [
+    { value: '', label: 'Tất cả cơ sở' }, ...this.venues().map(venue => ({ value: venue.venueId, label: venue.name }))
+  ]);
   readonly selectedVenueId = signal('');
   readonly selectedPreset = signal<RevenuePreset>('month');
   readonly fromDate = signal(this.monthStart());
@@ -280,8 +284,8 @@ export class OwnerRevenueComponent {
     });
   }
 
-  selectVenue(event: Event): void {
-    this.selectedVenueId.set((event.target as HTMLSelectElement).value);
+  selectVenue(value: string): void {
+    this.selectedVenueId.set(value);
   }
 
   selectPreset(preset: RevenuePreset): void {

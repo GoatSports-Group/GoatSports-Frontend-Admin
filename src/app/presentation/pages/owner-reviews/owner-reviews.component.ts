@@ -1,3 +1,4 @@
+import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
 import { PAGE_SIZE } from '@shared/constants/page-size';
 import { FormsModule } from '@angular/forms';
 import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
@@ -17,7 +18,7 @@ import { PaginationComponent } from '@shared/components/ui/pagination/pagination
 @Component({
   selector: 'app-owner-reviews',
   standalone: true,
-  imports: [FormsModule, DatePickerComponent, LucideIconComponent, PageLoadingComponent, PaginationComponent],
+  imports: [FormsModule, DatePickerComponent, LucideIconComponent, PageLoadingComponent, PaginationComponent, SelectComponent],
   templateUrl: './owner-reviews.component.html',
   styleUrl: './owner-reviews.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -28,6 +29,9 @@ export class OwnerReviewsComponent {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly stars = [1, 2, 3, 4, 5];
+  readonly ratingOptions: readonly SelectOption[] = [
+    { value: '', label: 'Tất cả mức' }, ...this.stars.map(star => ({ value: star, label: `${star} sao` }))
+  ];
   readonly venues = signal<OwnerVenueOverview[]>([]);
   readonly reviews = signal<OwnerReview[]>([]);
   readonly selectedVenueId = signal('');
@@ -44,8 +48,14 @@ export class OwnerReviewsComponent {
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
 
+  readonly venueOptions = computed<SelectOption[]>(() => [
+    { value: '', label: 'Tất cả cơ sở' }, ...this.venues().map(venue => ({ value: venue.venueId, label: venue.name }))
+  ]);
   readonly courts = computed(() => this.venues()
     .find(venue => venue.venueId === this.selectedVenueId())?.courts ?? []);
+  readonly courtOptions = computed<SelectOption[]>(() => [
+    { value: '', label: 'Tất cả sân' }, ...this.courts().map(court => ({ value: court.venueCourtId, label: court.name }))
+  ]);
   readonly invalidRange = computed(() => {
     if (!this.fromDate() || !this.toDate()) return false;
     return this.fromDate() > this.toDate() || this.rangeDays() > 366;
@@ -79,15 +89,14 @@ export class OwnerReviewsComponent {
   }
 
   retry(): void { this.venues().length ? this.loadReviews(this.page()) : this.loadContext(); }
-  selectVenue(event: Event): void {
-    this.selectedVenueId.set((event.target as HTMLSelectElement).value);
+  selectVenue(value: string): void {
+    this.selectedVenueId.set(value);
     this.selectedCourtId.set('');
   }
-  selectCourt(event: Event): void {
-    this.selectedCourtId.set((event.target as HTMLSelectElement).value);
+  selectCourt(value: string): void {
+    this.selectedCourtId.set(value);
   }
-  selectRating(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value;
+  selectRating(value: number | ''): void {
     this.selectedRating.set(value ? Number(value) : null);
   }
   selectFromDate(value: string): void {

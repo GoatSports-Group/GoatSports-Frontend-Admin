@@ -8,13 +8,8 @@
     <label class="venue-selector" [class.is-single]="venues().length < 2">
       <span class="sr-only">Chọn cơ sở để xem thống kê</span>
       <lucide-icon name="land-plot" />
-      <select [value]="venue.venueId" [disabled]="venues().length < 2"
-        (change)="selectVenue($event)" aria-label="Cơ sở đang thống kê">
-        @for (venueOption of venues(); track venueOption.venueId) {
-        <option [value]="venueOption.venueId">{{ venueOption.name }}</option>
-        }
-      </select>
-      <lucide-icon name="chevron-down" aria-hidden="true" />
+      <app-select [ngModel]="venue.venueId" (ngModelChange)="selectVenue($event)" [disabled]="venues().length < 2"
+        [options]="venueOptions()" leadingIcon="land-plot" ariaLabel="Cơ sở đang thống kê"></app-select>
     </label>
     }
   </header>

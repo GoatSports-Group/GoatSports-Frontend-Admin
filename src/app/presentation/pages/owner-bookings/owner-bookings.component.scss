@@ -1,3 +1,4 @@
+@use '../ops' as t;
 :host {
   display: block;
   color: var(--ink);
@@ -55,7 +56,7 @@
   min-width: 210px;
   padding: 18px 22px;
   border: 1px solid #a7e4d1;
-  border-radius: 20px;
+  border-radius: 16px;
   background: color-mix(in srgb, var(--surface) 82%, transparent);
 }
 
@@ -63,7 +64,7 @@
 .hero-metric small {
   display: block;
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .hero-metric strong {
@@ -86,7 +87,7 @@
   margin-top: 20px;
   padding: 20px;
   border: 1px solid var(--hairline);
-  border-radius: 22px;
+  border-radius: 16px;
   background: color-mix(in srgb, var(--surface) 94%, transparent);
   box-shadow: 0 10px 28px var(--hairline);
 }
@@ -99,7 +100,7 @@
 
 .filter-panel label>span {
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -118,7 +119,7 @@
 
 .filter-panel select:focus,
 .filter-panel input:focus {
-  border-color: #10b981;
+  border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(16, 185, 129, .12);
 }
 
@@ -193,7 +194,7 @@ button:disabled {
 .booking-card {
   padding: 18px;
   border: 1px solid var(--hairline);
-  border-radius: 20px;
+  border-radius: 16px;
   background: color-mix(in srgb, var(--surface) 96%, transparent);
   box-shadow: 0 10px 28px var(--hairline);
 }
@@ -220,7 +221,7 @@ button:disabled {
 
 .booking-card header small {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -229,7 +230,7 @@ button:disabled {
   border-radius: 999px;
   background: var(--surface-strong);
   color: var(--body);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 900;
   white-space: nowrap;
 }
@@ -263,7 +264,7 @@ button:disabled {
   align-items: center;
   margin: 18px 0;
   padding: 13px;
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--surface-subtle);
 }
 
@@ -291,7 +292,7 @@ button:disabled {
 
 .booking-card__court span {
   color: var(--body);
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .booking-facts {
@@ -307,12 +308,12 @@ button:disabled {
 
 .booking-facts dt {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 13px;
 }
 
 .booking-facts dd {
   margin: 3px 0 0;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
 }
 
@@ -333,11 +334,11 @@ button:disabled {
 
 .payment-strip small {
   color: var(--body);
-  font-size: 10px;
+  font-size: 13px;
 }
 
 .payment-strip strong {
-  font-size: 10px;
+  font-size: 13px;
   color: var(--body);
 }
 
@@ -357,7 +358,7 @@ button:disabled {
 
 .booking-card>footer>span {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 13px;
 }
 
 .booking-card>footer button {
@@ -368,7 +369,7 @@ button:disabled {
   border: 0;
   background: transparent;
   color: var(--primary-hover);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
 }
 
@@ -385,7 +386,7 @@ button:disabled {
   min-height: 34px;
   padding: 0 11px;
   border: 1px solid var(--primary-light);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--primary-light);
 }
 
@@ -394,7 +395,7 @@ button:disabled {
   margin-top: 20px;
   padding: 28px;
   border: 1px solid var(--hairline);
-  border-radius: 20px;
+  border-radius: 16px;
   background: var(--surface);
 }
 
@@ -434,7 +435,7 @@ button:disabled {
 .detail-state button {
   padding: 0 16px;
   border: 1px solid var(--primary-light);
-  border-radius: 11px;
+  border-radius: 12px;
   background: var(--primary-light);
   color: var(--primary-hover);
   font-weight: 800;
@@ -459,13 +460,13 @@ button:disabled {
 .error-state p {
   margin: 2px 0 0;
   color: var(--danger);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .loading-grid span {
   display: block;
   height: 300px;
-  border-radius: 20px;
+  border-radius: 16px;
   background: linear-gradient(90deg, var(--surface-strong), var(--surface), var(--surface-strong));
   background-size: 200% 100%;
   animation: shimmer 1.4s infinite;
@@ -499,7 +500,7 @@ button:disabled {
   gap: 16px;
   margin-top: 22px;
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .pagination button {
@@ -541,7 +542,7 @@ button:disabled {
 
 .detail-panel__header span {
   color: var(--primary);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
 }
@@ -571,7 +572,7 @@ button:disabled {
   margin-bottom: 14px;
   padding: 18px;
   border: 1px solid var(--hairline);
-  border-radius: 18px;
+  border-radius: 16px;
   background: var(--surface);
 }
 
@@ -588,7 +589,7 @@ button:disabled {
   display: flex;
   justify-content: space-between;
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .detail-section>header {
@@ -631,7 +632,7 @@ button:disabled {
 .detail-list dt,
 .money-breakdown dt {
   color: var(--body);
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .detail-list dd,
@@ -640,7 +641,7 @@ button:disabled {
   max-width: 65%;
   overflow-wrap: anywhere;
   text-align: right;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
 }
 
@@ -655,7 +656,7 @@ button:disabled {
   gap: 5px 12px;
   padding: 12px;
   border: 1px solid var(--hairline);
-  border-radius: 13px;
+  border-radius: 12px;
 }
 
 .payment-list article div {
@@ -665,7 +666,7 @@ button:disabled {
 
 .payment-list article div span {
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .payment-list article small {
@@ -674,7 +675,7 @@ button:disabled {
 }
 
 .payment-status {
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 900;
 }
 
@@ -693,7 +694,7 @@ button:disabled {
 .inline-empty p {
   margin: 3px 0 0;
   color: var(--body);
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .timeline {
@@ -714,7 +715,7 @@ button:disabled {
   width: 10px;
   height: 10px;
   margin-top: 4px;
-  border: 2px solid #10b981;
+  border: 2px solid var(--primary);
   border-radius: 50%;
   background: var(--surface);
 }
@@ -730,18 +731,18 @@ button:disabled {
 }
 
 .timeline strong {
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .timeline p {
   margin: 1px 0;
   color: var(--body);
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .timeline small {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 13px;
 }
 
 .detail-panel__footer {
@@ -756,7 +757,7 @@ button:disabled {
 
 .detail-panel__footer>span {
   color: var(--body);
-  font-size: 10px;
+  font-size: 13px;
 }
 
 .detail-state {
@@ -913,7 +914,7 @@ button:disabled {
 .form-grid label>span {
   color: var(--ink-2);
   font-size: 13px;
-  font-weight: 750;
+  font-weight: 700;
 }
 
 .form-grid select,
@@ -932,7 +933,7 @@ button:disabled {
 
 .form-grid select:focus,
 .form-grid input:focus {
-  border-color: #10b981;
+  border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(16, 185, 129, .12);
 }
 
@@ -959,7 +960,7 @@ button:disabled {
 .order-summary p {
   margin: 8px 0 0;
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.55;
 }
 
@@ -991,7 +992,7 @@ button:disabled {
 .create-form-errors p {
   margin: 0;
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.45;
 }
 
@@ -1064,8 +1065,8 @@ button:disabled {
   align-items: center;
   gap: 12px;
   padding: 14px;
-  border: 1px solid #fde68a;
-  border-radius: 14px;
+  border: 1px solid var(--warning);
+  border-radius: 12px;
   background: var(--warning-soft);
   color: var(--warning);
 }
@@ -1087,7 +1088,7 @@ button:disabled {
 
 .pending-payment-note small {
   color: var(--warning);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .payment-methods strong {
@@ -1104,7 +1105,7 @@ button:disabled {
   place-items: center;
   width: 46px;
   height: 46px;
-  border-radius: 13px;
+  border-radius: 12px;
 }
 
 .method-icon lucide-icon {
@@ -1137,7 +1138,7 @@ button:disabled {
   min-height: 292px;
   padding: 8px;
   border: 1px solid var(--hairline);
-  border-radius: 18px;
+  border-radius: 16px;
   background: var(--surface);
   box-shadow: 0 12px 30px var(--hairline);
 }
@@ -1151,7 +1152,7 @@ button:disabled {
 
 .payos-label {
   color: var(--danger);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
   letter-spacing: .08em;
 }
@@ -1352,7 +1353,7 @@ button:disabled {
 }
 
 .filter-panel {
-  border-radius: 14px;
+  border-radius: 12px;
   box-shadow: none;
 }
 
@@ -1361,7 +1362,7 @@ button:disabled {
   overflow: hidden;
   margin-top: 18px;
   border: 1px solid var(--hairline);
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--surface);
 }
 
@@ -1379,7 +1380,7 @@ button:disabled {
   border-bottom: 1px solid var(--hairline);
   background: var(--surface-subtle);
   color: var(--body);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: .04em;
   text-transform: uppercase;
@@ -1458,7 +1459,7 @@ button:disabled {
     grid-template-columns: 1fr;
     gap: 14px;
     border: 1px solid var(--hairline);
-    border-radius: 14px;
+    border-radius: 12px;
   }
 
   .booking-card>header {
@@ -1523,7 +1524,7 @@ button:disabled {
   margin: 0;
   color: var(--primary-strong);
   font-size: clamp(28px, 2.2vw, 36px);
-  font-weight: 850;
+  font-weight: 800;
   line-height: 1.12;
   letter-spacing: -.035em;
 }
@@ -1539,7 +1540,7 @@ button:disabled {
   min-width: 164px;
   min-height: 48px;
   margin-top: 2px;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 14px;
 }
 
@@ -1577,7 +1578,7 @@ button:disabled {
 .filter-panel label>span:not(.search-input) {
   color: var(--body);
   font-size: 13px;
-  font-weight: 750;
+  font-weight: 700;
 }
 
 .filter-panel input,
@@ -1585,7 +1586,7 @@ button:disabled {
 .filter-button,
 .filter-row--secondary .secondary-button {
   min-height: 44px;
-  border-radius: 9px;
+  border-radius: 12px;
   font-size: 14px;
 }
 
@@ -1616,7 +1617,7 @@ button:disabled {
   border: 1px solid var(--border-strong);
   background: var(--surface);
   color: var(--ink-2);
-  font-weight: 750;
+  font-weight: 700;
 }
 
 .filter-button:hover,
@@ -1654,9 +1655,9 @@ button:disabled {
 
 .primary-button,
 .secondary-button {
-  border-radius: 9px;
+  border-radius: 12px;
   font-size: 14px;
-  font-weight: 750;
+  font-weight: 700;
 }
 
 .primary-button {
@@ -1715,8 +1716,8 @@ button:disabled {
   border-bottom: 1px solid var(--border-strong);
   background: linear-gradient(180deg, var(--surface-strong), var(--surface-strong));
   color: var(--ink-2);
-  font-size: 12px;
-  font-weight: 850;
+  font-size: 13px;
+  font-weight: 800;
   letter-spacing: .015em;
   text-transform: none;
 }
@@ -1779,7 +1780,7 @@ button:disabled {
 .schedule-cell span {
   overflow: hidden;
   color: var(--body);
-  font-size: 12.5px;
+  font-size: 13px;
   line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1793,8 +1794,8 @@ button:disabled {
   justify-content: center;
   min-height: 26px;
   padding: 4px 9px;
-  border-radius: 7px;
-  font-size: 11.5px;
+  border-radius: 6px;
+  font-size: 13px;
   font-weight: 800;
   line-height: 1.15;
   white-space: nowrap;
@@ -1930,10 +1931,10 @@ button:disabled {
   align-items: center;
   gap: 5px;
   padding: 4px 9px;
-  border-radius: 7px;
+  border-radius: 6px;
   background: var(--surface-strong);
   color: var(--ink-2);
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 800;
 }
 
@@ -1961,7 +1962,7 @@ button:disabled {
   display: block;
   margin-bottom: 3px;
   color: var(--body);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -1982,7 +1983,7 @@ button:disabled {
   gap: 6px;
   margin: 6px 0 14px;
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .booking-overview__content>p lucide-icon {
@@ -2005,7 +2006,7 @@ button:disabled {
 .booking-slot-summary span,
 .booking-slot-summary small {
   color: var(--body);
-  font-size: 11.5px;
+  font-size: 13px;
 }
 
 .detail-qr-card {
@@ -2015,7 +2016,7 @@ button:disabled {
   gap: 4px;
   padding: 7px 7px 9px;
   border: 1px solid var(--border-strong);
-  border-radius: 13px;
+  border-radius: 12px;
   background: color-mix(in srgb, var(--surface) 90%, transparent);
   box-shadow: 0 8px 20px rgba(25, 72, 57, .07);
   text-align: center;
@@ -2027,7 +2028,7 @@ button:disabled {
   width: 96px;
   height: 96px;
   place-items: center;
-  border-radius: 9px;
+  border-radius: 12px;
   background: var(--surface);
 }
 
@@ -2042,12 +2043,12 @@ button:disabled {
 
 .detail-qr-card strong {
   color: var(--primary-strong);
-  font-size: 11.5px;
+  font-size: 13px;
 }
 
 .detail-qr-card small {
   color: var(--body);
-  font-size: 10px;
+  font-size: 13px;
 }
 
 .payment-overview {
@@ -2069,11 +2070,11 @@ button:disabled {
 
 .payment-state {
   padding: 5px 8px;
-  border-radius: 7px;
+  border-radius: 6px;
   background: var(--surface-strong);
   color: var(--body);
-  font-size: 10.5px;
-  font-weight: 850;
+  font-size: 13px;
+  font-weight: 800;
   white-space: nowrap;
 }
 
@@ -2125,7 +2126,7 @@ button:disabled {
   gap: 12px;
   margin-top: 7px;
   color: var(--body);
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .payment-progress-label strong {
@@ -2145,13 +2146,13 @@ button:disabled {
   min-width: 0;
   padding: 10px;
   border: 1px solid var(--hairline);
-  border-radius: 9px;
+  border-radius: 12px;
   background: var(--surface);
 }
 
 .payment-summary-grid dt {
   color: var(--body);
-  font-size: 10.5px;
+  font-size: 13px;
 }
 
 .payment-summary-grid dd {
@@ -2159,7 +2160,7 @@ button:disabled {
   overflow: hidden;
   color: var(--ink-2);
   font-size: 13px;
-  font-weight: 850;
+  font-weight: 800;
   text-overflow: ellipsis;
 }
 
@@ -2179,7 +2180,7 @@ button:disabled {
   gap: 9px;
   padding: 9px;
   border: 1px solid var(--hairline);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--surface-subtle);
 }
 
@@ -2188,7 +2189,7 @@ button:disabled {
   width: 34px;
   height: 34px;
   place-items: center;
-  border-radius: 9px;
+  border-radius: 12px;
   background: var(--surface-strong);
   color: var(--primary);
 }
@@ -2213,13 +2214,13 @@ button:disabled {
 .payment-transaction>div:nth-child(2) strong,
 .payment-transaction__amount>strong {
   color: var(--ink-2);
-  font-size: 11.5px;
+  font-size: 13px;
 }
 
 .payment-transaction>div:nth-child(2) span {
   overflow: hidden;
   color: var(--body);
-  font-size: 10.5px;
+  font-size: 13px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -2232,8 +2233,8 @@ button:disabled {
 
 .payment-transaction__amount span {
   color: var(--muted);
-  font-size: 10px;
-  font-weight: 750;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .payment-transaction__amount span[data-payment="SUCCEEDED"] {
@@ -2246,7 +2247,7 @@ button:disabled {
   gap: 10px;
   padding: 13px;
   border: 1px dashed var(--border-strong);
-  border-radius: 10px;
+  border-radius: 12px;
   color: var(--muted);
 }
 
@@ -2262,11 +2263,11 @@ button:disabled {
 
 .payment-empty strong {
   color: var(--body);
-  font-size: 11.5px;
+  font-size: 13px;
 }
 
 .payment-empty small {
-  font-size: 10.5px;
+  font-size: 13px;
 }
 
 .auto-completion-note {
@@ -2276,7 +2277,7 @@ button:disabled {
   margin: 12px;
   padding: 12px;
   border: 1px solid var(--border-strong);
-  border-radius: 11px;
+  border-radius: 12px;
   background: var(--surface-strong);
   color: var(--body);
 }
@@ -2301,11 +2302,11 @@ button:disabled {
 
 .auto-completion-note strong {
   color: var(--primary);
-  font-size: 11.5px;
+  font-size: 13px;
 }
 
 .auto-completion-note small {
-  font-size: 10.5px;
+  font-size: 13px;
   line-height: 1.45;
 }
 
@@ -2327,7 +2328,7 @@ button:disabled {
   margin: 0;
   color: var(--primary-strong);
   font-size: 18px;
-  font-weight: 850;
+  font-weight: 800;
   letter-spacing: .01em;
 }
 
@@ -2337,7 +2338,7 @@ button:disabled {
   gap: 6px;
   margin: 6px 0 0;
   color: var(--body);
-  font-size: 12.5px;
+  font-size: 13px;
 }
 
 .detail-intro lucide-icon {
@@ -2358,7 +2359,7 @@ button:disabled {
 .detail-section h3 {
   color: var(--ink-2);
   font-size: 13.5px;
-  font-weight: 850;
+  font-weight: 800;
 }
 
 .detail-list div,
@@ -2371,14 +2372,14 @@ button:disabled {
 .detail-list dt,
 .money-breakdown dt {
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .detail-list dd,
 .money-breakdown dd {
   color: var(--ink-2);
-  font-size: 12.5px;
-  font-weight: 750;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .money-breakdown .money-highlight {
@@ -2395,11 +2396,11 @@ button:disabled {
   padding-top: 11px;
   border-top: 1px dashed var(--hairline);
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .detail-payment-status strong {
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .timeline li {
@@ -2408,16 +2409,16 @@ button:disabled {
 
 .timeline strong {
   color: var(--ink-2);
-  font-size: 12.5px;
+  font-size: 13px;
 }
 
 .timeline p {
   color: var(--body);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .timeline small {
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .detail-panel__footer {
@@ -2431,7 +2432,7 @@ button:disabled {
 .detail-panel__footer button {
   min-height: 44px;
   padding: 0 12px;
-  font-size: 12.5px;
+  font-size: 13px;
 }
 
 .detail-state {
@@ -2606,7 +2607,7 @@ button:disabled {
   height: min(900px, calc(100vh - 40px));
   overflow: hidden;
   border: 1px solid var(--border-strong);
-  border-radius: 22px;
+  border-radius: 16px;
   background: var(--surface);
   box-shadow: 0 30px 90px rgba(3, 31, 23, .34);
 }
@@ -2889,7 +2890,7 @@ button:disabled {
 
 .booking-detail-modal .booking-overview__content>p {
   margin-bottom: 0;
-  font-size: 12.5px;
+  font-size: 13px;
 }
 
 .booking-detail-modal .detail-qr-card {
@@ -2905,7 +2906,7 @@ button:disabled {
 .booking-detail-modal .detail-qr-state {
   width: 98px;
   height: 98px;
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
 .booking-detail-modal .detail-section {
@@ -2926,7 +2927,7 @@ button:disabled {
 }
 
 .booking-detail-modal .detail-list dt {
-  font-size: 12.5px;
+  font-size: 13px;
 }
 
 .booking-detail-modal .detail-list dd {
@@ -2952,14 +2953,14 @@ button:disabled {
 
 .booking-detail-modal .payment-receipt dt {
   color: var(--body);
-  font-size: 12.5px;
+  font-size: 13px;
 }
 
 .booking-detail-modal .payment-receipt dd {
   max-width: 68%;
   color: var(--ink-2);
-  font-size: 12.5px;
-  font-weight: 750;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .booking-detail-modal .payment-receipt__total {
@@ -2971,7 +2972,7 @@ button:disabled {
 
 .booking-detail-modal .payment-receipt__total dt {
   color: var(--ink-2);
-  font-weight: 850;
+  font-weight: 800;
 }
 
 .booking-detail-modal .payment-receipt__total dd {
@@ -3018,7 +3019,7 @@ button:disabled {
   min-height: 24px;
   align-items: center;
   padding: 4px 8px;
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .booking-detail-modal .money-paid {
@@ -3038,7 +3039,7 @@ button:disabled {
 .booking-detail-modal .payment-history h4 {
   margin: 0 0 10px;
   color: var(--ink-2);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
 }
 
@@ -3091,8 +3092,8 @@ button:disabled {
 .booking-detail-modal .timeline time {
   flex: 0 0 auto;
   color: var(--body);
-  font-size: 12.5px;
-  font-weight: 750;
+  font-size: 13px;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
@@ -3100,7 +3101,7 @@ button:disabled {
   min-width: 0;
   color: var(--primary-strong);
   font-size: 13px;
-  font-weight: 850;
+  font-weight: 800;
   line-height: 1.45;
 }
 
@@ -3216,7 +3217,7 @@ button:disabled {
   padding: 0.2rem 0.5rem;
   background: var(--danger-soft);
   color: var(--danger);
-  font-size: 0.68rem;
+  font-size: 12px;
   font-weight: 800;
 }
 
@@ -3272,7 +3273,7 @@ button:disabled {
 
 .cancellation-workspace label {
   color: var(--ink-2);
-  font-size: 0.8rem;
+  font-size: 13px;
   font-weight: 800;
 }
 
@@ -3321,3 +3322,10 @@ button:disabled {
   margin: 0;
   line-height: 1.5;
 }
+
+// GOAT-DESIGN §7: dau trang van hanh, bo loc tu xuong dong, trang thai loi gon.
+:host .page-heading { @include t.page-head; }
+:host .filter-panel { grid-template-columns: minmax(0, 1fr); }
+:host .filter-row--primary { @include t.filter-grid(170px); }
+:host .error-state { @include t.state-panel; margin-top: 0; }
+:host .owner-bookings-page { width: 100%; padding: 0; }

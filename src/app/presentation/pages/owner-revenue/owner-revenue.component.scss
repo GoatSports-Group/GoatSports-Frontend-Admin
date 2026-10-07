@@ -1,3 +1,4 @@
+@use '../ops' as t;
 :host {
   --green: var(--primary);
   --green-dark: var(--primary-hover);
@@ -42,7 +43,7 @@
   margin: 0 0 7px;
   color: var(--green);
   font-size: 12px;
-  font-weight: 850;
+  font-weight: 800;
   letter-spacing: .045em;
   text-transform: uppercase;
 }
@@ -102,7 +103,7 @@ select:focus-visible {
   justify-content: center;
   gap: 8px;
   min-height: 46px;
-  border-radius: 11px;
+  border-radius: 12px;
   padding: 0 18px;
   font-weight: 800;
   transition: background-color .2s ease, border-color .2s ease, color .2s ease, transform .2s ease;
@@ -141,7 +142,7 @@ select:focus-visible {
 
 .filter-workspace {
   overflow: hidden;
-  border-radius: 14px;
+  border-radius: 12px;
 }
 
 .period-presets {
@@ -158,7 +159,7 @@ select:focus-visible {
   background: transparent;
   color: var(--ink-2);
   font-size: 14px;
-  font-weight: 760;
+  font-weight: 800;
   transition: background-color .2s ease, color .2s ease;
 }
 
@@ -193,14 +194,14 @@ label {
 label>span {
   color: var(--ink-2);
   font-size: 13px;
-  font-weight: 780;
+  font-weight: 800;
 }
 
 input,
 select {
   width: 100%;
   border: 1px solid var(--border-strong);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--surface);
   padding: 0 13px;
   color: var(--ink);
@@ -240,7 +241,7 @@ select:focus {
   margin: 0;
   border-top: 1px solid var(--hairline);
   padding: 11px 20px 12px;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.45;
 }
 
@@ -260,7 +261,7 @@ select:focus {
   overflow: hidden;
   margin-top: 18px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--surface);
 }
 
@@ -310,7 +311,7 @@ select:focus {
 .revenue-highlight>p {
   margin: 4px 0 10px;
   color: #c4e2d8;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .trend-badge {
@@ -319,12 +320,12 @@ select:focus {
   align-self: flex-start;
   gap: 6px;
   border: 1px solid rgba(255, 255, 255, .2);
-  border-radius: 8px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, .09);
   padding: 4px 8px;
   color: #fff;
-  font-size: 12px;
-  font-weight: 760;
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .metric-secondary {
@@ -351,7 +352,7 @@ select:focus {
   place-items: center;
   width: 38px;
   height: 38px;
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--surface-strong);
   color: var(--green);
 }
@@ -365,7 +366,7 @@ select:focus {
 .metric-secondary article>div>span,
 .metric-secondary small {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .metric-secondary strong {
@@ -402,7 +403,7 @@ select:focus {
 
 .panel {
   min-width: 0;
-  border-radius: 14px;
+  border-radius: 12px;
   padding: 22px;
 }
 
@@ -425,12 +426,12 @@ select:focus {
 
 .panel-heading>span {
   flex: 0 0 auto;
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--surface-soft);
   padding: 7px 9px;
   color: var(--green-dark);
-  font-size: 11px;
-  font-weight: 760;
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .panel-heading>lucide-icon {
@@ -477,11 +478,11 @@ select:focus {
 
 .chart-axis {
   fill: var(--body);
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .chart-money-axis {
-  font-size: 10px;
+  font-size: 13px;
 }
 
 .chart-empty,
@@ -490,7 +491,7 @@ select:focus {
   place-items: center;
   min-height: 224px;
   border: 1px dashed var(--border-strong);
-  border-radius: 11px;
+  border-radius: 12px;
   padding: 20px;
   color: var(--green);
   text-align: center;
@@ -514,11 +515,11 @@ select:focus {
   align-items: flex-start;
   gap: 7px;
   margin: -4px 0 12px;
-  border-radius: 9px;
+  border-radius: 12px;
   background: var(--warning-soft);
   padding: 9px 10px;
   color: var(--warning);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.4;
 }
 
@@ -546,7 +547,7 @@ select:focus {
 .ranking-list li.is-leading {
   margin: 0 -10px;
   border: 1px solid #b9ddd1;
-  border-radius: 11px;
+  border-radius: 12px;
   background: var(--primary-light);
   padding-inline: 12px;
 }
@@ -560,10 +561,10 @@ select:focus {
   place-items: center;
   width: 30px;
   height: 30px;
-  border-radius: 9px;
+  border-radius: 12px;
   background: var(--surface-strong);
   color: var(--body);
-  font-weight: 850;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
 
@@ -602,7 +603,7 @@ select:focus {
 
 .rank-meta {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .rank-track {
@@ -625,7 +626,7 @@ select:focus {
   display: grid;
   overflow: hidden;
   border: 1px solid var(--hairline);
-  border-radius: 10px;
+  border-radius: 12px;
 }
 
 .table-head,
@@ -641,8 +642,8 @@ select:focus {
   background: var(--surface-subtle);
   padding: 0 14px;
   color: var(--body);
-  font-size: 11px;
-  font-weight: 780;
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .table-head span:nth-child(n+2) {
@@ -688,12 +689,12 @@ select:focus {
 .status-row[data-status='FAILED']>div strong::before,
 .status-row[data-status='CANCELLED']>div strong::before,
 .status-row[data-status='EXPIRED']>div strong::before {
-  background: #d84343;
+  background: var(--danger);
 }
 
 .status-row>div span {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .status-row>span,
@@ -729,8 +730,8 @@ select:focus {
 }
 
 .share-cell b {
-  font-size: 11px;
-  font-weight: 750;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .table-empty {
@@ -738,7 +739,7 @@ select:focus {
   display: grid;
   place-items: center;
   border: 1px dashed var(--border-strong);
-  border-radius: 10px;
+  border-radius: 12px;
   color: var(--muted);
   font-size: 13px;
   text-align: center;
@@ -751,7 +752,7 @@ select:focus {
   gap: 8px;
   margin: 14px 0 0;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.5;
 }
 
@@ -760,7 +761,7 @@ select:focus {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   overflow: hidden;
   border: 1px solid var(--hairline);
-  border-radius: 10px;
+  border-radius: 12px;
 }
 
 .scope-summary>div {
@@ -777,12 +778,12 @@ select:focus {
 
 .scope-summary span {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .scope-summary strong {
   overflow: hidden;
-  font-size: 12px;
+  font-size: 13px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -803,14 +804,14 @@ select:focus {
 .comparison-head {
   padding: 0 0 9px;
   color: var(--muted);
-  font-size: 11px;
-  font-weight: 760;
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .comparison-table>div:not(.comparison-head) {
   min-height: 50px;
   border-top: 1px solid var(--hairline);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .comparison-head span:nth-child(n+2),
@@ -832,7 +833,7 @@ select:focus {
   gap: 18px;
   min-height: 260px;
   margin-top: 18px;
-  border-radius: 14px;
+  border-radius: 12px;
   padding: 28px;
 }
 
@@ -887,7 +888,7 @@ select:focus {
   height: min(900px, calc(100vh - 40px));
   overflow: hidden;
   border: 1px solid var(--border-strong);
-  border-radius: 22px;
+  border-radius: 16px;
   background: var(--surface);
   box-shadow: 0 30px 90px rgba(3, 31, 23, .34);
 }
@@ -927,8 +928,8 @@ select:focus {
 
 .preview-eyebrow {
   color: var(--warning);
-  font-size: 11px;
-  font-weight: 850;
+  font-size: 13px;
+  font-weight: 800;
   letter-spacing: .045em;
 }
 
@@ -952,7 +953,7 @@ select:focus {
   width: 46px;
   min-height: 46px;
   border: 1px solid var(--border-strong);
-  border-radius: 13px;
+  border-radius: 12px;
   background: var(--surface);
   color: var(--ink-2);
 }
@@ -1285,7 +1286,7 @@ select:focus {
     display: grid;
     gap: 4px;
     padding: 14px 16px;
-    border-radius: 14px;
+    border-radius: 12px;
     background: var(--surface-subtle);
   }
 
@@ -1323,3 +1324,15 @@ select:focus {
 @media (max-width: 767px) {
   .tournament-revenue__stats { grid-template-columns: minmax(0, 1fr); }
 }
+
+// GOAT-DESIGN §7: dau trang van hanh; nut ben phai xuong dong thay vi tran khoi mep.
+:host .page-heading { @include t.page-head; }
+:host .heading-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+
+// GOAT-DESIGN §7 segmented period control: track surface-subtle, muc dang chon nen trang chu primary.
+:host .period-presets { gap: 4px; padding: 4px; border-bottom: 1px solid var(--hairline); background: var(--surface-subtle); }
+:host .period-presets button { min-height: 40px; border: 0; border-radius: 12px; color: var(--body); font-weight: 800; }
+:host .period-presets button:hover:not(:disabled) { background: var(--surface); color: var(--ink); }
+:host .period-presets button.active { background: var(--surface); box-shadow: var(--shadow-sm); color: var(--primary); }
+:host .filter-controls { @include t.filter-grid(220px); }
+:host .filter-actions { display: flex; grid-column: 1 / -1; justify-content: flex-end; gap: 8px; }

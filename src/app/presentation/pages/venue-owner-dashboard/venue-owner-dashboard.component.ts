@@ -1,3 +1,4 @@
+import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
 import { FormsModule } from '@angular/forms';
 import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
 import {
@@ -71,7 +72,7 @@ const COURT_AVAILABILITY_POLL_INTERVAL_MS = 30_000;
 @Component({
   selector: 'app-venue-owner-dashboard',
   standalone: true,
-  imports: [FormsModule, DatePickerComponent, RouterModule, LucideIconComponent, PageLoadingComponent, OwnerApplicationProgressComponent],
+  imports: [FormsModule, DatePickerComponent, RouterModule, LucideIconComponent, PageLoadingComponent, OwnerApplicationProgressComponent, SelectComponent],
   templateUrl: './venue-owner-dashboard.component.html',
   styleUrl: './venue-owner-dashboard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -101,6 +102,7 @@ export class VenueOwnerDashboardComponent {
   readonly applicationLoading = signal(false);
   readonly applicationError = signal<string | null>(null);
   readonly venues = signal<OwnerVenueOverview[]>([]);
+  readonly venueOptions = computed<SelectOption[]>(() => this.venues().map(venue => ({ value: venue.venueId, label: venue.name })));
   readonly venueLoading = signal(false);
   readonly venueError = signal<string | null>(null);
   readonly selectedVenueId = signal<string | null>(null);
@@ -334,8 +336,7 @@ export class VenueOwnerDashboardComponent {
     this.loadDailyRevenue();
   }
 
-  selectVenue(event: Event): void {
-    const venueId = (event.target as HTMLSelectElement).value;
+  selectVenue(venueId: string): void {
     if (!venueId || venueId === this.selectedVenueId()) return;
     this.selectedVenueId.set(venueId);
     this.resetCourtCarousel();

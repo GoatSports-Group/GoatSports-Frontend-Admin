@@ -22,6 +22,8 @@ import { OwnerReviewsComponent } from '@presentation/pages/owner-reviews/owner-r
 import { OwnerBankAccountComponent } from '@presentation/pages/owner-bank-account/owner-bank-account.component';
 import { ModerationComponent } from '@presentation/pages/moderation/moderation.component';
 import { OwnerTournamentsComponent } from '@presentation/pages/owner-tournaments/owner-tournaments.component';
+import { AdminMessagesComponent } from '@presentation/pages/messages/messages.component';
+import { AdminNotificationsComponent } from '@presentation/pages/notifications/notifications.component';
 import { OwnerTournamentDetailComponent } from '@presentation/pages/owner-tournaments/owner-tournament-detail.component';
 
 const routes: Routes = [
@@ -55,6 +57,8 @@ const routes: Routes = [
       { path: 'reviews', component: OwnerReviewsComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
       { path: 'tournaments', component: OwnerTournamentsComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
       { path: 'tournaments/:id', component: OwnerTournamentDetailComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },
+      { path: 'messages', component: AdminMessagesComponent, canActivate: [AdminGuard], data: { allowedRoles: ['ADMIN', 'VENUE_OWNER'] } },
+      { path: 'notifications', component: AdminNotificationsComponent, canActivate: [AdminGuard], data: { allowedRoles: ['ADMIN', 'VENUE_OWNER'] } },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   }

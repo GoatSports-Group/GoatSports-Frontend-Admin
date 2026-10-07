@@ -3,7 +3,7 @@
 .metric-rail {
   overflow: hidden;
   border: 1px solid var(--hairline);
-  border-radius: 20px;
+  border-radius: 16px;
   background: color-mix(in srgb, var(--surface) 96%, transparent);
   box-shadow: 0 12px 34px rgb(15 81 63 / 5%);
 }
@@ -55,7 +55,7 @@
   overflow: hidden;
   color: var(--body);
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -78,14 +78,14 @@
   margin-top: 7px;
   overflow: hidden;
   color: var(--body);
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   line-height: 1.4;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.metric-rail__copy i { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: #10b981; }
+.metric-rail__copy i { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: var(--primary); }
 
 @media (max-width: 920px) {
   .metric-rail__scroller { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -95,13 +95,13 @@
 }
 
 @media (max-width: 560px) {
-  .metric-rail { border-radius: 18px; }
+  .metric-rail { border-radius: 16px; }
   .metric-rail__item { min-height: 124px; grid-template-columns: 44px minmax(0, 1fr); gap: 11px; padding: 16px 13px; }
-  .metric-rail__icon { width: 44px; height: 44px; border-radius: 14px; }
+  .metric-rail__icon { width: 44px; height: 44px; border-radius: 12px; }
   .metric-rail__icon lucide-icon { width: 21px; height: 21px; }
   .metric-rail__copy > span { font-size: 13px; white-space: normal; }
   .metric-rail__copy strong { font-size: 1.85rem; }
-  .metric-rail__copy small { align-items: flex-start; font-size: 12px; white-space: normal; }
+  .metric-rail__copy small { align-items: flex-start; font-size: 13px; white-space: normal; }
 }
 
 @media (max-width: 350px) {

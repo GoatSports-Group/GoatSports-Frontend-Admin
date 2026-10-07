@@ -24,7 +24,7 @@
       <app-theme-toggle size="sm"></app-theme-toggle>
       <div class="notification-menu">
         <button type="button" class="shell-icon-button notification-trigger" (click)="toggleNotifDropdown($event)"
-          aria-label="Mở thông báo" [attr.aria-expanded]="isNotifOpen">
+          aria-label="Mở thông báo" [attr.aria-expanded]="isNotifOpen" aria-controls="notification-panel">
           <lucide-icon name="bell" />
           @if ((notificationService.unreadCount$ | async)! > 0) {
             <span class="notification-count">{{ notificationService.unreadCount$ | async }}</span>
@@ -32,43 +32,46 @@
         </button>
 
         @if (isNotifOpen) {
-          <section class="notification-panel" aria-label="Thông báo" (click)="$event.stopPropagation()">
+          <!-- Giong chuong ben client: cham chua doc, chi co nut "da doc", link "Xem tat ca" toi trang Thong bao. -->
+          <section id="notification-panel" class="notification-panel" aria-label="Thông báo gần đây" (click)="$event.stopPropagation()">
             <header class="notification-panel__header">
               <h2>Thông báo</h2>
-              <button type="button" (click)="markAllRead()">Đánh dấu tất cả đã đọc</button>
+              @if (((notificationService.unreadCount$ | async) ?? 0) > 0) {
+                <button type="button" class="notification-panel__mark" (click)="markAllRead()">Đánh dấu tất cả đã đọc</button>
+              }
             </header>
 
             <div class="notification-panel__list" (scroll)="onNotificationScroll($event)">
-              @if ((notificationService.notifications$ | async)?.length === 0) {
+              @if (!(notificationService.notifications$ | async)?.length) {
                 <div class="notification-empty" role="status">
                   <lucide-icon name="bell-off" aria-hidden="true" />
-                  <strong>Chưa có thông báo mới</strong>
-                  <p>Các cập nhật quan trọng sẽ xuất hiện tại đây.</p>
+                  <p>Không có thông báo mới nào</p>
                 </div>
               } @else {
                 @for (notif of notificationService.notifications$ | async; track notif.notificationId) {
-                  <article class="notification-item" [class.is-unread]="notif.status === 'UNREAD'"
-                    (click)="onNotificationClick(notif)">
-                    <i aria-hidden="true"></i>
+                  <div role="button" tabindex="0" class="notification-item" [class.is-unread]="notif.status === 'UNREAD'"
+                    (click)="onNotificationClick(notif)" (keydown.enter)="onNotificationClick(notif)"
+                    (keydown.space)="$event.preventDefault(); onNotificationClick(notif)">
+                    <span class="notification-item__dot" aria-hidden="true"></span>
                     <div class="notification-item__copy">
                       <strong>{{ notif.title }}</strong>
                       <p>{{ notif.content }}</p>
-                      <time>{{ getRelativeTime(notif.createdAt) }}</time>
+                      <time [attr.datetime]="notif.createdAt">{{ getRelativeTime(notif.createdAt) }}</time>
                     </div>
-                    <div class="notification-item__actions" (click)="$event.stopPropagation()">
-                      @if (notif.status === 'UNREAD') {
-                        <button type="button" (click)="onNotificationClick(notif)" aria-label="Đánh dấu đã đọc">
-                          <lucide-icon name="check" />
-                        </button>
-                      }
-                      <button type="button" (click)="deleteNotification(notif)" aria-label="Xóa thông báo">
-                        <lucide-icon name="x" />
+                    @if (notif.status === 'UNREAD') {
+                      <button type="button" class="notification-item__read" aria-label="Đánh dấu đã đọc"
+                        (click)="$event.stopPropagation(); markOneRead(notif)">
+                        <lucide-icon name="check" />
                       </button>
-                    </div>
-                  </article>
+                    }
+                  </div>
                 }
               }
             </div>
+
+            <a routerLink="/admin/notifications" class="notification-panel__footer" (click)="isNotifOpen = false">
+              Xem tất cả thông báo<lucide-icon name="arrow-right" aria-hidden="true" />
+            </a>
           </section>
         }
       </div>
@@ -76,7 +79,7 @@
       <button type="button" class="admin-profile" [matMenuTriggerFor]="profileMenu"
         aria-label="Mở menu tài khoản">
         <img [src]="userProfile?.avatarUrl || fallbackAvatar" [alt]="userProfile?.fullName || 'Tài khoản'">
-        <span><strong>{{ userProfile?.fullName?.split(' ')?.slice(-1)?.[0] || 'Owner' }}</strong><small>{{ isPlatformAdmin() ? 'Quản trị viên' : 'Chủ sân' }}</small></span>
+        <span><strong>{{ userProfile?.fullName?.split(' ')?.slice(-1)?.[0] || 'Tài khoản' }}</strong><small>{{ isPlatformAdmin() ? 'Quản trị viên' : 'Chủ sân' }}</small></span>
         <lucide-icon name="chevron-down" aria-hidden="true" />
       </button>
       <mat-menu #profileMenu="matMenu" class="owner-profile-menu">
@@ -120,6 +123,9 @@
               [title]="item.title" [attr.aria-label]="item.title">
               <lucide-icon [name]="item.icon" />
               <span class="sidebar-text">{{ item.title }}</span>
+              @if (item.badge === 'messages' && chatInbox.badge() > 0) {
+                <span class="sidebar-badge" [attr.aria-label]="chatInbox.badge() + ' cuộc trò chuyện cần xem'">{{ chatInbox.badge() > 99 ? '99+' : chatInbox.badge() }}</span>
+              }
               @if (item.developing && !sidebarCollapsed()) {
                 <small class="sidebar-text">Sắp có</small>
               }

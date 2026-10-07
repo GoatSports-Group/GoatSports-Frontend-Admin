@@ -43,7 +43,7 @@
       min-height: 38px !important;
       font-weight: 600 !important;
       color: var(--ink) !important;
-      border-radius: 10px !important;
+      border-radius: 12px !important;
       margin-bottom: 2px !important;
       transition: all 0.15s ease !important;
 
@@ -94,7 +94,7 @@
   /* Compact form adjustments inside paginator */
   .mat-mdc-paginator {
     font-family: var(--font-sports-body) !important;
-    font-size: 12.5px !important;
+    font-size: 13px !important;
     color: var(--body) !important;
 
     .mat-mdc-paginator-page-size-label {

@@ -1,4 +1,4 @@
-<div class="bg-white border border-slate-100 rounded-2xl p-5 shadow-xs flex flex-col h-[300px] hover:shadow-md transition-shadow duration-300">
+<div class="bg-surface border border-slate-100 rounded-2xl p-5 shadow-xs flex flex-col h-[300px] hover:shadow-md transition-shadow duration-300">
   <div class="flex items-center justify-between mb-4 shrink-0">
       <h1 class="font-bold text-slate-600 text-sm tracking-tight">Tổng yêu cầu trong ngày</h1>
   </div>
@@ -8,10 +8,10 @@
     @if (loading) {
       <div class="absolute inset-0 flex flex-col gap-3 items-center justify-center">
         <div class="w-8 h-8 rounded-full border-4 border-slate-100 border-t-emerald-500 animate-spin"></div>
-        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Đang tính toán biểu đồ...</span>
+        <span class="text-[12px] font-bold text-slate-400 uppercase tracking-wider">Đang tính toán biểu đồ...</span>
       </div>
     } @else if (data.length === 0) {
-      <div class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 text-xs font-semibold">
+      <div class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 text-[13px] font-semibold">
         <lucide-icon name="activity" class="h-8 w-8 text-slate-300 mb-2"></lucide-icon>
         <span>Không có dữ liệu</span>
       </div>
@@ -55,11 +55,11 @@
         
         <!-- Tooltip overlay -->
         @if (hoverIndex !== null && data[hoverIndex]) {
-          <div class="absolute bg-slate-900/95 text-white rounded-xl p-2.5 text-[10px] pointer-events-none shadow-lg flex flex-col gap-0.5 border border-slate-800 transition-all duration-75 z-50 shrink-0"
+          <div class="absolute bg-slate-900/95 text-white rounded-xl p-2.5 text-[13px] pointer-events-none shadow-lg flex flex-col gap-0.5 border border-slate-800 transition-all duration-75 z-50 shrink-0"
                [style.left.px]="tooltipX"
                [style.top.px]="tooltipY">
             <span class="font-bold text-slate-400">{{ data[hoverIndex].label }}</span>
-            <span class="font-extrabold text-[12px] text-emerald-400 mt-0.5">{{ data[hoverIndex].value | number }} yêu cầu</span>
+            <span class="font-extrabold text-[13px] text-emerald-400 mt-0.5">{{ data[hoverIndex].value | number }} yêu cầu</span>
           </div>
         }
 
@@ -67,7 +67,7 @@
         <div class="absolute left-0 right-0 bottom-0 h-4 border-t border-slate-100/80 pt-1.5">
           @for (lbl of data; track lbl.label; let first = $first; let last = $last; let index = $index) {
             @if (first || last || index % 3 === 0) {
-              <span class="absolute text-[10px] font-extrabold text-slate-400 tracking-wider transition-all duration-300"
+              <span class="absolute text-[13px] font-extrabold text-slate-400 tracking-wider transition-all duration-300"
                     [style.left.%]="(index / (data.length - 1)) * 100"
                     [class]="index === 0 ? '-translate-x-0' : (index === data.length - 1 ? '-translate-x-full' : '-translate-x-1/2')">
                 {{ lbl.label }}

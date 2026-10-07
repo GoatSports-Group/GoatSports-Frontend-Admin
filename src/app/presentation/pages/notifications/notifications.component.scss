@@ -1,0 +1,119 @@
+@use '../ops' as t;
+@include t.ops;
+
+// Trang doc (khong co bang): mot cot giua toi da 1080px giong trang Thong bao ben client.
+.page { max-width: 1080px; margin-inline: auto; }
+
+.count--alert { background: var(--danger); color: var(--surface); }
+
+.is-paging { opacity: .55; pointer-events: none; transition: opacity var(--motion-fast, 150ms) ease; }
+
+.notif-list {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.notif-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 14px;
+  padding: 16px 20px;
+
+  + .notif-row { border-top: 1px solid var(--hairline); }
+
+  &.is-actionable { cursor: pointer; }
+  &.is-actionable:hover { background: var(--surface-subtle); }
+  &:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+  &.is-unread { background: color-mix(in srgb, var(--primary-light) 45%, var(--surface)); }
+  &.is-unread h2 { font-weight: 800; }
+}
+
+.notif-icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--surface-strong);
+  color: var(--body);
+
+  lucide-icon { width: 20px; height: 20px; }
+
+  &[data-tone='primary'] { background: var(--primary-light); color: var(--primary-strong); }
+  &[data-tone='success'] { background: var(--success-soft); color: var(--success); }
+  &[data-tone='warning'] { background: var(--warning-soft); color: var(--warning); }
+  &[data-tone='danger'] { background: var(--danger-soft); color: var(--danger); }
+  &[data-tone='info'] { background: var(--info-soft); color: var(--info); }
+}
+
+.notif-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+
+  h2 {
+    overflow: hidden;
+    margin: 0;
+    color: var(--ink);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.4;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  p {
+    margin: 2px 0 0;
+    color: var(--body);
+    font-size: 14px;
+    line-height: 1.55;
+  }
+}
+
+.notif-type {
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.notif-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  time { color: var(--body); font-size: 13px; font-weight: 600; white-space: nowrap; }
+}
+
+.unread-dot { width: 10px; height: 10px; flex: none; border-radius: 9999px; background: var(--primary-fill); }
+
+.icon-btn--danger:hover:not(:disabled) { border-color: var(--danger); background: var(--danger-soft); color: var(--danger); }
+
+.notif-confirm {
+  display: flex;
+  grid-column: 2 / -1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--danger-soft);
+
+  span { margin-right: auto; color: var(--danger); font-size: 14px; font-weight: 700; }
+}
+
+app-pagination { margin-top: 16px; }
+
+@media (max-width: 640px) {
+  .notif-row { grid-template-columns: 40px minmax(0, 1fr); padding: 14px 16px; }
+  .notif-icon { width: 40px; height: 40px; }
+  .notif-side { grid-column: 2; justify-content: flex-start; }
+  .notif-confirm { grid-column: 1 / -1; }
+}

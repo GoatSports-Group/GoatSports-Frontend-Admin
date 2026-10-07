@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { map, Observable, switchMap } from 'rxjs';
+import { Observable, forkJoin, map, of, switchMap } from 'rxjs';
 import { StorageRepository } from '@application/ports/persistence/storage.repository';
 import { StorageApi } from '@infrastructure/api/storage.api';
 import { PresignedUrlResponse } from '@application/dto/storage/storage.dto';
@@ -22,6 +22,17 @@ export class StorageRepositoryImpl implements StorageRepository {
 
   getFileUrl(key: string): Observable<string> {
     return this.storageApi.getFileUrl(key);
+  }
+
+  uploadImages(files: File[], folder: string): Observable<string[]> {
+    if (!files.length) return of([]);
+    return this.storageApi.getPresignedUrls(files.map(file => ({
+      fileName: file.name, contentType: file.type || 'application/octet-stream', folder, contentLength: file.size
+    }))).pipe(
+      switchMap(response => forkJoin(response.data.map((presigned, index) =>
+        this.storageApi.uploadToPresignedUrl(presigned.uploadUrl, files[index]).pipe(map(() => presigned.objectKey))
+      )))
+    );
   }
 
   uploadAvatar(file: File): Observable<string> {

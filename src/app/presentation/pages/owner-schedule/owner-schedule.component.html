@@ -28,24 +28,16 @@
     <section class="context-toolbar" aria-label="Chọn phạm vi lịch">
       <label class="context-select">
         <span>Cơ sở</span>
-        <select [value]="selectedVenueId()" (change)="selectVenue($any($event.target).value)"
-          [disabled]="loadingData() || savingRule() || generating()">
-          @for (venue of venues(); track venue.venueId) {
-          <option [value]="venue.venueId" [selected]="venue.venueId === selectedVenueId()">{{ venue.name }}</option>
-          }
-        </select>
+        <app-select [ngModel]="selectedVenueId()" (ngModelChange)="selectVenue($event)" [ngModelOptions]="{ standalone: true }"
+          [disabled]="loadingData() || savingRule() || generating()" [options]="venueOptions()" leadingIcon="land-plot"
+          ariaLabel="Cơ sở"></app-select>
       </label>
 
       <label class="context-select">
         <span>Sân</span>
-        <select [value]="selectedCourtId()" (change)="selectCourt($any($event.target).value)"
-          [disabled]="loadingData() || savingRule() || generating() || !courts().length">
-          @if (!courts().length) { <option value="">Chưa có sân thi đấu</option> }
-          @for (court of courts(); track court.venueCourtId) {
-          <option [value]="court.venueCourtId" [selected]="court.venueCourtId === selectedCourtId()">{{ court.name }}
-          </option>
-          }
-        </select>
+        <app-select [ngModel]="selectedCourtId()" (ngModelChange)="selectCourt($event)" [ngModelOptions]="{ standalone: true }"
+          [disabled]="loadingData() || savingRule() || generating() || !courts().length" [options]="courtOptions()"
+          [placeholder]="courts().length ? 'Chọn sân' : 'Chưa có sân thi đấu'" ariaLabel="Sân thi đấu"></app-select>
       </label>
 
       <div class="date-range-picker" role="button" tabindex="0" aria-label="Chọn tuần hiển thị"
@@ -265,12 +257,7 @@
         </div>
         <label><span>Từ ngày</span><app-date-picker ariaLabel="Từ ngày" formControlName="fromDate"></app-date-picker></label>
         <label><span>Đến ngày</span><app-date-picker ariaLabel="Đến ngày" formControlName="toDate"></app-date-picker></label>
-        <label><span>Thời lượng</span><select formControlName="slotDurationMinutes">
-            <option [value]="30">30 phút</option>
-            <option [value]="60">60 phút</option>
-            <option [value]="90">90 phút</option>
-            <option [value]="120">120 phút</option>
-          </select></label>
+        <label><span>Thời lượng</span><app-select formControlName="slotDurationMinutes" [options]="durationOptions" ariaLabel="Thời lượng"></app-select></label>
         <button type="submit" class="primary-button"
           [disabled]="generating() || generationForm.invalid || !selectedGenerationRuleIds().length">
           <span [class.spinner-small]="generating()"></span>{{ generating() ? 'Đang sinh…' : 'Sinh / đồng bộ slot' }}

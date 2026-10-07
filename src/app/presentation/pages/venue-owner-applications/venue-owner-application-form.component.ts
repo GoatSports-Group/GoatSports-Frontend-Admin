@@ -1,3 +1,4 @@
+import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
 import { Overlay, OverlayModule, OverlayRef } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
 import { CommonModule } from '@angular/common';
@@ -63,12 +64,15 @@ type ApplicationForm = {
 @Component({
   selector: 'app-venue-owner-application-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, OverlayModule, LucideIconComponent],
+  imports: [CommonModule, FormsModule, OverlayModule, LucideIconComponent, SelectComponent],
   templateUrl: './venue-owner-application-form.component.html',
   styleUrl: './venue-owner-application-form.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class VenueOwnerApplicationFormComponent implements OnDestroy {
+  readonly businessTypeOptions: readonly SelectOption[] = [
+    { value: 'INDIVIDUAL', label: 'Cá nhân' }, { value: 'COMPANY', label: 'Doanh nghiệp' }
+  ];
   private readonly submitApplication = inject(SubmitOwnerApplicationUseCase);
   private readonly verifyIdentity = inject(VerifyOwnerIdentityUseCase);
   private readonly analyzeFaceReadiness = inject(AnalyzeOwnerFaceReadinessUseCase);

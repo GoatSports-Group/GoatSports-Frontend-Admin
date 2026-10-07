@@ -23,7 +23,7 @@
 ::ng-deep {
   .mat-mdc-paginator {
     font-family: var(--font-sports-body) !important;
-    font-size: 12px !important;
+    font-size: 13px !important;
     color: var(--body) !important;
   }
 
@@ -47,7 +47,7 @@
       min-height: 38px !important;
       font-weight: 600 !important;
       color: var(--ink) !important; // Slate-850 text
-      border-radius: 10px !important;
+      border-radius: 12px !important;
       margin-bottom: 2px !important;
       transition: all 0.15s ease !important;
 
@@ -110,7 +110,7 @@
 
         &.text-emerald-500,
         &.text-emerald-600 {
-          color: #10b981 !important; // Emerald-500 icon
+          color: var(--primary) !important; // Emerald-500 icon
         }
       }
 

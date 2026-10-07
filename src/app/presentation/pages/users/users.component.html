@@ -15,60 +15,44 @@
   <!-- Page Header -->
   <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
     <div>
-      <h1 class="text-2xl font-bold tracking-tight font-display">Tất cả người dùng</h1>
-      <p class="text-sm font-bold text-slate-400 mt-1">Quản lý người dùng và tài khoản</p>
+      <h1 class="m-0 text-ink font-extrabold tracking-[-0.035em] leading-[1.15] text-[clamp(28px,3vw,40px)]">Người dùng</h1>
+      <p class="mt-1.5 max-w-[68ch] text-base text-slate-500 leading-relaxed">Tài khoản người chơi, chủ sân và quản trị viên: xác thực, khóa và phân vai trò.</p>
     </div>
     <button (click)="onCreateUser()"
-      class="bg-primary hover:bg-emerald-800 active:scale-[0.98] text-white text-xs font-bold px-5 py-2.5 rounded-full flex items-center gap-1.5 transition-all shadow-xs cursor-pointer">
+      class="bg-primary hover:bg-emerald-800 text-white text-[13px] font-bold px-5 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-xs cursor-pointer">
       <lucide-icon name="plus" class="h-4 w-4"></lucide-icon> Tạo tài khoản
     </button>
   </div>
 
-  <!-- Overview Stats Container -->
-  <div class="flex flex-wrap items-center justify-between gap-5 w-full" cdkDropList cdkDropListOrientation="horizontal"
-    (cdkDropListDropped)="drop($event)">
-    <div *ngFor="let card of statCards" cdkDrag cdkDragPreviewClass="cdk-user-stat-preview"
-      class="bg-white border border-slate-100 rounded-xl p-4 relative overflow-hidden flex flex-col justify-between min-h-[90px] w-full max-w-[400px] z-50 hover:shadow-sm transition-shadow bg-white cursor-default">
-
-      <!-- Drag Placeholder (Subtle drop zone) -->
-      <div *cdkDragPlaceholder class="border-slate-200 rounded-xl min-h-[90px] w-full max-w-[400px]"></div>
-
-      <!-- Top Row -->
-      <div class="flex items-start justify-between z-10 relative w-full">
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100">
-            <lucide-icon [name]="card.icon" class="h-5 w-5 text-emerald-500"></lucide-icon>
-          </div>
-          <div class="flex flex-col gap-1">
-            <h1 class="font-bold text-slate-500 capitalize">{{ card.title }}</h1>
-            <span class="text-[18px] font-bold text-slate-900">{{ card.count ?? '—' }}</span>
-          </div>
-        </div>
-
-        <!-- Drag Handle -->
-        <div cdkDragHandle
-          class="cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500 p-1 -mr-1 -mt-1 rounded transition-colors"
-          title="Kéo để di chuyển">
-          <lucide-icon name="grip-horizontal" class="h-4 w-4"></lucide-icon>
-        </div>
+  <!-- So lieu (GOAT-DESIGN §7 KPI tiles): nhan caption, so 28px tabular; khong keo tha. -->
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+    @for (card of statCards; track card.id) {
+    <div class="flex min-w-0 items-center gap-3 rounded-2xl border border-hairline bg-surface p-5 shadow-[var(--shadow-sm)]">
+      <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary-light text-primary-strong">
+        <lucide-icon [name]="card.icon" class="h-5 w-5"></lucide-icon>
+      </span>
+      <div class="min-w-0">
+        <p class="m-0 truncate text-[13px] font-semibold text-body">{{ card.title }}</p>
+        <strong class="block text-[28px] font-black leading-tight tabular-nums text-ink">{{ card.count ?? '—' }}</strong>
       </div>
     </div>
+    }
   </div>
 
   <!-- Search & Filter Controls -->
-  <div class="bg-white border border-slate-100/85 rounded-3xl p-6 shadow-xs">
+  <div class="bg-surface border border-slate-100/85 rounded-2xl p-6 shadow-xs">
     <!-- Row 1 -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
       <div class="flex flex-col gap-1.5">
         <label class="text-sm font-bold text-emerald-800">Họ tên</label>
         <input type="text" [(ngModel)]="filterFullName" (keyup.enter)="onSearch()" placeholder="Tìm kiếm theo họ tên"
-          class="w-full h-11 px-4 bg-slate-50/70 border-0 rounded-2xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-slate-100/80 transition-all">
+          class="w-full h-11 px-4 bg-slate-50/70 border-0 rounded-xl text-[13px] font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-slate-100/80 transition-all">
       </div>
 
       <div class="flex flex-col gap-1.5">
         <label class="text-sm font-bold text-emerald-800">Email</label>
         <input type="text" [(ngModel)]="filterEmail" (keyup.enter)="onSearch()" placeholder="Tìm kiếm theo email"
-          class="w-full h-11 px-4 bg-slate-50/70 border-0 rounded-2xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-slate-100/80 transition-all">
+          class="w-full h-11 px-4 bg-slate-50/70 border-0 rounded-xl text-[13px] font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-slate-100/80 transition-all">
       </div>
 
       <div class="flex flex-col gap-1.5">
@@ -87,11 +71,11 @@
       <!-- Action Buttons -->
       <div class="col-start-1 md:col-start-4 flex items-center gap-3">
         <button (click)="onSearch()"
-          class="flex-1 h-10 bg-primary hover:bg-emerald-800 active:scale-[0.98] text-white font-bold text-sm rounded-2xl flex items-center justify-center gap-1.5 transition-all cursor-pointer">
+          class="flex-1 h-10 bg-primary hover:bg-emerald-800 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer">
           <lucide-icon name="search" class="h-4 w-4"></lucide-icon> Tìm kiếm
         </button>
         <button (click)="resetFilters()"
-          class="flex-1 h-10 bg-white hover:bg-slate-50 active:scale-[0.98] border border-slate-200 text-slate-700 font-bold text-sm rounded-2xl flex items-center justify-center gap-1.5 transition-all cursor-pointer">
+          class="flex-1 h-10 bg-surface hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer">
           <lucide-icon name="rotate-ccw" class="h-4 w-4"></lucide-icon> Làm mới
         </button>
       </div>
@@ -106,20 +90,20 @@
   <!-- Empty State -->
   @if (users.length === 0) {
   <div
-    class="flex flex-col items-center justify-center py-20 text-center bg-white border border-slate-100 rounded-3xl shadow-xs">
+    class="flex flex-col items-center justify-center py-20 text-center bg-surface border border-slate-100 rounded-2xl shadow-xs">
     <lucide-icon name="users" class="text-slate-300 h-12 w-12 mb-4 mx-auto"></lucide-icon>
-    <h3 class="text-sm font-bold text-slate-900 font-display">Không có danh sách người dùng</h3>
-    <p class="text-xs text-slate-500 mt-1 max-w-sm font-medium">Hãy thử điều chỉnh bộ lọc hoặc đặt lại từ khóa tìm kiếm.
+    <h3 class="text-sm font-bold text-slate-900">Không có danh sách người dùng</h3>
+    <p class="text-[13px] text-slate-500 mt-1 max-w-sm font-medium">Hãy thử điều chỉnh bộ lọc hoặc đặt lại từ khóa tìm kiếm.
     </p>
   </div>
   } @else {
 
   <!-- Users List Table Wrapper -->
-  <div class="flex-1 min-h-0 flex flex-col bg-white border border-slate-100 rounded-3xl shadow-xl overflow-hidden">
+  <div class="flex-1 min-h-0 flex flex-col bg-surface border border-slate-100 rounded-2xl shadow-xl overflow-hidden">
     <div class="flex-1 min-h-0 overflow-auto">
       <table class="w-full text-left border-collapse text-sm">
         <thead>
-          <tr class="border-b border-slate-100 text-[14px] font-bold tracking-wider text-emerald-400 bg-white">
+          <tr class="border-b border-slate-100 text-[14px] font-bold tracking-wider text-emerald-400 bg-surface">
             <th class="py-4 px-6 font-bold text-emerald-500">Họ tên</th>
             <th class="py-4 px-6 font-bold text-emerald-500">Username</th>
             <th class="py-4 px-6 font-bold text-emerald-500">Email</th>
@@ -143,13 +127,13 @@
             <td class="py-4 px-6 text-slate-600 font-semibold">@{{ user.username }}</td>
             <td class="py-4 px-6 text-slate-600 font-semibold">{{ user.email }}</td>
             <td class="py-4 px-6">
-              <span class="px-3 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded-full">
+              <span class="px-3 py-1 bg-slate-100 text-slate-700 text-[13px] font-bold rounded-full">
                 {{ getFallbackRole(user?.role?.name) || 'Chưa gán' }}
               </span>
             </td>
             <td class="py-4 px-6">
               @if (user.status === 'BLOCKED') {
-              <span class="px-3 py-1 bg-rose-100 text-rose-800 text-xs font-bold rounded-full border border-rose-200">Đã khóa</span>
+              <span class="px-3 py-1 bg-rose-100 text-rose-800 text-[13px] font-bold rounded-full border border-rose-200">Đã khóa</span>
               } @else {
               <span [class]="user.status === 'ACTIVE' || user.status === 'ACTIVATED' 
                   ? 'px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-100' 
@@ -164,12 +148,12 @@
             <td class="py-4 px-6 text-right pr-12">
               <div class="flex items-center justify-end gap-2">
                 <button (click)="viewUser(user)"
-                  class="w-8 h-8 rounded-full flex items-center justify-center text-slate-600 hover:text-emerald-950 hover:bg-emerald-50/70 transition-all cursor-pointer border border-transparent">
+                  class="w-8 h-8 rounded-xl flex items-center justify-center text-slate-600 hover:text-emerald-950 hover:bg-emerald-50/70 transition-all cursor-pointer border border-transparent">
                   <lucide-icon name="eye" class="h-4.5 w-4.5"></lucide-icon>
                 </button>
 
                 <button [matMenuTriggerFor]="actionDropdownMenu"
-                  class="w-8 h-8 rounded-full flex items-center justify-center text-slate-600 hover:text-emerald-900 hover:bg-emerald-50 transition-colors cursor-pointer border border-transparent">
+                  class="w-8 h-8 rounded-xl flex items-center justify-center text-slate-600 hover:text-emerald-900 hover:bg-emerald-50 transition-colors cursor-pointer border border-transparent">
                   <lucide-icon name="more-vertical" class="h-4.5 w-4.5"></lucide-icon>
                 </button>
 

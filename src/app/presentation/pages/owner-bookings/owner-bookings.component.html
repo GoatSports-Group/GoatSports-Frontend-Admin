@@ -24,29 +24,11 @@
     <div class="filter-row filter-row--primary">
       <label><span>Từ ngày</span><app-date-picker ariaLabel="Từ ngày" formControlName="fromDate"></app-date-picker></label>
       <label><span>Đến ngày</span><app-date-picker ariaLabel="Đến ngày" formControlName="toDate"></app-date-picker></label>
-      <label><span>Cơ sở</span><select formControlName="venueId"
-          (change)="selectVenue($any($event.target).value)">
-          <option value="">Tất cả cơ sở</option>
-          @for (venue of venues(); track venue.venueId) {
-          <option [value]="venue.venueId">{{ venue.name }}</option>
-          }
-        </select></label>
-      <label><span>Sân</span><select formControlName="venueCourtId">
-          <option value="">Tất cả sân</option>
-          @for (court of courts(); track court.venueCourtId) {
-          <option [value]="court.venueCourtId">{{ court.name }}</option>
-          }
-        </select></label>
-      <label><span>Trạng thái đơn</span><select formControlName="status">
-          @for (status of statuses; track status.value) {
-          <option [value]="status.value">{{ status.label }}</option>
-          }
-        </select></label>
-      <label><span>Trạng thái thanh toán</span><select formControlName="paymentStatus">
-          @for (status of paymentStatuses; track status.value) {
-          <option [value]="status.value">{{ status.label }}</option>
-          }
-        </select></label>
+      <label><span>Cơ sở</span><app-select formControlName="venueId" (selectionChange)="selectVenue($event)" [options]="venueFilterOptions()"
+          leadingIcon="land-plot" ariaLabel="Cơ sở"></app-select></label>
+      <label><span>Sân</span><app-select formControlName="venueCourtId" [options]="courtFilterOptions()" ariaLabel="Sân"></app-select></label>
+      <label><span>Trạng thái đơn</span><app-select formControlName="status" [options]="statuses" ariaLabel="Trạng thái đơn"></app-select></label>
+      <label><span>Trạng thái thanh toán</span><app-select formControlName="paymentStatus" [options]="paymentStatuses" ariaLabel="Trạng thái thanh toán"></app-select></label>
       <button type="submit" class="filter-button" [disabled]="loading() || filterCourtsLoading()">
         <lucide-icon name="list-filter" /> Bộ lọc
       </button>
@@ -551,16 +533,13 @@
       <div class="form-grid">
         <label>
           <span>Cơ sở</span>
-          <select formControlName="venueId" (change)="selectCreateVenue($any($event.target).value)">
-            @for (venue of venues(); track venue.venueId) { <option [value]="venue.venueId">{{ venue.name }}</option> }
-          </select>
+          <app-select formControlName="venueId" (selectionChange)="selectCreateVenue($event)" [options]="venueOptions()"
+            leadingIcon="land-plot" ariaLabel="Cơ sở"></app-select>
         </label>
         <label>
           <span>Sân thi đấu</span>
-          <select formControlName="venueCourtId" (change)="loadCreateSlots()" [disabled]="slotsLoading()">
-            @for (court of createCourts(); track court.venueCourtId) { <option [value]="court.venueCourtId">{{
-              court.name }}</option> }
-          </select>
+          <app-select formControlName="venueCourtId" (selectionChange)="loadCreateSlots()" [disabled]="slotsLoading()"
+            [options]="createCourtOptions()" ariaLabel="Sân thi đấu"></app-select>
         </label>
         <label>
           <span>Ngày chơi</span>
@@ -569,14 +548,9 @@
         </label>
         <label>
           <span>Khung giờ còn trống</span>
-          <select formControlName="timeSlotId" [disabled]="slotsLoading() || !availableCreateSlots().length">
-            <option value="">{{ slotsLoading() ? 'Đang tải khung giờ…' : 'Chọn khung giờ' }}</option>
-            @for (slot of availableCreateSlots(); track slot.timeSlotId) {
-            <option [value]="slot.timeSlotId">
-              {{ timeValue(slot.startTime) }} – {{ timeValue(slot.endTime) }} · {{ formatMoney(slotTotal(slot)) }}
-            </option>
-            }
-          </select>
+          <app-select formControlName="timeSlotId" [disabled]="slotsLoading() || !availableCreateSlots().length"
+            [options]="createSlotOptions()" [placeholder]="slotsLoading() ? 'Đang tải khung giờ…' : 'Chọn khung giờ'"
+            leadingIcon="clock" ariaLabel="Khung giờ"></app-select>
         </label>
         <label>
           <span>Tên khách</span>

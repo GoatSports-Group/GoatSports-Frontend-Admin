@@ -1,3 +1,5 @@
+import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
+import { FormsModule } from '@angular/forms';
 import { PAGE_SIZE } from '@shared/constants/page-size';
 import {
   ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal
@@ -35,7 +37,7 @@ const MIN_REASON = 10;
 @Component({
   selector: 'app-moderation',
   standalone: true,
-  imports: [DatePipe, LucideIconComponent, PageLoadingComponent, PaginationComponent],
+  imports: [DatePipe, LucideIconComponent, PageLoadingComponent, PaginationComponent, SelectComponent, FormsModule],
   templateUrl: './moderation.component.html',
   styleUrl: './moderation.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -58,6 +60,11 @@ export class ModerationComponent {
 
   readonly reportStatuses: readonly ReportStatus[] = ['PENDING', 'REVIEWING', 'RESOLVED', 'REJECTED'];
   readonly appealStatuses: readonly AppealStatus[] = ['PENDING', 'APPROVED', 'REJECTED'];
+  readonly reportStatusOptions: readonly SelectOption[] = [
+    { value: '', label: 'Chờ xử lý và đang xem xét' },
+    ...this.reportStatuses.map(status => ({ value: status, label: this.statusLabel(status) }))
+  ];
+  readonly appealStatusOptions: readonly SelectOption[] = this.appealStatuses.map(status => ({ value: status, label: this.statusLabel(status) }));
 
   readonly lane = signal<Lane>('REPORTS');
   readonly reports = signal<ContentReport[]>([]);
@@ -93,13 +100,13 @@ export class ModerationComponent {
     this.load(0);
   }
 
-  selectReportStatus(event: Event): void {
-    this.reportStatusFilter.set((event.target as HTMLSelectElement).value);
+  selectReportStatus(value: string): void {
+    this.reportStatusFilter.set(value);
     this.load(0);
   }
 
-  selectAppealStatus(event: Event): void {
-    this.appealStatusFilter.set((event.target as HTMLSelectElement).value);
+  selectAppealStatus(value: string): void {
+    this.appealStatusFilter.set(value);
     this.load(0);
   }
 
@@ -157,8 +164,8 @@ export class ModerationComponent {
     }
   }
 
-  selectAction(event: Event): void {
-    this.draftAction.set((event.target as HTMLSelectElement).value as ModerationActionType);
+  selectAction(value: ModerationActionType): void {
+    this.draftAction.set(value);
   }
 
   updateReason(event: Event): void {

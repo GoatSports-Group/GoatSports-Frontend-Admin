@@ -25,12 +25,8 @@
     <div class="filter-controls">
       <label>
         <span>Cơ sở</span>
-        <select [value]="selectedVenueId()" [disabled]="loading()" (change)="selectVenue($event)">
-          <option value="">Tất cả cơ sở</option>
-          @for (venue of venues(); track venue.venueId) {
-          <option [value]="venue.venueId">{{ venue.name }}</option>
-          }
-        </select>
+        <app-select [ngModel]="selectedVenueId()" (ngModelChange)="selectVenue($event)" [disabled]="loading()"
+          [options]="venueOptions()" leadingIcon="land-plot" ariaLabel="Cơ sở"></app-select>
       </label>
       <label>
         <span>Từ ngày</span>

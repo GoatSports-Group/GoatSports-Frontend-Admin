@@ -165,6 +165,13 @@ export class NotificationService {
     );
   }
 
+  /** Nap lai danh sach o chuong + so chua doc (sau khi trang Thong bao doi trang thai ma dropdown chua biet). */
+  public refresh(): void {
+    this.resetPagination();
+    this.fetchNotifications({ page: 1, size: this.pageSize }).subscribe();
+    this.fetchUnreadCount().subscribe();
+  }
+
   /** Load the next page (called on scroll). No-op if already loading or no more pages. */
   public loadNextPage(): void {
     if (!this.hasMorePages || this.isLoadingSubject.value) return;

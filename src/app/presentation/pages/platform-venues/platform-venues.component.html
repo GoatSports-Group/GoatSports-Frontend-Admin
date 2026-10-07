@@ -75,6 +75,10 @@
             </div>
           </td>
           <td class="row-action">
+            @if (item.ownerId) {
+            <a class="btn btn--sm btn--ghost" routerLink="/admin/messages" [queryParams]="{ owner: item.ownerId }"
+              [attr.aria-label]="'Nhắn chủ sân của ' + item.name"><lucide-icon name="message-circle" />Nhắn chủ sân</a>
+            }
             @if (item.suspendedAt) {
             <button type="button" class="btn btn--sm" (click)="reinstate(item)"><lucide-icon name="lock-open" />Gỡ đình chỉ</button>
             } @else {

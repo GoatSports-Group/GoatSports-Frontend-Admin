@@ -1,7 +1,6 @@
 <main class="moderation-page">
   <section class="hero">
     <div>
-      <p class="eyebrow"><lucide-icon name="shield" /> Kiểm duyệt nội dung</p>
       <h1>Báo cáo &amp; khiếu nại</h1>
       <p>Xử lý nội dung bị báo cáo trên bảng tin và xét duyệt khiếu nại của tác giả.</p>
     </div>
@@ -28,20 +27,13 @@
   <section class="filter-panel" aria-label="Bộ lọc">
     @if (lane() === 'REPORTS') {
       <label>Trạng thái báo cáo
-        <select [value]="reportStatusFilter()" [disabled]="loading()" (change)="selectReportStatus($event)">
-          <option value="">Chờ xử lý và đang xem xét</option>
-          @for (status of reportStatuses; track status) {
-            <option [value]="status">{{ statusLabel(status) }}</option>
-          }
-        </select>
+        <app-select [ngModel]="reportStatusFilter()" (ngModelChange)="selectReportStatus($event)" [disabled]="loading()"
+          [options]="reportStatusOptions" ariaLabel="Trạng thái báo cáo"></app-select>
       </label>
     } @else {
       <label>Trạng thái khiếu nại
-        <select [value]="appealStatusFilter()" [disabled]="loading()" (change)="selectAppealStatus($event)">
-          @for (status of appealStatuses; track status) {
-            <option [value]="status">{{ statusLabel(status) }}</option>
-          }
-        </select>
+        <app-select [ngModel]="appealStatusFilter()" (ngModelChange)="selectAppealStatus($event)" [disabled]="loading()"
+          [options]="appealStatusOptions" ariaLabel="Trạng thái khiếu nại"></app-select>
       </label>
     }
     <button type="button" class="primary" [disabled]="loading()" (click)="load(0)">
@@ -121,11 +113,8 @@
                 @if (openReportId() === report.reportId) {
                   <div class="action-form">
                     <label>Hành động
-                      <select [value]="draftAction()" [disabled]="submitting()" (change)="selectAction($event)">
-                        @for (choice of actionChoices; track choice.value) {
-                          <option [value]="choice.value">{{ choice.label }}</option>
-                        }
-                      </select>
+                      <app-select [ngModel]="draftAction()" (ngModelChange)="selectAction($event)" [disabled]="submitting()"
+                        [options]="actionChoices" ariaLabel="Cách xử lý"></app-select>
                     </label>
                     <p class="hint">{{ activeHint() }}</p>
                     <label>Lý do xử lý

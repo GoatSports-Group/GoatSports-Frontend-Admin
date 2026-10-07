@@ -10,7 +10,7 @@
     height: auto;
     
     &.empty {
-      color: #cbd5e0;
+      color: var(--border-strong);
     }
   }
 
@@ -25,7 +25,7 @@
   &.small {
     font-size: 16px;
     .star-icon { font-size: 16px; }
-    .rating-value { font-size: 0.75rem; }
+    .rating-value { font-size: 13px; }
   }
 
   &.medium {

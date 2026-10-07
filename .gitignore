@@ -3,3 +3,6 @@ node_modules
 .env
 dist/
 src/environments/environment.prod.ts
+# Playwright
+/e2e-results
+/playwright-report

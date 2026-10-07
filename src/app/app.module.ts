@@ -36,6 +36,10 @@ import { OwnerTournamentRepositoryImpl } from '@infrastructure/repositories/owne
 import { SOCIAL_MODERATION_REPOSITORY_TOKEN } from '@application/ports/persistence/social-moderation.repository';
 import { BANK_ACCOUNT_REPOSITORY_TOKEN } from '@application/ports/persistence/bank-account.repository';
 import { WEBSOCKET_SERVICE_TOKEN } from '@application/ports/websocket.service';
+import { CHAT_REPOSITORY_TOKEN } from '@application/ports/persistence/chat.repository';
+import { SOCIAL_SOCKET_TOKEN } from '@application/ports/social-socket.service';
+import { ChatRepositoryImpl } from '@infrastructure/repositories/chat.repository.impl';
+import { SocialSocketServiceImpl } from '@infrastructure/websocket/social-socket.service';
 
 import { AuthRepositoryImpl } from '@infrastructure/repositories/auth.repository.impl';
 import { UserRepositoryImpl } from '@infrastructure/repositories/user.repository.impl';
@@ -105,6 +109,8 @@ import { APP_ICONS } from './app-icons';
     { provide: SOCIAL_MODERATION_REPOSITORY_TOKEN, useClass: SocialModerationRepositoryImpl },
     { provide: BANK_ACCOUNT_REPOSITORY_TOKEN, useClass: BankAccountRepositoryImpl },
     { provide: WEBSOCKET_SERVICE_TOKEN, useClass: StompWebSocketService },
+    { provide: CHAT_REPOSITORY_TOKEN, useClass: ChatRepositoryImpl },
+    { provide: SOCIAL_SOCKET_TOKEN, useClass: SocialSocketServiceImpl },
     {
       provide: IMAGE_CONFIG,
       useValue: {

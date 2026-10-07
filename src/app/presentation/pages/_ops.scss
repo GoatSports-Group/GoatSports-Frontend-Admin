@@ -1,3 +1,62 @@
+/// Dau trang van hanh (§7): page-title-ops (28-40px / 800, chu ink) + mot dong body-md, nut chinh ben phai.
+/// Cho trang chua dung ca mixin `ops` (trang chu san cu): `:host .page-heading { @include t.page-head; }`.
+@mixin page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+
+  > div:first-child { min-width: 0; flex: 1 1 420px; }
+
+  h1 {
+    margin: 0;
+    color: var(--ink);
+    font-size: clamp(28px, 3vw, 40px);
+    font-weight: 800;
+    letter-spacing: -.035em;
+    line-height: 1.15;
+  }
+
+  h1 + p, > div > p {
+    max-width: 68ch;
+    margin: 6px 0 0;
+    color: var(--body);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.55;
+  }
+}
+
+/// Bo loc: cac o cung hang, tu xuong dong khi het cho (khong co cot nao bi bop toi "Ch...").
+@mixin filter-grid($min: 180px) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, $min), 1fr));
+  align-items: end;
+  gap: 12px;
+}
+
+/// Trang thai trong / loi gon (§6 Loading, empty & error): nen surface-subtle, vien net dut, can giua.
+@mixin state-panel {
+  display: flex;
+  min-height: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px 16px;
+  padding: 32px 24px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 16px;
+  background: var(--surface-subtle);
+  color: var(--ink);
+  text-align: left;
+}
+
 // Admin operations pages (owner + platform admin) — GOAT-DESIGN.md operations shell (§7): page-title-ops, KPI tiles, tables in cards,
 // underline tabs, 44px controls, flex-column modal. Tokens only.
 @mixin ops {

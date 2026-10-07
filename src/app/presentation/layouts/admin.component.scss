@@ -46,13 +46,13 @@
   }
 
   .badge-role {
-    font-size: 10px;
+    font-size: 13px;
     font-weight: 700;
     letter-spacing: 2px;
     background-color: rgba(231, 55, 37, 0.15);
     color: var(--danger);
     padding: 2px 8px;
-    border-radius: 4px;
+    border-radius: 6px;
     border: 1px solid rgba(231, 55, 37, 0.3);
   }
 }
@@ -83,7 +83,7 @@
     }
 
     .admin-email {
-      font-size: 12px;
+      font-size: 13px;
       color: var(--muted);
       word-break: break-all;
     }
@@ -106,10 +106,10 @@
     align-items: center;
     gap: 12px;
     padding: 12px 16px;
-    border-radius: 8px;
-    color: #cbd5e0;
+    border-radius: 12px;
+    color: var(--border-strong);
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     text-decoration: none;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
@@ -144,7 +144,7 @@
 
     &.store-link {
       margin-top: auto;
-      color: #cbd5e0;
+      color: var(--border-strong);
       border: 1px dashed rgba(255, 255, 255, 0.1);
 
       mat-icon {
@@ -159,10 +159,10 @@
     }
 
     &.logout-link {
-      color: #fc8181;
+      color: var(--danger);
 
       mat-icon {
-        color: #fc8181;
+        color: var(--danger);
       }
 
       &:hover {
@@ -237,7 +237,7 @@
       }
 
       .status-label {
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 600;
         color: #169A13;
         transition: color 0.3s ease;
@@ -322,7 +322,7 @@
 // Notifications Menu Styles
 ::ng-deep .custom-notif-menu {
   background-color: var(--surface) !important;
-  border-radius: 14px !important;
+  border-radius: 12px !important;
   box-shadow: 0 10px 30px var(--hairline) !important;
   border: 1px solid rgba(226, 232, 240, 0.8) !important;
   padding: 0 !important;
@@ -341,7 +341,7 @@
     h3 {
       margin: 0;
       font-size: 0.95rem;
-      font-weight: 750;
+      font-weight: 700;
       color: var(--ink);
     }
   }
@@ -387,13 +387,13 @@
 
       .notif-desc {
         margin: 0;
-        font-size: 0.8rem;
+        font-size: 13px;
         color: var(--body);
         line-height: 1.4;
       }
 
       .notif-time {
-        font-size: 0.7rem;
+        font-size: 13px;
         color: var(--muted);
         align-self: flex-end;
       }
@@ -420,7 +420,7 @@
 
 @media (prefers-color-scheme: dark) {
   .notif-btn {
-    color: #cbd5e0;
+    color: var(--border-strong);
 
     &:hover {
       color: #ffffff;

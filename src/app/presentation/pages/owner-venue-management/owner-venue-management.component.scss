@@ -44,7 +44,7 @@ h1 {
   grid-template-rows: auto auto;
   overflow: hidden;
   border: 1px solid var(--venue-border);
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--surface);
 }
 
@@ -71,7 +71,7 @@ h1 {
   margin: 0;
   color: var(--ink);
   font-size: 15px;
-  font-weight: 750;
+  font-weight: 700;
 }
 
 .venue-selector__heading a {
@@ -81,7 +81,7 @@ h1 {
   gap: 6px;
   color: var(--venue-primary-dark);
   font-size: 14px;
-  font-weight: 750;
+  font-weight: 700;
   text-decoration: none;
 }
 
@@ -102,7 +102,7 @@ h1 {
   margin: 8px 10px;
   padding: 0 12px;
   border: 1px solid var(--border-strong);
-  border-radius: 9px;
+  border-radius: 12px;
   background: var(--surface);
   color: var(--body);
   transition: border-color .18s ease, box-shadow .18s ease;
@@ -192,7 +192,7 @@ h1 {
   grid-template-columns: 88px minmax(0, 1fr) 8px;
   padding: 8px 10px;
   border: 1px solid #62c6a5;
-  border-radius: 9px;
+  border-radius: 12px;
   background: linear-gradient(90deg, var(--primary-light), var(--primary-light));
   box-shadow: 0 2px 8px rgb(5 150 105 / 7%);
 }
@@ -213,7 +213,7 @@ h1 {
   place-items: center;
   overflow: hidden;
   border: 1px solid var(--hairline);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--surface-strong);
   color: var(--body);
 }
@@ -246,7 +246,7 @@ h1 {
 .venue-option__copy>strong {
   color: var(--ink);
   font-size: 15px;
-  font-weight: 750;
+  font-weight: 700;
 }
 
 .venue-option__copy>small {
@@ -262,7 +262,7 @@ h1 {
   border-radius: 6px;
   background: var(--warning-soft);
   color: var(--warning);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -356,7 +356,7 @@ h1 {
   margin: 0;
   color: var(--primary-strong);
   font-size: 17px;
-  font-weight: 750;
+  font-weight: 700;
 }
 
 .status-pill {
@@ -366,7 +366,7 @@ h1 {
   gap: 7px;
   padding: 6px 10px;
   border: 1px solid var(--warning-soft);
-  border-radius: 9px;
+  border-radius: 12px;
   background: var(--warning-soft);
   color: var(--warning);
   font-size: 13px;
@@ -398,7 +398,7 @@ h1 {
   margin-bottom: 16px;
   padding: 14px 16px;
   border: 1px solid var(--danger);
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--danger-soft);
   color: var(--ink);
 

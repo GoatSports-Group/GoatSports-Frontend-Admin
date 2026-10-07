@@ -2,29 +2,29 @@
   <!-- Page Header -->
   <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/80 pb-5">
     <div class="flex flex-col">
-      <div class="flex items-center gap-1 text-slate-500 hover:text-emerald-600 text-xs font-extrabold cursor-pointer mb-2 select-none" (click)="onCancel()">
+      <div class="flex items-center gap-1 text-slate-500 hover:text-emerald-600 text-[13px] font-extrabold cursor-pointer mb-2 select-none" (click)="onCancel()">
         <lucide-icon name="arrow-left" class="h-4 w-4"></lucide-icon> Quay lại danh sách
       </div>
-      <h1 class="font-display text-2xl font-black text-slate-900 uppercase tracking-tight">
+      <h1 class="text-2xl font-black text-slate-900 uppercase tracking-tight">
         Cấu Hình Quyền Hạn: <span class="text-emerald-600 font-black">{{ role?.name }}</span>
       </h1>
-      <p class="text-xs font-semibold text-slate-500 mt-1">Bật/tắt các quyền truy cập API được gán cho vai trò này.</p>
+      <p class="text-[13px] font-semibold text-slate-500 mt-1">Bật/tắt các quyền truy cập API được gán cho vai trò này.</p>
     </div>
 
     <div class="flex items-center gap-3 w-full md:w-auto">
       <button (click)="onCancel()" [disabled]="saving"
-        class="flex-1 md:flex-none h-11 px-5 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/60 rounded-2xl font-bold text-xs transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50">
+        class="flex-1 md:flex-none h-11 px-5 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/60 rounded-xl font-bold text-[13px] transition-all cursor-pointer disabled:opacity-50">
         Hủy bỏ
       </button>
       <button (click)="onSave()" [disabled]="saving || loading"
-        class="flex-1 md:flex-none h-11 px-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold text-xs shadow-lg shadow-emerald-600/10 transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 font-display">
+        class="flex-1 md:flex-none h-11 px-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-[13px] shadow-lg shadow-emerald-600/10 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5">
         <lucide-icon name="save" class="h-4 w-4 shrink-0"></lucide-icon> Lưu thiết lập
       </button>
     </div>
   </div>
 
   <!-- Search & Filter Controls -->
-  <div class="bg-white border border-slate-100 rounded-3xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.015)] flex flex-col md:flex-row items-center gap-4">
+  <div class="bg-surface border border-slate-100 rounded-2xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.015)] flex flex-col md:flex-row items-center gap-4">
     <div class="relative w-full flex-1">
       <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
         <lucide-icon name="search" class="text-slate-400 h-5 w-5"></lucide-icon>
@@ -33,22 +33,22 @@
              [(ngModel)]="searchQuery" 
              (keyup.enter)="onSearch()"
              placeholder="Tìm kiếm quyền hạn theo tên, api path, method, module..." 
-             class="w-full h-11 bg-slate-50/70 border-0 rounded-2xl pl-11 pr-4 text-sm font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500 transition-all">
+             class="w-full h-11 bg-slate-50/70 border-0 rounded-xl pl-11 pr-4 text-sm font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-surface focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500 transition-all">
     </div>
     
     <button (click)="onSearch()" 
-            class="w-full md:w-auto bg-slate-900 hover:bg-slate-800 active:scale-[0.98] text-white font-bold text-sm px-6 h-11 rounded-2xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md font-display">
+            class="w-full md:w-auto bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm px-6 h-11 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md">
       <lucide-icon name="filter" class="h-4 w-4 shrink-0"></lucide-icon> Lọc dữ liệu
     </button>
 
-    <div class="w-full md:w-auto flex items-center justify-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-4 h-11 rounded-2xl md:ml-auto">
+    <div class="w-full md:w-auto flex items-center justify-center gap-1.5 text-[13px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-4 h-11 rounded-2xl md:ml-auto">
       <lucide-icon name="check-circle" class="h-4 w-4 shrink-0 text-emerald-600"></lucide-icon>
       <span>{{ selectedPermissionIds.size }} quyền hạn được chọn</span>
     </div>
   </div>
 
   <!-- Table Card Wrapper -->
-  <div class="bg-white border border-slate-100 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.015)] overflow-hidden">
+  <div class="bg-surface border border-slate-100 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.015)] overflow-hidden">
     @if (loading) {
       <app-loading-skeleton variant="table" [flush]="true" [count]="8" [columns]="4" label="Đang tải danh sách quyền"></app-loading-skeleton>
     } @else {
@@ -56,14 +56,14 @@
       @if (permissions.length === 0) {
         <div class="flex flex-col items-center justify-center py-20 text-center">
           <lucide-icon name="shield" class="text-slate-300 h-12 w-12 mb-4 mx-auto block"></lucide-icon>
-          <h3 class="text-base font-extrabold text-slate-900 font-display">Không tìm thấy quyền hạn nào</h3>
-          <p class="text-xs text-slate-500 mt-1 max-w-sm font-medium">Thử điều chỉnh từ khóa tìm kiếm để bắt đầu.</p>
+          <h3 class="text-base font-extrabold text-slate-900">Không tìm thấy quyền hạn nào</h3>
+          <p class="text-[13px] text-slate-500 mt-1 max-w-sm font-medium">Thử điều chỉnh từ khóa tìm kiếm để bắt đầu.</p>
         </div>
       } @else {
         <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse text-xs">
+          <table class="w-full text-left border-collapse text-[13px]">
             <thead>
-              <tr class="border-b border-slate-100 text-xs font-bold uppercase tracking-wider text-emerald-600 bg-slate-50/50 font-display select-none">
+              <tr class="border-b border-slate-100 text-[12px] font-bold uppercase tracking-wider text-emerald-600 bg-slate-50/50 select-none">
                 <th class="py-4 px-6 w-[60px] text-center">
                   <input type="checkbox"
                     (change)="toggleAllOnPage($any($event.target).checked)"
@@ -91,12 +91,12 @@
                     {{ p.name }}
                   </td>
                   <td class="py-4 px-6">
-                    <span class="font-mono text-xs text-slate-700 bg-slate-50 border border-slate-200/40 px-3.5 py-2 rounded-2xl font-semibold">
+                    <span class="font-mono text-[13px] text-slate-700 bg-slate-50 border border-slate-200/40 px-3.5 py-2 rounded-2xl font-semibold">
                       {{ p.apiPath }}
                     </span>
                   </td>
                   <td class="py-4 px-6 text-center">
-                    <span class="inline-flex items-center justify-center min-w-[66px] px-3.5 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider border shadow-xs"
+                    <span class="inline-flex items-center justify-center min-w-[66px] px-3.5 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-wider border shadow-xs"
                       [ngClass]="{
                         'bg-emerald-50 text-emerald-700 border-emerald-200': p.method === 'GET',
                         'bg-amber-50 text-amber-700 border-amber-200': p.method === 'POST',
@@ -108,7 +108,7 @@
                     </span>
                   </td>
                   <td class="py-4 px-6 text-center">
-                    <span class="inline-flex items-center px-3 py-1.5 rounded-xl text-[11px] font-bold uppercase tracking-wider bg-slate-50 text-slate-700 border border-slate-200/50">
+                    <span class="inline-flex items-center px-3 py-1.5 rounded-xl text-[12px] font-bold uppercase tracking-wider bg-slate-50 text-slate-700 border border-slate-200/50">
                       {{ p.module || 'OTHER' }}
                     </span>
                   </td>
@@ -138,11 +138,11 @@
   @if (!loading) {
     <div class="flex justify-end gap-3 mt-4 border-t border-slate-100 pt-4">
       <button (click)="onCancel()"
-        class="px-5 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/60 rounded-full font-bold text-xs transition-all active:scale-[0.98] cursor-pointer">
+        class="px-5 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/60 rounded-xl font-bold text-[13px] transition-all cursor-pointer">
         Quay lại
       </button>
       <button (click)="onSave()" [disabled]="saving"
-        class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-bold text-xs shadow-md shadow-emerald-600/10 transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 font-display">
+        class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-[13px] shadow-md shadow-emerald-600/10 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5">
         <lucide-icon name="save" class="h-4 w-4 shrink-0"></lucide-icon> Lưu thiết lập
       </button>
     </div>

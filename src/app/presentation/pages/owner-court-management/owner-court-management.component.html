@@ -584,8 +584,7 @@
             <label class="field"><span>Mã hệ thống</span><input [value]="courtCode(editing)" readonly /><small
                 class="field__hint">Mã được tạo tự động để quản lý sân.</small></label>
             }
-            <label class="field"><span>Môn thể thao <b>*</b></span><select formControlName="sportType">@for (sport of
-                sports; track sport.value) { <option [value]="sport.value">{{ sport.label }}</option> }</select></label>
+            <label class="field"><span>Môn thể thao <b>*</b></span><app-select formControlName="sportType" [options]="sports" ariaLabel="Môn thể thao"></app-select></label>
             <label class="field"><span>Mặt sân</span><input formControlName="surfaceType" maxlength="255"
                 list="court-surface-options" placeholder="Ví dụ: Thảm PVC" /><datalist id="court-surface-options">@for
                 (surface of surfaceOptions; track surface) { <option [value]="surface"></option> }</datalist></label>

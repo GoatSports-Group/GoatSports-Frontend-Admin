@@ -1,16 +1,16 @@
-<div class="flex-1 min-h-0 flex flex-col bg-white border border-slate-100 rounded-3xl shadow-xl">
+<div class="flex-1 min-h-0 flex flex-col bg-surface border border-slate-100 rounded-2xl shadow-xl">
   
   <!-- Table Wrapper -->
   <div class="flex-1 min-h-0 overflow-x-auto rounded-t-3xl scrollbar-none">
     <table class="w-full text-left border-collapse">
       <thead>
-        <tr class="border-b border-slate-100 text-[14px] font-bold tracking-wider text-emerald-400 bg-white">
-          <th class="py-4 px-6 font-bold text-emerald-500 bg-white sticky top-0 z-20 border-b border-slate-100">Người thực hiện</th>
-          <th class="py-4 px-6 font-bold text-emerald-500 bg-white sticky top-0 z-20 border-b border-slate-100">Hành động</th>
-          <th class="py-4 px-6 font-bold text-emerald-500 bg-white sticky top-0 z-20 border-b border-slate-100">Địa chỉ IP</th>
-          <th class="py-4 px-6 font-bold text-emerald-500 bg-white sticky top-0 z-20 border-b border-slate-100">Trạng thái</th>
-          <th class="py-4 px-6 font-bold text-emerald-500 bg-white sticky top-0 z-20 border-b border-slate-100">Thời gian</th>
-          <th class="py-4 px-6 font-bold text-emerald-500 text-center bg-white sticky top-0 z-20 border-b border-slate-100">Thao tác</th>
+        <tr class="border-b border-slate-100 text-[14px] font-bold tracking-wider text-emerald-400 bg-surface">
+          <th class="py-4 px-6 font-bold text-emerald-500 bg-surface sticky top-0 z-20 border-b border-slate-100">Người thực hiện</th>
+          <th class="py-4 px-6 font-bold text-emerald-500 bg-surface sticky top-0 z-20 border-b border-slate-100">Hành động</th>
+          <th class="py-4 px-6 font-bold text-emerald-500 bg-surface sticky top-0 z-20 border-b border-slate-100">Địa chỉ IP</th>
+          <th class="py-4 px-6 font-bold text-emerald-500 bg-surface sticky top-0 z-20 border-b border-slate-100">Trạng thái</th>
+          <th class="py-4 px-6 font-bold text-emerald-500 bg-surface sticky top-0 z-20 border-b border-slate-100">Thời gian</th>
+          <th class="py-4 px-6 font-bold text-emerald-500 text-center bg-surface sticky top-0 z-20 border-b border-slate-100">Thao tác</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-100">
@@ -46,7 +46,7 @@
 
             <!-- Action Badge -->
             <td class="py-4 px-6">
-              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase border"
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-[12px] font-bold tracking-wide uppercase border"
                     [ngClass]="getActionBadgeClass(log.action)">
                 {{ log.action || 'HTTP CALL' }}
               </span>
@@ -59,7 +59,7 @@
 
             <!-- Status Code -->
             <td class="py-4 px-6">
-              <span class="inline-flex items-center justify-center w-12 py-1 rounded-xl text-xs font-black"
+              <span class="inline-flex items-center justify-center w-12 py-1 rounded-xl text-[13px] font-black"
                     [ngClass]="getStatusClass(log.statusCode)">
                 {{ log.statusCode }}
               </span>
@@ -75,7 +75,7 @@
               <div class="relative inline-block">
                 <button (mouseenter)="showTooltip($event, log.description || 'Không có mô tả chi tiết')"
                         (mouseleave)="hideTooltip()"
-                        class="px-4 py-1.5 rounded-2xl text-xs font-bold text-emerald-600 hover:text-white bg-emerald-50 hover:bg-emerald-600 transition-all duration-300 shadow-sm border border-emerald-100 hover:border-emerald-600 cursor-pointer">
+                        class="px-4 py-1.5 rounded-xl text-[13px] font-bold text-emerald-600 hover:text-white bg-emerald-50 hover:bg-emerald-600 transition-all duration-300 shadow-sm border border-emerald-100 hover:border-emerald-600 cursor-pointer">
                   Chi tiết
                 </button>
               </div>
@@ -99,12 +99,12 @@
 <div *ngIf="activeTooltipText" 
      [style.left.px]="tooltipX"
      [style.top.px]="tooltipY"
-     class="absolute -translate-x-[calc(100%-24px)] -translate-y-full -mt-2 w-72 bg-slate-950/95 backdrop-blur-md text-white text-xs rounded-xl p-3.5 shadow-2xl z-[999] pointer-events-none transition-all duration-200 border border-slate-800/80">
+     class="absolute -translate-x-[calc(100%-24px)] -translate-y-full -mt-2 w-72 bg-slate-950/95 backdrop-blur-md text-white text-[13px] rounded-xl p-3.5 shadow-2xl z-[999] pointer-events-none transition-all duration-200 border border-slate-800/80">
   <!-- Arrow -->
   <div class="absolute top-full right-6 border-4 border-transparent border-t-slate-950/95"></div>
   
   <div class="space-y-1">
-    <span class="text-[9px] font-extrabold text-emerald-400 uppercase tracking-wider block text-left">Mô tả hoạt động</span>
+    <span class="text-[12px] font-extrabold text-emerald-400 uppercase tracking-wider block text-left">Mô tả hoạt động</span>
     <p class="font-medium text-slate-100 leading-relaxed text-left break-words whitespace-pre-wrap">
       {{ activeTooltipText }}
     </p>

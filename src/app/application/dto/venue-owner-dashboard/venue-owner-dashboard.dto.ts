@@ -64,6 +64,8 @@ export interface OwnerVenueCourtUpsert {
 
 export interface OwnerVenueOverview {
   venueId: string;
+  /** Chu co so (admin: nut "Nhan chu san" mo hop thu ho tro voi nguoi nay). */
+  ownerId?: string;
   name: string;
   description?: string;
   openTime?: string;

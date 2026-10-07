@@ -31,9 +31,86 @@
   --color-primary-hover: var(--primary-hover);
   --color-primary-light: var(--primary-light);
 
-  --color-accent: #0ea5e9;
-  --color-accent-hover: #0284c7;
-  --color-accent-light: #f0f9ff;
+  // Accent xanh da troi da bo (GOAT-DESIGN §3): class cu tro ve info.
+  --color-accent: var(--info);
+  --color-accent-hover: var(--info);
+  --color-accent-light: var(--info-soft);
+
+  // GOAT-DESIGN §11: class Tailwind cu (emerald/slate/rose/amber...) trong template admin tro ve token,
+  // nen tu doi theo giao dien toi va khong con mau rieng ngoai he thong.
+  --color-emerald-50: var(--primary-light);
+  --color-emerald-100: var(--primary-light);
+  --color-emerald-200: color-mix(in srgb, var(--primary) 25%, var(--surface));
+  --color-emerald-300: color-mix(in srgb, var(--primary) 40%, var(--surface));
+  --color-emerald-400: var(--primary);
+  --color-emerald-500: var(--primary-fill);
+  --color-emerald-600: var(--primary);
+  --color-emerald-700: var(--primary-hover);
+  --color-emerald-800: var(--primary-strong);
+  --color-emerald-900: var(--primary-strong);
+  --color-teal-50: var(--primary-light);
+  --color-teal-100: var(--primary-light);
+  --color-teal-500: var(--primary-fill);
+  --color-teal-600: var(--primary);
+  --color-teal-700: var(--primary-hover);
+  --color-green-50: var(--success-soft);
+  --color-green-100: var(--success-soft);
+  --color-green-500: var(--success);
+  --color-green-600: var(--success);
+  --color-green-700: var(--success);
+  --color-slate-50: var(--surface-subtle);
+  --color-slate-100: var(--surface-strong);
+  --color-slate-200: var(--hairline);
+  --color-slate-300: var(--border-strong);
+  --color-slate-400: var(--body);
+  --color-slate-500: var(--body);
+  --color-slate-600: var(--body);
+  --color-slate-700: var(--ink);
+  --color-slate-800: var(--ink);
+  --color-slate-900: var(--ink);
+  --color-slate-950: var(--ink);
+  --color-gray-50: var(--surface-subtle);
+  --color-gray-100: var(--surface-strong);
+  --color-gray-200: var(--hairline);
+  --color-gray-300: var(--border-strong);
+  --color-gray-400: var(--body);
+  --color-gray-500: var(--body);
+  --color-gray-600: var(--body);
+  --color-gray-700: var(--ink);
+  --color-gray-800: var(--ink);
+  --color-gray-900: var(--ink);
+  --color-rose-50: var(--danger-soft);
+  --color-rose-100: var(--danger-soft);
+  --color-rose-200: color-mix(in srgb, var(--danger) 25%, var(--surface));
+  --color-rose-500: var(--danger);
+  --color-rose-600: var(--danger);
+  --color-rose-700: var(--danger);
+  --color-red-50: var(--danger-soft);
+  --color-red-100: var(--danger-soft);
+  --color-red-500: var(--danger);
+  --color-red-600: var(--danger);
+  --color-red-700: var(--danger);
+  --color-amber-50: var(--warning-soft);
+  --color-amber-100: var(--warning-soft);
+  --color-amber-400: var(--rating);
+  --color-amber-500: var(--warning);
+  --color-amber-600: var(--warning);
+  --color-amber-700: var(--warning);
+  --color-yellow-400: var(--rating);
+  --color-yellow-500: var(--rating);
+  --color-blue-50: var(--info-soft);
+  --color-blue-100: var(--info-soft);
+  --color-blue-500: var(--info);
+  --color-blue-600: var(--info);
+  --color-blue-700: var(--info);
+  --color-sky-50: var(--info-soft);
+  --color-sky-100: var(--info-soft);
+  --color-sky-500: var(--info);
+  --color-sky-600: var(--info);
+  --color-indigo-50: var(--info-soft);
+  --color-indigo-100: var(--info-soft);
+  --color-indigo-500: var(--info);
+  --color-indigo-600: var(--info);
 
   --color-success: var(--success);
   --color-warning: var(--warning);
@@ -41,6 +118,17 @@
   --color-info: var(--info);
 
   --color-text-dark: var(--ink);
+  // Token ten ngan cho class Tailwind (text-ink, text-body, bg-surface, border-hairline...).
+  --color-ink: var(--ink);
+  --color-body: var(--body);
+  --color-muted: var(--muted);
+  --color-hairline: var(--hairline);
+  --color-border-strong: var(--border-strong);
+  --color-surface: var(--surface);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-surface-strong: var(--surface-strong);
+  --color-canvas: var(--canvas);
+  --color-primary-strong: var(--primary-strong);
   --color-text-muted: var(--body);
   --color-text-light: #ffffff;
 

@@ -1,3 +1,4 @@
+import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
 import { PAGE_SIZE } from '@shared/constants/page-size';
 import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
 import {
@@ -103,8 +104,7 @@ type PointerOperation = PointerOperationBase & (
     RouterLink,
     LucideIconComponent,
     PageLoadingComponent,
-    CourtFloorMarkingComponent
-  ],
+    CourtFloorMarkingComponent, SelectComponent],
   templateUrl: './owner-court-management.component.html',
   styleUrl: './owner-court-management.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

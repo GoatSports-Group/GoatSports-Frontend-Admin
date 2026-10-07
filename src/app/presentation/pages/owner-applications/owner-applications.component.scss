@@ -18,7 +18,7 @@
 
   dt {
     color: var(--body);
-    font-size: 0.75rem;
+    font-size: 13px;
     font-weight: 600;
   }
 
@@ -69,7 +69,7 @@
   small {
     margin-top: 0.2rem;
     color: var(--muted);
-    font-size: 0.6875rem;
+    font-size: 13px;
     font-weight: 600;
   }
 }
@@ -112,7 +112,7 @@
 ::ng-deep {
   .sidebar-paginator {
     font-family: var(--font-sports-body) !important;
-    font-size: 11px !important;
+    font-size: 13px !important;
     color: var(--body) !important;
 
     .mat-mdc-paginator-container {

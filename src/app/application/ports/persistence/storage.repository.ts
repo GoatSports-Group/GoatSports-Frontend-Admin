@@ -7,6 +7,8 @@ export interface StorageRepository {
   uploadToPresignedUrl(uploadUrl: string, file: File): Observable<any>;
   getFileUrl(key: string): Observable<string>;
   uploadAvatar(file: File): Observable<string>;
+  /** Tai nhieu anh len thu muc `folder` (vd. chat-messages), tra ve khoa R2 theo dung thu tu. */
+  uploadImages(files: File[], folder: string): Observable<string[]>;
 }
 
 export const STORAGE_REPOSITORY_TOKEN = new InjectionToken<StorageRepository>('StorageRepository');

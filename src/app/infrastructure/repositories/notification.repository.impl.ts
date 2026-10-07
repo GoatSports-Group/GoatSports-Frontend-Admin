@@ -5,6 +5,7 @@ import { NotificationRepository } from '@application/ports/persistence/notificat
 import { Notification } from '@domain/entities/notification';
 import { NotificationApi } from '@infrastructure/api/notification.api';
 import { PageFilter } from '@application/dto/page.filter';
+import { NotificationPage } from '@application/dto/notification/notification.dto';
 
 @Injectable({
   providedIn: 'root'
@@ -15,6 +16,12 @@ export class NotificationRepositoryImpl implements NotificationRepository {
   getNotifications(filter: PageFilter): Observable<Notification[]> {
     return this.notificationApi.getNotifications(filter).pipe(
       map(response => response.data?.result || [])
+    );
+  }
+
+  getNotificationPage(filter: PageFilter): Observable<NotificationPage> {
+    return this.notificationApi.getNotifications(filter).pipe(
+      map(response => ({ items: response.data?.result || [], total: response.data?.meta?.total ?? 0 }))
     );
   }
 
