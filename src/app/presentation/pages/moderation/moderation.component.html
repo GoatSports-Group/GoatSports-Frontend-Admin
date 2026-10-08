@@ -189,7 +189,7 @@
       </ul>
     }
 
-    @if (pages() > 1) {
+    @if (total() > 0) {
       <app-pagination [pageIndex]="page()" [pageSize]="pageSize" [totalItems]="total()" (pageChange)="goToPage($event)" />
     }
   }

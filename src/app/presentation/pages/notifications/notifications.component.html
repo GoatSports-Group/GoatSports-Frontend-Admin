@@ -67,7 +67,7 @@
       </article>
       }
     </div>
-    @if (total() > pageSize) {
+    @if (total() > 0) {
     <app-pagination [class.is-paging]="paging()" [pageIndex]="pageIndex()" [pageSize]="pageSize" [totalItems]="total()"
       itemLabel="thông báo" (pageChange)="changePage($event)" />
     }

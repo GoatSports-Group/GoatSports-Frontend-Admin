@@ -90,7 +90,7 @@
       </tbody>
     </table>
   </section>
-  @if (total() > pageSize) {
+  @if (total() > 0) {
   <app-pagination [pageIndex]="pageIndex()" [pageSize]="pageSize" [totalItems]="total()" (pageChange)="goToPage($event)" />
   }
   }
