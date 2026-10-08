@@ -5,7 +5,10 @@ import {
   OwnerCustomerMetricsReport,
   OwnerRevenueFilter,
   OwnerRevenueReportExportFilter,
-  OwnerRevenueReport
+  OwnerRevenueReport,
+  PeriodicReport,
+  PeriodicReportFormat,
+  PeriodicReportType
 } from '@application/dto/owner-revenue/owner-revenue.dto';
 
 export interface OwnerRevenueRepository {
@@ -13,6 +16,9 @@ export interface OwnerRevenueRepository {
   getCustomerMetrics(filter: OwnerCustomerMetricsFilter): Observable<OwnerCustomerMetricsReport>;
   previewReport(filter: OwnerRevenueReportExportFilter): Observable<Blob>;
   exportReport(filter: OwnerRevenueReportExportFilter): Observable<Blob>;
+  listPeriodicReports(periodType: PeriodicReportType): Observable<PeriodicReport[]>;
+  generatePeriodicReport(periodType: PeriodicReportType): Observable<PeriodicReport>;
+  exportPeriodicReport(reportId: string, format: PeriodicReportFormat): Observable<Blob>;
 }
 
 export const OWNER_REVENUE_REPOSITORY_TOKEN =

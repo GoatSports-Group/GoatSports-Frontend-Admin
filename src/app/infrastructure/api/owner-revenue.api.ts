@@ -7,7 +7,10 @@ import {
   OwnerCustomerMetricsReport,
   OwnerRevenueFilter,
   OwnerRevenueReportExportFilter,
-  OwnerRevenueReport
+  OwnerRevenueReport,
+  PeriodicReport,
+  PeriodicReportFormat,
+  PeriodicReportType
 } from '@application/dto/owner-revenue/owner-revenue.dto';
 import { environment } from '@environments/environment';
 
@@ -47,6 +50,25 @@ export class OwnerRevenueApi {
   exportReport(filter: OwnerRevenueReportExportFilter): Observable<Blob> {
     return this.http.get(`${this.reportBaseUrl}/export/owner-revenue`, {
       params: this.reportParams(filter).set('format', 'xlsx'),
+      responseType: 'blob'
+    });
+  }
+
+  listPeriodicReports(periodType: PeriodicReportType): Observable<BaseResponse<PeriodicReport[]>> {
+    return this.http.get<BaseResponse<PeriodicReport[]>>(`${this.reportBaseUrl}/owner/periodic`, {
+      params: new HttpParams().set('periodType', periodType)
+    });
+  }
+
+  generatePeriodicReport(periodType: PeriodicReportType): Observable<BaseResponse<PeriodicReport>> {
+    return this.http.post<BaseResponse<PeriodicReport>>(`${this.reportBaseUrl}/owner/periodic`, null, {
+      params: new HttpParams().set('periodType', periodType)
+    });
+  }
+
+  exportPeriodicReport(reportId: string, format: PeriodicReportFormat): Observable<Blob> {
+    return this.http.get(`${this.reportBaseUrl}/owner/periodic/${encodeURIComponent(reportId)}/export`, {
+      params: new HttpParams().set('format', format),
       responseType: 'blob'
     });
   }

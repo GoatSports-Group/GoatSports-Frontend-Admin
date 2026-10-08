@@ -1,0 +1,58 @@
+<section class="periodic-reports" aria-labelledby="periodic-reports-title">
+  <header class="periodic-reports__head">
+    <div>
+      <h2 id="periodic-reports-title">Báo cáo định kỳ</h2>
+      <p>Tất cả cơ sở · tự chốt lúc 01:30 sau mỗi kỳ</p>
+    </div>
+    <button type="button" class="periodic-reports__generate" [disabled]="generating()" (click)="generate()">
+      <lucide-icon name="refresh-cw" [class.is-spinning]="generating()" />
+      {{ generating() ? 'Đang chốt…' : 'Chốt kỳ vừa xong' }}
+    </button>
+  </header>
+
+  <div class="periodic-reports__tabs" role="tablist" aria-label="Loại kỳ báo cáo">
+    @for (item of types; track item.value) {
+    <button type="button" role="tab" [class.is-active]="type() === item.value" [attr.aria-selected]="type() === item.value"
+      (click)="selectType(item.value)">{{ item.label }}</button>
+    }
+  </div>
+
+  @if (loading() && !reports().length) {
+  <div class="periodic-reports__state"><span class="skeleton"></span><span class="skeleton"></span></div>
+  } @else if (error()) {
+  <div class="periodic-reports__state" role="alert">
+    <span>Chưa tải được báo cáo.</span>
+    <button type="button" (click)="load()">Thử lại</button>
+  </div>
+  } @else if (!reports().length) {
+  <div class="periodic-reports__state">
+    <lucide-icon name="file-text" /><span>Chưa có báo cáo cho loại kỳ này. Bấm “Chốt kỳ vừa xong” để lập ngay.</span>
+  </div>
+  } @else {
+  <ul class="periodic-reports__list">
+    @for (report of reports(); track report.reportId) {
+    <li>
+      <div class="periodic-reports__period">
+        <strong>{{ periodLabel(report) }}</strong>
+        <small>{{ report.bookingCount }} lượt đặt · {{ report.paidBookingCount }} đã thanh toán</small>
+      </div>
+      <div class="periodic-reports__money">
+        <strong>{{ money(report.totalRevenue) }}</strong>
+        <small [attr.data-trend]="report.revenueChangePercentage === null ? null : report.revenueChangePercentage >= 0 ? 'up' : 'down'">
+          {{ change(report.revenueChangePercentage) }}</small>
+      </div>
+      <div class="periodic-reports__files">
+        <button type="button" [disabled]="downloading() !== null" (click)="download(report, 'pdf')"
+          [attr.aria-label]="'Tải PDF ' + periodLabel(report)">
+          <lucide-icon name="file-text" />{{ downloading() === report.reportId + ':pdf' ? '…' : 'PDF' }}
+        </button>
+        <button type="button" [disabled]="downloading() !== null" (click)="download(report, 'xlsx')"
+          [attr.aria-label]="'Tải Excel ' + periodLabel(report)">
+          <lucide-icon name="file-spreadsheet" />{{ downloading() === report.reportId + ':xlsx' ? '…' : 'XLSX' }}
+        </button>
+      </div>
+    </li>
+    }
+  </ul>
+  }
+</section>

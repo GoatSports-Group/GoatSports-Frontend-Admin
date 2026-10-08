@@ -68,3 +68,21 @@ export interface OwnerRevenueReport {
   dailyRevenue: OwnerDailyRevenue[];
   hourlyRevenue?: OwnerHourlyRevenue[];
 }
+
+/** Bao cao dinh ky da chot (report-service). Pham vi: moi co so cua chu san. */
+export type PeriodicReportType = 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY' | 'CUSTOM';
+
+export interface PeriodicReport {
+  reportId: string;
+  periodType: PeriodicReportType;
+  periodStart: string;
+  periodEnd: string;
+  totalRevenue: number;
+  bookingCount: number;
+  paidBookingCount: number;
+  revenueChangePercentage: number | null;
+  bookingCountChangePercentage: number | null;
+  generatedAt: string;
+}
+
+export type PeriodicReportFormat = 'pdf' | 'xlsx';

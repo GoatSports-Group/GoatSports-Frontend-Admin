@@ -15,22 +15,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterModule } from '@angular/router';
-import {
-  catchError,
-  EMPTY,
-  exhaustMap,
-  expand,
-  filter,
-  finalize,
-  forkJoin,
-  map,
-  Observable,
-  of,
-  reduce,
-  Subscription,
-  take,
-  timer
-} from 'rxjs';
+import { catchError, EMPTY, exhaustMap, expand, filter, finalize, forkJoin, map, Observable, of, reduce, Subscription, take, timer, Subject, merge, fromEvent, debounceTime } from 'rxjs';
 import { OwnerApplication, OwnerApplicationStatus } from '@application/dto/owner-application/owner-application.dto';
 import { OwnerBooking, OwnerBookingSource } from '@application/dto/owner-booking/owner-booking.dto';
 import { OwnerCustomerMetricsReport, OwnerRevenueReport } from '@application/dto/owner-revenue/owner-revenue.dto';
@@ -43,6 +28,12 @@ import { GetMyOwnerApplicationsUseCase } from '@application/usecase/owner-applic
 import { ManageOwnerBookingsUseCase } from '@application/usecase/owner-booking/manage-owner-bookings.usecase';
 import { GetOwnerCustomerMetricsUseCase } from '@application/usecase/owner-revenue/get-owner-customer-metrics.usecase';
 import { GetOwnerRevenueUseCase } from '@application/usecase/owner-revenue/get-owner-revenue.usecase';
+import { GetOwnerReviewsUseCase } from '@application/usecase/owner-review/get-owner-reviews.usecase';
+import { OwnerReview } from '@application/dto/owner-review/owner-review.dto';
+import { OwnerFeatureGridComponent } from './owner-feature-grid/owner-feature-grid.component';
+import { OwnerPeriodicReportsComponent } from './owner-periodic-reports/owner-periodic-reports.component';
+import { OWNER_WORKSPACE_FEATURES } from './venue-owner-dashboard.models';
+import { RealtimeNotificationBus } from '@presentation/services/realtime-notification-bus.service';
 import { GetStorageFileUrlUseCase } from '@application/usecase/storage/get-storage-file-url.usecase';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
 import { ManageOwnerVenueCourtsUseCase } from '@application/usecase/venue-owner-dashboard/manage-owner-venue-courts.usecase';
@@ -67,12 +58,15 @@ interface DailyRevenueChartPoint {
   y: number;
 }
 
-const COURT_AVAILABILITY_POLL_INTERVAL_MS = 30_000;
+/** Nhip du phong khi khong co su kien nao (mat WebSocket, thay doi ngoai luong): tinh trang san van tu lam moi. */
+export const COURT_AVAILABILITY_FALLBACK_MS = 5 * 60_000;
+/** Thong bao lam thay doi tinh trang san: don moi da coc, huy / hoan, thanh toan, nhan san. */
+const LIVE_COURT_EVENT_TYPES = new Set(['BOOKING', 'PAYMENT', 'REFUND', 'CHECK_IN']);
 
 @Component({
   selector: 'app-venue-owner-dashboard',
   standalone: true,
-  imports: [FormsModule, DatePickerComponent, RouterModule, LucideIconComponent, PageLoadingComponent, OwnerApplicationProgressComponent, SelectComponent],
+  imports: [FormsModule, DatePickerComponent, RouterModule, LucideIconComponent, PageLoadingComponent, OwnerApplicationProgressComponent, SelectComponent, OwnerFeatureGridComponent, OwnerPeriodicReportsComponent],
   templateUrl: './venue-owner-dashboard.component.html',
   styleUrl: './venue-owner-dashboard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -84,6 +78,10 @@ export class VenueOwnerDashboardComponent {
   private readonly manageBookings = inject(ManageOwnerBookingsUseCase);
   private readonly getCustomerMetrics = inject(GetOwnerCustomerMetricsUseCase);
   private readonly getRevenue = inject(GetOwnerRevenueUseCase);
+  private readonly getReviews = inject(GetOwnerReviewsUseCase);
+  private readonly realtimeBus = inject(RealtimeNotificationBus);
+  private readonly liveRefresh$ = new Subject<void>();
+  private boundaryTimer?: ReturnType<typeof setTimeout>;
   private readonly getFileUrl = inject(GetStorageFileUrlUseCase);
   private readonly destroyRef = inject(DestroyRef);
   private businessSnapshotSubscription?: Subscription;
@@ -128,16 +126,13 @@ export class VenueOwnerDashboardComponent {
   readonly canScrollCourtsBackward = signal(false);
   readonly canScrollCourtsForward = signal(false);
   readonly reviewStars = [1, 2, 3, 4, 5];
-  readonly previewReviews = [
-    {
-      id: 'preview-review-1', initials: 'HL', rating: 5,
-      content: 'Sân sạch, nhân viên hỗ trợ nhanh và nhiệt tình.', time: '12 phút trước'
-    },
-    {
-      id: 'preview-review-2', initials: 'TK', rating: 4,
-      content: 'Mặt sân tốt, khu vực chờ khá thoải mái.', time: '1 giờ trước'
-    }
-  ] as const;
+  /** Danh gia moi nhat cua co so dang xem (that, an danh nguoi choi nhu trang Danh gia). */
+  readonly recentReviews = signal<OwnerReview[]>([]);
+  readonly recentReviewsLoading = signal(false);
+  readonly recentReviewsError = signal(false);
+  /** Luoi cong cu van hanh: mo khi ho so da duyet, khoa kem ly do khi chua. */
+  readonly workspaceFeatures = OWNER_WORKSPACE_FEATURES;
+  private recentReviewsSubscription?: Subscription;
 
   readonly latestApplication = computed(() => this.applications()[0] ?? null);
   readonly approvedApplication = computed(() =>
@@ -556,16 +551,48 @@ export class VenueOwnerDashboardComponent {
     });
   }
 
+  /**
+   * Tinh trang san "truc tiep": lam moi ngay khi co thong bao dat san / thanh toan / huy (WebSocket), dung moc mot luot
+   * choi bat dau hoac ket thuc, khi quay lai tab, va nhip du phong 5 phut. Khong con hoi lai 30 giay mot lan.
+   */
   private startCourtAvailabilityPolling(): void {
-    timer(COURT_AVAILABILITY_POLL_INTERVAL_MS, COURT_AVAILABILITY_POLL_INTERVAL_MS).pipe(
+    const visible$ = typeof document === 'undefined' ? EMPTY : fromEvent(document, 'visibilitychange').pipe(
+      filter(() => document.visibilityState === 'visible')
+    );
+    merge(
+      this.liveRefresh$,
+      this.realtimeBus.events$.pipe(filter(notification => LIVE_COURT_EVENT_TYPES.has(String(notification.type)))),
+      visible$,
+      timer(COURT_AVAILABILITY_FALLBACK_MS, COURT_AVAILABILITY_FALLBACK_MS)
+    ).pipe(
+      debounceTime(250),
       filter(() => Boolean(this.selectedVenueId())),
       exhaustMap(() => {
         const venueId = this.selectedVenueId();
         if (!venueId) return EMPTY;
-        return this.loadLiveCourtState(venueId);
+        return this.loadLiveCourtState(venueId).pipe(catchError(() => EMPTY));
       }),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(({ venueId, courts, bookings }) => this.applyLiveCourtState(venueId, courts, bookings));
+    this.destroyRef.onDestroy(() => {
+      if (this.boundaryTimer) clearTimeout(this.boundaryTimer);
+    });
+  }
+
+  /** Hen lam moi dung luc luot choi gan nhat hom nay bat dau hoac ket thuc (+1 giay). */
+  private scheduleNextBoundary(bookings: readonly OwnerBooking[]): void {
+    if (this.boundaryTimer) clearTimeout(this.boundaryTimer);
+    const today = this.today();
+    const nowMinutes = this.currentMinutes();
+    const next = bookings
+      .filter(booking => booking.playDate === today)
+      .flatMap(booking => [this.timeMinutes(booking.startTime), this.timeMinutes(booking.endTime)])
+      .filter(minute => minute > nowMinutes)
+      .sort((left, right) => left - right)[0];
+    if (next === undefined) return;
+    const now = new Date();
+    const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), Math.floor(next / 60), next % 60, 1);
+    this.boundaryTimer = setTimeout(() => this.liveRefresh$.next(), Math.max(1000, target.getTime() - now.getTime()));
   }
 
   private refreshCourtAvailability(venueId: string): void {
@@ -594,10 +621,12 @@ export class VenueOwnerDashboardComponent {
       ? { ...venue, courts }
       : venue
     ));
-    this.liveCourtBookings.set(bookings.filter(booking =>
+    const live = bookings.filter(booking =>
       booking.venueId === venueId
       && ['PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN'].includes(booking.status)
-    ));
+    );
+    this.liveCourtBookings.set(live);
+    this.scheduleNextBoundary(live);
     queueMicrotask(() => this.updateCourtNavigation());
   }
 
@@ -608,9 +637,48 @@ export class VenueOwnerDashboardComponent {
     if (viewport) viewport.scrollLeft = 0;
   }
 
+  /** 3 danh gia moi nhat cua co so dang chon (trang Danh gia co du bo loc). */
+  loadRecentReviews(): void {
+    const venueId = this.selectedVenueId();
+    if (!venueId) return;
+    this.recentReviewsSubscription?.unsubscribe();
+    this.recentReviewsLoading.set(true);
+    this.recentReviewsError.set(false);
+    this.recentReviewsSubscription = this.getReviews.execute({ venueId, page: 0, size: 3 }).pipe(
+      take(1),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => {
+        if (this.selectedVenueId() === venueId) this.recentReviewsLoading.set(false);
+      })
+    ).subscribe({
+      next: page => {
+        if (this.selectedVenueId() === venueId) this.recentReviews.set(page.items);
+      },
+      error: () => {
+        if (this.selectedVenueId() !== venueId) return;
+        this.recentReviews.set([]);
+        this.recentReviewsError.set(true);
+      }
+    });
+  }
+
+  reviewTime(value: string): string {
+    const minutes = Math.floor((Date.now() - new Date(value).getTime()) / 60_000);
+    if (!Number.isFinite(minutes)) return '';
+    if (minutes < 1) return 'Vừa xong';
+    if (minutes < 60) return `${minutes} phút trước`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} giờ trước`;
+    const days = Math.floor(hours / 24);
+    if (days === 1) return 'Hôm qua';
+    if (days < 30) return `${days} ngày trước`;
+    return new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(value));
+  }
+
   private loadBusinessSnapshot(): void {
     const venueId = this.selectedVenueId();
     if (!venueId) return;
+    this.loadRecentReviews();
     this.businessSnapshotSubscription?.unsubscribe();
     this.businessLoading.set(true);
     this.businessError.set(null);

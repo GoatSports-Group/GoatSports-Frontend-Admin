@@ -17,7 +17,9 @@ import { GetOwnerRevenueUseCase } from '@application/usecase/owner-revenue/get-o
 import { GetStorageFileUrlUseCase } from '@application/usecase/storage/get-storage-file-url.usecase';
 import { GetMyOwnerVenuesUseCase } from '@application/usecase/venue-owner-dashboard/get-my-owner-venues.usecase';
 import { ManageOwnerVenueCourtsUseCase } from '@application/usecase/venue-owner-dashboard/manage-owner-venue-courts.usecase';
-import { VenueOwnerDashboardComponent } from './venue-owner-dashboard.component';
+import { COURT_AVAILABILITY_FALLBACK_MS, VenueOwnerDashboardComponent } from './venue-owner-dashboard.component';
+import { GetOwnerReviewsUseCase } from '@application/usecase/owner-review/get-owner-reviews.usecase';
+import { RealtimeNotificationBus } from '@presentation/services/realtime-notification-bus.service';
 
 describe('VenueOwnerDashboardComponent', () => {
   const getApplications = { execute: vi.fn() };
@@ -25,8 +27,14 @@ describe('VenueOwnerDashboardComponent', () => {
   const manageCourts = { list: vi.fn() };
   const manageBookings = { list: vi.fn(), detail: vi.fn() };
   const getCustomerMetrics = { execute: vi.fn() };
-  const getRevenue = { execute: vi.fn() };
+  const getRevenue = { execute: vi.fn(), listPeriodicReports: vi.fn(), generatePeriodicReport: vi.fn(), exportPeriodicReport: vi.fn() };
   const getFileUrl = { execute: vi.fn() };
+  const getReviews = { execute: vi.fn() };
+  const review = (id: string, rating: number, content: string | null) => ({
+    reviewId: id, venueId: 'venue-primary', venueName: 'GOAT Arena', venueCourtId: 'court-1', courtName: 'Sân A',
+    bookingId: 'b-' + id, bookingCode: 'GS' + id, playDate: '2026-10-01', startTime: '08:00:00', endTime: '09:00:00',
+    rating, content, status: 'PUBLISHED', createdAt: new Date(Date.now() - 2 * 3_600_000).toISOString()
+  });
   const primaryVenue = createVenue({
     venueId: 'venue-primary',
     name: 'GOAT Arena',
@@ -44,6 +52,9 @@ describe('VenueOwnerDashboardComponent', () => {
   });
 
   beforeEach(async () => {
+    getReviews.execute.mockReset();
+    getReviews.execute.mockReturnValue(of({ items: [review('1', 5, 'Sân sạch, nhân viên nhiệt tình.'), review('2', 4, null)],
+      total: 2, page: 0, pageSize: 3, pages: 1 }));
     getApplications.execute.mockReset();
     getVenues.execute.mockReset().mockReturnValue(of([primaryVenue]));
     manageCourts.list.mockReset().mockReturnValue(of(primaryVenue.courts));
@@ -53,6 +64,11 @@ describe('VenueOwnerDashboardComponent', () => {
     manageBookings.detail.mockReset().mockReturnValue(of(createBooking()));
     getFileUrl.execute.mockReset().mockReturnValue(of('https://cdn.goat.test/venue-cover.png'));
     getRevenue.execute.mockReset().mockReturnValue(of(revenueReport()));
+    getRevenue.listPeriodicReports.mockReset().mockReturnValue(of([{
+      reportId: 'report-1', periodType: 'MONTHLY', periodStart: '2026-09-01', periodEnd: '2026-09-30',
+      totalRevenue: 12_500_000, bookingCount: 48, paidBookingCount: 45, revenueChangePercentage: 12.5,
+      bookingCountChangePercentage: 4, generatedAt: '2026-10-01T01:30:00Z'
+    }]));
     getCustomerMetrics.execute.mockReset().mockReturnValue(of(customerMetricsReport()));
 
     await TestBed.configureTestingModule({
@@ -66,6 +82,7 @@ describe('VenueOwnerDashboardComponent', () => {
         { provide: ManageOwnerBookingsUseCase, useValue: manageBookings },
         { provide: GetOwnerCustomerMetricsUseCase, useValue: getCustomerMetrics },
         { provide: GetOwnerRevenueUseCase, useValue: getRevenue },
+        { provide: GetOwnerReviewsUseCase, useValue: getReviews },
         { provide: GetStorageFileUrlUseCase, useValue: getFileUrl }
       ]
     }).compileComponents();
@@ -134,8 +151,20 @@ describe('VenueOwnerDashboardComponent', () => {
     expect(root.querySelector('.schedule-panel')).toBeTruthy();
     expect(root.querySelector('.live-courts-panel')).toBeTruthy();
     expect(root.querySelector('.reviews-preview')).toBeTruthy();
-    expect(root.querySelector('.dev-badge')?.textContent).toContain('DEV');
+    // Danh gia that cua co so dang chon (khong con nhan DEV, an danh nguoi choi).
+    expect(root.querySelector('.dev-badge')).toBeNull();
+    expect(getReviews.execute).toHaveBeenCalledWith({ venueId: 'venue-primary', page: 0, size: 3 });
     expect(root.querySelectorAll('.reviews-preview__list article')).toHaveLength(2);
+    expect(root.querySelector('.reviews-preview__list')?.textContent).toContain('Không có nội dung, chỉ chấm sao.');
+    expect(root.querySelector('.reviews-preview__list time')?.textContent).toContain('Sân A · 2 giờ trước');
+    // Bao cao dinh ky: mac dinh ky thang, co nut tai PDF / XLSX.
+    expect(getRevenue.listPeriodicReports).toHaveBeenCalledWith('MONTHLY');
+    const periodic = root.querySelector('app-owner-periodic-reports');
+    expect(periodic?.textContent).toContain('Tháng 09/2026');
+    expect(periodic?.textContent).toContain('+12,5% so với kỳ trước');
+    expect(periodic?.querySelectorAll('.periodic-reports__files button')).toHaveLength(2);
+    // Luoi cong cu van hanh hien lai va da mo khoa.
+    expect(root.querySelectorAll('app-owner-feature-grid a.feature-card').length).toBeGreaterThan(0);
     expect(root.querySelectorAll('.live-courts-list article')).toHaveLength(2);
     // ngModel ghi gia tri vao app-select sau mot microtask (spec dung fake timers nen khong cho whenStable).
     await Promise.resolve();
@@ -143,7 +172,7 @@ describe('VenueOwnerDashboardComponent', () => {
     expect(getVenues.execute).toHaveBeenCalledTimes(1);
   });
 
-  it('poll trạng thái sân của venue đang chọn mỗi 30 giây và dừng khi component bị hủy', async () => {
+  it('tình trạng sân: nhịp dự phòng 5 phút và dừng khi component bị hủy', async () => {
     vi.useFakeTimers();
     getApplications.execute.mockReturnValue(of(pageOf([
       createApplication('application-approved', 'GOAT Arena', 'venue-primary', '2026-08-28T08:00:00Z')
@@ -162,7 +191,7 @@ describe('VenueOwnerDashboardComponent', () => {
       expect((fixture.nativeElement.querySelector('.live-courts-list article') as HTMLElement).dataset['status'])
         .toBe('OCCUPIED');
 
-      await vi.advanceTimersByTimeAsync(30_000);
+      await vi.advanceTimersByTimeAsync(COURT_AVAILABILITY_FALLBACK_MS + 300);
       fixture.detectChanges();
 
       expect(manageCourts.list).toHaveBeenCalledTimes(2);
@@ -171,8 +200,35 @@ describe('VenueOwnerDashboardComponent', () => {
         .toBe('AVAILABLE');
 
       fixture.destroy();
-      await vi.advanceTimersByTimeAsync(30_000);
+      await vi.advanceTimersByTimeAsync(COURT_AVAILABILITY_FALLBACK_MS + 300);
       expect(manageCourts.list).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('tình trạng sân: có thông báo đặt sân realtime thì làm mới ngay, thông báo khác thì không', async () => {
+    vi.useFakeTimers();
+    getApplications.execute.mockReturnValue(of(pageOf([
+      createApplication('application-approved', 'GOAT Arena', 'venue-primary', '2026-08-28T08:00:00Z')
+    ])));
+    try {
+      const fixture = TestBed.createComponent(VenueOwnerDashboardComponent);
+      fixture.detectChanges();
+      const bus = TestBed.inject(RealtimeNotificationBus);
+      expect(manageCourts.list).toHaveBeenCalledTimes(1);
+
+      bus.publish({ notificationId: 'n1', receiverId: 'owner-1', title: 'Hệ thống', content: '', type: 'SYSTEM' as never,
+        status: 'UNREAD' as never, createdAt: new Date().toISOString() });
+      await vi.advanceTimersByTimeAsync(300);
+      expect(manageCourts.list).toHaveBeenCalledTimes(1);
+
+      bus.publish({ notificationId: 'n2', receiverId: 'owner-1', title: 'Đơn đặt sân mới', content: '', type: 'BOOKING' as never,
+        status: 'UNREAD' as never, createdAt: new Date().toISOString() });
+      await vi.advanceTimersByTimeAsync(300);
+      expect(manageCourts.list).toHaveBeenCalledTimes(2);
+      expect(manageCourts.list).toHaveBeenLastCalledWith('venue-primary');
+      fixture.destroy();
     } finally {
       vi.useRealTimers();
     }

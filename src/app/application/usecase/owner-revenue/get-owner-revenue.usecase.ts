@@ -3,7 +3,10 @@ import { Observable } from 'rxjs';
 import {
   OwnerRevenueFilter,
   OwnerRevenueReportExportFilter,
-  OwnerRevenueReport
+  OwnerRevenueReport,
+  PeriodicReport,
+  PeriodicReportFormat,
+  PeriodicReportType
 } from '@application/dto/owner-revenue/owner-revenue.dto';
 import {
   OWNER_REVENUE_REPOSITORY_TOKEN,
@@ -27,5 +30,17 @@ export class GetOwnerRevenueUseCase {
 
   exportReport(filter: OwnerRevenueReportExportFilter): Observable<Blob> {
     return this.repository.exportReport(filter);
+  }
+
+  listPeriodicReports(periodType: PeriodicReportType): Observable<PeriodicReport[]> {
+    return this.repository.listPeriodicReports(periodType);
+  }
+
+  generatePeriodicReport(periodType: PeriodicReportType): Observable<PeriodicReport> {
+    return this.repository.generatePeriodicReport(periodType);
+  }
+
+  exportPeriodicReport(reportId: string, format: PeriodicReportFormat): Observable<Blob> {
+    return this.repository.exportPeriodicReport(reportId, format);
   }
 }

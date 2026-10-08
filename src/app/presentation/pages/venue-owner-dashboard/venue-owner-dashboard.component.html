@@ -31,6 +31,8 @@
       [applicationUrl]="applicationUrl" (retry)="loadApplications()" />
     }
   </section>
+  <app-owner-feature-grid [features]="workspaceFeatures" [operationsEnabled]="false"
+    lockReason="Mở khóa sau khi hồ sơ chủ sân được duyệt" />
   } @else if (venueLoading() && !venues().length) {
   <app-page-loading title="Đang tải tổng quan"
     description="Đang tổng hợp cơ sở, sân thi đấu và dữ liệu vận hành mới nhất." />
@@ -267,22 +269,36 @@
               <h2 id="reviews-preview-title">Đánh giá mới</h2>
               <p>Phản hồi gần đây từ khách hàng</p>
             </div>
-            <span class="dev-badge">DEV</span>
+            <a routerLink="/admin/reviews" class="reviews-preview__more">Xem tất cả <lucide-icon name="arrow-right" /></a>
           </header>
+          @if (recentReviewsLoading() && !recentReviews().length) {
+          <div class="reviews-preview__state"><span class="skeleton"></span><span class="skeleton"></span></div>
+          } @else if (recentReviewsError()) {
+          <div class="reviews-preview__state" role="alert">
+            <span>Chưa tải được đánh giá.</span>
+            <button type="button" (click)="loadRecentReviews()">Thử lại</button>
+          </div>
+          } @else if (!recentReviews().length) {
+          <div class="reviews-preview__state">
+            <lucide-icon name="star" /><span>Chưa có đánh giá nào cho cơ sở này.</span>
+          </div>
+          } @else {
           <div class="reviews-preview__list">
-            @for (review of previewReviews; track review.id) {
+            @for (review of recentReviews(); track review.reviewId) {
             <article>
-              <span class="review-avatar">{{ review.initials }}</span>
+              <span class="review-avatar" aria-hidden="true"><lucide-icon name="star" /></span>
               <div>
                 <span class="review-stars" [attr.aria-label]="review.rating + ' trên 5 sao'">
                   @for (star of reviewStars; track star) { <lucide-icon name="star"
                     [class.is-empty]="star > review.rating" /> }
                 </span>
-                <p>{{ review.content }}</p><time>{{ review.time }}</time>
+                <p [class.is-empty]="!review.content">{{ review.content || 'Không có nội dung, chỉ chấm sao.' }}</p>
+                <time [attr.datetime]="review.createdAt">{{ review.courtName }} · {{ reviewTime(review.createdAt) }}</time>
               </div>
             </article>
             }
           </div>
+          }
         </section>
 
         <a class="venue-photo" routerLink="/admin/venues" aria-label="Xem thông tin cơ sở">
@@ -295,6 +311,11 @@
       </div>
     </aside>
   </section>
+  }
+
+  @if (applicationApproved() && venues().length) {
+  <app-owner-periodic-reports />
+  <app-owner-feature-grid [features]="workspaceFeatures" [operationsEnabled]="true" />
   }
 
   @if (bookingDetailId()) {

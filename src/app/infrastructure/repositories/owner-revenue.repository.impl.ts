@@ -5,7 +5,10 @@ import {
   OwnerCustomerMetricsReport,
   OwnerRevenueFilter,
   OwnerRevenueReportExportFilter,
-  OwnerRevenueReport
+  OwnerRevenueReport,
+  PeriodicReport,
+  PeriodicReportFormat,
+  PeriodicReportType
 } from '@application/dto/owner-revenue/owner-revenue.dto';
 import { OwnerRevenueRepository } from '@application/ports/persistence/owner-revenue.repository';
 import { OwnerRevenueApi } from '@infrastructure/api/owner-revenue.api';
@@ -28,5 +31,17 @@ export class OwnerRevenueRepositoryImpl implements OwnerRevenueRepository {
 
   exportReport(filter: OwnerRevenueReportExportFilter): Observable<Blob> {
     return this.api.exportReport(filter);
+  }
+
+  listPeriodicReports(periodType: PeriodicReportType): Observable<PeriodicReport[]> {
+    return this.api.listPeriodicReports(periodType).pipe(map(response => response.data ?? []));
+  }
+
+  generatePeriodicReport(periodType: PeriodicReportType): Observable<PeriodicReport> {
+    return this.api.generatePeriodicReport(periodType).pipe(map(response => response.data));
+  }
+
+  exportPeriodicReport(reportId: string, format: PeriodicReportFormat): Observable<Blob> {
+    return this.api.exportPeriodicReport(reportId, format);
   }
 }

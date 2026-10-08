@@ -17,6 +17,7 @@ import { MarkAllNotificationsReadUseCase } from '@application/usecase/notificati
 import { DeleteNotificationUseCase } from '@application/usecase/notification/delete-notification.usecase';
 import { WEBSOCKET_SERVICE_TOKEN } from '@application/ports/websocket.service';
 import { AuthService } from './auth.service';
+import { RealtimeNotificationBus } from './realtime-notification-bus.service';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { PageFilter } from '@application/dto/page.filter';
 
@@ -36,6 +37,7 @@ export class NotificationService {
   private authService = inject(AuthService);
   private snackBar    = inject(NotifyService);
   private ngZone      = inject(NgZone);
+  private realtimeBus = inject(RealtimeNotificationBus);
 
   // ─── State ────────────────────────────────────────────────────────────────────
   private notificationsSubject = new BehaviorSubject<Notification[]>([]);
@@ -110,6 +112,7 @@ export class NotificationService {
 
     // Deduplicate: ignore if already in list
     if (current.some(n => n.notificationId === notification.notificationId)) return;
+    this.realtimeBus.publish(notification);
 
     this.notificationsSubject.next([notification, ...current]);
     this.unreadCountSubject.next(this.unreadCountSubject.value + 1);
