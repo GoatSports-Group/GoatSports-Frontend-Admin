@@ -57,9 +57,9 @@ export class OwnerBankAccountComponent {
       finalize(() => this.saving.set(false)),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe({
-        next: account => { this.accounts.update(items => [account, ...items]); this.showForm.set(false); this.bankBin = ''; this.accountNumber = ''; this.accountName = ''; this.notify.success('Đã liên kết tài khoản nhận doanh thu.'); },
-        error: error => this.notify.error(error?.error?.message || 'Không thể liên kết tài khoản.')
-      });
+      next: account => { this.accounts.update(items => [account, ...items]); this.showForm.set(false); this.bankBin = ''; this.accountNumber = ''; this.accountName = ''; this.notify.success('Đã liên kết tài khoản nhận doanh thu.'); },
+      error: error => this.notify.error(error?.error?.message || 'Không thể liên kết tài khoản.')
+    });
   }
   makeDefault(account: BankAccount): void {
     if (account.isDefault) return;
@@ -75,7 +75,7 @@ export class OwnerBankAccountComponent {
     if (!confirmed) {
       this.confirmDialog.ask({
         title: `Gỡ tài khoản ****${account.accountNumberLast4}?`, confirmText: 'Gỡ tài khoản', confirmColor: 'warn',
-        message: 'Doanh thu sẽ bị giữ cho đến khi bạn có tài khoản nhận tiền khác.'
+        message: 'Doanh thu sẽ bị giữ cho đến khi bạn có tài khoản khác.'
       }).subscribe(ok => ok && this.disable(account, true));
       return;
     }

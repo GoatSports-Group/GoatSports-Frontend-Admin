@@ -38,7 +38,7 @@ export const VENUE_OWNER_NAVIGATION: readonly AdminNavigationItem[] = [
   { title: 'Check-in khách', description: 'QR, Booking Code và khách walk-in', icon: 'shield-check', route: '/check-in' },
   { title: 'Giải đấu', description: 'Tổ chức giải tại cơ sở: sân, đăng ký, lịch và kết quả', icon: 'trophy', route: '/tournaments' },
   { title: 'Doanh thu', description: 'Doanh thu và dữ liệu đối soát thực tế', icon: 'credit-card', route: '/finance' },
-  { title: 'Tài khoản nhận tiền', description: 'Liên kết ngân hàng để nhận doanh thu từ hệ thống', icon: 'wallet-cards', route: '/bank-account' },
+  { title: 'Tài khoản', description: 'Liên kết ngân hàng để nhận doanh thu từ hệ thống', icon: 'wallet-cards', route: '/bank-account' },
   { title: 'Đánh giá', description: 'Phản hồi thật từ booking đã hoàn tất', icon: 'star', route: '/reviews' },
   { title: 'Thông báo', description: 'Mọi thông báo của bạn', icon: 'bell', route: '/notifications' }
 ];

@@ -5,7 +5,8 @@
       <p>Đối chiếu doanh thu và hiệu quả hoạt động theo từng cơ sở trong khoảng thời gian bạn chọn.</p>
     </div>
     <div class="heading-actions">
-      <a class="secondary heading-action" routerLink="/admin/bank-account"><lucide-icon name="wallet-cards" /> Tài khoản nhận tiền</a>
+      <a class="secondary heading-action" routerLink="/admin/bank-account"><lucide-icon name="wallet-cards" /> Tài
+        khoản</a>
       <button type="button" class="secondary heading-action"
         [disabled]="loading() || !report() || reportPreviewLoading() || exporting()"
         (click)="openReportPreview()"><lucide-icon name="download" /> Xuất báo cáo</button>
@@ -30,15 +31,17 @@
       </label>
       <label>
         <span>Từ ngày</span>
-        <app-date-picker ariaLabel="Từ ngày" [max]="toDate()" [ngModel]="fromDate()" [disabled]="loading()" (dateChange)="selectFromDate($event)"></app-date-picker>
+        <app-date-picker ariaLabel="Từ ngày" [max]="toDate()" [ngModel]="fromDate()" [disabled]="loading()"
+          (dateChange)="selectFromDate($event)"></app-date-picker>
       </label>
       <label>
         <span>Đến ngày</span>
-        <app-date-picker ariaLabel="Đến ngày" [min]="fromDate()" [ngModel]="toDate()" [disabled]="loading()" (dateChange)="selectToDate($event)"></app-date-picker>
+        <app-date-picker ariaLabel="Đến ngày" [min]="fromDate()" [ngModel]="toDate()" [disabled]="loading()"
+          (dateChange)="selectToDate($event)"></app-date-picker>
       </label>
       <div class="filter-actions">
-        <button type="button" class="primary apply-button"
-          [disabled]="loading() || invalidRange() || !venues().length" (click)="loadReport()">
+        <button type="button" class="primary apply-button" [disabled]="loading() || invalidRange() || !venues().length"
+          (click)="loadReport()">
           @if (loading()) {
           <lucide-icon name="loader-2" class="spin" /> Đang tải
           } @else {
@@ -135,11 +138,14 @@
     </header>
     <div class="tournament-revenue__stats">
       <div><span>Lệ phí đã thu</span><strong class="positive-value">+{{ money(tr.feeIncome) }}</strong>
-        <small>{{ tr.paidRegistrations }} lượt đóng phí</small></div>
+        <small>{{ tr.paidRegistrations }} lượt đóng phí</small>
+      </div>
       <div><span>Giải thưởng đã trả</span><strong class="negative-value">−{{ money(tr.prizeExpense) }}</strong>
-        <small>Trừ khi giải kết thúc</small></div>
+        <small>Trừ khi giải kết thúc</small>
+      </div>
       <div><span>Thực nhận từ giải</span><strong [class.negative-value]="tr.net < 0">{{ signedMoney(tr.net) }}</strong>
-        <small>Đã cộng vào doanh thu xác nhận</small></div>
+        <small>Đã cộng vào doanh thu xác nhận</small>
+      </div>
     </div>
     @if (tr.entries.length) {
     <ul class="tournament-revenue__list">
@@ -155,7 +161,8 @@
     } @else {
     <p class="tournament-revenue__empty">Không có lệ phí hay giải thưởng nào trong kỳ này.</p>
     }
-    <p class="tournament-revenue__note">Lệ phí đã hoàn cho người chơi (rút đội, bị từ chối, hủy giải) không được tính.</p>
+    <p class="tournament-revenue__note">Lệ phí đã hoàn cho người chơi (rút đội, bị từ chối, hủy giải) không được tính.
+    </p>
   </section>
   }
 
@@ -178,29 +185,40 @@
       } @else {
       <dl class="chart-summary">
         @if (chartPeak(); as peak) {
-        <div><dt>Cao nhất</dt><dd>{{ money(peak.revenue) }}<small>{{ peak.title }}</small></dd></div>
+        <div>
+          <dt>Cao nhất</dt>
+          <dd>{{ money(peak.revenue) }}<small>{{ peak.title }}</small></dd>
+        </div>
         }
-        <div><dt>Trung bình mỗi {{ chartUnitLabel() }}</dt><dd>{{ money(chartAverage()) }}</dd></div>
-        <div><dt>Có doanh thu</dt><dd>{{ chartActiveCount() }}<small>/ {{ chartBars().length }} {{ chartUnitLabel() }}</small></dd></div>
+        <div>
+          <dt>Trung bình mỗi {{ chartUnitLabel() }}</dt>
+          <dd>{{ money(chartAverage()) }}</dd>
+        </div>
+        <div>
+          <dt>Có doanh thu</dt>
+          <dd>{{ chartActiveCount() }}<small>/ {{ chartBars().length }} {{ chartUnitLabel() }}</small></dd>
+        </div>
       </dl>
       <div class="chart-scroll">
         <svg class="revenue-chart" viewBox="0 0 1000 250" role="img"
           [attr.aria-label]="'Biểu đồ doanh thu theo ' + chartUnitLabel()">
           @for (tick of chartTicks(); track tick.y) {
-          <line class="chart-grid-line" [class.is-base]="$last" x1="64" [attr.y1]="tick.y" x2="988" [attr.y2]="tick.y" />
+          <line class="chart-grid-line" [class.is-base]="$last" x1="64" [attr.y1]="tick.y" x2="988"
+            [attr.y2]="tick.y" />
           <text class="chart-axis" x="54" [attr.y]="tick.y + 4" text-anchor="end">{{ chartMoney(tick.value) }}</text>
           }
           @for (bar of chartBars(); track bar.key) {
           <g class="chart-bar" [class.is-peak]="bar.peak">
             <rect class="chart-bar__hit" [attr.x]="bar.x - 2" y="14" [attr.width]="bar.width + 4" height="196" />
             @if (bar.height) {
-            <rect class="chart-bar__fill" [attr.x]="bar.x" [attr.y]="bar.y" [attr.width]="bar.width" [attr.height]="bar.height"
-              [attr.rx]="bar.width > 8 ? 4 : 1" />
+            <rect class="chart-bar__fill" [attr.x]="bar.x" [attr.y]="bar.y" [attr.width]="bar.width"
+              [attr.height]="bar.height" [attr.rx]="bar.width > 8 ? 4 : 1" />
             }
             <title>{{ bar.title }}: {{ money(bar.revenue) }}</title>
           </g>
           @if (bar.showValue) {
-          <text class="chart-value-label" [class.is-peak]="bar.peak" [attr.x]="bar.x + bar.width / 2" [attr.y]="bar.y - 6" text-anchor="middle">{{
+          <text class="chart-value-label" [class.is-peak]="bar.peak" [attr.x]="bar.x + bar.width / 2"
+            [attr.y]="bar.y - 6" text-anchor="middle">{{
             chartMoney(bar.revenue) }}</text>
           }
           @if (bar.showLabel) {
@@ -313,7 +331,8 @@
   <li [attr.data-window-id]="entryKey(entry)">
     <time>{{ entry.date | date:'dd/MM' }}</time>
     <div><strong>{{ entry.tournamentName }}</strong>
-      <span>{{ entry.kind === 'FEE' ? 'Lệ phí · ' + entry.count + ' lượt' : 'Giải thưởng khi kết thúc giải' }}</span></div>
+      <span>{{ entry.kind === 'FEE' ? 'Lệ phí · ' + entry.count + ' lượt' : 'Giải thưởng khi kết thúc giải' }}</span>
+    </div>
     <b [class.positive-value]="entry.kind === 'FEE'" [class.negative-value]="entry.kind === 'PRIZE'">
       {{ entry.kind === 'FEE' ? '+' : '−' }}{{ money(entry.amount) }}</b>
   </li>
@@ -328,7 +347,8 @@
         <h2 id="tournament-entries-title">Doanh thu giải đấu</h2>
         <p>{{ tournamentEntries().length }} mục · {{ fullDate(fromDate()) }} – {{ fullDate(toDate()) }}</p>
       </div>
-      <button type="button" class="entries-modal__close" aria-label="Đóng" (click)="closeTournamentEntries()"><lucide-icon name="x" /></button>
+      <button type="button" class="entries-modal__close" aria-label="Đóng"
+        (click)="closeTournamentEntries()"><lucide-icon name="x" /></button>
     </header>
     <ul #tournamentEntryList class="tournament-revenue__list entries-modal__list">
       @if (tournamentWindow.hasBefore()) {
