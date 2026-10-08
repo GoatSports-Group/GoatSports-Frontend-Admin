@@ -4,3 +4,41 @@
 // GOAT-DESIGN §7: khong kicker tren H1; cung le voi cac trang khac.
 :host .bank-page { max-width: none; margin: 0; padding: 0; }
 :host .page-heading { @include t.page-head; margin-bottom: 20px; }
+
+// Popup (GOAT-DESIGN Modals): lien ket tai khoan va chi tiet so du; backdrop chuan, radius 24, bottom sheet tren dien thoai.
+.dialog-backdrop { position: fixed; inset: 0; z-index: 1100; display: grid; place-items: center; padding: 24px 16px; background: rgb(16 26 44 / 55%); backdrop-filter: blur(3px); }
+.dialog { display: flex; width: min(100%, 600px); max-height: min(88dvh, 880px); flex-direction: column; margin: 0; padding: 22px 24px 24px; overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--hairline); border-radius: 24px; background: var(--surface); box-shadow: var(--shadow-lg); scrollbar-width: none; }
+.dialog::-webkit-scrollbar { display: none; }
+.dialog .form-title { align-items: flex-start; gap: 16px; }
+.dialog .form-title h2 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.025em; }
+.dialog .form-title p { margin: 4px 0 0; color: var(--body); font-size: 14px; }
+.dialog .form-title > button { display: grid; flex: none; width: 44px; height: 44px; place-items: center; border: 1px solid var(--hairline); border-radius: 12px; background: var(--surface); color: var(--ink); }
+.dialog .form-actions { margin-top: 18px; }
+.detail-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 0; border: 0; background: none; color: var(--primary-strong); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.detail-link:hover { text-decoration: underline; }
+.detail-link app-lucide-icon { width: 16px; height: 16px; }
+.add-account { display: flex; min-height: 56px; align-items: center; justify-content: center; gap: 8px; border: 1px dashed var(--border-strong); border-radius: 16px; background: var(--surface); color: var(--primary-strong); font: inherit; font-weight: 700; cursor: pointer; }
+.add-account:hover { border-color: var(--primary); background: var(--primary-light); }
+.balance-detail { width: min(100%, 640px); gap: 4px; }
+.balance-formula { display: grid; gap: 0; margin: 18px 0 8px; padding: 6px 16px; border-radius: 16px; background: var(--surface-subtle); }
+.balance-formula div { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid var(--hairline); }
+.balance-formula div:first-child { border-top: 0; }
+.balance-formula dt { color: var(--body); font-size: 14px; }
+.balance-formula dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+.balance-formula .is-total dt, .balance-formula .is-total dd { color: var(--primary-strong); font-size: 16px; font-weight: 800; }
+.earnings-title { display: grid; gap: 2px; margin: 14px 0 6px; font-size: 16px; }
+.earnings-title small { color: var(--body); font-size: 13px; font-weight: 500; }
+.earnings-state { display: flex; min-height: 96px; align-items: center; justify-content: center; gap: 10px; color: var(--body); font-size: 14px; }
+.earnings-list { display: grid; max-height: 360px; margin: 0; padding: 0; overflow-y: auto; overscroll-behavior: contain; list-style: none; scrollbar-width: none; }
+.earnings-list::-webkit-scrollbar { display: none; }
+.earnings-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 0; border-top: 1px solid var(--hairline); }
+.earnings-list li.list-sentinel { min-height: 1px; padding: 0; border: 0; }
+.earnings-list li > div:first-child { display: grid; gap: 2px; min-width: 0; }
+.earnings-list strong { font-size: 14px; }
+.earnings-list span:not(.pill) { color: var(--body); font-size: 13px; }
+.earnings-list__right { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; }
+.earnings-list__right b { color: var(--success); font-variant-numeric: tabular-nums; }
+@media (max-width: 640px) {
+  .dialog-backdrop { align-items: end; padding: 0; }
+  .dialog { width: 100%; max-height: 92dvh; border-radius: 24px 24px 0 0; padding-inline: 16px; }
+}

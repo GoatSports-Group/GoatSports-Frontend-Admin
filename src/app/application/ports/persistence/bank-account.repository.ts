@@ -1,6 +1,6 @@
 import { InjectionToken } from '@angular/core';
 import { Observable } from 'rxjs';
-import { BankAccount, BankDirectoryEntry, PayoutBalance, Withdrawal } from '@application/dto/bank-account/bank-account.dto';
+import { BankAccount, BankDirectoryEntry, PayoutBalance, PayoutEarning, Withdrawal } from '@application/dto/bank-account/bank-account.dto';
 import { EncryptedPayload } from '@application/dto/security/encrypted-payload.dto';
 export interface BankAccountRepository {
   getBanks(): Observable<BankDirectoryEntry[]>;
@@ -10,6 +10,7 @@ export interface BankAccountRepository {
   makeDefault(request: EncryptedPayload): Observable<BankAccount>;
   disable(request: EncryptedPayload): Observable<void>;
   getPayoutBalance(): Observable<PayoutBalance>;
+  getEarnings(): Observable<PayoutEarning[]>;
   getWithdrawals(): Observable<Withdrawal[]>;
   withdraw(): Observable<Withdrawal>;
 }

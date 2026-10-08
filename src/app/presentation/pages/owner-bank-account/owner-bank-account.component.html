@@ -1,11 +1,12 @@
 <main class="bank-page">
-  <header class="page-heading"><div><h1>Tài khoản nhận doanh thu</h1><p>Chủ sân bắt buộc liên kết tài khoản ngân hàng trước khi GoatSports có thể chuyển doanh thu.</p></div><button type="button" class="primary" (click)="showForm.set(true)"><app-lucide-icon name="plus" /> Liên kết tài khoản</button></header>
-  <section class="requirement"><app-lucide-icon name="shield-check" /><div><strong>payOS xác minh trước khi chuyển tiền</strong><p>Danh sách ngân hàng lấy từ VietQR. Tên người nhận chính thức được payOS trả về khi payout đầu tiên được tạo.</p></div></section>
+  <header class="page-heading"><div><h1>Tài khoản nhận doanh thu</h1><p>Chủ sân bắt buộc liên kết tài khoản ngân hàng trước khi GoatSports có thể chuyển doanh thu.</p></div></header>
+  <section class="requirement"><app-lucide-icon name="shield-check" /><div><strong>Doanh thu được chuyển thẳng về tài khoản của bạn</strong><p>Thông tin tài khoản được mã hóa khi gửi đi. Hãy nhập đúng tên chủ tài khoản như tại ngân hàng: payOS đối chiếu tên này ở lần rút tiền đầu tiên.</p></div></section>
   @if (loading()) { <app-loading-skeleton variant="cards" [count]="2" [media]="false" minWidth="320px" label="Đang tải thông tin tài khoản" /> } @else {
     @if (balance(); as b) {
       <section class="payout">
         <div class="payout-main"><span class="eyebrow">Có thể rút</span><strong>{{ money(b.available) }}</strong>
-          <p>Tiền khách trả được giữ {{ b.holdDays }} ngày để kịp hoàn khi khách hủy; sau đó bạn rút về tài khoản mặc định bất kỳ lúc nào.</p></div>
+          <p>Tiền khách trả được giữ {{ b.holdDays }} ngày để kịp hoàn khi khách hủy; sau đó bạn rút về tài khoản mặc định bất kỳ lúc nào.</p>
+          <button type="button" class="detail-link" (click)="openBalanceDetail()"><app-lucide-icon name="receipt" /> Xem chi tiết</button></div>
         <dl class="payout-stats"><div><dt>Đang giữ</dt><dd>{{ money(b.onHold) }}</dd></div><div><dt>Đã hoàn khách</dt><dd>{{ money(b.refunded) }}</dd></div><div><dt>Đã rút</dt><dd>{{ money(b.withdrawn) }}</dd></div></dl>
         <div class="payout-action"><button type="button" class="primary" [disabled]="withdrawing() || !canWithdraw()" (click)="withdraw()">@if (withdrawing()) { <app-lucide-icon name="loader-2" class="spin" /> Đang gửi lệnh } @else { <app-lucide-icon name="banknote" /> Rút tiền }</button>
           @if (!payoutAccount()) { <small>Cần một tài khoản mặc định hợp lệ.</small> } @else if (b.available < b.minimumWithdrawal) { <small>Tối thiểu {{ money(b.minimumWithdrawal) }} mỗi lần rút.</small> }</div>
@@ -14,6 +15,7 @@
     <section class="account-grid">
       @for (account of accounts(); track account.bankAccountId) { <article class="account-card" [class.default]="account.isDefault"><div class="logo">@if (bank(account.bankBin); as item) { <img [src]="item.logo" [alt]="item.shortName" /> } @else { <app-lucide-icon name="banknote" /> }</div><div class="account-info"><div><strong>{{ bank(account.bankBin)?.shortName || account.bankBin }}</strong>@if (account.isDefault) { <span class="pill green">Nhận doanh thu</span> }<span class="pill" [class.red]="account.status === 'REJECTED'">{{ status(account.status) }}</span></div><p>{{ account.accountName }}</p><b>•••• •••• {{ account.accountNumberLast4 }}</b></div><div class="actions">@if (!account.isDefault && account.status !== 'REJECTED') { <button type="button" (click)="makeDefault(account)">Đặt mặc định</button> }<button type="button" class="danger" (click)="disable(account)"><app-lucide-icon name="trash-2" /></button></div></article> }
       @empty { <article class="empty"><app-lucide-icon name="wallet-cards" /><strong>Doanh thu đang chưa có nơi nhận</strong><p>Liên kết tài khoản để sẵn sàng cho kỳ đối soát tiếp theo.</p><button type="button" class="primary" (click)="showForm.set(true)">Liên kết ngay</button></article> }
+      @if (accounts().length) { <button type="button" class="add-account" (click)="showForm.set(true)"><app-lucide-icon name="plus" /> Thêm tài khoản nhận tiền</button> }
     </section>
   }
   @if (withdrawals().length) {
@@ -27,5 +29,49 @@
       }
     </section>
   }
-  @if (showForm()) { <section class="form-card"><div class="form-title"><div><span>1</span><h2>Thông tin tài khoản</h2></div><button type="button" (click)="showForm.set(false)">×</button></div><label>Ngân hàng</label><app-select [(ngModel)]="bankBin" [options]="bankOptions()" [searchable]="true" searchPlaceholder="Tìm ngân hàng..." placeholder="Chọn ngân hàng" leadingIcon="landmark" ariaLabel="Ngân hàng"></app-select><div class="form-grid"><div><label>Số tài khoản</label><input inputmode="numeric" maxlength="19" [(ngModel)]="accountNumber" placeholder="Nhập số tài khoản" /></div><div><label>Tên chủ tài khoản</label><input maxlength="255" [(ngModel)]="accountName" placeholder="NGUYEN VAN A" /></div></div><p class="hint"><app-lucide-icon name="info" /> Không yêu cầu mật khẩu, OTP hoặc số dư ngân hàng.</p><div class="form-actions"><button type="button" class="secondary" (click)="showForm.set(false)">Để sau</button><button type="button" class="primary" [disabled]="saving()" (click)="submit()">@if (saving()) { <app-lucide-icon name="loader-2" class="spin" /> Đang lưu } @else { Xác nhận liên kết }</button></div></section> }
+  @if (showForm()) {
+  <div class="dialog-backdrop" (click)="saving() || showForm.set(false)">
+    <section class="form-card dialog" role="dialog" aria-modal="true" aria-labelledby="link-account-title" (click)="$event.stopPropagation()"><div class="form-title"><div><h2 id="link-account-title">Liên kết tài khoản nhận tiền</h2><p>Doanh thu sẽ được chuyển về tài khoản này khi bạn rút tiền.</p></div><button type="button" aria-label="Đóng" (click)="showForm.set(false)" [disabled]="saving()"><app-lucide-icon name="x" /></button></div><label>Ngân hàng</label><app-select [(ngModel)]="bankBin" [options]="bankOptions()" [searchable]="true" searchPlaceholder="Tìm ngân hàng..." placeholder="Chọn ngân hàng" leadingIcon="landmark" ariaLabel="Ngân hàng"></app-select><div class="form-grid"><div><label>Số tài khoản</label><input inputmode="numeric" maxlength="19" [(ngModel)]="accountNumber" placeholder="Nhập số tài khoản" /></div><div><label>Tên chủ tài khoản</label><input maxlength="255" [(ngModel)]="accountName" placeholder="NGUYEN VAN A" /></div></div><p class="hint"><app-lucide-icon name="info" /> Không yêu cầu mật khẩu, OTP hoặc số dư ngân hàng.</p><div class="form-actions"><button type="button" class="secondary" (click)="showForm.set(false)">Để sau</button><button type="button" class="primary" [disabled]="saving()" (click)="submit()">@if (saving()) { <app-lucide-icon name="loader-2" class="spin" /> Đang lưu } @else { Xác nhận liên kết }</button></div></section>
+  </div>
+  }
 </main>
+
+@if (balanceDetailOpen()) {
+<div class="dialog-backdrop" (click)="balanceDetailOpen.set(false)">
+  <section class="dialog balance-detail" role="dialog" aria-modal="true" aria-labelledby="balance-detail-title" (click)="$event.stopPropagation()">
+    <div class="form-title"><div><h2 id="balance-detail-title">Chi tiết số dư</h2><p>Số tiền có thể rút được tính từ các khoản khách đã thanh toán qua GoatSports.</p></div>
+      <button type="button" aria-label="Đóng" (click)="balanceDetailOpen.set(false)"><app-lucide-icon name="x" /></button></div>
+    @if (balance(); as b) {
+    <dl class="balance-formula">
+      <div><dt>Tổng tiền khách đã trả</dt><dd>{{ money(b.earned) }}</dd></div>
+      <div><dt>− Đang giữ ({{ b.holdDays }} ngày gần nhất)</dt><dd>{{ money(b.onHold) }}</dd></div>
+      <div><dt>− Đã hoàn cho khách</dt><dd>{{ money(b.refunded) }}</dd></div>
+      <div><dt>− Đã rút</dt><dd>{{ money(b.withdrawn) }}</dd></div>
+      <div class="is-total"><dt>= Có thể rút</dt><dd>{{ money(b.available) }}</dd></div>
+    </dl>
+    }
+    <h3 class="earnings-title">Các khoản thu <small>Tiền mặt thu tại quầy không đi qua GoatSports nên không có ở đây.</small></h3>
+    @if (earningsLoading()) {
+    <app-loading-skeleton variant="rows" [count]="4" label="Đang tải các khoản thu" />
+    } @else if (earningsError()) {
+    <div class="earnings-state" role="alert"><span>Chưa tải được các khoản thu.</span><button type="button" class="secondary" (click)="loadEarnings()">Thử lại</button></div>
+    } @else if (!earnings().length) {
+    <div class="earnings-state"><span>Chưa có khoản thu nào qua GoatSports.</span></div>
+    } @else {
+    <ul #earningsList class="earnings-list">
+      @if (earningsWindow.hasBefore()) { <li class="list-sentinel" appInfiniteScroll (reached)="showPreviousEarnings()" aria-hidden="true"></li> }
+      @for (item of earningsWindow.items(); track item.paymentId) {
+      <li [attr.data-window-id]="item.paymentId">
+        <div><strong>{{ earningLabel(item) }}</strong><span>{{ item.paidAt | date: 'HH:mm dd/MM/yyyy' }}</span></div>
+        <div class="earnings-list__right"><b>+{{ money(item.amount) }}</b>
+          @if (item.onHold) { <span class="pill">Rút được từ {{ releaseDate(item) | date: 'dd/MM' }}</span> }
+          @if (item.status === 'REFUNDED') { <span class="pill red">Đã hoàn khách</span> }
+          @else if (item.status === 'PARTIALLY_REFUNDED') { <span class="pill red">Đã hoàn một phần</span> }</div>
+      </li>
+      }
+      @if (earningsWindow.hasAfter()) { <li class="list-sentinel" appInfiniteScroll (reached)="showMoreEarnings()" aria-hidden="true"></li> }
+    </ul>
+    }
+  </section>
+</div>
+}

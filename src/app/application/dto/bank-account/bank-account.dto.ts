@@ -3,6 +3,8 @@ export type BankAccountStatus = 'PENDING_VERIFICATION' | 'VERIFIED' | 'REJECTED'
 export interface BankAccount { bankAccountId: string; bankBin: string; accountNumberLast4: string; accountName: string; status: BankAccountStatus; isDefault: boolean; verifiedAt?: string; createdAt: string; }
 /** Số dư doanh thu (payment-service GET /payouts/me/balance): tiền thu đã qua thời gian giữ − hoàn khách − đã rút. */
 export interface PayoutBalance { earned: number; refunded: number; withdrawn: number; onHold: number; available: number; holdDays: number; minimumWithdrawal: number; }
+/** Mot khoan thu da cong vao so du (phan chu san duoc huong); onHold = con trong thoi gian giu de hoan khach. */
+export interface PayoutEarning { paymentId: string; purpose: 'BOOKING_DEPOSIT' | 'BOOKING_REMAINING' | 'TOURNAMENT_FEE'; referenceType: string; referenceId: string; amount: number; status: string; paidAt: string; onHold: boolean; }
 export type WithdrawalStatus = 'PENDING' | 'HELD' | 'READY' | 'PROCESSING' | 'PAID' | 'FAILED' | 'CANCELLED';
 export interface Withdrawal { settlementId: string; amount: number; status: WithdrawalStatus; destinationAccount?: string; destinationAccountName?: string; failureReason?: string; requestedAt: string; settledAt?: string; }
 export interface LinkBankAccountRequest { bankBin: string; accountNumber: string; accountName: string; }
