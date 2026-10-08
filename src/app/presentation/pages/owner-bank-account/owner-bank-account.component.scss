@@ -42,3 +42,18 @@
   .dialog-backdrop { align-items: end; padding: 0; }
   .dialog { width: 100%; max-height: 92dvh; border-radius: 24px 24px 0 0; padding-inline: 16px; }
 }
+
+// Popup rut tien: so du lon, o nhap so tien co don vi va nut "Rut het"; vuot so du thi vien + loi danger.
+.withdraw-dialog { width: min(100%, 480px); }
+.withdraw-available { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-top: 16px; padding: 12px 14px; border-radius: 12px; background: var(--primary-light); }
+.withdraw-available span { color: var(--primary-strong); font-size: 13px; font-weight: 700; }
+.withdraw-available strong { color: var(--primary-strong); font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.amount-field { display: flex; min-height: 52px; align-items: center; gap: 8px; padding: 0 6px 0 14px; border: 1px solid var(--border-strong); border-radius: 12px; background: var(--surface); }
+.amount-field:focus-within { border-color: var(--primary); }
+.amount-field.is-invalid { border-color: var(--danger); }
+.amount-field input { flex: 1; min-width: 0; min-height: 48px; padding: 0; border: 0; background: none; box-shadow: none; color: var(--ink); font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.amount-field input:focus { border: 0; box-shadow: none; }
+.amount-field > span { color: var(--body); font-weight: 700; }
+.amount-field > button { min-height: 36px; padding: 0 12px; border: 0; border-radius: 10px; background: var(--primary-light); color: var(--primary-strong); font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
+.amount-hint { margin: 8px 0 0; color: var(--body); font-size: 13px; }
+.amount-hint.is-error { color: var(--danger); font-weight: 600; }

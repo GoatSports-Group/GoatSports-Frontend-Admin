@@ -16,6 +16,6 @@ export class BankAccountRepositoryImpl implements BankAccountRepository {
   getPayoutBalance() { return this.api.getPayoutBalance().pipe(map(response => this.required(response.data))); }
   getEarnings() { return this.api.getEarnings().pipe(map(response => response.data ?? [])); }
   getWithdrawals() { return this.api.getWithdrawals().pipe(map(response => response.data ?? [])); }
-  withdraw() { return this.api.withdraw().pipe(map(response => this.required(response.data))); }
+  withdraw(amount: number) { return this.api.withdraw(amount).pipe(map(response => this.required(response.data))); }
   private required<T>(data: T | null | undefined): T { if (data == null) throw new Error('Payment service không trả dữ liệu.'); return data; }
 }

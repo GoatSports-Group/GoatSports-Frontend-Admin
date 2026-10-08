@@ -8,7 +8,7 @@
           <p>Tiền khách trả được giữ {{ b.holdDays }} ngày để kịp hoàn khi khách hủy; sau đó bạn rút về tài khoản mặc định bất kỳ lúc nào.</p>
           <button type="button" class="detail-link" (click)="openBalanceDetail()"><app-lucide-icon name="receipt" /> Xem chi tiết</button></div>
         <dl class="payout-stats"><div><dt>Đang giữ</dt><dd>{{ money(b.onHold) }}</dd></div><div><dt>Đã hoàn khách</dt><dd>{{ money(b.refunded) }}</dd></div><div><dt>Đã rút</dt><dd>{{ money(b.withdrawn) }}</dd></div></dl>
-        <div class="payout-action"><button type="button" class="primary" [disabled]="withdrawing() || !canWithdraw()" (click)="withdraw()">@if (withdrawing()) { <app-lucide-icon name="loader-2" class="spin" /> Đang gửi lệnh } @else { <app-lucide-icon name="banknote" /> Rút tiền }</button>
+        <div class="payout-action"><button type="button" class="primary" [disabled]="withdrawing() || !canWithdraw()" (click)="openWithdraw()">@if (withdrawing()) { <app-lucide-icon name="loader-2" class="spin" /> Đang gửi lệnh } @else { <app-lucide-icon name="banknote" /> Rút tiền }</button>
           @if (!payoutAccount()) { <small>Cần một tài khoản mặc định hợp lệ.</small> } @else if (b.available < b.minimumWithdrawal) { <small>Tối thiểu {{ money(b.minimumWithdrawal) }} mỗi lần rút.</small> }</div>
       </section>
     }
@@ -72,6 +72,30 @@
       @if (earningsWindow.hasAfter()) { <li class="list-sentinel" appInfiniteScroll (reached)="showMoreEarnings()" aria-hidden="true"></li> }
     </ul>
     }
+  </section>
+</div>
+}
+
+@if (withdrawOpen() && balance(); as b) {
+<div class="dialog-backdrop" (click)="withdrawing() || withdrawOpen.set(false)">
+  <section class="dialog withdraw-dialog" role="dialog" aria-modal="true" aria-labelledby="withdraw-title" (click)="$event.stopPropagation()">
+    <div class="form-title"><div><h2 id="withdraw-title">Rút tiền</h2>
+        @if (payoutAccount(); as account) { <p>Về {{ bank(account.bankBin)?.shortName || account.bankBin }} •••• {{ account.accountNumberLast4 }} · {{ account.accountName }}</p> }</div>
+      <button type="button" aria-label="Đóng" (click)="withdrawOpen.set(false)" [disabled]="withdrawing()"><app-lucide-icon name="x" /></button></div>
+    <div class="withdraw-available"><span>Có thể rút</span><strong>{{ money(b.available) }}</strong></div>
+    <label for="withdraw-amount">Số tiền muốn rút</label>
+    <div class="amount-field" [class.is-invalid]="!!withdrawError()">
+      <input id="withdraw-amount" inputmode="numeric" autocomplete="off" [value]="formattedWithdrawAmount()"
+        (input)="updateWithdrawAmount($event)" (keydown.enter)="withdraw()" [disabled]="withdrawing()"
+        [attr.aria-invalid]="!!withdrawError()" aria-describedby="withdraw-hint" />
+      <span>₫</span>
+      <button type="button" (click)="withdrawAll()" [disabled]="withdrawing()">Rút hết</button>
+    </div>
+    <p id="withdraw-hint" class="amount-hint" [class.is-error]="!!withdrawError()" [attr.role]="withdrawError() ? 'alert' : null">
+      {{ withdrawError() || 'Tối thiểu ' + money(b.minimumWithdrawal) + ' mỗi lần rút. Phần còn lại vẫn nằm trong số dư.' }}</p>
+    <div class="form-actions"><button type="button" class="secondary" (click)="withdrawOpen.set(false)" [disabled]="withdrawing()">Hủy</button>
+      <button type="button" class="primary" [disabled]="!!withdrawError() || withdrawing()" (click)="withdraw()">
+        @if (withdrawing()) { <app-lucide-icon name="loader-2" class="spin" /> Đang gửi lệnh } @else { <app-lucide-icon name="banknote" /> Rút {{ withdrawError() ? '' : money(withdrawAmount()) }} }</button></div>
   </section>
 </div>
 }

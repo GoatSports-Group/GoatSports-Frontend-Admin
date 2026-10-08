@@ -17,5 +17,5 @@ export class BankAccountApi {
   getPayoutBalance() { return this.http.get<BaseResponse<PayoutBalance>>(`${this.baseUrl}/payouts/me/balance`); }
   getEarnings() { return this.http.get<BaseResponse<PayoutEarning[]>>(`${this.baseUrl}/payouts/me/earnings`); }
   getWithdrawals() { return this.http.get<BaseResponse<Withdrawal[]>>(`${this.baseUrl}/payouts/me`); }
-  withdraw() { return this.http.post<BaseResponse<Withdrawal>>(`${this.baseUrl}/payouts/me/withdraw`, {}); }
+  withdraw(amount: number) { return this.http.post<BaseResponse<Withdrawal>>(`${this.baseUrl}/payouts/me/withdraw`, { amount }); }
 }

@@ -12,6 +12,7 @@ export interface BankAccountRepository {
   getPayoutBalance(): Observable<PayoutBalance>;
   getEarnings(): Observable<PayoutEarning[]>;
   getWithdrawals(): Observable<Withdrawal[]>;
-  withdraw(): Observable<Withdrawal>;
+  /** Rut `amount` dong (so nguyen) ve tai khoan mac dinh; server kiem lai <= so du co the rut. */
+  withdraw(amount: number): Observable<Withdrawal>;
 }
 export const BANK_ACCOUNT_REPOSITORY_TOKEN = new InjectionToken<BankAccountRepository>('BANK_ACCOUNT_REPOSITORY_TOKEN');

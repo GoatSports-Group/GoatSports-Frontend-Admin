@@ -112,8 +112,10 @@ export class OwnerBankAccountComponent {
   @HostListener('document:keydown.escape')
   closeDialogs(): void {
     if (this.saving()) return;
+    if (this.withdrawing()) return;
     this.balanceDetailOpen.set(false);
     this.showForm.set(false);
+    this.withdrawOpen.set(false);
   }
 
   showMoreEarnings(): void { this.earningsWindow.next(this.earningsListRef()?.nativeElement); }
@@ -130,22 +132,55 @@ export class OwnerBankAccountComponent {
     return date;
   }
 
-  withdraw(confirmed = false): void {
+  /** Popup rut tien: nhap so tien (mac dinh toan bo so du), chan ngay khi vuot so du co the rut. */
+  readonly withdrawOpen = signal(false);
+  readonly withdrawDigits = signal('');
+  readonly withdrawAmount = computed(() => Number(this.withdrawDigits() || 0));
+  readonly withdrawError = computed(() => {
+    const balance = this.balance();
+    const amount = this.withdrawAmount();
+    if (!balance) return null;
+    if (!amount) return 'Nhập số tiền muốn rút.';
+    if (amount > balance.available) return `Vượt quá số tiền có thể rút (${this.money(balance.available)}).`;
+    if (amount < balance.minimumWithdrawal) return `Tối thiểu ${this.money(balance.minimumWithdrawal)} mỗi lần rút.`;
+    return null;
+  });
+
+  openWithdraw(): void {
+    const balance = this.balance();
+    if (!balance || !this.canWithdraw()) return;
+    this.withdrawDigits.set(String(Math.floor(balance.available)));
+    this.withdrawOpen.set(true);
+  }
+
+  /** Chi giu chu so (bo dau cham ngan cach khi dan / go); hien lai co dau cham cho de doc. */
+  updateWithdrawAmount(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, '').replace(/^0+(?=\d)/, '').slice(0, 12);
+    this.withdrawDigits.set(digits);
+    input.value = this.formattedWithdrawAmount();
+  }
+
+  formattedWithdrawAmount(): string {
+    return this.withdrawDigits() ? new Intl.NumberFormat('vi-VN').format(this.withdrawAmount()) : '';
+  }
+
+  withdrawAll(): void {
+    const balance = this.balance();
+    if (balance) this.withdrawDigits.set(String(Math.floor(balance.available)));
+  }
+
+  withdraw(): void {
     const balance = this.balance(); const account = this.payoutAccount();
-    if (!balance || !account || !this.canWithdraw()) return;
-    if (!confirmed) {
-      this.confirmDialog.ask({
-        title: 'Rút tiền?', confirmText: 'Rút tiền',
-        message: `Rút ${this.money(balance.available)} về tài khoản ****${account.accountNumberLast4}.`
-      }).subscribe(ok => ok && this.withdraw(true));
-      return;
-    }
+    if (!balance || !account || !this.canWithdraw() || this.withdrawError() || this.withdrawing()) return;
+    const amount = this.withdrawAmount();
     this.withdrawing.set(true);
-    this.repository.withdraw().pipe(
+    this.repository.withdraw(amount).pipe(
       switchMap(withdrawal => forkJoin({ withdrawal: [withdrawal], balance: this.repository.getPayoutBalance(), withdrawals: this.repository.getWithdrawals() })),
       finalize(() => this.withdrawing.set(false)), takeUntilDestroyed(this.destroyRef)
     ).subscribe({
       next: result => {
+        this.withdrawOpen.set(false);
         this.balance.set(result.balance); this.withdrawals.set(result.withdrawals);
         if (result.withdrawal.status === 'FAILED') this.notify.error(result.withdrawal.failureReason || 'payOS từ chối lệnh chuyển, tiền vẫn nằm trong số dư.');
         else this.notify.success(result.withdrawal.status === 'PAID' ? 'Đã chuyển tiền về tài khoản của bạn.' : 'Đã gửi lệnh rút, payOS đang xử lý.');
