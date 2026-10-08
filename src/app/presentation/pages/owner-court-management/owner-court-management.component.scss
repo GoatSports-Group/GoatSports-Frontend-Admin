@@ -144,7 +144,7 @@ select:focus-visible {
 }
 
 .operations-toolbar.has-booking-date {
-  grid-template-columns: minmax(180px, 220px) minmax(150px, 1fr) minmax(130px, 160px) minmax(145px, 180px) 142px auto;
+  grid-template-columns: minmax(180px, 220px) minmax(150px, 1fr) minmax(130px, 160px) minmax(145px, 180px) minmax(170px, 220px) auto;
   gap: 9px;
 }
 
