@@ -52,11 +52,11 @@
         </div>
         } @else {
         <div #applicationList class="application-list goat-stagger">
-          @if (windowStart() > 0) {
+          @if (listWindow.hasBefore()) {
           <div class="list-sentinel" appInfiniteScroll (reached)="showPrevious()" aria-hidden="true"></div>
           }
           @for (application of pagedApplications(); track application.ownerApplicationId) {
-          <button type="button" class="application-list__item" [attr.data-application-id]="application.ownerApplicationId"
+          <button type="button" class="application-list__item" [attr.data-window-id]="application.ownerApplicationId"
             [class.is-selected]="selectedApplication().ownerApplicationId === application.ownerApplicationId"
             [class]="'application-list__item application-list__item--' + getStatusTone(application.status)"
             [attr.aria-pressed]="selectedApplication().ownerApplicationId === application.ownerApplicationId"
@@ -74,7 +74,7 @@
             <app-lucide-icon class="application-list__chevron" name="chevron-right" [size]="17" aria-hidden="true" />
           </button>
           }
-          @if (filteredApplications().length > windowEnd()) {
+          @if (listWindow.hasAfter()) {
           <div class="list-sentinel" appInfiniteScroll (reached)="showMore()" aria-hidden="true"></div>
           }
         </div>

@@ -66,7 +66,7 @@ describe('OwnerRevenueComponent', () => {
     }));
     expect(fixture.nativeElement.textContent).toContain('320.000');
     expect(fixture.nativeElement.textContent).toContain('Thành công');
-    expect(fixture.nativeElement.querySelectorAll('.bar-item')).toHaveLength(2);
+    expect(fixture.nativeElement.querySelectorAll('.chart-bar__fill')).toHaveLength(2);
   });
 
   it('uses the full current calendar month as the default revenue period', () => {

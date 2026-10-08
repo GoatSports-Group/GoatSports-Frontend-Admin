@@ -1,14 +1,10 @@
 import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
+import { InfiniteScrollDirective } from '@shared/directives/infinite-scroll.directive';
+import { TwoWayWindow } from '@shared/utils/two-way-window';
+import { TournamentRevenueEntry } from '@application/dto/owner-tournament/owner-tournament.dto';
 import { FormsModule } from '@angular/forms';
 import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  DestroyRef,
-  computed,
-  inject,
-  signal
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal, ElementRef, HostListener, Injector, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Observable, Subject, catchError, finalize, forkJoin, map, of, switchMap, take, takeUntil } from 'rxjs';
@@ -26,7 +22,7 @@ import { NotifyService } from '@shared/components/notify/notify.service';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-loading.component';
 import { RouterLink } from '@angular/router';
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgTemplateOutlet } from '@angular/common';
 
 type RevenuePreset = 'today' | 'week' | 'month' | 'quarter' | 'year' | 'custom';
 
@@ -43,11 +39,27 @@ interface VenueRevenueRanking {
   paidBookingCount: number;
 }
 
-interface RevenueChartPoint {
-  date: string;
+type ChartGranularity = 'day' | 'week' | 'month';
+
+// Vung ve trong viewBox 1000 x 250: chua 64px ben trai cho nhan tien, 22px duoi cho nhan ngay.
+const CHART_LEFT = 64;
+const CHART_WIDTH = 924;
+const CHART_TOP = 14;
+const CHART_HEIGHT = 196;
+
+interface RevenueChartBar {
+  key: string;
+  label: string;
+  title: string;
   revenue: number;
   x: number;
   y: number;
+  width: number;
+  height: number;
+  showLabel: boolean;
+  /** Ghi so tien tren dau cot: moi cot co doanh thu, tru nhan de len nhan cua cot cao hon ben canh. */
+  showValue: boolean;
+  peak: boolean;
 }
 
 interface RevenueLoadResult {
@@ -60,7 +72,7 @@ interface RevenueLoadResult {
 @Component({
   selector: 'app-owner-revenue',
   standalone: true,
-  imports: [FormsModule, DatePickerComponent, DatePipe, LucideIconComponent, PageLoadingComponent, RouterLink, SelectComponent],
+  imports: [FormsModule, DatePickerComponent, DatePipe, LucideIconComponent, PageLoadingComponent, RouterLink, SelectComponent, InfiniteScrollDirective, NgTemplateOutlet],
   templateUrl: './owner-revenue.component.html',
   styleUrl: './owner-revenue.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -105,8 +117,7 @@ export class OwnerRevenueComponent {
     { value: 'week', label: 'Tuần' },
     { value: 'month', label: 'Tháng' },
     { value: 'quarter', label: 'Quý' },
-    { value: 'year', label: 'Năm' },
-    { value: 'custom', label: 'Tùy chỉnh' }
+    { value: 'year', label: 'Năm' }
   ];
 
   readonly selectedVenueName = computed(() =>
@@ -116,9 +127,6 @@ export class OwnerRevenueComponent {
     if (!this.fromDate() || !this.toDate()) return true;
     return this.fromDate() > this.toDate() || this.rangeDays() > 366;
   });
-  readonly maxDailyRevenue = computed(() => Math.max(
-    0, ...(this.report()?.dailyRevenue.map(point => point.revenue) ?? [])
-  ));
   readonly averageRevenuePerPaidBooking = computed(() => {
     const period = this.report()?.currentPeriod;
     return period?.paidBookingCount ? period.totalRevenue / period.paidBookingCount : 0;
@@ -132,34 +140,92 @@ export class OwnerRevenueComponent {
     return data ? data.currentPeriod.totalRevenue - data.previousPeriod.totalRevenue : 0;
   });
   readonly rankingMaximum = computed(() => this.venueRanking()[0]?.totalRevenue ?? 0);
-  readonly chartMaximum = computed(() => this.niceMaximum(this.maxDailyRevenue()));
+  /** Xu huong doanh thu: <= 31 ngay ve theo ngay, <= 120 ngay theo tuan (thu Hai), dai hon theo thang. */
+  readonly chartGranularity = computed<ChartGranularity>(() => {
+    const period = this.report()?.currentPeriod;
+    if (!period) return 'day';
+    const days = Math.round((this.parseDate(period.toDate).getTime() - this.parseDate(period.fromDate).getTime()) / 86_400_000) + 1;
+    return days <= 31 ? 'day' : days <= 120 ? 'week' : 'month';
+  });
+  readonly chartUnitLabel = computed(() => ({ day: 'ngày', week: 'tuần', month: 'tháng' })[this.chartGranularity()]);
+  private readonly chartBuckets = computed(() => {
+    const data = this.report();
+    if (!data) return [];
+    const unit = this.chartGranularity();
+    const revenueByDate = new Map(data.dailyRevenue.map(row => [row.date, row.revenue]));
+    const buckets = new Map<string, { start: string; end: string; revenue: number }>();
+    const last = this.parseDate(data.currentPeriod.toDate);
+    for (let day = this.parseDate(data.currentPeriod.fromDate); day <= last; day.setDate(day.getDate() + 1)) {
+      const iso = this.isoDate(day);
+      const key = unit === 'day' ? iso : unit === 'month' ? iso.slice(0, 7) : this.isoDate(this.weekStart(day));
+      const bucket = buckets.get(key) ?? { start: iso, end: iso, revenue: 0 };
+      bucket.end = iso;
+      bucket.revenue += revenueByDate.get(iso) ?? 0;
+      buckets.set(key, bucket);
+    }
+    return [...buckets.entries()].map(([key, bucket]) => ({ key, ...bucket }));
+  });
+  readonly chartMaximum = computed(() => this.niceMaximum(Math.max(0, ...this.chartBuckets().map(bucket => bucket.revenue))));
   readonly chartTicks = computed(() => Array.from({ length: 5 }, (_, index) => ({
     value: this.chartMaximum() * (4 - index) / 4,
-    y: 22 + index * 43
+    y: CHART_TOP + index * CHART_HEIGHT / 4
   })));
-  readonly chartPoints = computed<readonly RevenueChartPoint[]>(() => {
-    const rows = [...(this.report()?.dailyRevenue ?? [])].sort((left, right) => left.date.localeCompare(right.date));
+  readonly chartBars = computed<readonly RevenueChartBar[]>(() => {
+    const buckets = this.chartBuckets();
+    if (!buckets.length) return [];
+    const unit = this.chartGranularity();
     const maximum = this.chartMaximum();
-    return rows.map((row, index) => ({
-      ...row,
-      x: rows.length === 1 ? 500 : 52 + index * 918 / (rows.length - 1),
-      y: 194 - row.revenue * 172 / maximum
-    }));
+    const slot = CHART_WIDTH / buckets.length;
+    const width = Math.max(2, Math.min(44, slot * .62));
+    const labelEvery = slot >= 40 ? 1 : Math.ceil(buckets.length / 8);
+    const peak = buckets.reduce((best, bucket) => bucket.revenue > best.revenue ? bucket : best, buckets[0]);
+    const multiYear = buckets[0].start.slice(0, 4) !== buckets.at(-1)!.start.slice(0, 4);
+    const bars = buckets.map((bucket, index) => {
+      const height = bucket.revenue ? Math.max(3, bucket.revenue * CHART_HEIGHT / maximum) : 0;
+      return {
+        key: bucket.key,
+        label: unit === 'month'
+          ? `T${Number(bucket.start.slice(5, 7))}${multiYear ? '/' + bucket.start.slice(2, 4) : ''}`
+          : this.shortDate(bucket.start),
+        title: unit === 'day' ? this.fullDate(bucket.start)
+          : unit === 'week' ? `${this.shortDate(bucket.start)} – ${this.shortDate(bucket.end)}`
+            : `Tháng ${bucket.start.slice(5, 7)}/${bucket.start.slice(0, 4)}`,
+        revenue: bucket.revenue,
+        x: CHART_LEFT + index * slot + (slot - width) / 2,
+        y: CHART_TOP + CHART_HEIGHT - height,
+        width,
+        height,
+        showLabel: index % labelEvery === 0 || index === buckets.length - 1 && buckets.length <= 8,
+        peak: bucket === peak && bucket.revenue > 0,
+        showValue: false
+      };
+    });
+    // Ghi so tien tren moi cot co doanh thu; cot cao hon duoc uu tien, nhan nao de len nhan da dat thi bo
+    // (uoc luong 7 don vi viewBox moi ky tu chu 12px).
+    const placed: { center: number; half: number }[] = [];
+    for (const bar of [...bars].filter(item => item.revenue > 0).sort((left, right) => right.revenue - left.revenue)) {
+      const center = bar.x + bar.width / 2;
+      const half = (this.chartMoney(bar.revenue).length * 7 + 6) / 2;
+      if (placed.some(label => Math.abs(label.center - center) < label.half + half)) continue;
+      placed.push({ center, half });
+      bar.showValue = true;
+    }
+    return bars;
   });
-  readonly chartLinePath = computed(() => this.chartPoints()
-    .map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`)
-    .join(' '));
-  readonly chartAreaPath = computed(() => {
-    const points = this.chartPoints();
-    if (!points.length) return '';
-    return `${this.chartLinePath()} L ${points.at(-1)!.x} 194 L ${points[0].x} 194 Z`;
+  readonly chartPeak = computed(() => this.chartBars().find(bar => bar.peak) ?? null);
+  readonly chartActiveCount = computed(() => this.chartBars().filter(bar => bar.revenue > 0).length);
+  readonly chartAverage = computed(() => {
+    const bars = this.chartBars();
+    return bars.length ? bars.reduce((total, bar) => total + bar.revenue, 0) / bars.length : 0;
   });
-  readonly chartLabels = computed(() => {
-    const points = this.chartPoints();
-    if (!points.length) return [];
-    const step = Math.max(1, Math.ceil((points.length - 1) / 6));
-    return points.filter((_, index) => index % step === 0 || index === points.length - 1);
-  });
+
+  /** Doanh thu giai dau: 3 muc gan nhat tren trang, "Xem them" mo popup cuon vo han hai chieu. */
+  readonly tournamentEntries = computed<readonly TournamentRevenueEntry[]>(() =>
+    [...(this.tournamentRevenue()?.entries ?? [])].sort((left, right) => right.date.localeCompare(left.date)));
+  readonly recentTournamentEntries = computed(() => this.tournamentEntries().slice(0, 3));
+  readonly tournamentEntriesOpen = signal(false);
+  readonly tournamentWindow = new TwoWayWindow(this.tournamentEntries, entry => this.entryKey(entry), inject(Injector));
+  private readonly tournamentListRef = viewChild<ElementRef<HTMLElement>>('tournamentEntryList');
 
   constructor() {
     this.destroyRef.onDestroy(() => {
@@ -314,12 +380,6 @@ export class OwnerRevenueComponent {
     }).format(value);
   }
 
-  compactMoney(value: number): string {
-    return new Intl.NumberFormat('vi-VN', {
-      notation: 'compact', maximumFractionDigits: 1
-    }).format(value);
-  }
-
   percentage(value: number | null | undefined): string {
     if (value === undefined || value === null) return 'Chưa có cơ sở so sánh';
     const prefix = value > 0 ? '+' : '';
@@ -333,12 +393,6 @@ export class OwnerRevenueComponent {
 
   trendIcon(value: number | null | undefined): string {
     return value !== undefined && value !== null && value < 0 ? 'trending-down' : 'trending-up';
-  }
-
-  barHeight(value: number): number {
-    const maximum = this.maxDailyRevenue();
-    if (!maximum || !value) return 0;
-    return Math.max(4, Math.round((value / maximum) * 100));
   }
 
   shortDate(value: string): string {
@@ -365,9 +419,40 @@ export class OwnerRevenueComponent {
     return maximum ? Math.max(value ? 5 : 0, Math.round(value * 100 / maximum)) : 0;
   }
 
+  /** Nhan truc tien gon: 800k, 1,2tr, 2,5 tỷ. */
   chartMoney(value: number): string {
     if (!value) return '0';
-    return `${this.compactMoney(value)}đ`;
+    const format = (amount: number) => amount.toLocaleString('vi-VN', { maximumFractionDigits: 1 });
+    if (value >= 1e9) return `${format(value / 1e9)} tỷ`;
+    if (value >= 1e6) return `${format(value / 1e6)}tr`;
+    if (value >= 1e3) return `${format(value / 1e3)}k`;
+    return format(value);
+  }
+
+  entryKey(entry: TournamentRevenueEntry): string {
+    return `${entry.tournamentId}:${entry.kind}:${entry.date}`;
+  }
+
+  openTournamentEntries(): void {
+    this.tournamentWindow.reset();
+    this.tournamentEntriesOpen.set(true);
+  }
+
+  closeTournamentEntries(): void {
+    this.tournamentEntriesOpen.set(false);
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.tournamentEntriesOpen()) this.closeTournamentEntries();
+  }
+
+  showMoreTournamentEntries(): void {
+    this.tournamentWindow.next(this.tournamentListRef()?.nativeElement);
+  }
+
+  showPreviousTournamentEntries(): void {
+    this.tournamentWindow.previous(this.tournamentListRef()?.nativeElement);
   }
 
   signedMoney(value: number): string {
@@ -506,6 +591,21 @@ export class OwnerRevenueComponent {
     const start = new Date(`${this.fromDate()}T00:00:00`);
     const end = new Date(`${this.toDate()}T00:00:00`);
     return Math.floor((end.getTime() - start.getTime()) / 86_400_000) + 1;
+  }
+
+  private parseDate(value: string): Date {
+    const [year, month, day] = value.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  private isoDate(date: Date): string {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  }
+
+  private weekStart(date: Date): Date {
+    const start = new Date(date);
+    start.setDate(start.getDate() - (start.getDay() + 6) % 7);
+    return start;
   }
 
   private niceMaximum(value: number): number {

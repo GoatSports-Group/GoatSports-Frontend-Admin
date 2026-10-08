@@ -143,16 +143,15 @@
     </div>
     @if (tr.entries.length) {
     <ul class="tournament-revenue__list">
-      @for (entry of tr.entries; track entry.tournamentId + entry.kind + entry.date) {
-      <li>
-        <time>{{ entry.date | date:'dd/MM' }}</time>
-        <div><strong>{{ entry.tournamentName }}</strong>
-          <span>{{ entry.kind === 'FEE' ? 'Lệ phí · ' + entry.count + ' lượt' : 'Giải thưởng khi kết thúc giải' }}</span></div>
-        <b [class.positive-value]="entry.kind === 'FEE'" [class.negative-value]="entry.kind === 'PRIZE'">
-          {{ entry.kind === 'FEE' ? '+' : '−' }}{{ money(entry.amount) }}</b>
-      </li>
+      @for (entry of recentTournamentEntries(); track entryKey(entry)) {
+      <ng-container *ngTemplateOutlet="tournamentEntryRow; context: { $implicit: entry }" />
       }
     </ul>
+    @if (tournamentEntries().length > 3) {
+    <button type="button" class="tournament-revenue__more" (click)="openTournamentEntries()">
+      Xem thêm {{ tournamentEntries().length - 3 }} mục <lucide-icon name="arrow-right" />
+    </button>
+    }
     } @else {
     <p class="tournament-revenue__empty">Không có lệ phí hay giải thưởng nào trong kỳ này.</p>
     }
@@ -167,38 +166,46 @@
           <p class="eyebrow">Theo ngày sử dụng sân</p>
           <h2>Xu hướng doanh thu</h2>
         </div>
-        <span>{{ periodName() }} · {{ data.dailyRevenue.length }} ngày có dữ liệu</span>
+        <span>{{ periodName() }} · theo {{ chartUnitLabel() }}</span>
       </header>
 
-      @if (!data.dailyRevenue.length) {
+      @if (!chartActiveCount()) {
       <div class="chart-empty">
         <lucide-icon name="chart-no-axes-column" />
         <strong>Chưa có doanh thu trong kỳ</strong>
         <p>Hãy thử một khoảng ngày hoặc cơ sở khác.</p>
       </div>
       } @else {
+      <dl class="chart-summary">
+        @if (chartPeak(); as peak) {
+        <div><dt>Cao nhất</dt><dd>{{ money(peak.revenue) }}<small>{{ peak.title }}</small></dd></div>
+        }
+        <div><dt>Trung bình mỗi {{ chartUnitLabel() }}</dt><dd>{{ money(chartAverage()) }}</dd></div>
+        <div><dt>Có doanh thu</dt><dd>{{ chartActiveCount() }}<small>/ {{ chartBars().length }} {{ chartUnitLabel() }}</small></dd></div>
+      </dl>
       <div class="chart-scroll">
-        <svg class="revenue-chart" viewBox="0 0 1000 234" role="img" aria-label="Biểu đồ xu hướng doanh thu theo ngày">
-          <defs>
-            <linearGradient id="ownerRevenueArea" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#008f68" stop-opacity="0.22" />
-              <stop offset="100%" stop-color="#008f68" stop-opacity="0" />
-            </linearGradient>
-          </defs>
+        <svg class="revenue-chart" viewBox="0 0 1000 250" role="img"
+          [attr.aria-label]="'Biểu đồ doanh thu theo ' + chartUnitLabel()">
           @for (tick of chartTicks(); track tick.y) {
-          <line class="chart-grid-line" x1="52" [attr.y1]="tick.y" x2="970" [attr.y2]="tick.y" />
-          <text class="chart-axis chart-money-axis" x="43" [attr.y]="tick.y + 4" text-anchor="end">{{
-            chartMoney(tick.value) }}</text>
+          <line class="chart-grid-line" [class.is-base]="$last" x1="64" [attr.y1]="tick.y" x2="988" [attr.y2]="tick.y" />
+          <text class="chart-axis" x="54" [attr.y]="tick.y + 4" text-anchor="end">{{ chartMoney(tick.value) }}</text>
           }
-          <path class="chart-area" [attr.d]="chartAreaPath()" />
-          <path class="chart-line" [attr.d]="chartLinePath()" />
-          @for (point of chartPoints(); track point.date) {
-          <circle class="chart-point" [attr.cx]="point.x" [attr.cy]="point.y" r="3.5">
-            <title>{{ fullDate(point.date) }}: {{ money(point.revenue) }}</title>
-          </circle>
+          @for (bar of chartBars(); track bar.key) {
+          <g class="chart-bar" [class.is-peak]="bar.peak">
+            <rect class="chart-bar__hit" [attr.x]="bar.x - 2" y="14" [attr.width]="bar.width + 4" height="196" />
+            @if (bar.height) {
+            <rect class="chart-bar__fill" [attr.x]="bar.x" [attr.y]="bar.y" [attr.width]="bar.width" [attr.height]="bar.height"
+              [attr.rx]="bar.width > 8 ? 4 : 1" />
+            }
+            <title>{{ bar.title }}: {{ money(bar.revenue) }}</title>
+          </g>
+          @if (bar.showValue) {
+          <text class="chart-value-label" [class.is-peak]="bar.peak" [attr.x]="bar.x + bar.width / 2" [attr.y]="bar.y - 6" text-anchor="middle">{{
+            chartMoney(bar.revenue) }}</text>
           }
-          @for (point of chartLabels(); track point.date) {
-          <text class="chart-axis" [attr.x]="point.x" y="224" text-anchor="middle">{{ shortDate(point.date) }}</text>
+          @if (bar.showLabel) {
+          <text class="chart-axis" [attr.x]="bar.x + bar.width / 2" y="234" text-anchor="middle">{{ bar.label }}</text>
+          }
           }
         </svg>
       </div>
@@ -301,6 +308,42 @@
   </section>
   }
 </main>
+
+<ng-template #tournamentEntryRow let-entry>
+  <li [attr.data-window-id]="entryKey(entry)">
+    <time>{{ entry.date | date:'dd/MM' }}</time>
+    <div><strong>{{ entry.tournamentName }}</strong>
+      <span>{{ entry.kind === 'FEE' ? 'Lệ phí · ' + entry.count + ' lượt' : 'Giải thưởng khi kết thúc giải' }}</span></div>
+    <b [class.positive-value]="entry.kind === 'FEE'" [class.negative-value]="entry.kind === 'PRIZE'">
+      {{ entry.kind === 'FEE' ? '+' : '−' }}{{ money(entry.amount) }}</b>
+  </li>
+</ng-template>
+
+@if (tournamentEntriesOpen()) {
+<div class="entries-backdrop" (click)="closeTournamentEntries()">
+  <section class="entries-modal" role="dialog" aria-modal="true" aria-labelledby="tournament-entries-title"
+    (click)="$event.stopPropagation()">
+    <header>
+      <div>
+        <h2 id="tournament-entries-title">Doanh thu giải đấu</h2>
+        <p>{{ tournamentEntries().length }} mục · {{ fullDate(fromDate()) }} – {{ fullDate(toDate()) }}</p>
+      </div>
+      <button type="button" class="entries-modal__close" aria-label="Đóng" (click)="closeTournamentEntries()"><lucide-icon name="x" /></button>
+    </header>
+    <ul #tournamentEntryList class="tournament-revenue__list entries-modal__list">
+      @if (tournamentWindow.hasBefore()) {
+      <li class="list-sentinel" appInfiniteScroll (reached)="showPreviousTournamentEntries()" aria-hidden="true"></li>
+      }
+      @for (entry of tournamentWindow.items(); track entryKey(entry)) {
+      <ng-container *ngTemplateOutlet="tournamentEntryRow; context: { $implicit: entry }" />
+      }
+      @if (tournamentWindow.hasAfter()) {
+      <li class="list-sentinel" appInfiniteScroll (reached)="showMoreTournamentEntries()" aria-hidden="true"></li>
+      }
+    </ul>
+  </section>
+</div>
+}
 
 @if (reportPreviewOpen()) {
 <div class="report-preview-backdrop" (click)="closeReportPreview()">

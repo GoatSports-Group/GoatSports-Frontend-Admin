@@ -1336,3 +1336,142 @@ select:focus {
 :host .period-presets button.active { background: var(--surface); box-shadow: var(--shadow-sm); color: var(--primary); }
 :host .filter-controls { @include t.filter-grid(220px); }
 :host .filter-actions { display: flex; grid-column: 1 / -1; justify-content: flex-end; gap: 8px; }
+
+// Khoang cach deu giua cac khoi (truoc day dau trang, bo loc va khoi giai dau dinh sat nhau).
+:host .revenue-page { display: grid; gap: 20px; }
+:host .revenue-page > * { margin-top: 0; margin-bottom: 0; }
+
+// Ky bao cao: 5 lua chon (Tuy chinh da nam o bo loc ngay ben duoi).
+:host .period-presets { grid-template-columns: repeat(5, minmax(96px, 1fr)); }
+
+// Co so · Tu ngay · Den ngay · nut Ap dung / Lam moi tren cung mot hang; hep thi xuong dong.
+:host .filter-controls {
+  display: grid;
+  grid-template-columns: minmax(200px, 1.2fr) repeat(2, minmax(180px, 1fr)) auto;
+  align-items: end;
+  gap: 14px;
+}
+:host .filter-actions { grid-column: auto; justify-content: flex-start; }
+@media (max-width: 1024px) {
+  :host .filter-controls { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  :host .filter-actions { grid-column: 1 / -1; justify-content: flex-end; }
+}
+
+:host .tournament-revenue__more {
+  display: inline-flex;
+  justify-self: start;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--primary-strong);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover { border-color: var(--primary); }
+  lucide-icon { width: 16px; height: 16px; }
+}
+
+// Popup danh sach doanh thu giai dau (GOAT-DESIGN Modals), chi danh sach cuon, an thanh cuon.
+.entries-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+  background: rgb(16 26 44 / 55%);
+  backdrop-filter: blur(3px);
+}
+
+.entries-modal {
+  display: flex;
+  width: min(100%, 560px);
+  max-height: min(80dvh, 720px);
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--hairline);
+  border-radius: 24px;
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+
+  > header {
+    display: flex;
+    flex: none;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  h2 { margin: 0; color: var(--ink); font-size: 22px; font-weight: 800; letter-spacing: -.025em; }
+  p { margin: 4px 0 0; color: var(--body); font-size: 14px; }
+}
+
+.entries-modal__close {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  place-items: center;
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+
+  lucide-icon { width: 18px; height: 18px; }
+}
+
+.tournament-revenue__list.entries-modal__list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 24px 8px;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar { display: none; }
+  li:first-of-type { border-top: 0; }
+  .list-sentinel { min-height: 1px; padding: 0; border: 0; }
+}
+
+@media (max-width: 640px) {
+  .entries-backdrop { align-items: end; padding: 0; }
+  .entries-modal { width: 100%; max-height: 92dvh; border-radius: 24px 24px 0 0; }
+  .entries-modal > header, .tournament-revenue__list.entries-modal__list { padding-inline: 16px; }
+}
+
+// Xu huong doanh thu: cot theo ngay / tuan / thang, cot cao nhat dam mau va co nhan gia tri.
+.chart-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 16px;
+
+  > div { display: grid; gap: 2px; padding: 12px 14px; border-radius: 12px; background: var(--surface-subtle); }
+  dt { color: var(--body); font-size: 13px; font-weight: 600; }
+  dd { margin: 0; color: var(--ink); font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  small { margin-left: 6px; color: var(--body); font-size: 13px; font-weight: 600; }
+}
+
+:host .revenue-chart { min-width: 560px; }
+:host .chart-grid-line { stroke: var(--hairline); stroke-dasharray: none; }
+:host .chart-grid-line.is-base { stroke: var(--border-strong); }
+:host .chart-axis { fill: var(--body); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.chart-bar__hit { fill: transparent; }
+.chart-bar__fill { fill: color-mix(in srgb, var(--primary) 55%, var(--surface)); transition: fill .15s ease; }
+.chart-bar:hover .chart-bar__fill,
+.chart-bar.is-peak .chart-bar__fill { fill: var(--primary); }
+.chart-value-label { fill: var(--body); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.chart-value-label.is-peak { fill: var(--primary-strong); font-weight: 800; }
+
+@media (max-width: 640px) {
+  .chart-summary { grid-template-columns: minmax(0, 1fr); }
+}
