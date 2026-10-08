@@ -85,4 +85,4 @@ export interface PeriodicReport {
   generatedAt: string;
 }
 
-export type PeriodicReportFormat = 'pdf' | 'xlsx';
+export type PeriodicReportFormat = 'pdf' | 'xlsx' | 'csv';

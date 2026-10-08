@@ -162,7 +162,7 @@ describe('VenueOwnerDashboardComponent', () => {
     const periodic = root.querySelector('app-owner-periodic-reports');
     expect(periodic?.textContent).toContain('Tháng 09/2026');
     expect(periodic?.textContent).toContain('+12,5% so với kỳ trước');
-    expect(periodic?.querySelectorAll('.periodic-reports__files button')).toHaveLength(2);
+    expect(periodic?.querySelectorAll('.periodic-reports__files button')).toHaveLength(3);
     // Luoi cong cu van hanh hien lai va da mo khoa.
     expect(root.querySelectorAll('app-owner-feature-grid a.feature-card').length).toBeGreaterThan(0);
     expect(root.querySelectorAll('.live-courts-list article')).toHaveLength(2);

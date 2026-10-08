@@ -109,6 +109,7 @@ button:focus-visible { outline: 3px solid rgb(16 185 129 / 34%); outline-offset:
 
 .periodic-reports__files {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
 
   button {

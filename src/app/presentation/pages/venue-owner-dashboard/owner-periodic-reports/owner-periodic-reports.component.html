@@ -48,6 +48,9 @@
         <button type="button" (click)="openPreview(report, 'xlsx')" [attr.aria-label]="'Xem trước Excel ' + periodLabel(report)">
           <lucide-icon name="file-spreadsheet" />XLSX
         </button>
+        <button type="button" (click)="openPreview(report, 'csv')" [attr.aria-label]="'Xem trước CSV ' + periodLabel(report)">
+          <lucide-icon name="file-text" />CSV
+        </button>
       </div>
     </li>
     }
@@ -82,14 +85,14 @@
     </div>
 
     <footer class="preview__foot">
-      @if (current.format === 'xlsx') {
-      <p><lucide-icon name="info" />Bản xem trước ở dạng PDF; file Excel có cùng số liệu.</p>
+      @if (current.format !== 'pdf') {
+      <p><lucide-icon name="info" />Bản xem trước ở dạng PDF; file {{ current.format === 'xlsx' ? 'Excel' : 'CSV' }} có cùng số liệu.</p>
       }
       <button type="button" class="preview__secondary" [disabled]="downloading()" (click)="closePreview()">Đóng</button>
       <button type="button" class="preview__primary" [disabled]="previewLoading() || previewError() || downloading()"
         (click)="downloadPreview()">
         <lucide-icon name="download" />
-        {{ downloading() ? 'Đang tải…' : current.format === 'pdf' ? 'Tải xuống PDF' : 'Tải xuống Excel' }}
+        {{ downloading() ? 'Đang tải…' : current.format === 'pdf' ? 'Tải xuống PDF' : current.format === 'xlsx' ? 'Tải xuống Excel' : 'Tải xuống CSV' }}
       </button>
     </footer>
   </section>
