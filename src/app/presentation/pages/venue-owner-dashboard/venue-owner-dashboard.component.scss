@@ -1945,3 +1945,6 @@
     transition: none;
   }
 }
+
+// O chon co so la app-select (co san vien, icon va mui ten): label chi con la khung do rong, khong ve them vien.
+:host .venue-selector { display: block; width: min(280px, 100%); min-height: 0; padding: 0; border: 0; background: none; }

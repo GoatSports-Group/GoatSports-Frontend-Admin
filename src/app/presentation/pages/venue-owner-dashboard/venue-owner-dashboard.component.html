@@ -7,7 +7,6 @@
     @if (selectedVenue(); as venue) {
     <label class="venue-selector" [class.is-single]="venues().length < 2">
       <span class="sr-only">Chọn cơ sở để xem thống kê</span>
-      <lucide-icon name="land-plot" />
       <app-select [ngModel]="venue.venueId" (ngModelChange)="selectVenue($event)" [disabled]="venues().length < 2"
         [options]="venueOptions()" leadingIcon="land-plot" ariaLabel="Cơ sở đang thống kê"></app-select>
     </label>

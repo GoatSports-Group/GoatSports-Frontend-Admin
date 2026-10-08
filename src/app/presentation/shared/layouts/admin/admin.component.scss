@@ -556,6 +556,20 @@
   flex: 1;
   overflow-y: auto;
   padding: 16px 12px;
+  // An thanh cuon nhung van cuon duoc (chuot, cham, ban phim).
+  scrollbar-width: none;
+}
+
+.admin-sidebar nav::-webkit-scrollbar {
+  display: none;
+}
+
+// §4: ten muc mot dong, het cho thi cat (tooltip `title` co ten day du).
+.admin-sidebar a .sidebar-text {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sidebar-group {
