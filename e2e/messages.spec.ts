@@ -32,7 +32,8 @@ test.describe('chủ sân', () => {
     await page.getByRole('textbox', { name: 'Nội dung tin nhắn' }).fill('Tối thứ Bảy còn sân 2 bạn nhé');
     await page.keyboard.press('Enter');
     await expect(page.locator('.msg--mine .bubble').last()).toHaveText('Tối thứ Bảy còn sân 2 bạn nhé');
-    expect(sent).toHaveLength(1);
+    // Bong bong tam hien truoc khi POST toi server: cho request that.
+    await expect.poll(() => sent.length).toBe(1);
     expect((sent[0] as { content: string }).content).toBe('Tối thứ Bảy còn sân 2 bạn nhé');
   });
 
@@ -108,4 +109,32 @@ test('điện thoại: danh sách trước, mở cuộc trò chuyện thì có n
   await expect(rooms).toBeVisible();
   // Khong tran ngang.
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+});
+
+test('đang nhập realtime: gõ thì báo cho người kia, người kia gõ thì hiện bong bóng "đang nhập"', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'Logic giống nhau trên mọi kích thước; chỉ chạy desktop.');
+  await mockAdminApi(page, 'VENUE_OWNER');
+  await mockChatApi(page, 'VENUE_OWNER');
+  const sentFrames: string[] = [];
+  let pushTyping: (typing: boolean) => void = () => undefined;
+  await page.routeWebSocket(/social-service\/ws$/, ws => {
+    ws.onMessage(raw => {
+      const message = String(raw);
+      sentFrames.push(message);
+      if (message.startsWith('CONNECT')) ws.send('CONNECTED\nversion:1.2\nheart-beat:0,0\n\n\0');
+    });
+    pushTyping = typing => ws.send(`MESSAGE\ndestination:/topic/conversations/${BUSINESS_ROOM}/typing\nsubscription:typing-${BUSINESS_ROOM}\n\n${JSON.stringify({ userId: 'c0000000-0000-4000-8000-000000000003', typing })}\0`);
+  });
+  await page.goto('/admin/messages');
+  await expect(page.getByRole('heading', { name: 'Nguyễn Minh Anh', level: 2 })).toBeVisible();
+  await expect.poll(() => sentFrames.some(frame => frame.includes(`destination:/topic/conversations/${BUSINESS_ROOM}/typing`))).toBe(true);
+
+  await page.getByRole('textbox', { name: 'Nội dung tin nhắn' }).pressSequentially('Chào');
+  await expect.poll(() => sentFrames.some(frame => frame.includes('/app/social/chat.typing') && frame.includes('"typing":true'))).toBe(true);
+
+  pushTyping(true);
+  await expect(page.getByRole('status', { name: 'Minh Anh đang nhập' })).toBeVisible();
+  await expect(page.locator('.room__preview--typing')).toBeVisible();
+  pushTyping(false);
+  await expect(page.getByRole('status', { name: 'Minh Anh đang nhập' })).toHaveCount(0);
 });

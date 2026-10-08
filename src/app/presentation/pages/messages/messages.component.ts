@@ -148,7 +148,13 @@ export class AdminMessagesComponent implements OnInit, AfterViewChecked, OnDestr
   private readonly outgoingFiles = new Map<string, File[]>();
   private readonly uploadedKeys = new Map<string, string[]>();
   private readonly localUrls = new Set<string>();
-  private subscribedRoom: string | null = null;
+  /** Moi phong minh la thanh vien deu duoc nghe (tin moi + dang nhap), giong Tin nhan ben client. */
+  private readonly listening = new Set<string>();
+  /** Phong -> nguoi dang nhap (tru minh). Tu xoa sau 4,5s neu khong nhan duoc "ngung nhap". */
+  readonly typing = signal<ReadonlyMap<string, readonly string[]>>(new Map());
+  private readonly typingTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  private typingRoom: string | null = null;
+  private typingStopTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     effect(() => {
@@ -168,6 +174,9 @@ export class AdminMessagesComponent implements OnInit, AfterViewChecked, OnDestr
     this.socket.roomMessages$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(message => this.onRoomMessage(message));
     this.socket.inboxMessages$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(message => this.onListMessage(message));
     this.socket.supportMessages$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(message => this.onListMessage(message));
+    this.socket.typingEvents$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(event => {
+      if (event.userId !== this.me) this.setTyping(event.roomId, event.userId, event.typing);
+    });
     this.loadRooms();
   }
 
@@ -194,7 +203,9 @@ export class AdminMessagesComponent implements OnInit, AfterViewChecked, OnDestr
   }
 
   ngOnDestroy(): void {
-    if (this.subscribedRoom) this.socket.unsubscribeRoom(this.subscribedRoom);
+    this.stopTyping();
+    this.listening.forEach(roomId => this.socket.unsubscribeRoom(roomId));
+    this.typingTimers.forEach(timer => clearTimeout(timer));
     this.draftImages().forEach(item => URL.revokeObjectURL(item.previewUrl));
     this.localUrls.forEach(url => URL.revokeObjectURL(url));
   }
@@ -210,6 +221,7 @@ export class AdminMessagesComponent implements OnInit, AfterViewChecked, OnDestr
         this.rooms.set(sortRooms(rooms));
         this.hasMoreRooms.set(rooms.length === ROOM_PAGE);
         this.resolvePeople(rooms);
+        this.listen(rooms);
         if (this.requestedRoomId) this.selectById(this.requestedRoomId);
         else if (!this.active() && rooms.length && this.showsListAndThread()) this.select(this.rooms()[0], false);
       },
@@ -228,6 +240,7 @@ export class AdminMessagesComponent implements OnInit, AfterViewChecked, OnDestr
         this.hasMoreRooms.set(rooms.length === ROOM_PAGE);
         this.rooms.update(current => sortRooms([...current, ...rooms.filter(room => !known.has(room.roomId))]));
         this.resolvePeople(rooms);
+        this.listen(rooms);
       },
       error: () => this.hasMoreRooms.set(false)
     });
@@ -262,6 +275,7 @@ export class AdminMessagesComponent implements OnInit, AfterViewChecked, OnDestr
   private adopt(room: ChatRoom): void {
     this.rooms.update(items => sortRooms([room, ...items.filter(item => item.roomId !== room.roomId)]));
     this.resolvePeople([room]);
+    this.listen([room]);
     this.select(room);
   }
 
@@ -293,9 +307,8 @@ export class AdminMessagesComponent implements OnInit, AfterViewChecked, OnDestr
         return;
       }
     }
-    if (this.subscribedRoom) this.socket.unsubscribeRoom(this.subscribedRoom);
-    this.subscribedRoom = room.roomId;
-    this.socket.subscribeRoom(room.roomId);
+    this.stopTyping();
+    this.listen([room]);
     this.active.set(room);
     this.contextOpen.set(false);
     this.confirmClear.set(false);
@@ -307,8 +320,7 @@ export class AdminMessagesComponent implements OnInit, AfterViewChecked, OnDestr
   }
 
   backToList(): void {
-    if (this.subscribedRoom) this.socket.unsubscribeRoom(this.subscribedRoom);
-    this.subscribedRoom = null;
+    this.stopTyping();
     this.active.set(null);
     this.messages.set([]);
     void this.router.navigate([], { relativeTo: this.route, queryParams: {} });
@@ -427,6 +439,7 @@ export class AdminMessagesComponent implements OnInit, AfterViewChecked, OnDestr
 
   onDraftInput(value: string): void {
     this.draft.set(value);
+    this.announceTyping(value);
     const area = this.composerRef?.nativeElement;
     if (!area) return;
     area.style.height = 'auto';
@@ -464,6 +477,7 @@ export class AdminMessagesComponent implements OnInit, AfterViewChecked, OnDestr
     };
     this.draft.set('');
     this.draftImages.set([]);
+    this.stopTyping();
     if (this.composerRef) this.composerRef.nativeElement.style.height = '';
     if (this.hasNewer()) {
       this.messages.update(items => [...items, optimistic]);
@@ -765,6 +779,7 @@ export class AdminMessagesComponent implements OnInit, AfterViewChecked, OnDestr
   // ---- realtime + cap nhat trang thai ------------------------------------------------------------
 
   private onRoomMessage(message: ChatMessage): void {
+    this.setTyping(message.roomId, message.senderId, false);
     const active = this.active();
     if (active?.roomId === message.roomId) {
       if (this.hasNewer() && message.senderId !== this.me) {
@@ -778,8 +793,8 @@ export class AdminMessagesComponent implements OnInit, AfterViewChecked, OnDestr
   }
 
   private onListMessage(message: ChatMessage): void {
-    // Doan chat dang mo da nhan qua kenh cua phong; o day chi cap nhat hang trong danh sach.
-    if (this.active()?.roomId === message.roomId) return;
+    // Phong dang nghe da nhan tin qua kenh cua phong (onRoomMessage); kenh rieng chi lo phong moi / chua tham gia.
+    if (this.listening.has(message.roomId)) return;
     this.touchRoom(message);
   }
 
@@ -830,6 +845,77 @@ export class AdminMessagesComponent implements OnInit, AfterViewChecked, OnDestr
   private patchMessage(message: ChatMessage, changes: Partial<ChatMessage>): void {
     this.messages.update(items => items.map(item => item.messageId === message.messageId
       || (message.clientMessageId && item.clientMessageId === message.clientMessageId) ? { ...item, ...changes } : item));
+  }
+
+  // ---- dang nhap (typing) ------------------------------------------------------------------------
+
+  /** Ten nguoi dang nhap o phong dang mo, vd. "Minh Anh đang nhập". */
+  typingLabel(roomId: string): string {
+    const ids = this.typing().get(roomId) ?? [];
+    if (!ids.length) return '';
+    const names = ids.map(id => this.people().get(id)?.name?.split(' ').slice(-2).join(' ') || 'Ai đó');
+    return names.length === 1 ? `${names[0]} đang nhập` : `${names.slice(0, 2).join(' và ')} đang nhập`;
+  }
+
+  typingUsers(roomId: string): readonly string[] {
+    return this.typing().get(roomId) ?? [];
+  }
+
+  /** Nghe tin moi va "dang nhap" cua cac phong minh la thanh vien (admin chua tham gia hop thu thi server tu choi). */
+  private listen(rooms: readonly ChatRoom[]): void {
+    rooms.filter(room => room.participants.some(person => person.userId === this.me) && !this.listening.has(room.roomId))
+      .forEach(room => {
+        this.listening.add(room.roomId);
+        this.socket.subscribeRoom(room.roomId);
+      });
+  }
+
+  /** Go chu: bao "dang nhap" mot lan, ngung sau 2,5s khong go; xoa het chu thi ngung ngay. */
+  private announceTyping(value: string): void {
+    const room = this.active();
+    if (!room) return;
+    if (!value.trim()) {
+      this.stopTyping();
+      return;
+    }
+    if (this.typingRoom !== room.roomId) {
+      this.stopTyping();
+      this.typingRoom = room.roomId;
+      this.socket.sendTyping(room.roomId, true);
+    }
+    if (this.typingStopTimer) clearTimeout(this.typingStopTimer);
+    this.typingStopTimer = setTimeout(() => this.stopTyping(), 2500);
+  }
+
+  private stopTyping(): void {
+    if (this.typingStopTimer) clearTimeout(this.typingStopTimer);
+    this.typingStopTimer = null;
+    if (!this.typingRoom) return;
+    this.socket.sendTyping(this.typingRoom, false);
+    this.typingRoom = null;
+  }
+
+  private setTyping(roomId: string, userId: string, typing: boolean): void {
+    const key = `${roomId}:${userId}`;
+    const timer = this.typingTimers.get(key);
+    if (timer) clearTimeout(timer);
+    this.typingTimers.delete(key);
+    const current = this.typing().get(roomId) ?? [];
+    const next = typing ? [...current.filter(id => id !== userId), userId] : current.filter(id => id !== userId);
+    if (next.length === current.length && next.every((id, index) => id === current[index])) return;
+    const followBottom = typing && this.active()?.roomId === roomId && this.isNearBottom();
+    this.typing.update(map => {
+      const copy = new Map(map);
+      if (next.length) copy.set(roomId, next); else copy.delete(roomId);
+      return copy;
+    });
+    if (followBottom) this.scrollBottom = true;
+    if (typing) this.typingTimers.set(key, setTimeout(() => this.setTyping(roomId, userId, false), 4500));
+  }
+
+  private isNearBottom(): boolean {
+    const element = this.threadRef?.nativeElement;
+    return !!element && element.scrollHeight - element.scrollTop - element.clientHeight < 120;
   }
 
   /** Ten + anh + email nguoi trong cac doan chat (auth-service), nap mot lan moi nguoi. */

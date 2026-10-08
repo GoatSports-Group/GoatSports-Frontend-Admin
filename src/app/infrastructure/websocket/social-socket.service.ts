@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { ChatMessage } from '@application/dto/chat/chat.dto';
-import { SocialSocketService } from '@application/ports/social-socket.service';
+import { ChatTypingEvent, SocialSocketService } from '@application/ports/social-socket.service';
 import { MessageApi, toMessage } from '@infrastructure/api/chat.api';
 import { environment } from '@environments/environment';
 
@@ -36,9 +36,11 @@ export class SocialSocketServiceImpl implements SocialSocketService {
   private readonly roomSubject = new Subject<ChatMessage>();
   private readonly inboxSubject = new Subject<ChatMessage>();
   private readonly supportSubject = new Subject<ChatMessage>();
+  private readonly typingSubject = new Subject<ChatTypingEvent>();
   readonly roomMessages$: Observable<ChatMessage> = this.roomSubject.asObservable();
   readonly inboxMessages$: Observable<ChatMessage> = this.inboxSubject.asObservable();
   readonly supportMessages$: Observable<ChatMessage> = this.supportSubject.asObservable();
+  readonly typingEvents$: Observable<ChatTypingEvent> = this.typingSubject.asObservable();
 
   private socket: WebSocket | null = null;
   private connected = false;
@@ -74,12 +76,24 @@ export class SocialSocketServiceImpl implements SocialSocketService {
   subscribeRoom(roomId: string): void {
     if (!roomId || this.rooms.has(roomId)) return;
     this.rooms.add(roomId);
-    if (this.connected) this.send(frame('SUBSCRIBE', { id: `room-${roomId}`, destination: `/topic/conversations/${roomId}` }));
+    if (this.connected) this.subscribeRoomFrames(roomId);
   }
 
   unsubscribeRoom(roomId: string): void {
     if (!this.rooms.delete(roomId)) return;
-    if (this.connected) this.send(frame('UNSUBSCRIBE', { id: `room-${roomId}` }));
+    if (!this.connected) return;
+    this.send(frame('UNSUBSCRIBE', { id: `room-${roomId}` }));
+    this.send(frame('UNSUBSCRIBE', { id: `typing-${roomId}` }));
+  }
+
+  sendTyping(roomId: string, typing: boolean): void {
+    if (!this.connected || !roomId) return;
+    this.send(frame('SEND', { destination: '/app/social/chat.typing' }, JSON.stringify({ conversationId: roomId, typing })));
+  }
+
+  private subscribeRoomFrames(roomId: string): void {
+    this.send(frame('SUBSCRIBE', { id: `room-${roomId}`, destination: `/topic/conversations/${roomId}` }));
+    this.send(frame('SUBSCRIBE', { id: `typing-${roomId}`, destination: `/topic/conversations/${roomId}/typing` }));
   }
 
   private open(): void {
@@ -115,11 +129,21 @@ export class SocialSocketServiceImpl implements SocialSocketService {
         this.send(frame('SUBSCRIBE', { id: 'inbox', destination: `/topic/users/${this.options.userId}/messages` }));
         if (this.options.listenSupport) this.send(frame('SUBSCRIBE', { id: 'support', destination: '/topic/support/messages' }));
       }
-      this.rooms.forEach(roomId => this.send(frame('SUBSCRIBE', { id: `room-${roomId}`, destination: `/topic/conversations/${roomId}` })));
+      this.rooms.forEach(roomId => this.subscribeRoomFrames(roomId));
       return;
     }
     if (message.command !== 'MESSAGE') return;
     const destination = message.headers['destination'] ?? '';
+    const typing = destination.match(/^\/topic\/conversations\/([^/]+)\/typing$/);
+    if (typing) {
+      try {
+        const body = JSON.parse(message.body) as { userId?: string; typing?: boolean };
+        if (body.userId) this.typingSubject.next({ roomId: typing[1], userId: body.userId, typing: !!body.typing });
+      } catch {
+        // bo qua khung hong
+      }
+      return;
+    }
     let payload: MessageApi;
     try {
       payload = JSON.parse(message.body);

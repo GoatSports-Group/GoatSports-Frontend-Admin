@@ -71,7 +71,11 @@
               <time>{{ timeLabel(room) }}</time>
             </span>
             <span class="room__bottom">
+              @if (typingUsers(room.roomId).length) {
+              <span class="room__preview room__preview--typing">đang nhập<span class="dots" aria-hidden="true"><i></i><i></i><i></i></span></span>
+              } @else {
               <span class="room__preview">{{ preview(room) }}</span>
+              }
               @if (room.muted) { <lucide-icon name="bell-off" class="room__muted" aria-label="Đã tắt thông báo" /> }
               @if (room.unreadCount > 0) { <span class="counter">{{ room.unreadCount > 99 ? '99+' : room.unreadCount }}</span> }
             </span>
@@ -99,7 +103,11 @@
       </span>
       <div class="thread__title">
         <h2>{{ name }}</h2>
+        @if (typingLabel(room.roomId); as label) {
+        <span class="is-typing">{{ label }}...</span>
+        } @else {
         <span>{{ roomContext(room) }}</span>
+        }
       </div>
       <button type="button" class="icon-btn" [class.is-on]="contextOpen()" [attr.aria-pressed]="contextOpen()"
         aria-label="Thông tin cuộc trò chuyện" (click)="toggleContext()">
@@ -176,6 +184,16 @@
         @if (hasNewer()) {
         <div class="list-sentinel" appInfiniteScroll (reached)="loadNewer()" aria-hidden="true"></div>
         }
+      }
+      @if (!hasNewer() && typingUsers(room.roomId).length) {
+      @let typer = person(typingUsers(room.roomId)[0]);
+      <div class="typing-row" role="status" [attr.aria-label]="typingLabel(room.roomId)">
+        <span class="avatar avatar--sm">
+          @if (typer?.avatar) { <img [src]="typer!.avatar" alt="" /> } @else { {{ initials(typer?.name || '?') }} }
+        </span>
+        <span class="typing-bubble" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="typing-label">{{ typingLabel(room.roomId) }}</span>
+      </div>
       }
     </div>
 
