@@ -60,6 +60,32 @@
   gap: 8px;
 }
 
+.charter-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: 8px;
+}
+
+.charter-row__index {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 9999px;
+  background: var(--primary-light);
+  color: var(--primary-strong);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+// Than form van cuon nhung an thanh cuon (giong cac danh sach khac trong admin).
+.modal__body {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar { display: none; }
+}
+
 @media (max-width: 767px) {
   .grid--2, .grid--3, .grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .rule-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 40px; }

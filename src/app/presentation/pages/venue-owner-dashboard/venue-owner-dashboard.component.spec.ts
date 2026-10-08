@@ -550,12 +550,11 @@ describe('VenueOwnerDashboardComponent', () => {
       fixture.detectChanges();
       getRevenue.execute.mockClear();
 
-      // Ngay thong ke la app-date-picker: chon ngay qua component, roi bam nut "Thong ke".
+      // Ngay thong ke la app-date-picker: chon ngay la thong ke ngay, khong con nut "Thong ke".
       const picker = fixture.debugElement.query(By.directive(DatePickerComponent)).componentInstance as DatePickerComponent;
       picker.pick('2026-09-01');
       fixture.detectChanges();
-      const buttons = Array.from(fixture.nativeElement.querySelectorAll('.revenue-actions button')) as HTMLButtonElement[];
-      buttons.find(button => button.textContent?.includes('Thống kê'))!.click();
+      expect(fixture.nativeElement.querySelector('.revenue-actions')?.textContent).not.toContain('Thống kê');
 
       expect(getRevenue.execute).toHaveBeenCalledWith({
         venueId: 'venue-primary', fromDate: '2026-09-01', toDate: '2026-09-01'

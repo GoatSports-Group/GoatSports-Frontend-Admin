@@ -346,8 +346,10 @@ export class VenueOwnerDashboardComponent {
     this.loadDailyRevenue();
   }
 
+  /** Chon ngay la thong ke luon (khong con nut "Thong ke"). */
   selectRevenueDate(value: string): void {
     this.revenueDateDraft.set(value);
+    this.applyRevenueDate();
   }
 
   applyRevenueDate(): void {

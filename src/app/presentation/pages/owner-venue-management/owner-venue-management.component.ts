@@ -1,4 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, HostListener, computed, inject, signal } from '@angular/core';
+import { TimePickerComponent } from '@shared/components/ui/time-picker/time-picker.component';
+import { ConfirmService } from '@presentation/services/confirm.service';
 import { InfiniteScrollDirective, LIST_CHUNK } from '@shared/directives/infinite-scroll.directive';
 import { DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -44,7 +46,7 @@ interface VenueCoordinates {
 @Component({
   selector: 'app-owner-venue-management',
   standalone: true,
-  imports: [InfiniteScrollDirective, DatePipe, LoadingSkeletonComponent, ReactiveFormsModule, RouterLink, LucideIconComponent, PageLoadingComponent],
+  imports: [InfiniteScrollDirective, TimePickerComponent, DatePipe, LoadingSkeletonComponent, ReactiveFormsModule, RouterLink, LucideIconComponent, PageLoadingComponent],
   templateUrl: './owner-venue-management.component.html',
   styleUrls: [
     './owner-venue-management.component.scss',
@@ -64,6 +66,7 @@ export class OwnerVenueManagementComponent {
   private readonly searchAddressSuggestions = inject(SearchAddressSuggestionsUseCase);
   private readonly notify = inject(NotifyService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly confirmDialog = inject(ConfirmService);
   private readonly addressInput = new Subject<string>();
 
   readonly loading = signal(true);
@@ -288,10 +291,13 @@ export class OwnerVenueManagementComponent {
     });
   }
 
-  selectVenue(venueId: string): void {
+  selectVenue(venueId: string, confirmed = false): void {
     if (venueId === this.selectedVenueId() || this.selectionLocked()) return;
-    if ((this.form.dirty || this.policyForm.dirty)
-      && !window.confirm('Bạn có thay đổi chưa lưu. Chuyển cơ sở sẽ hủy các thay đổi này.')) {
+    if ((this.form.dirty || this.policyForm.dirty) && !confirmed) {
+      this.confirmDialog.ask({
+        title: 'Bỏ thay đổi chưa lưu?', confirmText: 'Chuyển cơ sở', cancelText: 'Ở lại', confirmColor: 'warn',
+        message: 'Chuyển cơ sở sẽ hủy các thay đổi bạn chưa lưu.'
+      }).subscribe(ok => ok && this.selectVenue(venueId, true));
       return;
     }
     this.loadVenueDetail(venueId);

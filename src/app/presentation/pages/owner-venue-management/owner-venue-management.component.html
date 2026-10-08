@@ -251,10 +251,10 @@
           <section class="form-section">
             <header><lucide-icon name="clock" /><span>Giờ hoạt động</span></header>
             <div class="form-grid form-grid--hours">
-              <label class="field"><span>Giờ mở cửa <b>*</b></span><input type="time"
-                  formControlName="openTime" /></label>
-              <label class="field"><span>Giờ đóng cửa <b>*</b></span><input type="time"
-                  formControlName="closeTime" /></label>
+              <label class="field"><span>Giờ mở cửa <b>*</b></span><app-time-picker formControlName="openTime"
+                  ariaLabel="Giờ mở cửa" [minuteStep]="15" /></label>
+              <label class="field"><span>Giờ đóng cửa <b>*</b></span><app-time-picker formControlName="closeTime"
+                  ariaLabel="Giờ đóng cửa" [minuteStep]="15" /></label>
               <label class="field"><span>Giá thấp nhất (VNĐ) <b>*</b></span><input type="number"
                   formControlName="minPrice" min="0" /></label>
               <label class="field"><span>Giá cao nhất (VNĐ) <b>*</b></span><input type="number"

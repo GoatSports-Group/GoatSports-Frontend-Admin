@@ -495,7 +495,7 @@
           }}</span>
       </header>
       <section class="court-detail__identity">
-        <div><span>Giá thuê</span><strong>{{ formatCurrency(courtPrice(court)) }}<small>/giờ</small></strong></div>
+        <div><span>Giá thuê</span><strong>{{ detailPriceLabel(court) }}<small>/giờ</small></strong></div>
       </section>
       @if (courtBookingLoading()) {
       <app-loading-skeleton variant="rows" [count]="4" label="Đang tải booking của sân"></app-loading-skeleton>

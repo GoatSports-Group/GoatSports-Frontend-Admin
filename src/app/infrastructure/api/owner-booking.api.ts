@@ -56,6 +56,12 @@ export class OwnerBookingApi {
     );
   }
 
+  cancelPayment(paymentId: string): Observable<BaseResponse<unknown>> {
+    return this.http.post<BaseResponse<unknown>>(
+      `${environment.apiUrl}/payment-service/api/v1/payments/${encodeURIComponent(paymentId)}/cancel`, {}
+    );
+  }
+
   processCancellation(
     cancellationId: string, approved: boolean, processNote?: string
   ): Observable<BaseResponse<OwnerBookingCancellation>> {

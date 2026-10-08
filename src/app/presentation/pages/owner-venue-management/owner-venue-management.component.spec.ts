@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { ConfirmService } from '@presentation/services/confirm.service';
 import { provideRouter } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -50,6 +51,7 @@ describe('OwnerVenueManagementComponent', () => {
     await TestBed.configureTestingModule({
       imports: [OwnerVenueManagementComponent],
       providers: [
+        { provide: ConfirmService, useValue: { ask: vi.fn() } },
         provideRouter([]),
         provideLucideIcons(...APP_ICONS),
         { provide: GetMyOwnerVenuesUseCase, useValue: getMyVenues },
@@ -348,7 +350,8 @@ describe('OwnerVenueManagementComponent', () => {
   it('không chuyển cơ sở khi người dùng giữ lại thay đổi chưa lưu', () => {
     const secondVenue = { ...venue, venueId: 'venue-2', name: 'Goat Arena 2' };
     getMyVenues.execute.mockReturnValue(of([venue, secondVenue]));
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const confirm = TestBed.inject(ConfirmService).ask as ReturnType<typeof vi.fn>;
+    confirm.mockReturnValue(of(false));
     const fixture = TestBed.createComponent(OwnerVenueManagementComponent);
     fixture.detectChanges();
     fixture.componentInstance.form.controls.name.setValue('Tên chưa lưu');

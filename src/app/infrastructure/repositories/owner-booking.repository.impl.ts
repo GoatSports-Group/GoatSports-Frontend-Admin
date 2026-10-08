@@ -46,6 +46,10 @@ export class OwnerBookingRepositoryImpl implements OwnerBookingRepository {
     return this.api.createPayment(bookingId, method).pipe(map(response => response.data));
   }
 
+  cancelPayment(paymentId: string): Observable<void> {
+    return this.api.cancelPayment(paymentId).pipe(map(() => undefined));
+  }
+
   processCancellation(
     cancellationId: string, approved: boolean, processNote?: string
   ): Observable<OwnerBookingCancellation> {

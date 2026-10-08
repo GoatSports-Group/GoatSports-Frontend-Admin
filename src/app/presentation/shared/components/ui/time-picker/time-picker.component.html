@@ -1,0 +1,34 @@
+<button #origin="cdkOverlayOrigin" cdkOverlayOrigin type="button" class="time-picker__trigger" [class.is-open]="open"
+  [disabled]="disabled" [attr.aria-label]="ariaLabel + (value ? ': ' + value : '')" aria-haspopup="dialog"
+  [attr.aria-expanded]="open" (click)="toggle()">
+  <span class="time-picker__leading" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
+    </svg>
+  </span>
+  <span class="time-picker__label" [class.is-placeholder]="!value">{{ value || placeholder }}</span>
+  <svg class="time-picker__chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="m6 8 4 4 4-4" />
+  </svg>
+</button>
+
+<ng-template cdkConnectedOverlay [cdkConnectedOverlayOrigin]="origin" [cdkConnectedOverlayOpen]="open"
+  [cdkConnectedOverlayPositions]="positions" [cdkConnectedOverlayViewportMargin]="16" (detach)="close()"
+  (overlayOutsideClick)="onOutsideClick($event)" (overlayKeydown)="onKeydown($event)">
+  <div class="time-picker__panel" role="dialog" [attr.aria-label]="ariaLabel">
+    <div class="time-picker__col" role="listbox" aria-label="Giờ">
+      <span class="time-picker__head">Giờ</span>
+      @for (item of hours; track item) {
+      <button type="button" role="option" [class.is-selected]="item === hour" [attr.aria-selected]="item === hour"
+        (click)="pickHour(item)">{{ item }}</button>
+      }
+    </div>
+    <div class="time-picker__col" role="listbox" aria-label="Phút">
+      <span class="time-picker__head">Phút</span>
+      @for (item of minutes; track item) {
+      <button type="button" role="option" [class.is-selected]="item === minute" [attr.aria-selected]="item === minute"
+        (click)="pickMinute(item)">{{ item }}</button>
+      }
+    </div>
+  </div>
+</ng-template>

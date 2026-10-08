@@ -1,26 +1,15 @@
-<div
-  class="p-4 bg-surface text-slate-900 rounded-2xl border border-slate-100 flex flex-col w-full max-w-md shadow-2xl select-none animate-fade-in">
-  <!-- Dialog Header -->
-  <div class="flex items-center justify-between mb-4">
-    <h2 class="font-sports-display text-lg font-black uppercase tracking-tight m-0"
-      [class]="data.confirmColor === 'warn' ? '!text-rose-600' : '!text-emerald-600'">{{ data.title }}</h2>
-  </div>
-
-  <!-- Dialog Content -->
-  <div class="text-slate-500 font-semibold text-sm leading-relaxed mb-6">
-    <p class="m-0">{{ data.message }}</p>
-  </div>
-
-  <!-- Dialog Actions -->
-  <div class="flex justify-end gap-3 border-t border-slate-100 pt-4">
-    <button type="button" (click)="onCancel()"
-      class="px-5 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200/60 rounded-xl font-bold text-[13px] transition-all cursor-pointer">
-      {{ data.cancelText || 'Hủy' }}
-    </button>
-    <button type="button" (click)="onConfirm()"
-      [ngClass]="data.confirmColor === 'warn' ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/10' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/10'"
-      class="px-5 py-2.5 text-white rounded-xl font-bold text-[13px] shadow-md transition-all cursor-pointer">
+<div class="confirm" role="alertdialog" aria-labelledby="confirm-title" aria-describedby="confirm-message">
+  <header class="confirm__head">
+    <span class="confirm__icon" [class.is-danger]="data.confirmColor === 'warn'" aria-hidden="true">
+      <lucide-icon [name]="data.confirmColor === 'warn' ? 'triangle-alert' : 'circle-help'" />
+    </span>
+    <h2 id="confirm-title">{{ data.title }}</h2>
+  </header>
+  <p id="confirm-message" class="confirm__message">{{ data.message }}</p>
+  <footer class="confirm__actions">
+    <button type="button" class="confirm__cancel" (click)="onCancel()">{{ data.cancelText || 'Hủy' }}</button>
+    <button type="button" class="confirm__ok" [class.is-danger]="data.confirmColor === 'warn'" (click)="onConfirm()">
       {{ data.confirmText || 'Xác nhận' }}
     </button>
-  </div>
+  </footer>
 </div>

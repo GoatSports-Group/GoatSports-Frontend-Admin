@@ -171,6 +171,9 @@
   overscroll-behavior: contain;
   grid-auto-rows: max-content;
   mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar { display: none; }
 }
 
 .application-list__item {

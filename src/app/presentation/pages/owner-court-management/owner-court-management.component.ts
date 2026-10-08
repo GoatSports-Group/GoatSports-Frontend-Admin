@@ -1,4 +1,5 @@
 import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
+import { ConfirmService } from '@presentation/services/confirm.service';
 import { PAGE_SIZE } from '@shared/constants/page-size';
 import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
 import {
@@ -120,6 +121,7 @@ export class OwnerCourtManagementComponent implements OnDestroy {
   private readonly layoutStore = inject(FacilityLayoutStore);
   private readonly notify = inject(NotifyService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly confirmDialog = inject(ConfirmService);
 
   @ViewChild('facilityCanvas') private facilityCanvas?: ElementRef<HTMLElement>;
   @ViewChild('courtCheckInVideo') private courtCheckInVideo?: ElementRef<HTMLVideoElement>;
@@ -181,6 +183,8 @@ export class OwnerCourtManagementComponent implements OnDestroy {
   readonly courts = signal<OwnerVenueCourt[]>([]);
   readonly bookings = signal<OwnerBooking[]>([]);
   readonly courtBookings = signal<OwnerBooking[]>([]);
+  /** Slot lich cua san dang xem trong ngay da chon: gia that theo bang gia (khong phai gia thap nhat cua co so). */
+  readonly courtDaySlots = signal<{ context: string; slots: OwnerTimeSlot[] } | null>(null);
   readonly selectedBookingDate = signal(this.todayIso());
   readonly minimumMaintenanceDate = this.todayIso();
   readonly loading = signal(true);
@@ -400,7 +404,7 @@ export class OwnerCourtManagementComponent implements OnDestroy {
 
   selectVenue(venueId: string, force = false): void {
     if ((!force && venueId === this.selectedVenueId()) || this.saving() || this.courtLoading()) return;
-    if (this.layoutMode() && !this.cancelLayoutEdit()) return;
+    if (this.layoutMode()) { this.cancelLayoutEdit(() => this.selectVenue(venueId, force)); return; }
     this.selectedVenueId.set(venueId);
     this.layout.set(null);
     this.layoutError.set(null);
@@ -444,7 +448,7 @@ export class OwnerCourtManagementComponent implements OnDestroy {
 
   setView(view: WorkspaceView): void {
     if (view === this.activeView()) return;
-    if (this.layoutMode() && !this.cancelLayoutEdit()) return;
+    if (this.layoutMode()) { this.cancelLayoutEdit(() => this.setView(view)); return; }
     this.activeView.set(view);
     this.closePanel();
     if (view === 'MAP') this.openDefaultCourtDetail();
@@ -754,11 +758,17 @@ export class OwnerCourtManagementComponent implements OnDestroy {
     });
   }
 
-  toggle(court: OwnerVenueCourt): void {
+  toggle(court: OwnerVenueCourt, confirmed = false): void {
     if (this.togglingId() || this.isCourtInUse(court)) return;
     this.actionMenuId.set(null);
     const active = !court.active;
-    if (!active && !window.confirm(`Ngừng hoạt động của “${court.name}”?`)) return;
+    if (!active && !confirmed) {
+      this.confirmDialog.ask({
+        title: 'Tạm ngưng sân?', confirmText: 'Tạm ngưng', confirmColor: 'warn',
+        message: `“${court.name}” sẽ không nhận đặt sân mới cho đến khi bạn bật hoạt động lại.`
+      }).subscribe(ok => ok && this.toggle(court, true));
+      return;
+    }
     this.togglingId.set(court.venueCourtId);
     this.manageCourts.toggle(court.venueCourtId, active).pipe(
       take(1),
@@ -894,11 +904,15 @@ export class OwnerCourtManagementComponent implements OnDestroy {
     });
   }
 
-  deleteCourt(court: OwnerVenueCourt): void {
+  deleteCourt(court: OwnerVenueCourt, confirmed = false): void {
     if (this.deletingId() || this.maintenanceSaving() || this.togglingId() || this.isCourtInUse(court)) return;
-    if (!window.confirm(
-      `Xóa sân “${court.name}” khỏi danh sách? Lịch sử booking và các quan hệ dữ liệu vẫn được giữ lại.`
-    )) return;
+    if (!confirmed) {
+      this.confirmDialog.ask({
+        title: `Xóa sân “${court.name}”?`, confirmText: 'Xóa sân', confirmColor: 'warn',
+        message: 'Sân bị gỡ khỏi danh sách. Lịch sử booking và các quan hệ dữ liệu vẫn được giữ lại.'
+      }).subscribe(ok => ok && this.deleteCourt(court, true));
+      return;
+    }
 
     this.deletingId.set(court.venueCourtId);
     this.manageCourts.delete(court.venueCourtId).pipe(
@@ -948,10 +962,21 @@ export class OwnerCourtManagementComponent implements OnDestroy {
     this.selectedLayoutZoneId.set(null);
   }
 
-  cancelLayoutEdit(): boolean {
-    if (!this.layoutMode()) return true;
-    if (this.layoutSaving()) return false;
-    if (this.layoutDirty() && !window.confirm('Bỏ các thay đổi chưa lưu trong bố cục sân?')) return false;
+  /** Thoat che do chinh bo cuc; co thay doi chua luu thi hoi truoc, roi moi chay `next`. */
+  cancelLayoutEdit(next?: () => void): void {
+    if (!this.layoutMode()) { next?.(); return; }
+    if (this.layoutSaving()) return;
+    if (this.layoutDirty()) {
+      this.confirmDialog.ask({
+        title: 'Bỏ thay đổi bố cục?', confirmText: 'Bỏ thay đổi', cancelText: 'Tiếp tục chỉnh', confirmColor: 'warn',
+        message: 'Các thay đổi chưa lưu trong bố cục sân sẽ mất.'
+      }).subscribe(ok => {
+        if (!ok) return;
+        this.layoutDirty.set(false);
+        this.cancelLayoutEdit(next);
+      });
+      return;
+    }
     this.layoutMode.set(false);
     this.layoutDirty.set(false);
     this.draftLayout.set(null);
@@ -961,7 +986,7 @@ export class OwnerCourtManagementComponent implements OnDestroy {
     this.selectedLayoutZoneId.set(null);
     this.customObjectDialogOpen.set(false);
     this.openDefaultCourtDetail();
-    return true;
+    next?.();
   }
 
   saveLayout(): void {
@@ -1543,6 +1568,29 @@ export class OwnerCourtManagementComponent implements OnDestroy {
     return this.venue()?.minPrice ?? null;
   }
 
+  /**
+   * Gia thue o bang chi tiet san: lay tu slot cua ngay dang chon (gio dang dien ra / sap toi neu la hom nay),
+   * nhieu muc gia thi hien khoang "200.000đ – 300.000đ". Chua co lich ngay do moi lui ve courtPrice().
+   */
+  detailPriceLabel(court: OwnerVenueCourt): string {
+    const day = this.courtDaySlots();
+    const slots = day && day.context === this.bookingContext(court.venueCourtId, this.selectedBookingDate())
+      ? day.slots.filter(slot => slot.pricePerHour > 0)
+      : [];
+    if (!slots.length) return this.formatCurrency(this.courtPrice(court));
+    if (this.selectedBookingDate() === this.todayIso()) {
+      const now = new Date();
+      const minutes = now.getHours() * 60 + now.getMinutes();
+      const current = slots.find(slot => this.timeMinutes(slot.startTime) <= minutes && minutes < this.timeMinutes(slot.endTime))
+        ?? slots.find(slot => this.timeMinutes(slot.startTime) > minutes);
+      if (current) return this.formatCurrency(current.pricePerHour);
+    }
+    const prices = slots.map(slot => slot.pricePerHour);
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    return min === max ? this.formatCurrency(min) : `${this.formatCurrency(min)} – ${this.formatCurrency(max)}`;
+  }
+
   formatCurrency(value: number | null | undefined): string {
     return value === null || value === undefined ? 'Chưa cấu hình' : `${new Intl.NumberFormat('vi-VN').format(value)}đ`;
   }
@@ -1719,6 +1767,15 @@ export class OwnerCourtManagementComponent implements OnDestroy {
     this.courtBookings.set([]);
     this.courtBookingError.set(null);
     if (showLoading) this.courtBookingLoading.set(true);
+
+    this.manageSchedule.listSlots(courtId, date, date).pipe(take(1), takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: slots => {
+        if (context === this.bookingContext(courtId, this.selectedBookingDate())) this.courtDaySlots.set({ context, slots });
+      },
+      error: () => {
+        if (context === this.bookingContext(courtId, this.selectedBookingDate())) this.courtDaySlots.set({ context, slots: [] });
+      }
+    });
 
     this.loadAllBookings({ venueId, venueCourtId: courtId, fromDate: date, toDate: date }).pipe(
       takeUntilDestroyed(this.destroyRef),

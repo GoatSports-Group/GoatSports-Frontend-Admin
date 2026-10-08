@@ -59,11 +59,11 @@
             <div class="grid grid--3 grid--tight">
               <label class="field">
                 <span class="field__label">Từ</span>
-                <input class="field__control" type="time" [(ngModel)]="form.dailyStartTime" (ngModelChange)="touch()" name="dailyStart" />
+                <app-time-picker [(ngModel)]="form.dailyStartTime" (ngModelChange)="touch()" name="dailyStart" ariaLabel="Giờ thi đấu từ" [minuteStep]="15" />
               </label>
               <label class="field">
                 <span class="field__label">Đến</span>
-                <input class="field__control" type="time" [(ngModel)]="form.dailyEndTime" (ngModelChange)="touch()" name="dailyEnd" />
+                <app-time-picker [(ngModel)]="form.dailyEndTime" (ngModelChange)="touch()" name="dailyEnd" ariaLabel="Giờ thi đấu đến" [minuteStep]="15" />
               </label>
               <label class="field">
                 <span class="field__label">Phút/trận</span>
@@ -164,11 +164,25 @@
         </section>
 
         <section class="section">
-          <h3>Điều lệ</h3>
-          <label class="field">
-            <span class="field__label">Mỗi dòng một điều</span>
-            <textarea class="field__control" rows="4" [(ngModel)]="rulesText" name="charter"></textarea>
-          </label>
+          <div class="section__head">
+            <h3>Điều lệ</h3>
+            @if (charter.length < 20) {
+            <button type="button" class="btn btn--ghost btn--sm" (click)="addCharterItem()"><lucide-icon name="plus" />Thêm điều</button>
+            }
+          </div>
+          @for (item of charter; track $index) {
+          <div class="charter-row">
+            <span class="charter-row__index" aria-hidden="true">{{ $index + 1 }}</span>
+            <input class="field__control" [id]="'charter-' + $index" maxlength="300" [ngModel]="item"
+              (ngModelChange)="updateCharterItem($index, $event)" [name]="'charter' + $index"
+              [attr.aria-label]="'Điều ' + ($index + 1)" placeholder="Ví dụ: Có mặt trước giờ thi đấu 15 phút"
+              (keydown.enter)="$event.preventDefault(); addCharterItem()" />
+            <button type="button" class="icon-btn" (click)="removeCharterItem($index)" [attr.aria-label]="'Xóa điều ' + ($index + 1)">
+              <lucide-icon name="trash-2" /></button>
+          </div>
+          } @empty {
+          <p class="field__hint">Chưa có điều lệ. Bấm “Thêm điều” để nhập từng điều một.</p>
+          }
         </section>
       </fieldset>
     </div>

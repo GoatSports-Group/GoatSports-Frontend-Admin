@@ -79,9 +79,6 @@
             <app-date-picker ariaLabel="Ngày thống kê doanh thu" [clearable]="false" [ngModel]="revenueDateDraft()" [max]="maximumRevenueDate"
               [disabled]="dailyRevenueLoading()" (dateChange)="selectRevenueDate($event)"></app-date-picker>
           </label>
-          <button type="button" [disabled]="dailyRevenueLoading() || !revenueDateDraft()" (click)="applyRevenueDate()">
-            <lucide-icon name="bar-chart-3" /> Thống kê
-          </button>
           <a routerLink="/admin/finance">Xem báo cáo <lucide-icon name="arrow-right" /></a>
         </div>
       </header>

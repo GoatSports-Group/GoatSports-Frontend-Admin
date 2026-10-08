@@ -1,4 +1,6 @@
 import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
+import { TimePickerComponent } from '@shared/components/ui/time-picker/time-picker.component';
+import { ConfirmService } from '@presentation/services/confirm.service';
 import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
 import {
   ChangeDetectionStrategy,
@@ -90,7 +92,7 @@ interface HeldTournament {
 @Component({
   selector: 'app-owner-schedule',
   standalone: true,
-  imports: [DatePickerComponent, ReactiveFormsModule, RouterLink, LucideIconComponent, PageLoadingComponent, SelectComponent, FormsModule],
+  imports: [DatePickerComponent, TimePickerComponent, ReactiveFormsModule, RouterLink, LucideIconComponent, PageLoadingComponent, SelectComponent, FormsModule],
   templateUrl: './owner-schedule.component.html',
   styleUrl: './owner-schedule.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -106,6 +108,7 @@ export class OwnerScheduleComponent {
   private readonly router = inject(Router);
   private readonly notify = inject(NotifyService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly confirmDialog = inject(ConfirmService);
   private readonly route = inject(ActivatedRoute);
   private readonly requestedVenueId = this.route.snapshot.queryParamMap.get('venueId') ?? '';
   private readonly requestedCourtId = this.route.snapshot.queryParamMap.get('venueCourtId') ?? '';
@@ -515,9 +518,16 @@ export class OwnerScheduleComponent {
     });
   }
 
-  deleteRule(rule: CourtPricingRule): void {
+  deleteRule(rule: CourtPricingRule, confirmed = false): void {
     const courtId = this.selectedCourtId();
-    if (!courtId || this.deletingRuleId() || !window.confirm('Xóa quy tắc giá này? Slot đã sinh vẫn giữ giá snapshot.')) return;
+    if (!courtId || this.deletingRuleId()) return;
+    if (!confirmed) {
+      this.confirmDialog.ask({
+        title: 'Xóa quy tắc giá?', confirmText: 'Xóa quy tắc', confirmColor: 'warn',
+        message: 'Slot đã sinh vẫn giữ giá tại thời điểm sinh.'
+      }).subscribe(ok => ok && this.deleteRule(rule, true));
+      return;
+    }
     this.deletingRuleId.set(rule.pricingRuleId);
     this.manageSchedule.deleteRule(courtId, rule.pricingRuleId).pipe(
       take(1), takeUntilDestroyed(this.destroyRef), finalize(() => this.deletingRuleId.set(null))
@@ -563,10 +573,16 @@ export class OwnerScheduleComponent {
     });
   }
 
-  toggleMaintenance(slot: OwnerTimeSlot): void {
+  toggleMaintenance(slot: OwnerTimeSlot, confirmed = false): void {
     if (this.mutatingSlotId() || slot.status === 'LOCKED' || slot.status === 'BOOKED') return;
     const nextStatus = slot.status === 'MAINTENANCE' ? 'AVAILABLE' : 'MAINTENANCE';
-    if (nextStatus === 'MAINTENANCE' && !window.confirm('Đánh dấu slot này là bảo trì?')) return;
+    if (nextStatus === 'MAINTENANCE' && !confirmed) {
+      this.confirmDialog.ask({
+        title: 'Chặn slot để bảo trì?', confirmText: 'Đánh dấu bảo trì',
+        message: `Khung ${this.timeValue(slot.startTime)} – ${this.timeValue(slot.endTime)} sẽ không nhận đặt sân cho đến khi bạn mở lại.`
+      }).subscribe(ok => ok && this.toggleMaintenance(slot, true));
+      return;
+    }
     this.mutatingSlotId.set(slot.timeSlotId);
     this.manageSchedule.setSlotStatus(slot.timeSlotId, nextStatus).pipe(
       take(1), takeUntilDestroyed(this.destroyRef), finalize(() => this.mutatingSlotId.set(null))
@@ -579,8 +595,15 @@ export class OwnerScheduleComponent {
     });
   }
 
-  deleteSlot(slot: OwnerTimeSlot): void {
-    if (this.mutatingSlotId() || !window.confirm('Xóa slot chưa được đặt này?')) return;
+  deleteSlot(slot: OwnerTimeSlot, confirmed = false): void {
+    if (this.mutatingSlotId()) return;
+    if (!confirmed) {
+      this.confirmDialog.ask({
+        title: 'Xóa slot?', confirmText: 'Xóa slot', confirmColor: 'warn',
+        message: `Khung ${this.timeValue(slot.startTime)} – ${this.timeValue(slot.endTime)} chưa có ai đặt sẽ bị xóa khỏi lịch.`
+      }).subscribe(ok => ok && this.deleteSlot(slot, true));
+      return;
+    }
     this.mutatingSlotId.set(slot.timeSlotId);
     this.manageSchedule.deleteSlot(slot.timeSlotId).pipe(
       take(1), takeUntilDestroyed(this.destroyRef), finalize(() => this.mutatingSlotId.set(null))

@@ -40,7 +40,7 @@
         <div class="application-search">
           <app-lucide-icon name="search" [size]="18" aria-hidden="true" />
           <input type="search" aria-label="Tìm hồ sơ đăng ký"
-            placeholder="Tìm kiếm theo tên cở sở, người đại diện hoặc trạng thái" [value]="searchQuery()"
+            placeholder="Tìm kiếm theo tên cơ sở, người đại diện hoặc trạng thái" [value]="searchQuery()"
             (input)="updateSearch($any($event.target).value)" />
         </div>
 
@@ -51,9 +51,12 @@
           <p>Thử tìm theo tên cơ sở, người đại diện hoặc trạng thái.</p>
         </div>
         } @else {
-        <div class="application-list goat-stagger">
+        <div #applicationList class="application-list goat-stagger">
+          @if (windowStart() > 0) {
+          <div class="list-sentinel" appInfiniteScroll (reached)="showPrevious()" aria-hidden="true"></div>
+          }
           @for (application of pagedApplications(); track application.ownerApplicationId) {
-          <button type="button" class="application-list__item"
+          <button type="button" class="application-list__item" [attr.data-application-id]="application.ownerApplicationId"
             [class.is-selected]="selectedApplication().ownerApplicationId === application.ownerApplicationId"
             [class]="'application-list__item application-list__item--' + getStatusTone(application.status)"
             [attr.aria-pressed]="selectedApplication().ownerApplicationId === application.ownerApplicationId"
@@ -71,7 +74,7 @@
             <app-lucide-icon class="application-list__chevron" name="chevron-right" [size]="17" aria-hidden="true" />
           </button>
           }
-          @if (filteredApplications().length > shown()) {
+          @if (filteredApplications().length > windowEnd()) {
           <div class="list-sentinel" appInfiniteScroll (reached)="showMore()" aria-hidden="true"></div>
           }
         </div>

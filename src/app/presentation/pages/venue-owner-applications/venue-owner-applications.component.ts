@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, Injector, OnInit, afterNextRender, computed, inject, signal, viewChild } from '@angular/core';
 import { InfiniteScrollDirective, LIST_CHUNK } from '@shared/directives/infinite-scroll.directive';
 import { CommonModule } from '@angular/common';
 import { OwnerApplication, OwnerApplicationStatus } from '@application/dto/owner-application/owner-application.dto';
@@ -14,6 +14,8 @@ import {
   getOwnerApplicationStatusLabel
 } from '@presentation/pages/dashboard/owner-application-progress/owner-application-progress.utils';
 import { VenueOwnerApplicationFormComponent } from './venue-owner-application-form.component';
+
+const MAX_WINDOW = LIST_CHUNK * 3;
 
 @Component({
   selector: 'app-venue-owner-applications',
@@ -41,8 +43,14 @@ export class VenueOwnerApplicationsComponent implements OnInit {
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   readonly searchQuery = signal('');
-  /** Danh sach ho so trong cot ben cuon doc va render dan tung LIST_CHUNK muc. */
-  readonly shown = signal(LIST_CHUNK);
+  /**
+   * Cuon vo han hai chieu: chi render mot cua so toi da 3 x LIST_CHUNK ho so. Cham day thi noi them o duoi (bot o tren),
+   * cuon nguoc len dau thi noi lai o tren (bot o duoi); vi tri doc duoc giu nguyen nen danh sach khong nhay.
+   */
+  readonly windowStart = signal(0);
+  readonly windowEnd = signal(LIST_CHUNK);
+  private readonly injector = inject(Injector);
+  private readonly listRef = viewChild<ElementRef<HTMLElement>>('applicationList');
   readonly selectedApplicationId = signal<string | null>(null);
   readonly hasPendingApplication = computed(() => this.applications().some(
     application => application.status === OwnerApplicationStatus.PENDING
@@ -58,7 +66,7 @@ export class VenueOwnerApplicationsComponent implements OnInit {
       this.getStatusLabel(application.status)
     ].some(value => value.toLocaleLowerCase('vi').includes(query)));
   });
-  readonly pagedApplications = computed(() => this.filteredApplications().slice(0, this.shown()));
+  readonly pagedApplications = computed(() => this.filteredApplications().slice(this.windowStart(), this.windowEnd()));
   readonly selectedApplication = computed(() => {
     const visibleApplications = this.filteredApplications();
     return visibleApplications.find(application => application.ownerApplicationId === this.selectedApplicationId())
@@ -93,7 +101,7 @@ export class VenueOwnerApplicationsComponent implements OnInit {
 
   updateSearch(query: string): void {
     this.searchQuery.set(query);
-    this.shown.set(LIST_CHUNK);
+    this.resetWindow();
     const firstMatch = this.filteredApplications()[0];
     this.selectedApplicationId.set(firstMatch?.ownerApplicationId ?? null);
   }
@@ -103,7 +111,41 @@ export class VenueOwnerApplicationsComponent implements OnInit {
   }
 
   showMore(): void {
-    this.shown.update(count => count + LIST_CHUNK);
+    const total = this.filteredApplications().length;
+    if (this.windowEnd() >= total) return;
+    const end = Math.min(total, this.windowEnd() + LIST_CHUNK);
+    const start = Math.max(this.windowStart(), end - MAX_WINDOW);
+    this.moveWindow(start, end, this.filteredApplications()[start]?.ownerApplicationId);
+  }
+
+  showPrevious(): void {
+    if (this.windowStart() <= 0) return;
+    const start = Math.max(0, this.windowStart() - LIST_CHUNK);
+    const end = Math.min(this.windowEnd(), start + MAX_WINDOW);
+    this.moveWindow(start, end, this.filteredApplications()[this.windowStart()]?.ownerApplicationId);
+  }
+
+  private resetWindow(): void {
+    this.windowStart.set(0);
+    this.windowEnd.set(LIST_CHUNK);
+  }
+
+  /** Doi cua so render nhung giu ho so `anchorId` dung cho cu tren man hinh. */
+  private moveWindow(start: number, end: number, anchorId: string | undefined): void {
+    const list = this.listRef()?.nativeElement;
+    const anchorTop = anchorId ? this.itemTop(list, anchorId) : null;
+    this.windowStart.set(start);
+    this.windowEnd.set(end);
+    if (!list || anchorTop === null) return;
+    afterNextRender(() => {
+      const top = this.itemTop(list, anchorId!);
+      if (top !== null) list.scrollTop += top - anchorTop;
+    }, { injector: this.injector });
+  }
+
+  private itemTop(list: HTMLElement | undefined, id: string): number | null {
+    const item = list?.querySelector<HTMLElement>(`[data-application-id="${id}"]`);
+    return item ? item.getBoundingClientRect().top : null;
   }
 
   getStatusIcon(status: OwnerApplicationStatus): string {
@@ -125,7 +167,7 @@ export class VenueOwnerApplicationsComponent implements OnInit {
       next: response => {
         const applications = this.newestFirst(response.result ?? []);
         this.applications.set(applications);
-        this.shown.set(LIST_CHUNK);
+        this.resetWindow();
         this.selectedApplicationId.set(applications[0]?.ownerApplicationId ?? null);
         this.loading.set(false);
       },

@@ -1179,18 +1179,39 @@ button:disabled {
   font-weight: 800;
 }
 
-.payos-button {
+.payos-cancel-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   min-height: 44px;
   padding: 0 16px;
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, var(--hairline));
   border-radius: 12px;
-  background: #be185d;
-  color: #fff;
+  background: var(--surface);
+  color: var(--danger);
+  font: inherit;
   font-weight: 800;
-  text-decoration: none;
+  cursor: pointer;
+
+  &:hover:not(:disabled) { background: var(--danger-soft); }
+  &:disabled { cursor: not-allowed; opacity: .6; }
+  lucide-icon { width: 16px; height: 16px; }
+}
+
+.pending-payment-cancel {
+  flex: none;
+  min-height: 36px;
+  margin-left: auto;
+  padding: 0 12px;
+  border: 1px solid var(--warning);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--warning);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 .payment-success {
@@ -2871,7 +2892,14 @@ button:disabled {
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
+  scrollbar-width: none;
 }
+
+.booking-detail-modal .detail-panel__body::-webkit-scrollbar { display: none; }
+
+.payment-receipt__paid dd { color: var(--primary-strong); font-weight: 800; }
+.payment-receipt__due dt,
+.payment-receipt__due dd { color: var(--warning); font-weight: 800; }
 
 .booking-detail-modal .booking-overview {
   grid-template-columns: minmax(0, 1fr) 112px;

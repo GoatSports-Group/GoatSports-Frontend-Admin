@@ -378,9 +378,9 @@
             }
           </div>
           <div class="time-range-row">
-            <label><span>Khung giờ</span><input type="time" formControlName="startTime" /></label>
+            <label><span>Khung giờ</span><app-time-picker formControlName="startTime" ariaLabel="Giờ bắt đầu" [minuteStep]="15" /></label>
             <i>–</i>
-            <label><span>&nbsp;</span><input type="time" formControlName="endTime" /></label>
+            <label><span>&nbsp;</span><app-time-picker formControlName="endTime" ariaLabel="Giờ kết thúc" [minuteStep]="15" /></label>
           </div>
         </section>
 

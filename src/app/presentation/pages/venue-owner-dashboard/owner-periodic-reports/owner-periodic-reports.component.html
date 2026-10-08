@@ -42,13 +42,11 @@
           {{ change(report.revenueChangePercentage) }}</small>
       </div>
       <div class="periodic-reports__files">
-        <button type="button" [disabled]="downloading() !== null" (click)="download(report, 'pdf')"
-          [attr.aria-label]="'Tải PDF ' + periodLabel(report)">
-          <lucide-icon name="file-text" />{{ downloading() === report.reportId + ':pdf' ? '…' : 'PDF' }}
+        <button type="button" (click)="openPreview(report, 'pdf')" [attr.aria-label]="'Xem trước PDF ' + periodLabel(report)">
+          <lucide-icon name="file-text" />PDF
         </button>
-        <button type="button" [disabled]="downloading() !== null" (click)="download(report, 'xlsx')"
-          [attr.aria-label]="'Tải Excel ' + periodLabel(report)">
-          <lucide-icon name="file-spreadsheet" />{{ downloading() === report.reportId + ':xlsx' ? '…' : 'XLSX' }}
+        <button type="button" (click)="openPreview(report, 'xlsx')" [attr.aria-label]="'Xem trước Excel ' + periodLabel(report)">
+          <lucide-icon name="file-spreadsheet" />XLSX
         </button>
       </div>
     </li>
@@ -56,3 +54,44 @@
   </ul>
   }
 </section>
+
+@if (preview(); as current) {
+<div class="preview-backdrop" (click)="closePreview()">
+  <section class="preview" role="dialog" aria-modal="true" aria-labelledby="periodic-preview-title"
+    (click)="$event.stopPropagation()">
+    <header class="preview__head">
+      <div>
+        <h2 id="periodic-preview-title">Xem trước báo cáo</h2>
+        <p>{{ periodLabel(current.report) }} · Tất cả cơ sở</p>
+      </div>
+      <button type="button" class="preview__close" aria-label="Đóng bản xem trước" [disabled]="downloading()"
+        (click)="closePreview()"><lucide-icon name="x" /></button>
+    </header>
+
+    <div class="preview__stage">
+      @if (previewLoading()) {
+      <div class="preview__state" role="status"><span class="skeleton"></span><span>Đang dựng bản xem trước…</span></div>
+      } @else if (previewError()) {
+      <div class="preview__state" role="alert">
+        <lucide-icon name="file-warning" /><span>Chưa tạo được bản xem trước.</span>
+        <button type="button" (click)="loadPreview()">Thử lại</button>
+      </div>
+      } @else if (previewUrl()) {
+      <iframe [src]="previewUrl()" [title]="'Bản xem trước ' + periodLabel(current.report)"></iframe>
+      }
+    </div>
+
+    <footer class="preview__foot">
+      @if (current.format === 'xlsx') {
+      <p><lucide-icon name="info" />Bản xem trước ở dạng PDF; file Excel có cùng số liệu.</p>
+      }
+      <button type="button" class="preview__secondary" [disabled]="downloading()" (click)="closePreview()">Đóng</button>
+      <button type="button" class="preview__primary" [disabled]="previewLoading() || previewError() || downloading()"
+        (click)="downloadPreview()">
+        <lucide-icon name="download" />
+        {{ downloading() ? 'Đang tải…' : current.format === 'pdf' ? 'Tải xuống PDF' : 'Tải xuống Excel' }}
+      </button>
+    </footer>
+  </section>
+</div>
+}

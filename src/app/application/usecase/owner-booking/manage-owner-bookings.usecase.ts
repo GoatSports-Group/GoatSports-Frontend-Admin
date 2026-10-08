@@ -44,6 +44,10 @@ export class ManageOwnerBookingsUseCase {
     return this.repository.createPayment(bookingId, method);
   }
 
+  cancelPayment(paymentId: string): Observable<void> {
+    return this.repository.cancelPayment(paymentId);
+  }
+
   processCancellation(
     cancellationId: string, approved: boolean, processNote?: string
   ): Observable<OwnerBookingCancellation> {

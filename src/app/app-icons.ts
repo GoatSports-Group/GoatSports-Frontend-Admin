@@ -141,6 +141,7 @@ import {
   LucidePieChart,
   LucideTriangleAlert,
   LucideUndo2,
+  LucideTicket
 } from '@lucide/angular';
 
 export const APP_ICONS = [
@@ -284,4 +285,5 @@ export const APP_ICONS = [
   LucideMinus,
   LucideMaximize2,
   LucideLandmark,
+  LucideTicket
 ];

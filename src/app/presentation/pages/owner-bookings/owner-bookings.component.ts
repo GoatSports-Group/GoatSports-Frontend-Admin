@@ -1,4 +1,5 @@
 import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
+import { ConfirmService } from '@presentation/services/confirm.service';
 import { PAGE_SIZE } from '@shared/constants/page-size';
 import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
@@ -53,6 +54,7 @@ export class OwnerBookingsComponent {
   private readonly manageSchedule = inject(ManageOwnerScheduleUseCase);
   private readonly notify = inject(NotifyService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly confirmDialog = inject(ConfirmService);
   private readonly route = inject(ActivatedRoute);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly requestedVenueId = this.route.snapshot.queryParamMap.get('venueId') ?? '';
@@ -111,9 +113,10 @@ export class OwnerBookingsComponent {
   readonly slotsLoading = signal(false);
   readonly createError = signal<string | null>(null);
   readonly paymentBooking = signal<OwnerBooking | null>(null);
-  readonly paymentLoading = signal<OwnerBookingPaymentMethod | null>(null);
+  readonly paymentLoading = signal<OwnerBookingPaymentMethod | 'CANCEL' | null>(null);
   readonly checkoutQr = signal<string | null>(null);
   readonly checkoutUrl = signal<string | null>(null);
+  readonly checkoutPaymentId = signal<string | null>(null);
   readonly bookingTicketQr = signal<string | null>(null);
   readonly detailBookingQr = signal<string | null>(null);
   readonly paymentCompleted = signal(false);
@@ -392,10 +395,48 @@ export class OwnerBookingsComponent {
   }
 
   hasPendingOnlinePayment(booking: OwnerBooking): boolean {
-    return booking.payments.some(payment =>
+    return !!this.pendingOnlinePayment(booking);
+  }
+
+  pendingOnlinePayment(booking: OwnerBooking): OwnerPayment | undefined {
+    return booking.payments.find(payment =>
       payment.purpose === 'BOOKING_REMAINING'
       && (payment.status === 'CREATED' || payment.status === 'PENDING')
     );
+  }
+
+  /** Khach vang lai: chu san la nguoi tra tien nen tu huy duoc ma payOS (giong nut Huy thanh toan ben client). */
+  canCancelOnlinePayment(booking: OwnerBooking): boolean {
+    return !booking.playerId && (!!this.checkoutPaymentId() || this.hasPendingOnlinePayment(booking));
+  }
+
+  cancelOnlinePayment(confirmed = false): void {
+    const booking = this.paymentBooking();
+    const paymentId = this.checkoutPaymentId() ?? (booking ? this.pendingOnlinePayment(booking)?.paymentId : undefined);
+    if (!booking || !paymentId || this.paymentLoading()) return;
+    if (!confirmed) {
+      this.confirmDialog.ask({
+        title: 'Hủy thanh toán payOS?', confirmText: 'Hủy thanh toán', cancelText: 'Tiếp tục chờ', confirmColor: 'warn',
+        message: 'Mã QR hiện tại sẽ hết hiệu lực. Bạn có thể thu tiền mặt hoặc tạo mã payOS mới sau đó.'
+      }).subscribe(ok => ok && this.cancelOnlinePayment(true));
+      return;
+    }
+    this.paymentLoading.set('CANCEL');
+    this.manageBookings.cancelPayment(paymentId).pipe(
+      switchMap(() => this.manageBookings.detail(booking.bookingId)),
+      take(1), takeUntilDestroyed(this.destroyRef), finalize(() => this.paymentLoading.set(null))
+    ).subscribe({
+      next: updated => {
+        this.stopPaymentPolling.next();
+        this.checkoutQr.set(null);
+        this.checkoutUrl.set(null);
+        this.checkoutPaymentId.set(null);
+        this.paymentBooking.set(updated);
+        if (this.selectedBooking()?.bookingId === updated.bookingId) this.selectedBooking.set(updated);
+        this.notify.success('Đã hủy giao dịch payOS.');
+      },
+      error: error => this.notify.error(this.errorMessage(error, 'Không thể hủy giao dịch payOS.'))
+    });
   }
 
   openPayment(booking: OwnerBooking): void {
@@ -403,6 +444,7 @@ export class OwnerBookingsComponent {
     this.paymentBooking.set(booking);
     this.checkoutQr.set(null);
     this.checkoutUrl.set(null);
+    this.checkoutPaymentId.set(null);
     this.bookingTicketQr.set(null);
     this.paymentCompleted.set(this.isPaid(booking));
     if (booking.qrCode) {
@@ -420,6 +462,7 @@ export class OwnerBookingsComponent {
     this.paymentBooking.set(null);
     this.checkoutQr.set(null);
     this.checkoutUrl.set(null);
+    this.checkoutPaymentId.set(null);
     this.bookingTicketQr.set(null);
     this.paymentCompleted.set(false);
   }
@@ -443,6 +486,7 @@ export class OwnerBookingsComponent {
         }
         this.checkoutQr.set(result.qrCodeContent);
         this.checkoutUrl.set(result.checkoutUrl ?? null);
+        this.checkoutPaymentId.set(result.paymentId ?? null);
         this.startPaymentPolling(booking.bookingId);
       },
       error: error => this.notify.error(this.errorMessage(error, 'Không thể khởi tạo thanh toán.'))
@@ -733,9 +777,15 @@ export class OwnerBookingsComponent {
     this.detailBookingQr.set(null);
   }
 
-  completeBooking(booking: OwnerBooking): void {
+  completeBooking(booking: OwnerBooking, confirmed = false): void {
     if (this.completingId() || !booking.allowedTransitions.includes('COMPLETED')) return;
-    if (!window.confirm(`Xác nhận đơn ${booking.bookingCode} đã hoàn tất sau giờ chơi?`)) return;
+    if (!confirmed) {
+      this.confirmDialog.ask({
+        title: 'Hoàn tất đơn đặt sân?', confirmText: 'Hoàn tất',
+        message: `Xác nhận đơn ${booking.bookingCode} đã hoàn tất sau giờ chơi.`
+      }).subscribe(ok => ok && this.completeBooking(booking, true));
+      return;
+    }
     this.completingId.set(booking.bookingId);
     this.manageBookings.updateStatus(booking.bookingId, 'COMPLETED').pipe(
       take(1), takeUntilDestroyed(this.destroyRef), finalize(() => this.completingId.set(null))
@@ -853,6 +903,12 @@ export class OwnerBookingsComponent {
       paid += Math.max(0, booking.remainingAmount || 0);
     }
     return Math.min(Math.max(0, booking.totalPrice || 0), paid);
+  }
+  /** " (tiền cọc)" khi khach moi tra coc, de chu san thay ngay vi sao chua du. */
+  paidPortionLabel(booking: OwnerBooking): string {
+    const depositOnly = booking.depositAmount > 0 && this.paidAmount(booking) === booking.depositAmount
+      && this.outstandingAmount(booking) > 0;
+    return depositOnly ? ' (tiền cọc)' : '';
   }
   outstandingAmount(booking: OwnerBooking): number {
     if (this.isPaid(booking)) return 0;

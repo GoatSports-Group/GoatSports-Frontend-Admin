@@ -1,4 +1,5 @@
 import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
+import { TimePickerComponent } from '@shared/components/ui/time-picker/time-picker.component';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
@@ -26,7 +27,7 @@ const RULE_TYPES: ReadonlyArray<SelectOption & { value: EligibilityRuleType }> =
 @Component({
   selector: 'app-owner-tournament-form',
   standalone: true,
-  imports: [DatePickerComponent, FormsModule, LucideIconComponent, SelectComponent],
+  imports: [DatePickerComponent, TimePickerComponent, FormsModule, LucideIconComponent, SelectComponent],
   templateUrl: './owner-tournament-form.component.html',
   styleUrl: './owner-tournament-form.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -72,7 +73,8 @@ export class OwnerTournamentFormComponent implements OnInit {
   readonly revision = signal(0);
 
   form!: TournamentUpsert;
-  rulesText = '';
+  /** Dieu le: moi dieu mot o nhap (nut + them dieu moi), toi da 20 dieu. */
+  charter: string[] = [];
   eligibility: EligibilityRule[] = [];
 
   get isEdit(): boolean { return !!this.tournament; }
@@ -111,7 +113,7 @@ export class OwnerTournamentFormComponent implements OnInit {
       startDate: isoDate(addDays(now, 9)), endDate: isoDate(addDays(now, 10)), rules: [], eligibilityRules: [],
       venueId: '', courtIds: [], dailyStartTime: '07:00', dailyEndTime: '21:00', matchDurationMinutes: 45, playFormat: ''
     };
-    this.rulesText = (source?.rules ?? []).join('\n');
+    this.charter = [...(source?.rules ?? [])];
     this.eligibility = this.rules.filter(rule => rule.ruleType !== 'TEAM_SIZE' && rule.ruleType !== 'CLUB_MEMBERSHIP')
       .map(rule => ({ ruleType: rule.ruleType, operator: rule.operator, expectedValue: rule.expectedValue }));
 
@@ -169,6 +171,21 @@ export class OwnerTournamentFormComponent implements OnInit {
 
   removeRule(index: number): void { this.eligibility = this.eligibility.filter((_, position) => position !== index); }
 
+  addCharterItem(): void {
+    if (this.charter.length >= 20) return;
+    this.charter = [...this.charter, ''];
+    // O moi nhan focus ngay de go tiep.
+    setTimeout(() => document.querySelector<HTMLInputElement>(`#charter-${this.charter.length - 1}`)?.focus());
+  }
+
+  updateCharterItem(index: number, value: string): void {
+    this.charter = this.charter.map((item, position) => position === index ? value : item);
+  }
+
+  removeCharterItem(index: number): void {
+    this.charter = this.charter.filter((_, position) => position !== index);
+  }
+
   submit(publish: boolean): void {
     if (this.saving()) return;
     const errors = this.validate();
@@ -182,7 +199,7 @@ export class OwnerTournamentFormComponent implements OnInit {
       entryFee: Number(this.form.entryFee) || 0,
       prizePool: Number(this.form.prizePool) || 0,
       matchDurationMinutes: Number(this.form.matchDurationMinutes),
-      rules: this.rulesText.split('\n').map(line => line.trim()).filter(Boolean).slice(0, 20),
+      rules: this.charter.map(line => line.trim()).filter(Boolean).slice(0, 20),
       eligibilityRules: this.eligibility.map(rule => ({ ...rule, expectedValue: String(rule.expectedValue).trim() }))
     };
     if (!this.isEdit) payload.publish = publish;

@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, HostListener, OnInit, inject, signal } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize, take } from 'rxjs';
 import { GetOwnerRevenueUseCase } from '@application/usecase/owner-revenue/get-owner-revenue.usecase';
@@ -28,6 +29,7 @@ export class OwnerPeriodicReportsComponent implements OnInit {
   private readonly revenue = inject(GetOwnerRevenueUseCase);
   private readonly notify = inject(NotifyService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly sanitizer = inject(DomSanitizer);
 
   readonly types: readonly { value: ScheduledType; label: string }[] = [
     { value: 'WEEKLY', label: 'Tuần' },
@@ -40,8 +42,18 @@ export class OwnerPeriodicReportsComponent implements OnInit {
   readonly loading = signal(false);
   readonly error = signal(false);
   readonly generating = signal(false);
-  /** `${reportId}:${format}` dang tai. */
-  readonly downloading = signal<string | null>(null);
+  /** Bao cao dang xem truoc: luon xem ban PDF (trinh duyet khong hien duoc XLSX), tai xuong dung dinh dang da bam. */
+  readonly preview = signal<{ report: PeriodicReport; format: PeriodicReportFormat } | null>(null);
+  readonly previewUrl = signal<SafeResourceUrl | null>(null);
+  readonly previewLoading = signal(false);
+  readonly previewError = signal(false);
+  readonly downloading = signal(false);
+  private previewBlob: Blob | null = null;
+  private previewObjectUrl: string | null = null;
+
+  constructor() {
+    this.destroyRef.onDestroy(() => this.releasePreview());
+  }
 
   ngOnInit(): void {
     this.load();
@@ -88,30 +100,83 @@ export class OwnerPeriodicReportsComponent implements OnInit {
     });
   }
 
-  download(report: PeriodicReport, format: PeriodicReportFormat): void {
-    if (this.downloading()) return;
-    this.downloading.set(`${report.reportId}:${format}`);
-    this.revenue.exportPeriodicReport(report.reportId, format).pipe(
+  openPreview(report: PeriodicReport, format: PeriodicReportFormat): void {
+    this.releasePreview();
+    this.preview.set({ report, format });
+    this.loadPreview();
+  }
+
+  loadPreview(): void {
+    const current = this.preview();
+    if (!current) return;
+    this.previewLoading.set(true);
+    this.previewError.set(false);
+    this.revenue.exportPeriodicReport(current.report.reportId, 'pdf').pipe(
       take(1),
       takeUntilDestroyed(this.destroyRef),
-      finalize(() => this.downloading.set(null))
+      finalize(() => this.previewLoading.set(false))
     ).subscribe({
       next: file => {
+        if (this.preview() !== current) return;
         if (!file.size) {
-          this.notify.error('Dịch vụ báo cáo không trả dữ liệu.');
+          this.previewError.set(true);
           return;
         }
-        const url = URL.createObjectURL(file);
-        const anchor = document.createElement('a');
-        anchor.href = url;
-        anchor.download = `bao-cao-${report.periodType.toLowerCase()}-${report.periodStart}.${format}`;
-        document.body.appendChild(anchor);
-        anchor.click();
-        anchor.remove();
-        URL.revokeObjectURL(url);
+        this.previewBlob = file;
+        this.previewObjectUrl = URL.createObjectURL(file);
+        this.previewUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(this.previewObjectUrl));
       },
-      error: () => this.notify.error(`Không tải được báo cáo ${format.toUpperCase()}.`)
+      error: () => {
+        if (this.preview() === current) this.previewError.set(true);
+      }
     });
+  }
+
+  @HostListener('document:keydown.escape')
+  closePreview(): void {
+    if (!this.preview() || this.downloading()) return;
+    this.releasePreview();
+    this.preview.set(null);
+  }
+
+  /** PDF: tai dung file dang xem; XLSX: lay file Excel cung snapshot roi moi tai. */
+  downloadPreview(): void {
+    const current = this.preview();
+    if (!current || this.downloading() || this.previewLoading() || this.previewError()) return;
+    if (current.format === 'pdf' && this.previewBlob) {
+      this.save(this.previewBlob, current.report, 'pdf');
+      return;
+    }
+    this.downloading.set(true);
+    this.revenue.exportPeriodicReport(current.report.reportId, current.format).pipe(
+      take(1),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.downloading.set(false))
+    ).subscribe({
+      next: file => file.size
+        ? this.save(file, current.report, current.format)
+        : this.notify.error('Dịch vụ báo cáo không trả dữ liệu.'),
+      error: () => this.notify.error(`Không tải được báo cáo ${current.format.toUpperCase()}.`)
+    });
+  }
+
+  private save(file: Blob, report: PeriodicReport, format: PeriodicReportFormat): void {
+    const url = URL.createObjectURL(file);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `bao-cao-${report.periodType.toLowerCase()}-${report.periodStart}.${format}`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  private releasePreview(): void {
+    if (this.previewObjectUrl) URL.revokeObjectURL(this.previewObjectUrl);
+    this.previewObjectUrl = null;
+    this.previewBlob = null;
+    this.previewUrl.set(null);
+    this.previewError.set(false);
   }
 
   periodLabel(report: PeriodicReport): string {

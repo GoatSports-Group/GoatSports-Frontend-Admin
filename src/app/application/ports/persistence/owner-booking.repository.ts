@@ -20,6 +20,8 @@ export interface OwnerBookingRepository {
   createPayment(
     bookingId: string, method: OwnerBookingPaymentMethod
   ): Observable<OwnerBookingPaymentResult>;
+  /** Huy giao dich payOS dang cho (chi nguoi tra tien, tuc chu san voi khach vang lai, moi huy duoc). */
+  cancelPayment(paymentId: string): Observable<void>;
   processCancellation(
     cancellationId: string, approved: boolean, processNote?: string
   ): Observable<OwnerBookingCancellation>;

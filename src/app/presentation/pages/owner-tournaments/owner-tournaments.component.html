@@ -94,8 +94,9 @@
       </tbody>
     </table>
   </section>
-  @if (total() > pageSize) {
-  <app-pagination [pageIndex]="pageIndex()" [pageSize]="pageSize" [totalItems]="total()" (pageChange)="goToPage($event)" />
+  @if (total() > 0) {
+  <app-pagination [pageIndex]="pageIndex()" [pageSize]="pageSize" [totalItems]="total()" itemLabel="giải đấu"
+    (pageChange)="goToPage($event)" />
   }
   }
 

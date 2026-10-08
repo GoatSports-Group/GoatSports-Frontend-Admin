@@ -249,6 +249,18 @@
             <dt>Thành tiền</dt>
             <dd>{{ formatMoney(finalAmount(booking)) }}</dd>
           </div>
+          @if (paidAmount(booking) > 0) {
+          <div class="payment-receipt__paid">
+            <dt>Đã thanh toán{{ paidPortionLabel(booking) }}</dt>
+            <dd>{{ formatMoney(paidAmount(booking)) }}</dd>
+          </div>
+          @if (outstandingAmount(booking) > 0 && ['PENDING_PAYMENT', 'CONFIRMED', 'CHECKED_IN'].includes(booking.status)) {
+          <div class="payment-receipt__due">
+            <dt>Còn phải thu</dt>
+            <dd>{{ formatMoney(outstandingAmount(booking)) }}</dd>
+          </div>
+          }
+          }
           @if (displayPayment(booking); as payment) {
           <div>
             <dt>Phương thức</dt>
@@ -645,10 +657,11 @@
         <p>QR đã điền sẵn số tiền và nội dung. Hệ thống sẽ tự xác nhận ngay khi ngân hàng ghi
           nhận chuyển khoản.</p>
         <div class="payos-waiting"><span class="spinner-small"></span> Đang chờ thanh toán…</div>
-        @if (checkoutUrl()) {
-        <a class="payos-button" [href]="checkoutUrl()" target="_blank" rel="noopener noreferrer">
-          <lucide-icon name="external-link" /> Mở trang thanh toán payOS
-        </a>
+        @if (canCancelOnlinePayment(booking)) {
+        <button type="button" class="payos-cancel-button" [disabled]="!!paymentLoading()" (click)="cancelOnlinePayment()">
+          @if (paymentLoading() === 'CANCEL') { <span class="spinner-small"></span> Đang hủy… } @else {
+          <lucide-icon name="x" /> Hủy thanh toán }
+        </button>
         }
       </div>
     </div>
@@ -665,7 +678,12 @@
       <div class="pending-payment-note">
         <lucide-icon name="shield-alert" />
         <span><strong>Đang có giao dịch payOS chờ thanh toán</strong><small>Tiếp tục giao dịch hiện tại để tránh tạo
-            khoản thu trùng.</small></span>
+            khoản thu trùng{{ canCancelOnlinePayment(booking) ? ', hoặc hủy nó để thu tiền mặt' : '' }}.</small></span>
+        @if (canCancelOnlinePayment(booking)) {
+        <button type="button" class="pending-payment-cancel" [disabled]="!!paymentLoading()" (click)="cancelOnlinePayment()">
+          {{ paymentLoading() === 'CANCEL' ? 'Đang hủy…' : 'Hủy giao dịch' }}
+        </button>
+        }
       </div>
       }
       <button type="button" (click)="collectPayment('PAYOS')" [disabled]="!!paymentLoading()">

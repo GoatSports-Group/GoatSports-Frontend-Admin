@@ -161,17 +161,15 @@ describe('OwnerBookingsComponent', () => {
   it('blocks double status transition while the first request is pending', () => {
     const pending = new Subject<OwnerBooking>();
     manageBookings.updateStatus.mockReturnValue(pending);
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
     const fixture = TestBed.createComponent(OwnerBookingsComponent);
     fixture.detectChanges();
     const component = fixture.componentInstance;
 
-    component.completeBooking(booking);
-    component.completeBooking(booking);
+    component.completeBooking(booking, true);
+    component.completeBooking(booking, true);
 
     expect(manageBookings.updateStatus).toHaveBeenCalledOnce();
     expect(component.completingId()).toBe('booking-1');
-    confirm.mockRestore();
   });
 
   it('filters ended walk-in slots and updates the selected slot total', () => {

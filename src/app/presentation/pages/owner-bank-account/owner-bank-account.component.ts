@@ -1,4 +1,5 @@
 import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
+import { ConfirmService } from '@presentation/services/confirm.service';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -20,6 +21,7 @@ export class OwnerBankAccountComponent {
   private readonly notify = inject(NotifyService);
   private readonly cryptoService = inject(CryptoService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly confirmDialog = inject(ConfirmService);
   readonly banks = signal<BankDirectoryEntry[]>([]);
   readonly bankOptions = computed<SelectOption[]>(() => this.banks().map(item => ({ value: item.bin, label: `${item.shortName} — ${item.name}` })));
   readonly accounts = signal<BankAccount[]>([]);
@@ -69,8 +71,14 @@ export class OwnerBankAccountComponent {
       error: error => this.notify.error(error?.error?.message || 'Không thể đổi tài khoản mặc định.')
     });
   }
-  disable(account: BankAccount): void {
-    if (!window.confirm(`Gỡ tài khoản ****${account.accountNumberLast4}? Doanh thu sẽ bị giữ cho đến khi có tài khoản khác.`)) return;
+  disable(account: BankAccount, confirmed = false): void {
+    if (!confirmed) {
+      this.confirmDialog.ask({
+        title: `Gỡ tài khoản ****${account.accountNumberLast4}?`, confirmText: 'Gỡ tài khoản', confirmColor: 'warn',
+        message: 'Doanh thu sẽ bị giữ cho đến khi bạn có tài khoản nhận tiền khác.'
+      }).subscribe(ok => ok && this.disable(account, true));
+      return;
+    }
     this.encryptBankingPayload({ bankAccountId: account.bankAccountId }).pipe(
       switchMap(encryptedPayload => this.repository.disable(encryptedPayload)),
       takeUntilDestroyed(this.destroyRef)
@@ -79,10 +87,16 @@ export class OwnerBankAccountComponent {
       error: error => this.notify.error(error?.error?.message || 'Không thể gỡ tài khoản.')
     });
   }
-  withdraw(): void {
+  withdraw(confirmed = false): void {
     const balance = this.balance(); const account = this.payoutAccount();
     if (!balance || !account || !this.canWithdraw()) return;
-    if (!window.confirm(`Rút ${this.money(balance.available)} về tài khoản ****${account.accountNumberLast4}?`)) return;
+    if (!confirmed) {
+      this.confirmDialog.ask({
+        title: 'Rút tiền?', confirmText: 'Rút tiền',
+        message: `Rút ${this.money(balance.available)} về tài khoản ****${account.accountNumberLast4}.`
+      }).subscribe(ok => ok && this.withdraw(true));
+      return;
+    }
     this.withdrawing.set(true);
     this.repository.withdraw().pipe(
       switchMap(withdrawal => forkJoin({ withdrawal: [withdrawal], balance: this.repository.getPayoutBalance(), withdrawals: this.repository.getWithdrawals() })),
