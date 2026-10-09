@@ -1,0 +1,83 @@
+<section class="demand" aria-labelledby="demand-title">
+  <header class="demand__head">
+    <div>
+      <h2 id="demand-title">Dự báo nhu cầu 7 ngày tới</h2>
+      <p>AI dự báo tỉ lệ lấp đầy từng giờ từ lịch sử đặt sân của cơ sở</p>
+    </div>
+    <span class="demand__badge"><lucide-icon name="sparkles" />Chronos-Bolt</span>
+  </header>
+
+  @if (loading()) {
+  <div class="demand__state" role="status"><span class="skeleton"></span><span>Đang dự báo…</span></div>
+  } @else if (error(); as problem) {
+  <div class="demand__state" [attr.role]="problem.insufficient ? null : 'alert'">
+    <lucide-icon [name]="problem.insufficient ? 'chart-no-axes-column' : 'circle-alert'" />
+    <span>{{ problem.message }}</span>
+    @if (!problem.insufficient) { <button type="button" (click)="load()">Thử lại</button> }
+  </div>
+  } @else if (forecast(); as data) {
+  <div class="demand__highlights">
+    @if (peak(); as cell) {
+    <div class="demand__highlight is-busy">
+      <span>Đông nhất</span><strong>{{ cell.label }}</strong>
+      <small>dự kiến {{ percent(cell.median) }} · khoảng {{ percent(cell.lower) }}–{{ percent(cell.upper) }}</small>
+    </div>
+    }
+    @if (quiet(); as cell) {
+    <div class="demand__highlight is-quiet">
+      <span>Vắng nhất (3 ngày tới)</span><strong>{{ cell.label }}</strong>
+      <small>dự kiến {{ percent(cell.median) }} · khoảng {{ percent(cell.lower) }}–{{ percent(cell.upper) }}</small>
+    </div>
+    }
+  </div>
+
+  <div class="demand__grid-wrap">
+    <table class="demand__grid">
+      <caption class="sr-only">Tỉ lệ lấp đầy dự kiến theo ngày và giờ</caption>
+      <thead>
+        <tr>
+          <th scope="col"></th>
+          @for (hour of hoursOfDay(); track hour) { <th scope="col">{{ hour }}h</th> }
+        </tr>
+      </thead>
+      <tbody>
+        @for (day of days(); track day.key) {
+        <tr [class.is-extended]="day.extended">
+          <th scope="row">{{ day.label }}</th>
+          @for (cell of day.cells; track $index) {
+          @if (cell) {
+          <td [style.background]="cellColor(cell)" [attr.data-tone]="cellTone(cell)" [class.is-extended]="cell.extended"
+            [title]="cellTitle(cell)" [attr.aria-label]="cellTitle(cell)">
+            <span>{{ (cell.median * 100).toFixed(0) }}</span>
+          </td>
+          } @else { <td class="is-empty"></td> }
+          }
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="demand__legend">
+    <span><i class="is-quiet"></i>Vắng (&lt; 30%)</span>
+    <span><i class="is-normal"></i>Vừa</span>
+    <span><i class="is-busy"></i>Đông (≥ 60%)</span>
+    <span><i class="is-extended"></i>Ngày xa: dự báo chạy nối, kém chắc chắn hơn</span>
+  </div>
+
+  <footer class="demand__quality">
+    <lucide-icon name="badge-check" />
+    @if (data.backtest; as test) {
+    <p>
+      Kiểm chứng trên tuần vừa qua: sai số trung bình <strong>{{ points(test.modelMae) }}</strong>
+      (đoán "giống tuần trước": {{ points(test.baselineMae) }}),
+      {{ percent(test.coverage) }} số giờ thực tế nằm trong khoảng dự báo.
+    </p>
+    } @else {
+    <p>Chưa đủ 2 tuần dữ liệu để kiểm chứng độ chính xác trên tuần vừa qua.</p>
+    }
+    <small>Dựa trên {{ data.historyHours.toLocaleString('vi-VN') }} giờ lịch sử · {{ data.courtCount }} sân ·
+      {{ data.modelName }} {{ data.modelRevision.slice(0, 7) }}</small>
+  </footer>
+  }
+</section>

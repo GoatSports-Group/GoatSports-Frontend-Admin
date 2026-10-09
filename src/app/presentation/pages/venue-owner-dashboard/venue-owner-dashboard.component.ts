@@ -32,6 +32,7 @@ import { GetOwnerReviewsUseCase } from '@application/usecase/owner-review/get-ow
 import { OwnerReview } from '@application/dto/owner-review/owner-review.dto';
 import { OwnerFeatureGridComponent } from './owner-feature-grid/owner-feature-grid.component';
 import { OwnerPeriodicReportsComponent } from './owner-periodic-reports/owner-periodic-reports.component';
+import { OwnerDemandForecastComponent } from './owner-demand-forecast/owner-demand-forecast.component';
 import { OWNER_WORKSPACE_FEATURES } from './venue-owner-dashboard.models';
 import { RealtimeNotificationBus } from '@presentation/services/realtime-notification-bus.service';
 import { GetStorageFileUrlUseCase } from '@application/usecase/storage/get-storage-file-url.usecase';
@@ -66,7 +67,7 @@ const LIVE_COURT_EVENT_TYPES = new Set(['BOOKING', 'PAYMENT', 'REFUND', 'CHECK_I
 @Component({
   selector: 'app-venue-owner-dashboard',
   standalone: true,
-  imports: [FormsModule, DatePickerComponent, RouterModule, LucideIconComponent, PageLoadingComponent, OwnerApplicationProgressComponent, SelectComponent, OwnerFeatureGridComponent, OwnerPeriodicReportsComponent],
+  imports: [FormsModule, DatePickerComponent, RouterModule, LucideIconComponent, PageLoadingComponent, OwnerApplicationProgressComponent, SelectComponent, OwnerFeatureGridComponent, OwnerPeriodicReportsComponent, OwnerDemandForecastComponent],
   templateUrl: './venue-owner-dashboard.component.html',
   styleUrl: './venue-owner-dashboard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

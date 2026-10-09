@@ -20,6 +20,7 @@ import { ManageOwnerVenueCourtsUseCase } from '@application/usecase/venue-owner-
 import { COURT_AVAILABILITY_FALLBACK_MS, VenueOwnerDashboardComponent } from './venue-owner-dashboard.component';
 import { GetOwnerReviewsUseCase } from '@application/usecase/owner-review/get-owner-reviews.usecase';
 import { RealtimeNotificationBus } from '@presentation/services/realtime-notification-bus.service';
+import { GetVenueDemandForecastUseCase } from '@application/usecase/demand-forecast/get-venue-demand-forecast.usecase';
 
 describe('VenueOwnerDashboardComponent', () => {
   const getApplications = { execute: vi.fn() };
@@ -83,6 +84,7 @@ describe('VenueOwnerDashboardComponent', () => {
         { provide: GetOwnerCustomerMetricsUseCase, useValue: getCustomerMetrics },
         { provide: GetOwnerRevenueUseCase, useValue: getRevenue },
         { provide: GetOwnerReviewsUseCase, useValue: getReviews },
+        { provide: GetVenueDemandForecastUseCase, useValue: { execute: vi.fn(() => NEVER) } },
         { provide: GetStorageFileUrlUseCase, useValue: getFileUrl }
       ]
     }).compileComponents();

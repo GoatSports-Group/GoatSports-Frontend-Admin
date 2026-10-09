@@ -311,6 +311,7 @@
   }
 
   @if (applicationApproved() && venues().length) {
+  <app-owner-demand-forecast [venueId]="selectedVenueId()" />
   <app-owner-periodic-reports />
   <app-owner-feature-grid [features]="workspaceFeatures" [operationsEnabled]="true" />
   }

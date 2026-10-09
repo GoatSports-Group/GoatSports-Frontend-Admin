@@ -31,6 +31,7 @@ import { OWNER_BOOKING_REPOSITORY_TOKEN } from '@application/ports/persistence/o
 import { OWNER_CHECK_IN_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-check-in.repository';
 import { OWNER_REVENUE_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-revenue.repository';
 import { OWNER_REVIEW_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-review.repository';
+import { DEMAND_FORECAST_REPOSITORY_TOKEN } from '@application/ports/persistence/demand-forecast.repository';
 import { OWNER_TOURNAMENT_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-tournament.repository';
 import { OwnerTournamentRepositoryImpl } from '@infrastructure/repositories/owner-tournament.repository.impl';
 import { SOCIAL_MODERATION_REPOSITORY_TOKEN } from '@application/ports/persistence/social-moderation.repository';
@@ -57,6 +58,7 @@ import { OwnerBookingRepositoryImpl } from '@infrastructure/repositories/owner-b
 import { OwnerCheckInRepositoryImpl } from '@infrastructure/repositories/owner-check-in.repository.impl';
 import { OwnerRevenueRepositoryImpl } from '@infrastructure/repositories/owner-revenue.repository.impl';
 import { OwnerReviewRepositoryImpl } from '@infrastructure/repositories/owner-review.repository.impl';
+import { DemandForecastRepositoryImpl } from '@infrastructure/repositories/demand-forecast.repository.impl';
 import { SocialModerationRepositoryImpl } from '@infrastructure/repositories/social-moderation.repository.impl';
 import { BankAccountRepositoryImpl } from '@infrastructure/repositories/bank-account.repository.impl';
 import { StompWebSocketService } from '@infrastructure/websocket/stomp-websocket.service';
@@ -105,6 +107,7 @@ import { APP_ICONS } from './app-icons';
     { provide: OWNER_CHECK_IN_REPOSITORY_TOKEN, useClass: OwnerCheckInRepositoryImpl },
     { provide: OWNER_REVENUE_REPOSITORY_TOKEN, useClass: OwnerRevenueRepositoryImpl },
     { provide: OWNER_REVIEW_REPOSITORY_TOKEN, useClass: OwnerReviewRepositoryImpl },
+    { provide: DEMAND_FORECAST_REPOSITORY_TOKEN, useClass: DemandForecastRepositoryImpl },
     { provide: OWNER_TOURNAMENT_REPOSITORY_TOKEN, useClass: OwnerTournamentRepositoryImpl },
     { provide: SOCIAL_MODERATION_REPOSITORY_TOKEN, useClass: SocialModerationRepositoryImpl },
     { provide: BANK_ACCOUNT_REPOSITORY_TOKEN, useClass: BankAccountRepositoryImpl },
