@@ -20,7 +20,7 @@ function forecast(): VenueDemandForecast {
   return {
     forecastId: 'f-1', venueId: 'venue-1', modelName: 'chronos-bolt-tiny', modelRevision: 'a0e552de83495b5c',
     generatedAt: '2026-10-09T17:00:00Z', forecastStart: hours[0].start, courtCount: 4,
-    openTime: '06:00:00', closeTime: '22:00:00', historyHours: 1900, hours,
+    openTime: '06:00:00', closeTime: '22:00:00', historyHours: 1900, bookedHours: 640, recentBookedHours: 120, hours,
     backtest: { hours: 168, modelMae: 0.081, baselineMae: 0.124, coverage: 0.78 }
   };
 }
@@ -56,6 +56,22 @@ describe('OwnerDemandForecastComponent', () => {
     expect(root.querySelector('td[data-tone="busy"]')?.getAttribute('title')).toContain('khoảng 72%–92%');
     expect(root.querySelector('.demand__quality')?.textContent).toContain('8,1 điểm %');
     expect(root.querySelector('.demand__quality')?.textContent).toContain('78%');
+  });
+
+  it('lịch sử quá ít lượt đặt: giải thích thay vì hiện ô đông / vắng 0%, ô gần 0 để trống', () => {
+    const sparse = forecast();
+    sparse.hours = sparse.hours.map(hour => ({ ...hour, lower: 0.0001, median: 0.0002, upper: 0.0003 }));
+    sparse.bookedHours = 22;
+    sparse.recentBookedHours = 0;
+    getForecast.execute.mockReturnValue(of(sparse));
+    fixture.componentRef.setInput('venueId', 'venue-1');
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+
+    expect(root.querySelector('.demand__notice')?.textContent).toContain('chỉ có 22 giờ có lượt đặt');
+    expect(root.querySelector('.demand__notice')?.textContent).toContain('14 ngày gần nhất chưa có lượt nào');
+    expect(root.querySelector('.demand__highlights')).toBeNull();
+    expect(root.querySelector('tbody td span')?.textContent?.trim()).toBe('');
   });
 
   it('báo cần thêm dữ liệu (422) mà không hiện nút thử lại', () => {

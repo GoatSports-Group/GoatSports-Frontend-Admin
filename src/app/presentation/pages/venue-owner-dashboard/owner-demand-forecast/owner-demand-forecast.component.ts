@@ -20,6 +20,10 @@ interface ForecastDay {
 const WEEKDAYS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 const BUSY = 0.6;
 const QUIET = 0.3;
+/** Dưới mức này coi như 0: ô để trống thay vì ghi "0". */
+const NEGLIGIBLE = 0.005;
+/** Cả tuần dự báo đều dưới 1%: lịch sử quá ít lượt đặt, hai ô đông / vắng không còn ý nghĩa. */
+const SPARSE = 0.01;
 
 /**
  * Dự báo nhu cầu đặt sân 7 ngày tới (ai-service, Chronos-Bolt): bảng nhiệt ngày × giờ mở cửa theo trung vị,
@@ -72,6 +76,11 @@ export class OwnerDemandForecastComponent {
     }).filter(day => day.cells.some(cell => cell !== null));
   });
 
+  readonly sparse = computed(() => {
+    const forecast = this.forecast();
+    return !!forecast && forecast.hours.every(hour => hour.upper < SPARSE);
+  });
+
   /** Giờ đông nhất trong 7 ngày và giờ vắng nhất (trong giờ mở cửa) của 3 ngày đầu, phần tin cậy nhất. */
   readonly peak = computed(() => this.extreme(this.days(), (a, b) => b.median - a.median));
   readonly quiet = computed(() => this.extreme(this.days().filter(day => !day.extended), (a, b) => a.median - b.median));
@@ -100,6 +109,10 @@ export class OwnerDemandForecastComponent {
 
   cellColor(cell: ForecastCell): string {
     return `color-mix(in srgb, var(--primary) ${Math.round(8 + cell.median * 92)}%, var(--surface))`;
+  }
+
+  cellValue(cell: ForecastCell): string {
+    return cell.median < NEGLIGIBLE ? '' : (cell.median * 100).toFixed(0);
   }
 
   cellTone(cell: ForecastCell): 'busy' | 'normal' | 'quiet' {

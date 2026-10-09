@@ -16,6 +16,17 @@
     @if (!problem.insufficient) { <button type="button" (click)="load()">Thử lại</button> }
   </div>
   } @else if (forecast(); as data) {
+  @if (sparse()) {
+  <div class="demand__notice" role="status">
+    <lucide-icon name="info" />
+    <div>
+      <strong>Chưa đủ lượt đặt để thấy giờ đông / vắng</strong>
+      <p>Trong {{ data.historyHours.toLocaleString('vi-VN') }} giờ lịch sử chỉ có {{ data.bookedHours }} giờ có lượt đặt,
+        {{ data.recentBookedHours ? data.recentBookedHours + ' giờ trong 14 ngày gần nhất' : '14 ngày gần nhất chưa có lượt nào' }}.
+        Vì vậy AI dự báo các giờ tới đều gần như trống. Khi cơ sở có thêm lượt đặt, bảng sẽ tự hiện giờ cao điểm.</p>
+    </div>
+  </div>
+  } @else {
   <div class="demand__highlights">
     @if (peak(); as cell) {
     <div class="demand__highlight is-busy">
@@ -30,6 +41,7 @@
     </div>
     }
   </div>
+  }
 
   <div class="demand__grid-wrap">
     <table class="demand__grid">
@@ -48,7 +60,7 @@
           @if (cell) {
           <td [style.background]="cellColor(cell)" [attr.data-tone]="cellTone(cell)" [class.is-extended]="cell.extended"
             [title]="cellTitle(cell)" [attr.aria-label]="cellTitle(cell)">
-            <span>{{ (cell.median * 100).toFixed(0) }}</span>
+            <span>{{ cellValue(cell) }}</span>
           </td>
           } @else { <td class="is-empty"></td> }
           }

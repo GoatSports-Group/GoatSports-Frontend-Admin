@@ -46,6 +46,19 @@
   button { min-height: 36px; padding: 0 12px; border: 1px solid var(--hairline); border-radius: 12px; background: var(--surface); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
 }
 
+.demand__notice {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--surface-subtle);
+
+  lucide-icon { width: 18px; height: 18px; margin-top: 1px; color: var(--primary); }
+  strong { color: var(--ink); font-size: 14px; font-weight: 800; }
+  p { margin: 4px 0 0; color: var(--body); font-size: 13px; line-height: 1.5; }
+}
+
 .demand__highlights { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
 
 .demand__highlight {

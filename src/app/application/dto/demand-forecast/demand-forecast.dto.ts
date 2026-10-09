@@ -28,6 +28,9 @@ export interface VenueDemandForecast {
   openTime: string | null;
   closeTime: string | null;
   historyHours: number;
+  /** Số giờ có lượt đặt: toàn lịch sử và 14 ngày gần nhất. */
+  bookedHours: number;
+  recentBookedHours: number;
   hours: DemandForecastHour[];
   backtest: DemandBacktest | null;
 }
