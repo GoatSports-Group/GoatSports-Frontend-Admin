@@ -42,6 +42,11 @@ export class UserApi {
     return this.http.put<BaseResponse<void>>(`${this.apiBase}/auth-service/api/v1/users/${userId}/avatar`, null, { params });
   }
 
+  getSummaries(userIds: string[]): Observable<BaseResponse<{ userId: string; fullName: string; email: string }[]>> {
+    return this.http.post<BaseResponse<{ userId: string; fullName: string; email: string }[]>>(
+      `${this.apiBase}/auth-service/api/v1/admin/users/summaries`, { userIds });
+  }
+
   exportUsersReport(format: string): Observable<Blob> {
     return this.http.get(`${this.apiBase}/report-service/api/v1/reports/export/users`, {
       params: new HttpParams().set('format', format),

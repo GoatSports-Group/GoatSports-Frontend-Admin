@@ -23,6 +23,7 @@ import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-ic
 import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-loading.component';
 import { RouterLink } from '@angular/router';
 import { DatePipe, NgTemplateOutlet } from '@angular/common';
+import { downloadBlob } from '@shared/utils/file.utils';
 
 type RevenuePreset = 'today' | 'week' | 'month' | 'quarter' | 'year' | 'custom';
 
@@ -334,14 +335,7 @@ export class OwnerRevenueComponent {
           this.notify.error('Dịch vụ báo cáo không trả dữ liệu Excel.');
           return;
         }
-        const url = URL.createObjectURL(file);
-        const anchor = document.createElement('a');
-        anchor.href = url;
-        anchor.download = `bao-cao-doanh-thu-${filter.fromDate}-${filter.toDate}.xlsx`;
-        document.body.appendChild(anchor);
-        anchor.click();
-        anchor.remove();
-        URL.revokeObjectURL(url);
+        downloadBlob(file, `bao-cao-doanh-thu-${filter.fromDate}-${filter.toDate}.xlsx`);
         this.notify.success('Đã xuất báo cáo doanh thu.');
       },
       error: error => this.notify.error(

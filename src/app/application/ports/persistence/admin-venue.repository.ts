@@ -10,6 +10,8 @@ export interface AdminVenueFilter {
   status?: AdminVenueStatus;
   /** Tên, email, SĐT, quận hoặc thành phố. */
   query?: string;
+  /** Chỉ lấy các cơ sở này (tra tên theo lô, tối đa 50). */
+  ids?: string[];
   page: number;
   size: number;
 }

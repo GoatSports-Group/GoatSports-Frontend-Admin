@@ -31,6 +31,7 @@ import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-ic
 import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-loading.component';
 import { PaginationComponent } from '@shared/components/ui/pagination/pagination.component';
 import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/loading-skeleton.component';
+import { downloadBlob } from '@shared/utils/file.utils';
 
 interface StatusOption { value: '' | OwnerBookingStatus; label: string; }
 type PaymentFilter = '' | 'PAID' | 'UNPAID' | 'FAILED';
@@ -598,14 +599,7 @@ export class OwnerBookingsComponent {
           this.notify.error('Dịch vụ báo cáo không trả dữ liệu Excel.');
           return;
         }
-        const url = URL.createObjectURL(file);
-        const anchor = document.createElement('a');
-        anchor.href = url;
-        anchor.download = `bao-cao-don-dat-san-${this.today()}.xlsx`;
-        document.body.appendChild(anchor);
-        anchor.click();
-        anchor.remove();
-        URL.revokeObjectURL(url);
+        downloadBlob(file, `bao-cao-don-dat-san-${this.today()}.xlsx`);
         this.notify.success('Đã xuất báo cáo đơn đặt sân.');
       },
       error: error => this.notify.error(this.errorMessage(error, 'Không thể xuất báo cáo Excel.'))
@@ -688,14 +682,7 @@ export class OwnerBookingsComponent {
           this.notify.error('Dịch vụ báo cáo không trả dữ liệu hóa đơn PDF.');
           return;
         }
-        const url = URL.createObjectURL(file);
-        const anchor = document.createElement('a');
-        anchor.href = url;
-        anchor.download = `hoa-don-${booking.bookingCode}.pdf`;
-        document.body.appendChild(anchor);
-        anchor.click();
-        anchor.remove();
-        URL.revokeObjectURL(url);
+        downloadBlob(file, `hoa-don-${booking.bookingCode}.pdf`);
         this.notify.success('Đã tải hóa đơn PDF.');
       },
       error: error => this.notify.error(this.errorMessage(error, 'Không thể tải hóa đơn PDF.'))

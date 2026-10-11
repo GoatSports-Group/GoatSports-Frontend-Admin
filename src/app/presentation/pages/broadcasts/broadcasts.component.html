@@ -1,0 +1,147 @@
+<main class="page">
+  <header class="page-head">
+    <div>
+      <h1>Gửi thông báo</h1>
+      <p>Thông báo hệ thống tới người chơi, chủ sân hoặc cả hai: hiện ở chuông thông báo và đến ngay nếu người nhận đang mở ứng dụng. Gửi rồi không thu hồi được.</p>
+    </div>
+  </header>
+
+  @if (notice()) {
+  <div class="notice" role="status">
+    <lucide-icon name="circle-check-big" /><span>{{ notice() }}</span>
+    <button type="button" class="icon-btn" aria-label="Ẩn thông báo" (click)="notice.set(null)"><lucide-icon name="x" /></button>
+  </div>
+  }
+
+  <div class="composer-grid">
+    <section class="card composer" aria-labelledby="compose-title">
+      <header class="card__head"><div><h2 id="compose-title">Soạn thông báo</h2></div></header>
+
+      <fieldset class="audience">
+        <legend class="field__label">Gửi tới</legend>
+        <div class="audience__options" role="radiogroup" aria-label="Đối tượng nhận">
+          @for (option of audiences; track option.value) {
+          <button type="button" role="radio" class="audience__option" [class.is-active]="audience() === option.value"
+            [attr.aria-checked]="audience() === option.value" (click)="setAudience(option.value)">
+            <lucide-icon [name]="option.icon" />
+            <span><strong>{{ option.label }}</strong><small>{{ option.hint }}</small></span>
+          </button>
+          }
+        </div>
+        <p class="field__hint" aria-live="polite">
+          @if (countingRecipients()) { Đang đếm người nhận... }
+          @else if (recipients() !== null) { {{ recipients()!.toLocaleString('vi-VN') }} tài khoản đang hoạt động sẽ nhận. Tài khoản bị khóa không nhận. }
+          @else { Chưa đếm được số người nhận. }
+        </p>
+      </fieldset>
+
+      <label class="field">
+        <span class="field__label">Tiêu đề</span>
+        <input class="field__control" type="text" [maxlength]="titleMax" [ngModel]="title()" (ngModelChange)="title.set($event)"
+          name="title" placeholder="Ví dụ: Bảo trì hệ thống tối 12/10" aria-describedby="title-hint" />
+        <p id="title-hint" class="field__hint">{{ title().trim().length }}/{{ titleMax }} ký tự</p>
+      </label>
+
+      <label class="field">
+        <span class="field__label">Nội dung</span>
+        <textarea class="field__control" rows="6" [maxlength]="contentMax" [ngModel]="content()" (ngModelChange)="content.set($event)"
+          name="content" placeholder="Nói rõ việc gì, khi nào, người nhận cần làm gì." aria-describedby="content-hint"></textarea>
+        <p id="content-hint" class="field__hint">{{ content().trim().length }}/{{ contentMax }} ký tự</p>
+      </label>
+
+      <footer class="composer__footer">
+        <button type="button" class="btn btn--primary" (click)="openConfirm()" [disabled]="!valid() || sending()">
+          <lucide-icon name="send" />Gửi thông báo
+        </button>
+      </footer>
+    </section>
+
+    <aside class="card preview" aria-label="Xem trước">
+      <header class="card__head"><div><h2>Xem trước</h2><p>Người nhận thấy trong danh sách thông báo</p></div></header>
+      <article class="preview__item">
+        <span class="preview__icon"><lucide-icon name="bell" /></span>
+        <div class="preview__body">
+          <strong>{{ title().trim() || 'Tiêu đề thông báo' }}</strong>
+          <p>{{ content().trim() || 'Nội dung thông báo sẽ hiện ở đây.' }}</p>
+          <small>Hệ thống · Vừa xong</small>
+        </div>
+      </article>
+    </aside>
+  </div>
+
+  <section class="history" aria-labelledby="history-title">
+    <h2 id="history-title" class="section-title">Đã gửi</h2>
+    @if (loading()) {
+    <app-loading-skeleton variant="table" [count]="4" [columns]="4" label="Đang tải lịch sử" />
+    } @else if (error()) {
+    <div class="state state--error" role="alert">
+      <lucide-icon name="alert-circle" /><strong>Chưa tải được lịch sử</strong><p>{{ error() }}</p>
+      <button type="button" class="btn" (click)="load()"><lucide-icon name="rotate-ccw" />Thử lại</button>
+    </div>
+    } @else if (!items().length) {
+    <div class="state"><lucide-icon name="megaphone" /><strong>Chưa gửi thông báo nào</strong><p>Thông báo bạn gửi sẽ hiện ở đây cùng số người đã nhận.</p></div>
+    } @else {
+    <section class="card table-wrap">
+      <table class="table">
+        <thead><tr><th>Thông báo</th><th>Gửi tới</th><th>Trạng thái</th><th>Thời gian</th></tr></thead>
+        <tbody>
+          @for (item of items(); track item.broadcastId) {
+          <tr>
+            <td><div class="cell-title"><strong [title]="item.title">{{ item.title }}</strong><small class="excerpt" [title]="item.content">{{ item.content }}</small></div></td>
+            <td>{{ audienceOf(item.audience) }}</td>
+            <td>
+              <div class="status-cell">
+                <span [class]="'badge badge--' + status(item.status).tone">
+                  @if (item.status === 'SENDING') { <lucide-icon name="loader-2" class="spin" /> }
+                  {{ status(item.status).label }}
+                </span>
+                <small>{{ item.deliveredCount.toLocaleString('vi-VN') }} người đã nhận</small>
+                @if (item.failureReason && item.status !== 'SENT') { <small class="danger" [title]="item.failureReason">{{ item.failureReason }}</small> }
+              </div>
+            </td>
+            <td><div class="cell-title"><strong class="plain">{{ item.createdAt | date:'HH:mm dd/MM/yyyy' }}</strong>
+              @if (item.completedAt) { <small>xong {{ item.completedAt | date:'HH:mm' }}</small> }</div></td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+    @if (total() > pageSize) {
+    <app-pagination [pageIndex]="pageIndex()" [pageSize]="pageSize" [totalItems]="total()" (pageChange)="goToPage($event)" />
+    }
+    }
+  </section>
+
+  @if (confirming()) {
+  <div class="modal-backdrop" (click)="closeConfirm()">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title" (click)="$event.stopPropagation()">
+      <header class="modal__header">
+        <div><h2 id="confirm-title">Gửi thông báo tới {{ audienceLabel().toLowerCase() }}?</h2></div>
+        <button type="button" class="icon-btn" aria-label="Đóng" (click)="closeConfirm()"><lucide-icon name="x" /></button>
+      </header>
+      <div class="modal__body">
+        <p class="confirm-count">
+          @if (recipients() !== null) { <strong>{{ recipients()!.toLocaleString('vi-VN') }}</strong> tài khoản sẽ nhận }
+          @else { Chưa đếm được số người nhận }
+        </p>
+        <ul class="consequences">
+          <li>Thông báo được gửi theo lô ở nền; tiến độ hiện trong lịch sử.</li>
+          <li>Đã gửi thì không sửa hay thu hồi được.</li>
+          <li>Việc gửi được ghi vào nhật ký hệ thống.</li>
+        </ul>
+        <div class="preview__item preview__item--compact">
+          <span class="preview__icon"><lucide-icon name="bell" /></span>
+          <div class="preview__body"><strong>{{ title().trim() }}</strong><p>{{ content().trim() }}</p></div>
+        </div>
+        @if (sendError()) { <p class="field__error" role="alert">{{ sendError() }}</p> }
+      </div>
+      <footer class="modal__footer">
+        <button type="button" class="btn" (click)="closeConfirm()" [disabled]="sending()">Quay lại sửa</button>
+        <button type="button" class="btn btn--primary" (click)="send()" [disabled]="sending()">
+          <lucide-icon [name]="sending() ? 'loader-2' : 'send'" [class.spin]="sending()" />Gửi ngay
+        </button>
+      </footer>
+    </section>
+  </div>
+  }
+</main>

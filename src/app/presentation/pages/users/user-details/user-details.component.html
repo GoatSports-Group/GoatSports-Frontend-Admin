@@ -62,6 +62,10 @@
               <lucide-icon name="key" class="h-5 w-5 mr-2"></lucide-icon>
               <span>Đổi mật khẩu</span>
             </button>
+            <button mat-menu-item (click)="exportProfile.emit(selectedUser)">
+              <lucide-icon name="file-down" class="h-5 w-5 mr-2"></lucide-icon>
+              <span>Xuất hồ sơ (PDF)</span>
+            </button>
             @if (selectedUser.status === 'BLOCKED') {
               <button mat-menu-item (click)="changeStatus.emit({ user: selectedUser, status: 'ACTIVE' })">
                 <lucide-icon name="lock-open" class="h-5 w-5 mr-2 text-emerald-600"></lucide-icon>

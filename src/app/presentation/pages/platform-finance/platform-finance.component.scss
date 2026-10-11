@@ -1,0 +1,58 @@
+@use '../ops' as t;
+@include t.ops;
+
+.period {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(160px, 180px));
+  gap: 12px;
+}
+
+.date-field,
+.filter {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  color: var(--body);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.kpis { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+
+.kpi strong { font-size: 24px; }
+
+button.kpi { font: inherit; text-align: left; cursor: pointer; }
+
+.kpi--alert { border-color: var(--danger); background: var(--danger-soft); }
+
+.count--danger { background: var(--danger-soft); color: var(--danger); }
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 240px)) minmax(0, 1fr);
+  align-items: end;
+  gap: 12px;
+}
+
+.filter-note { margin: 0; color: var(--body); font-size: 13px; line-height: 1.5; align-self: center; }
+
+.result-count { margin: 0; color: var(--body); font-size: 14px; font-weight: 600; }
+
+.is-paging { opacity: .55; pointer-events: none; }
+
+.cell-title strong.plain { font-weight: 600; }
+.cell-title small { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.status-cell {
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+
+  small { max-width: 260px; color: var(--body); font-size: 12px; line-height: 1.4; }
+  small.danger { overflow: hidden; color: var(--danger); text-overflow: ellipsis; white-space: nowrap; }
+}
+
+@media (max-width: 760px) {
+  .period { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  .filters { grid-template-columns: minmax(0, 1fr); }
+}

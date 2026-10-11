@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { map, Observable } from 'rxjs';
-import { UserRepository } from '@application/ports/persistence/user.repository';
+import { UserRepository, UserSummary } from '@application/ports/persistence/user.repository';
 import { UserApi } from '@infrastructure/api/user.api';
 import { User } from '@domain/entities/user';
 import { PageFilter } from '@application/dto/page.filter';
@@ -29,6 +29,10 @@ export class UserRepositoryImpl implements UserRepository {
     return this.userApi.assignRole(userId, roleId).pipe(
       map(response => response.data)
     );
+  }
+
+  getSummaries(userIds: string[]): Observable<UserSummary[]> {
+    return this.userApi.getSummaries(userIds).pipe(map(response => response.data ?? []));
   }
 
   exportUsersReport(format: string): Observable<Blob> {

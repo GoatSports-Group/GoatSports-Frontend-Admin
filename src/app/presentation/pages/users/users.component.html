@@ -8,6 +8,7 @@
       (edit)="editUser($event)"
       (assignRole)="openAssignRoleDialog($event)"
       (changePassword)="changePassword($event)"
+      (exportProfile)="exportProfile($event)"
       (toggleVerification)="toggleVerification($event.user, $event.verified)"
       (changeStatus)="changeStatus($event.user, $event.status)">
     </app-user-details>
@@ -18,10 +19,25 @@
       <h1 class="m-0 text-ink font-extrabold tracking-[-0.035em] leading-[1.15] text-[clamp(28px,3vw,40px)]">Người dùng</h1>
       <p class="mt-1.5 max-w-[68ch] text-base text-slate-500 leading-relaxed">Tài khoản người chơi, chủ sân và quản trị viên: xác thực, khóa và phân vai trò.</p>
     </div>
-    <button (click)="onCreateUser()"
-      class="bg-primary hover:bg-emerald-800 text-white text-[13px] font-bold px-5 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-xs cursor-pointer">
-      <lucide-icon name="plus" class="h-4 w-4"></lucide-icon> Tạo tài khoản
-    </button>
+    <div class="flex flex-wrap items-center gap-2">
+      <button type="button" [matMenuTriggerFor]="exportMenu" [disabled]="!!exporting"
+        class="border border-hairline bg-surface hover:border-border-strong text-ink text-[13px] font-bold px-5 py-2.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-60 disabled:cursor-wait">
+        <lucide-icon [name]="exporting ? 'loader-2' : 'download'" class="h-4 w-4" [class.spin]="!!exporting"></lucide-icon>
+        {{ exporting ? 'Đang xuất...' : 'Xuất báo cáo' }}
+      </button>
+      <mat-menu #exportMenu="matMenu" xPosition="before">
+        @for (format of exportFormats; track format.value) {
+        <button mat-menu-item (click)="exportUsers(format.value)">
+          <lucide-icon [name]="format.icon" class="h-5 w-5 mr-2"></lucide-icon>
+          <span>{{ format.label }}</span>
+        </button>
+        }
+      </mat-menu>
+      <button (click)="onCreateUser()"
+        class="bg-primary hover:bg-emerald-800 text-white text-[13px] font-bold px-5 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-xs cursor-pointer">
+        <lucide-icon name="plus" class="h-4 w-4"></lucide-icon> Tạo tài khoản
+      </button>
+    </div>
   </div>
 
   <!-- So lieu (GOAT-DESIGN §7 KPI tiles): nhan caption, so 28px tabular; khong keo tha. -->

@@ -676,7 +676,8 @@ export class OwnerCourtManagementComponent implements OnDestroy {
     this.courtScannerControls = undefined;
     const video = this.courtCheckInVideo?.nativeElement;
     const stream = video?.srcObject;
-    if (stream instanceof MediaStream) stream.getTracks().forEach(track => track.stop());
+    // typeof trước: nơi không có MediaStream (jsdom, trình duyệt cũ) thì instanceof ném ReferenceError.
+    if (typeof MediaStream !== 'undefined' && stream instanceof MediaStream) stream.getTracks().forEach(track => track.stop());
     if (video) video.srcObject = null;
     this.checkInScannerActive.set(false);
     this.checkInScannerStarting.set(false);

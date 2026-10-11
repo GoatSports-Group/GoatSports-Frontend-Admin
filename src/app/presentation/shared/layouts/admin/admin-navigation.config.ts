@@ -19,12 +19,16 @@ export const PLATFORM_ADMIN_NAVIGATION: readonly AdminNavigationItem[] = [
   { title: 'Cơ sở', description: 'Mọi cơ sở trên nền tảng, đình chỉ cơ sở vi phạm', icon: 'store', route: '/platform-venues' },
   { title: 'Chủ sân', description: 'Duyệt đơn và quản lý hồ sơ đối tác chủ sân', icon: 'land-plot', route: '/owner-applications' },
   { title: 'Đánh giá', description: 'Ẩn hoặc gỡ đánh giá cơ sở vi phạm', icon: 'star', route: '/platform-reviews' },
+  { title: 'Tài chính', description: 'Tiền thu, hoàn tiền và chi trả cho chủ sân', icon: 'banknote', route: '/platform-finance' },
+  { title: 'CLB & giải đấu', description: 'Mọi câu lạc bộ và giải đấu trên nền tảng', icon: 'trophy', route: '/platform-community' },
+  { title: 'Gửi thông báo', description: 'Thông báo hệ thống tới người chơi và chủ sân', icon: 'megaphone', route: '/broadcasts' },
   { title: 'Người dùng', description: 'Quản lý tài khoản thành viên hệ thống', icon: 'users', route: '/users' },
   { title: 'Vai trò', description: 'Quản lý nhóm vai trò và quyền hạn', icon: 'shield', route: '/roles' },
   { title: 'Kiểm duyệt', description: 'Xử lý báo cáo nội dung và khiếu nại của tác giả', icon: 'shield-alert', route: '/moderation' },
   { title: 'Tin nhắn', description: 'Hộp thư hỗ trợ: trả lời và chủ động nhắn cho chủ sân', icon: 'message-circle', route: '/messages', badge: 'messages' },
   { title: 'Thông báo', description: 'Mọi thông báo của bạn', icon: 'bell', route: '/notifications' },
-  { title: 'Nhật ký', description: 'Theo dõi nhật ký hoạt động hệ thống', icon: 'activity', route: '/logs' }
+  { title: 'Nhật ký', description: 'Theo dõi nhật ký hoạt động hệ thống', icon: 'activity', route: '/logs' },
+  { title: 'Giám sát', description: 'Trạng thái microservice và tính năng AI', icon: 'server', route: '/system' }
 ];
 
 export const VENUE_OWNER_NAVIGATION: readonly AdminNavigationItem[] = [
@@ -48,8 +52,9 @@ const platformItems = (routes: readonly string[]) => PLATFORM_ADMIN_NAVIGATION.f
 export const PLATFORM_ADMIN_NAVIGATION_GROUPS: readonly AdminNavigationGroup[] = [
   { label: 'Tổng quan', items: platformItems(['/dashboard']) },
   { label: 'Sân và đặt sân', items: platformItems(['/bookings', '/platform-venues', '/owner-applications', '/platform-reviews']) },
-  { label: 'Cộng đồng', items: platformItems(['/moderation', '/messages']) },
-  { label: 'Hệ thống', items: platformItems(['/users', '/roles', '/logs']) }
+  { label: 'Tài chính', items: platformItems(['/platform-finance']) },
+  { label: 'Cộng đồng', items: platformItems(['/platform-community', '/moderation', '/messages', '/broadcasts']) },
+  { label: 'Hệ thống', items: platformItems(['/users', '/roles', '/logs', '/system']) }
 ];
 
 export const VENUE_OWNER_NAVIGATION_GROUPS: readonly AdminNavigationGroup[] = [

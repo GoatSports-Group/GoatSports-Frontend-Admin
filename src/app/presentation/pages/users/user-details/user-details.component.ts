@@ -19,6 +19,7 @@ export class UserDetailsComponent {
   @Output() edit = new EventEmitter<User>();
   @Output() assignRole = new EventEmitter<User>();
   @Output() changePassword = new EventEmitter<User>();
+  @Output() exportProfile = new EventEmitter<User>();
   @Output() toggleVerification = new EventEmitter<{ user: User; verified: boolean }>();
   @Output() changeStatus = new EventEmitter<{ user: User; status: 'ACTIVE' | 'BLOCKED' }>();
 

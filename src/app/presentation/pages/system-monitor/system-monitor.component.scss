@@ -1,0 +1,93 @@
+@use '../ops' as t;
+@include t.ops;
+
+.checked-at { color: var(--body); font-size: 13px; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+.count--danger { background: var(--danger-soft); color: var(--danger); }
+
+.kpi--alert { border-color: var(--warning); }
+.kpi--danger { border-color: var(--danger); }
+
+.services,
+.capabilities {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 16px;
+}
+
+.service,
+.capability {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 18px 20px;
+}
+
+// Viền trái theo trạng thái: nhìn lướt thấy ngay service có sự cố, không cần đọc chữ.
+.service--danger { box-shadow: inset 4px 0 0 var(--danger), var(--shadow-sm); }
+.service--warning { box-shadow: inset 4px 0 0 var(--warning), var(--shadow-sm); }
+
+.service__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.service__role,
+.capability__detail { margin: 0; color: var(--body); font-size: 14px; line-height: 1.5; }
+
+.service__hint { margin: 0; color: var(--body); font-size: 13px; line-height: 1.5; }
+
+.capability__name { color: var(--ink); font-size: 16px; font-weight: 800; }
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 8px;
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--hairline);
+
+  div { display: grid; gap: 2px; min-width: 0; }
+  dt { color: var(--body); font-size: 12px; font-weight: 600; }
+  dd { margin: 0; color: var(--ink); font-size: 15px; font-variant-numeric: tabular-nums; font-weight: 800; }
+  dd.is-bad { color: var(--danger); }
+}
+
+.facts {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+
+  div { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 12px; }
+  dt { color: var(--body); font-size: 13px; }
+  dd { margin: 0; color: var(--ink); font-size: 13px; font-weight: 700; overflow-wrap: anywhere; }
+}
+
+.model-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    background: var(--surface-subtle);
+    font-size: 12px;
+  }
+
+  span { color: var(--body); }
+  strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+}
+
+@media (max-width: 640px) {
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .facts div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+}

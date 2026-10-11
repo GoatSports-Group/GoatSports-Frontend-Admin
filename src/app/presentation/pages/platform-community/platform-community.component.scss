@@ -1,0 +1,46 @@
+@use '../ops' as t;
+@include t.ops;
+
+.filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(170px, 220px) minmax(150px, 200px) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.result-count { margin: 0; color: var(--body); font-size: 14px; font-weight: 600; }
+
+.is-paging { opacity: .55; pointer-events: none; }
+
+.cell-title strong.plain { font-weight: 600; }
+
+.club { display: flex; align-items: center; gap: 12px; min-width: 0; }
+
+.club__logo {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.club__logo--empty {
+  display: grid;
+  place-items: center;
+  background: var(--primary-light);
+  color: var(--primary-strong);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.status-cell {
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+
+  small { color: var(--body); font-size: 12px; }
+}
+
+@media (max-width: 760px) {
+  .filters { grid-template-columns: minmax(0, 1fr); }
+}

@@ -24,6 +24,14 @@ import { ADMIN_BOOKING_REPOSITORY_TOKEN } from '@application/ports/persistence/a
 import { ADMIN_STATS_REPOSITORY_TOKEN } from '@application/ports/persistence/admin-stats.repository';
 import { ADMIN_VENUE_REPOSITORY_TOKEN } from '@application/ports/persistence/admin-venue.repository';
 import { AdminVenueRepositoryImpl } from '@infrastructure/repositories/admin-venue.repository.impl';
+import { SYSTEM_MONITOR_REPOSITORY_TOKEN } from '@application/ports/persistence/system-monitor.repository';
+import { SystemMonitorRepositoryImpl } from '@infrastructure/repositories/system-monitor.repository.impl';
+import { BROADCAST_REPOSITORY_TOKEN } from '@application/ports/persistence/broadcast.repository';
+import { BroadcastRepositoryImpl } from '@infrastructure/repositories/broadcast.repository.impl';
+import { ADMIN_FINANCE_REPOSITORY_TOKEN } from '@application/ports/persistence/admin-finance.repository';
+import { AdminFinanceRepositoryImpl } from '@infrastructure/repositories/admin-finance.repository.impl';
+import { ADMIN_COMMUNITY_REPOSITORY_TOKEN } from '@application/ports/persistence/admin-community.repository';
+import { AdminCommunityRepositoryImpl } from '@infrastructure/repositories/admin-community.repository.impl';
 import { AdminStatsRepositoryImpl } from '@infrastructure/repositories/admin-stats.repository.impl';
 import { VENUE_OWNER_DASHBOARD_REPOSITORY_TOKEN } from '@application/ports/persistence/venue-owner-dashboard.repository';
 import { OWNER_SCHEDULE_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-schedule.repository';
@@ -101,6 +109,10 @@ import { APP_ICONS } from './app-icons';
     { provide: ADMIN_BOOKING_REPOSITORY_TOKEN, useClass: AdminBookingRepositoryImpl },
     { provide: ADMIN_STATS_REPOSITORY_TOKEN, useClass: AdminStatsRepositoryImpl },
     { provide: ADMIN_VENUE_REPOSITORY_TOKEN, useClass: AdminVenueRepositoryImpl },
+    { provide: SYSTEM_MONITOR_REPOSITORY_TOKEN, useClass: SystemMonitorRepositoryImpl },
+    { provide: BROADCAST_REPOSITORY_TOKEN, useClass: BroadcastRepositoryImpl },
+    { provide: ADMIN_FINANCE_REPOSITORY_TOKEN, useClass: AdminFinanceRepositoryImpl },
+    { provide: ADMIN_COMMUNITY_REPOSITORY_TOKEN, useClass: AdminCommunityRepositoryImpl },
     { provide: VENUE_OWNER_DASHBOARD_REPOSITORY_TOKEN, useClass: VenueOwnerDashboardRepositoryImpl },
     { provide: OWNER_SCHEDULE_REPOSITORY_TOKEN, useClass: OwnerScheduleRepositoryImpl },
     { provide: OWNER_BOOKING_REPOSITORY_TOKEN, useClass: OwnerBookingRepositoryImpl },

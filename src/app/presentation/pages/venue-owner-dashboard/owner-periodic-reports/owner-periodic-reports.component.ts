@@ -10,6 +10,7 @@ import {
 } from '@application/dto/owner-revenue/owner-revenue.dto';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { NotifyService } from '@shared/components/notify/notify.service';
+import { downloadBlob } from '@shared/utils/file.utils';
 
 type ScheduledType = Exclude<PeriodicReportType, 'CUSTOM'>;
 
@@ -161,14 +162,7 @@ export class OwnerPeriodicReportsComponent implements OnInit {
   }
 
   private save(file: Blob, report: PeriodicReport, format: PeriodicReportFormat): void {
-    const url = URL.createObjectURL(file);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `bao-cao-${report.periodType.toLowerCase()}-${report.periodStart}.${format}`;
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    URL.revokeObjectURL(url);
+    downloadBlob(file, `bao-cao-${report.periodType.toLowerCase()}-${report.periodStart}.${format}`);
   }
 
   private releasePreview(): void {

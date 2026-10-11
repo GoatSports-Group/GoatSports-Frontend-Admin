@@ -10,6 +10,9 @@ import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/co
 import { User } from '@application/dto/user/user.dto';
 import { ADMIN_STATS_REPOSITORY_TOKEN } from '@application/ports/persistence/admin-stats.repository';
 import { UserService } from '@presentation/services/user.service';
+import { downloadBlob } from '@shared/utils/file.utils';
+import { isoDate } from '@presentation/pages/owner-tournaments/tournament-labels';
+import { finalize } from 'rxjs';
 import { getDisplayAvatar, getGenderLabel, getRoleLabel } from '@shared/utils/user-display.utils';
 
 @Component({
@@ -22,6 +25,13 @@ export class UsersComponent implements OnInit {
   readonly getDisplayAvatar = getDisplayAvatar;
   readonly getFallbackRole = getRoleLabel;
   readonly getFallbackGender = getGenderLabel;
+  /** Định dạng report-service hỗ trợ cho danh sách người dùng. */
+  readonly exportFormats = [
+    { value: 'pdf', label: 'PDF', icon: 'file-text' },
+    { value: 'xlsx', label: 'Excel', icon: 'file-spreadsheet' },
+    { value: 'csv', label: 'CSV', icon: 'file-down' }
+  ] as const;
+  exporting: string | null = null;
   @ViewChild('createUserTemplate') createUserTemplate!: TemplateRef<any>;
   @ViewChild('editUserTemplate') editUserTemplate!: TemplateRef<any>;
   @ViewChild('changePasswordTemplate') changePasswordTemplate!: TemplateRef<any>;
@@ -276,6 +286,37 @@ export class UsersComponent implements OnInit {
   }
 
   /** Khóa: người đó không đăng nhập được và phiên hiện tại hết hiệu lực khi access token hết hạn (vài phút). */
+  exportUsers(format: string): void {
+    if (this.exporting) return;
+    this.exporting = format;
+    this.userAdminService.exportUsersReport(format).pipe(finalize(() => this.exporting = null)).subscribe({
+      next: file => {
+        if (!file.size) {
+          this.snackBar.error('Dịch vụ báo cáo không trả dữ liệu.');
+          return;
+        }
+        downloadBlob(file, `danh-sach-nguoi-dung-${isoDate(new Date())}.${format}`);
+        this.snackBar.success('Đã xuất danh sách người dùng.');
+      },
+      error: () => this.snackBar.error('Không xuất được báo cáo người dùng. Vui lòng thử lại.')
+    });
+  }
+
+  exportProfile(user: User): void {
+    if (!user.userId) return;
+    this.userAdminService.exportUserDetailReport(user.userId, 'pdf').subscribe({
+      next: file => {
+        if (!file.size) {
+          this.snackBar.error('Dịch vụ báo cáo không trả dữ liệu.');
+          return;
+        }
+        downloadBlob(file, `ho-so-${user.username || user.userId}.pdf`);
+        this.snackBar.success(`Đã xuất hồ sơ ${user.fullName || user.username}.`);
+      },
+      error: () => this.snackBar.error('Không xuất được hồ sơ người dùng. Vui lòng thử lại.')
+    });
+  }
+
   changeStatus(user: User, status: 'ACTIVE' | 'BLOCKED'): void {
     if (!user.userId) return;
     const name = user.fullName || user.username;

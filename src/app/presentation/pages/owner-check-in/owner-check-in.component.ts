@@ -328,7 +328,8 @@ export class OwnerCheckInComponent implements OnDestroy {
     this.scannerControls?.stop();
     this.scannerControls = undefined;
     const stream = this.scannerVideo?.nativeElement.srcObject;
-    if (stream instanceof MediaStream) stream.getTracks().forEach(track => track.stop());
+    // typeof trước: nơi không có MediaStream (jsdom, trình duyệt cũ) thì instanceof ném ReferenceError.
+    if (typeof MediaStream !== 'undefined' && stream instanceof MediaStream) stream.getTracks().forEach(track => track.stop());
     this.scannerActive.set(false);
   }
 

@@ -1,0 +1,104 @@
+<main class="page">
+  <header class="page-head">
+    <div>
+      <h1>CLB & giải đấu</h1>
+      <p>Mọi câu lạc bộ và giải đấu trên nền tảng. Admin theo dõi tình hình cộng đồng; điều hành giải vẫn do chủ sân tổ chức, bản nháp giải không hiển thị.</p>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Loại">
+    <button type="button" role="tab" class="tab" [class.is-active]="tab() === 'clubs'" [attr.aria-selected]="tab() === 'clubs'"
+      (click)="setTab('clubs')"><lucide-icon name="users" />Câu lạc bộ</button>
+    <button type="button" role="tab" class="tab" [class.is-active]="tab() === 'tournaments'" [attr.aria-selected]="tab() === 'tournaments'"
+      (click)="setTab('tournaments')"><lucide-icon name="trophy" />Giải đấu</button>
+  </nav>
+
+  <div class="filters" role="search">
+    <label class="search">
+      <lucide-icon name="search" />
+      <input type="search" [ngModel]="keyword()" (ngModelChange)="onKeyword($event)" name="keyword"
+        [placeholder]="tab() === 'clubs' ? 'Tên câu lạc bộ...' : 'Tên giải đấu...'" [attr.aria-label]="tab() === 'clubs' ? 'Tìm câu lạc bộ' : 'Tìm giải đấu'" />
+    </label>
+    @if (tab() === 'clubs') {
+    <app-select [ngModel]="clubState()" (ngModelChange)="setClubState($event)" [options]="clubStateOptions" ariaLabel="Trạng thái câu lạc bộ" />
+    } @else {
+    <app-select [ngModel]="tournamentStatus()" (ngModelChange)="setTournamentStatus($event)" [options]="tournamentStatusOptions" ariaLabel="Trạng thái giải" />
+    }
+    <app-select [ngModel]="sport()" (ngModelChange)="setSport($event)" [options]="sportOptions" ariaLabel="Môn thể thao" />
+    @if (hasFilters()) {
+    <button type="button" class="btn btn--ghost" (click)="clearFilters()"><lucide-icon name="x" />Xóa lọc</button>
+    }
+  </div>
+
+  @if (loading()) {
+  <app-loading-skeleton variant="table" [count]="6" [columns]="6" label="Đang tải danh sách" />
+  } @else if (error()) {
+  <div class="state state--error" role="alert">
+    <lucide-icon name="alert-circle" /><strong>Chưa tải được danh sách</strong><p>{{ error() }}</p>
+    <button type="button" class="btn" (click)="load()"><lucide-icon name="rotate-ccw" />Thử lại</button>
+  </div>
+  } @else if (!total()) {
+  <div class="state">
+    <lucide-icon [name]="hasFilters() ? 'filter' : (tab() === 'clubs' ? 'users' : 'trophy')" />
+    <strong>{{ hasFilters() ? 'Không có kết quả khớp bộ lọc' : (tab() === 'clubs' ? 'Chưa có câu lạc bộ nào' : 'Chưa có giải đấu nào') }}</strong>
+    @if (hasFilters()) { <button type="button" class="btn" (click)="clearFilters()"><lucide-icon name="x" />Xóa lọc</button> }
+  </div>
+  } @else {
+  <p class="result-count">{{ total().toLocaleString('vi-VN') }} {{ tab() === 'clubs' ? 'câu lạc bộ' : 'giải đấu' }}</p>
+  <section class="card table-wrap" [class.is-paging]="paging()">
+    @if (tab() === 'clubs') {
+    <table class="table">
+      <thead><tr><th>Câu lạc bộ</th><th>Môn</th><th>Chủ CLB</th><th class="num">Thành viên</th><th class="num">Elo · trận</th><th>Trạng thái</th></tr></thead>
+      <tbody>
+        @for (item of clubs(); track item.clubId) {
+        <tr>
+          <td>
+            <div class="club">
+              @if (item.logoUrl) { <img class="club__logo" [src]="item.logoUrl" alt="" loading="lazy" /> }
+              @else { <span class="club__logo club__logo--empty" aria-hidden="true">{{ item.name.charAt(0) }}</span> }
+              <div class="cell-title"><strong>{{ item.name }}</strong><small>{{ item.city || '—' }} · {{ item.privacy === 'PUBLIC' ? 'Công khai' : 'Riêng tư' }}</small></div>
+            </div>
+          </td>
+          <td>{{ sportLabel[item.sportType] }}</td>
+          <td><div class="cell-title"><strong class="plain">{{ person(item.ownerId) }}</strong><small>{{ users.email(item.ownerId) }}</small></div></td>
+          <td class="num">{{ item.memberCount.toLocaleString('vi-VN') }}</td>
+          <td class="num">{{ item.eloRating ?? '—' }} · {{ item.matchCount ?? 0 }}</td>
+          <td>
+            <div class="status-cell">
+              <span [class]="'badge badge--' + (item.disbanded ? 'neutral' : 'success')">{{ item.disbanded ? 'Đã giải tán' : 'Đang hoạt động' }}</span>
+              <small>{{ item.disbanded ? ('giải tán ' + (item.disbandedAt | date:'dd/MM/yyyy')) : ('lập ' + (item.createdAt | date:'dd/MM/yyyy')) }}</small>
+            </div>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+    } @else {
+    <table class="table">
+      <thead><tr><th>Giải đấu</th><th>Cơ sở</th><th>Ban tổ chức</th><th>Thời gian</th><th class="num">Suất</th><th class="num">Lệ phí</th><th>Trạng thái</th><th></th></tr></thead>
+      <tbody>
+        @for (item of tournaments(); track item.tournamentId) {
+        <tr>
+          <td><div class="cell-title"><strong>{{ item.name }}</strong><small>{{ sportLabel[item.sportType] }} · {{ formatLabel[item.format] }}</small></div></td>
+          <td>{{ venue(item.venueId) }}</td>
+          <td><div class="cell-title"><strong class="plain">{{ person(item.organizerId) }}</strong><small>{{ users.email(item.organizerId) }}</small></div></td>
+          <td><div class="cell-title"><strong class="plain">{{ item.startDate | date:'dd/MM' }} – {{ item.endDate | date:'dd/MM/yyyy' }}</strong>
+            <small>đăng ký đến {{ item.registrationCloseDate | date:'dd/MM' }}</small></div></td>
+          <td class="num">{{ seats(item) }}</td>
+          <td class="num">{{ fee(item.entryFee) }}</td>
+          <td><span [class]="'badge badge--' + tournamentStatusMeta(item.status).tone">{{ tournamentStatusMeta(item.status).label }}</span></td>
+          <td class="row-action">
+            <a class="btn btn--sm btn--ghost" routerLink="/admin/messages" [queryParams]="{ owner: item.organizerId }"
+              [attr.aria-label]="'Nhắn ban tổ chức giải ' + item.name"><lucide-icon name="message-circle" />Nhắn</a>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+    }
+  </section>
+  @if (total() > pageSize) {
+  <app-pagination [pageIndex]="pageIndex()" [pageSize]="pageSize" [totalItems]="total()" (pageChange)="goToPage($event)" />
+  }
+  }
+</main>

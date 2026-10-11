@@ -1,0 +1,123 @@
+<main class="page">
+  <header class="page-head">
+    <div>
+      <h1>Giám sát hệ thống</h1>
+      <p>Trạng thái và tài nguyên của từng dịch vụ trong 5 phút gần nhất, cùng tình trạng các tính năng AI. Tự làm mới mỗi 30 giây.</p>
+    </div>
+    <div class="actions">
+      @if (health()?.checkedAt; as checkedAt) {
+      <span class="checked-at">Cập nhật {{ checkedAt | date:'HH:mm:ss' }}</span>
+      }
+      <button type="button" class="btn" (click)="refresh()" [disabled]="refreshing()">
+        <lucide-icon name="rotate-ccw" [class.spin]="refreshing()" />Làm mới
+      </button>
+      @if (health()?.grafanaUrl; as grafana) {
+      <a class="btn" [href]="grafana" target="_blank" rel="noopener"><lucide-icon name="external-link" />Mở Grafana</a>
+      }
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Khu vực giám sát">
+    <button type="button" role="tab" class="tab" [class.is-active]="tab() === 'services'" [attr.aria-selected]="tab() === 'services'"
+      (click)="setTab('services')"><lucide-icon name="server" />Microservice
+      @if (counts().down + counts().degraded) { <span class="count count--danger">{{ counts().down + counts().degraded }}</span> }
+    </button>
+    <button type="button" role="tab" class="tab" [class.is-active]="tab() === 'ai'" [attr.aria-selected]="tab() === 'ai'"
+      (click)="setTab('ai')"><lucide-icon name="sparkles" />AI</button>
+  </nav>
+
+  @if (loading()) {
+  <app-loading-skeleton variant="cards" [count]="6" label="Đang tải số liệu giám sát" />
+  } @else if (tab() === 'services') {
+    @if (healthError()) {
+    <div class="state state--error" role="alert">
+      <lucide-icon name="alert-circle" /><strong>Chưa tải được số liệu</strong><p>{{ healthError() }}</p>
+      <button type="button" class="btn" (click)="refresh()"><lucide-icon name="rotate-ccw" />Thử lại</button>
+    </div>
+    } @else if (health() && !health()!.metricsAvailable) {
+    <div class="state state--error" role="alert">
+      <lucide-icon name="alert-triangle" />
+      <strong>Không đọc được Prometheus</strong>
+      <p>Đây là lỗi của hệ thống giám sát, không có nghĩa các dịch vụ đang ngừng. Kiểm tra container Prometheus trong observability/docker-compose.yml.</p>
+    </div>
+    } @else {
+    <section class="kpis" aria-label="Tổng quan dịch vụ">
+      <div class="kpi"><span>Đang hoạt động</span><strong>{{ counts().up }}/{{ counts().total }}</strong><small>dịch vụ</small></div>
+      <div class="kpi" [class.kpi--alert]="counts().degraded"><span>Suy giảm</span><strong>{{ counts().degraded }}</strong><small>lỗi 5xx từ 5% hoặc p95 từ 1 giây</small></div>
+      <div class="kpi" [class.kpi--danger]="counts().down"><span>Ngừng</span><strong>{{ counts().down }}</strong><small>Prometheus không gọi được</small></div>
+      <div class="kpi"><span>Lưu lượng toàn hệ thống</span><strong>{{ rate(counts().requestRate) }}</strong><small>request/giây</small></div>
+    </section>
+
+    <section class="services" aria-label="Danh sách dịch vụ">
+      @for (item of services(); track item.service) {
+      <article class="card service" [class]="'service--' + status(item.status).tone">
+        <header class="service__head">
+          <div class="cell-title">
+            <strong>{{ label(item.service) }}</strong>
+            <small>{{ item.service }}</small>
+          </div>
+          <span [class]="'badge badge--' + status(item.status).tone">{{ status(item.status).label }}</span>
+        </header>
+        <p class="service__role">{{ role(item.service) }}</p>
+        <dl class="metrics">
+          <div><dt>Request/giây</dt><dd>{{ rate(item.requestsPerSecond) }}</dd></div>
+          <div><dt>Lỗi 5xx</dt><dd [class.is-bad]="(item.errorRate ?? 0) >= 0.05">{{ percent(item.errorRate) }}</dd></div>
+          <div><dt>Độ trễ p95</dt><dd [class.is-bad]="(item.p95LatencyMs ?? 0) >= 1000">{{ latency(item.p95LatencyMs) }}</dd></div>
+          <div><dt>CPU</dt><dd>{{ percent(item.cpuUsage) }}</dd></div>
+          <div><dt>Bộ nhớ</dt><dd>{{ memory(item.memoryUsedBytes) }}</dd></div>
+          <div><dt>Đã chạy</dt><dd>{{ uptime(item.uptimeSeconds) }}</dd></div>
+        </dl>
+        @if (item.status === 'UNKNOWN') {
+        <p class="service__hint">Prometheus chưa thu được số liệu: dịch vụ chưa khởi động hoặc chưa có trong cấu hình scrape.</p>
+        }
+      </article>
+      }
+    </section>
+    }
+  } @else {
+    @if (aiError()) {
+    <div class="state state--error" role="alert">
+      <lucide-icon name="alert-circle" /><strong>ai-service không phản hồi</strong><p>{{ aiError() }}</p>
+      <button type="button" class="btn" (click)="refresh()"><lucide-icon name="rotate-ccw" />Thử lại</button>
+    </div>
+    } @else if (ai(); as status) {
+    <section class="kpis" aria-label="Tổng quan AI">
+      <div class="kpi"><span>Tính năng sẵn sàng</span><strong>{{ aiReady() }}/{{ status.capabilities.length }}</strong><small>kiểm tra lúc {{ status.checkedAt | date:'HH:mm:ss' }}</small></div>
+      @for (dependency of status.dependencies; track dependency.name) {
+      <div class="kpi" [class.kpi--danger]="dependency.status === 'DOWN'">
+        <span>{{ dependency.name }}</span>
+        <strong>{{ dependency.status === 'UP' ? 'Kết nối tốt' : 'Mất kết nối' }}</strong>
+        <small>{{ dependency.status === 'UP' ? (dependency.latencyMs ?? 0) + ' ms' : dependency.detail }}</small>
+      </div>
+      }
+    </section>
+
+    <section class="capabilities" aria-label="Tính năng AI">
+      @for (item of status.capabilities; track item.capability) {
+      <article class="card capability">
+        <header class="service__head">
+          <strong class="capability__name">{{ capability(item) }}</strong>
+          <span [class]="'badge badge--' + (item.status === 'READY' ? 'success' : 'warning')">
+            {{ item.status === 'READY' ? 'Sẵn sàng' : 'Hạn chế' }}
+          </span>
+        </header>
+        <p class="capability__detail">{{ item.detail }}</p>
+        <dl class="facts">
+          <div><dt>Thuật toán</dt><dd>{{ item.algorithm }}</dd></div>
+          <div><dt>Dữ liệu</dt><dd>{{ item.storage }}</dd></div>
+          @if (item.activeModel; as model) {
+          <div><dt>Model đang dùng</dt><dd>{{ model.modelName }} · {{ model.version }}</dd></div>
+          @if (model.trainedAt) { <div><dt>Huấn luyện</dt><dd>{{ model.trainedAt | date:'HH:mm dd/MM/yyyy' }}</dd></div> }
+          }
+        </dl>
+        @if (metrics(item).length) {
+        <ul class="model-metrics" aria-label="Chỉ số model">
+          @for (metric of metrics(item); track metric.key) { <li><span>{{ metric.key }}</span><strong>{{ metric.value }}</strong></li> }
+        </ul>
+        }
+      </article>
+      }
+    </section>
+    }
+  }
+</main>
