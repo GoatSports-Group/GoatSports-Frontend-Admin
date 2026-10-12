@@ -2,15 +2,16 @@
   <header class="page-head">
     <div>
       <h1>Đơn đặt sân</h1>
-      <p>Mọi đơn trên nền tảng, của tất cả cơ sở. Admin theo dõi và tra cứu; duyệt hủy, thu tiền và check-in vẫn do chủ sân thực hiện.</p>
+      <p>Mọi đơn trên nền tảng, của tất cả cơ sở. Admin theo dõi và tra cứu.</p>
     </div>
   </header>
 
   <nav class="tabs" role="tablist" aria-label="Lọc theo trạng thái">
-    <button type="button" role="tab" class="tab" [class.is-active]="!status()" [attr.aria-selected]="!status()" (click)="setStatus('')">Tất cả</button>
+    <button type="button" role="tab" class="tab" [class.is-active]="!status()" [attr.aria-selected]="!status()"
+      (click)="setStatus('')">Tất cả</button>
     @for (value of statusTabs; track value) {
-    <button type="button" role="tab" class="tab" [class.is-active]="status() === value" [attr.aria-selected]="status() === value"
-      (click)="setStatus(value)">{{ statusMeta[value].label }}</button>
+    <button type="button" role="tab" class="tab" [class.is-active]="status() === value"
+      [attr.aria-selected]="status() === value" (click)="setStatus(value)">{{ statusMeta[value].label }}</button>
     }
   </nav>
 
@@ -22,11 +23,13 @@
     </label>
     <label class="date-field">
       <span>Từ ngày</span>
-      <app-date-picker ariaLabel="Từ ngày" placeholder="Từ ngày" [max]="toDate()" [ngModel]="fromDate()" (ngModelChange)="setDate('from', $event)"></app-date-picker>
+      <app-date-picker ariaLabel="Từ ngày" placeholder="Từ ngày" [max]="toDate()" [ngModel]="fromDate()"
+        (ngModelChange)="setDate('from', $event)"></app-date-picker>
     </label>
     <label class="date-field">
       <span>Đến ngày</span>
-      <app-date-picker ariaLabel="Đến ngày" placeholder="Đến ngày" [min]="fromDate()" [ngModel]="toDate()" (ngModelChange)="setDate('to', $event)"></app-date-picker>
+      <app-date-picker ariaLabel="Đến ngày" placeholder="Đến ngày" [min]="fromDate()" [ngModel]="toDate()"
+        (ngModelChange)="setDate('to', $event)"></app-date-picker>
     </label>
     @if (hasFilters()) {
     <button type="button" class="btn btn--ghost" (click)="clearFilters()"><lucide-icon name="x" />Xóa lọc</button>
@@ -37,63 +40,114 @@
   <app-loading-skeleton variant="table" [count]="6" [columns]="7" label="Đang tải đơn đặt sân" />
   } @else if (error()) {
   <div class="state state--error" role="alert">
-    <lucide-icon name="alert-circle" /><strong>Chưa tải được đơn đặt sân</strong><p>{{ error() }}</p>
+    <lucide-icon name="alert-circle" /><strong>Chưa tải được đơn đặt sân</strong>
+    <p>{{ error() }}</p>
     <button type="button" class="btn" (click)="load()"><lucide-icon name="rotate-ccw" />Thử lại</button>
   </div>
   } @else if (!items().length) {
   <div class="state">
     <lucide-icon [name]="hasFilters() ? 'filter' : 'calendar-x'" />
     <strong>{{ hasFilters() ? 'Không có đơn khớp bộ lọc' : 'Chưa có đơn đặt sân nào' }}</strong>
-    <p>{{ hasFilters() ? 'Thử đổi trạng thái, khoảng ngày hoặc từ khóa.' : 'Đơn đặt sân của mọi cơ sở sẽ xuất hiện tại đây.' }}</p>
-    @if (hasFilters()) { <button type="button" class="btn" (click)="clearFilters()"><lucide-icon name="x" />Xóa lọc</button> }
+    <p>{{ hasFilters() ? 'Thử đổi trạng thái, khoảng ngày hoặc từ khóa.' : 'Đơn đặt sân của mọi cơ sở sẽ xuất hiện tại
+      đây.' }}</p>
+    @if (hasFilters()) { <button type="button" class="btn" (click)="clearFilters()"><lucide-icon name="x" />Xóa
+      lọc</button> }
   </div>
   } @else {
   <p class="result-count">{{ total() }} đơn</p>
   <section class="card table-wrap" [class.is-paging]="paging()">
     <table class="table">
       <thead>
-        <tr><th>Mã đơn</th><th>Cơ sở · sân</th><th>Giờ chơi</th><th>Khách</th><th class="num">Tổng tiền</th><th class="num">Đã thu</th><th>Trạng thái</th><th></th></tr>
+        <tr>
+          <th>Mã đơn</th>
+          <th>Cơ sở · sân</th>
+          <th>Giờ chơi</th>
+          <th>Khách</th>
+          <th class="num">Tổng tiền</th>
+          <th class="num">Đã thu</th>
+          <th>Trạng thái</th>
+          <th></th>
+        </tr>
       </thead>
       <tbody>
         @for (item of items(); track item.bookingId) {
         <tr>
-          <td><div class="cell-title"><strong>{{ item.bookingCode }}</strong><small>{{ item.createdAt | date:'HH:mm dd/MM/yyyy' }}</small></div></td>
-          <td><div class="cell-title"><strong>{{ item.venueName }}</strong><small>{{ item.courtName }}</small></div></td>
-          <td><div class="cell-title"><strong>{{ item.playDate | date:'dd/MM/yyyy' }}</strong><small>{{ time(item.startTime) }}–{{ time(item.endTime) }}</small></div></td>
-          <td><div class="cell-title"><strong>{{ customerName(item) }}</strong><small>{{ sourceLabel(item.source) }}</small></div></td>
+          <td>
+            <div class="cell-title"><strong>{{ item.bookingCode }}</strong><small>{{ item.createdAt | date:'HH:mm
+                dd/MM/yyyy' }}</small></div>
+          </td>
+          <td>
+            <div class="cell-title"><strong>{{ item.venueName }}</strong><small>{{ item.courtName }}</small></div>
+          </td>
+          <td>
+            <div class="cell-title"><strong>{{ item.playDate | date:'dd/MM/yyyy' }}</strong><small>{{
+                time(item.startTime) }}–{{ time(item.endTime) }}</small></div>
+          </td>
+          <td>
+            <div class="cell-title"><strong>{{ customerName(item) }}</strong><small>{{ sourceLabel(item.source)
+                }}</small></div>
+          </td>
           <td class="num">{{ vnd(item.totalPrice) }}</td>
           <td class="num">{{ vnd(paidAmount(item)) }}</td>
-          <td><span [class]="'badge badge--' + statusMeta[item.status].tone">{{ statusMeta[item.status].label }}</span></td>
-          <td class="row-action"><button type="button" class="btn btn--sm" (click)="open(item)" [attr.aria-label]="'Xem đơn ' + item.bookingCode">Chi tiết<lucide-icon name="arrow-right" /></button></td>
+          <td><span [class]="'badge badge--' + statusMeta[item.status].tone">{{ statusMeta[item.status].label }}</span>
+          </td>
+          <td class="row-action"><button type="button" class="btn btn--sm" (click)="open(item)"
+              [attr.aria-label]="'Xem đơn ' + item.bookingCode">Chi tiết<lucide-icon name="arrow-right" /></button></td>
         </tr>
         }
       </tbody>
     </table>
   </section>
   @if (total() > 0) {
-  <app-pagination [pageIndex]="pageIndex()" [pageSize]="pageSize" [totalItems]="total()" (pageChange)="goToPage($event)" />
+  <app-pagination [pageIndex]="pageIndex()" [pageSize]="pageSize" [totalItems]="total()"
+    (pageChange)="goToPage($event)" />
   }
   }
 
   @if (selected(); as booking) {
   <div class="modal-backdrop" (click)="close()">
-    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="booking-detail-title" (click)="$event.stopPropagation()">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="booking-detail-title"
+      (click)="$event.stopPropagation()">
       <header class="modal__header">
         <div>
           <h2 id="booking-detail-title">Đơn {{ booking.bookingCode }}</h2>
-          <span [class]="'badge badge--' + statusMeta[booking.status].tone">{{ statusMeta[booking.status].label }}</span>
+          <span [class]="'badge badge--' + statusMeta[booking.status].tone">{{ statusMeta[booking.status].label
+            }}</span>
         </div>
         <button type="button" class="icon-btn" aria-label="Đóng" (click)="close()"><lucide-icon name="x" /></button>
       </header>
       <div class="modal__body">
         <dl class="facts">
-          <div><dt>Cơ sở</dt><dd>{{ booking.venueName }} · {{ booking.courtName }}</dd></div>
-          <div><dt>Giờ chơi</dt><dd>{{ booking.playDate | date:'dd/MM/yyyy' }}, {{ time(booking.startTime) }}–{{ time(booking.endTime) }}</dd></div>
-          <div><dt>Khách</dt><dd>{{ customerName(booking) }}@if (booking.walkInCustomerPhone) { · {{ booking.walkInCustomerPhone }} }</dd></div>
-          <div><dt>Nguồn</dt><dd>{{ sourceLabel(booking.source) }}</dd></div>
-          <div><dt>Tổng tiền</dt><dd>{{ vnd(booking.totalPrice) }}</dd></div>
-          <div><dt>Cọc / còn lại</dt><dd>{{ vnd(booking.depositAmount) }} / {{ vnd(booking.remainingAmount) }}</dd></div>
-          <div><dt>Tạo lúc</dt><dd>{{ booking.createdAt | date:'HH:mm dd/MM/yyyy' }}</dd></div>
+          <div>
+            <dt>Cơ sở</dt>
+            <dd>{{ booking.venueName }} · {{ booking.courtName }}</dd>
+          </div>
+          <div>
+            <dt>Giờ chơi</dt>
+            <dd>{{ booking.playDate | date:'dd/MM/yyyy' }}, {{ time(booking.startTime) }}–{{ time(booking.endTime) }}
+            </dd>
+          </div>
+          <div>
+            <dt>Khách</dt>
+            <dd>{{ customerName(booking) }}@if (booking.walkInCustomerPhone) { · {{ booking.walkInCustomerPhone }} }
+            </dd>
+          </div>
+          <div>
+            <dt>Nguồn</dt>
+            <dd>{{ sourceLabel(booking.source) }}</dd>
+          </div>
+          <div>
+            <dt>Tổng tiền</dt>
+            <dd>{{ vnd(booking.totalPrice) }}</dd>
+          </div>
+          <div>
+            <dt>Cọc / còn lại</dt>
+            <dd>{{ vnd(booking.depositAmount) }} / {{ vnd(booking.remainingAmount) }}</dd>
+          </div>
+          <div>
+            <dt>Tạo lúc</dt>
+            <dd>{{ booking.createdAt | date:'HH:mm dd/MM/yyyy' }}</dd>
+          </div>
         </dl>
 
         <h3 class="section-title">Thanh toán</h3>
@@ -101,9 +155,11 @@
         <ul class="list">
           @for (payment of booking.payments; track payment.paymentId) {
           <li>
-            <span><strong>{{ paymentLabel(payment) }}</strong><small>{{ (payment.paidAt || payment.createdAt) | date:'HH:mm dd/MM/yyyy' }}</small></span>
+            <span><strong>{{ paymentLabel(payment) }}</strong><small>{{ (payment.paidAt || payment.createdAt) |
+                date:'HH:mm dd/MM/yyyy' }}</small></span>
             <span class="num">{{ vnd(payment.amount) }}</span>
-            <span [class]="'badge badge--' + paymentStatus(payment.status).tone">{{ paymentStatus(payment.status).label }}</span>
+            <span [class]="'badge badge--' + paymentStatus(payment.status).tone">{{ paymentStatus(payment.status).label
+              }}</span>
           </li>
           }
         </ul>
@@ -114,9 +170,18 @@
         @if (booking.cancellation; as cancellation) {
         <h3 class="section-title">Yêu cầu hủy</h3>
         <dl class="facts">
-          <div><dt>Lý do</dt><dd>{{ cancellation.reason || '—' }}</dd></div>
-          <div><dt>Hoàn</dt><dd>{{ cancellation.refundPercentage }}% · {{ vnd(cancellation.refundAmount) }}</dd></div>
-          <div><dt>Tình trạng</dt><dd>{{ cancellation.status }}</dd></div>
+          <div>
+            <dt>Lý do</dt>
+            <dd>{{ cancellation.reason || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Hoàn</dt>
+            <dd>{{ cancellation.refundPercentage }}% · {{ vnd(cancellation.refundAmount) }}</dd>
+          </div>
+          <div>
+            <dt>Tình trạng</dt>
+            <dd>{{ cancellation.status }}</dd>
+          </div>
         </dl>
         }
       </div>

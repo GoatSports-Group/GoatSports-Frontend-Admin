@@ -7,51 +7,87 @@
     (retryWeather)="fetchWeather()" />
 } @else {
   <div class="admin-home">
-    <app-admin-overview [pendingApplications]="pendingApps()" />
-
-    <!-- Admin Map & District Breakdown -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div class="lg:col-span-2 rounded-2xl border border-slate-200/80 bg-surface p-6 shadow-sm">
-        <div class="flex items-center justify-between mb-4">
+    <app-admin-overview [pendingApplications]="pendingApps()" [applicationsFailed]="applicationsFailed()">
+      <article class="panel" overviewMain aria-label="Bản đồ hồ sơ chủ sân">
+        <header class="panel__head">
           <div>
-            <h3 class="text-base font-black text-slate-900">Bản Đồ Phân Bố Sân Bãi & Đơn Đăng Ký</h3>
-            <p class="text-[13px] text-slate-400">Mật độ các cơ sở thể thao và yêu cầu xét duyệt trên địa bàn</p>
+            <h2>Bản đồ hồ sơ chủ sân</h2>
+            <p>Vị trí cơ sở trong các hồ sơ đăng ký, lọc theo trạng thái</p>
           </div>
-          <div class="flex items-center gap-2">
-            <button (click)="toggleMapStatus(OwnerApplicationStatus.APPROVED)"
-              [class]="selectedMapStatus() === OwnerApplicationStatus.APPROVED ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-700'"
-              class="px-3 py-1.5 rounded-xl text-[13px] font-bold transition-all">
-              Đã duyệt ({{ getMapMarkerCount(OwnerApplicationStatus.APPROVED) }})
-            </button>
-            <button (click)="toggleMapStatus(OwnerApplicationStatus.PENDING)"
-              [class]="selectedMapStatus() === OwnerApplicationStatus.PENDING ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-700'"
-              class="px-3 py-1.5 rounded-xl text-[13px] font-bold transition-all">
-              Chờ duyệt ({{ getMapMarkerCount(OwnerApplicationStatus.PENDING) }})
-            </button>
-          </div>
-        </div>
-
-        <div id="real-leaflet-map" class="w-full h-[320px] rounded-2xl overflow-hidden border border-slate-100"></div>
-      </div>
-
-      <!-- District Breakdown List -->
-      <div class="rounded-2xl border border-slate-200/80 bg-surface p-6 shadow-sm">
-        <h3 class="text-base font-black text-slate-900 mb-4">Cơ Sở Theo Quận / Huyện</h3>
-        <div class="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-          @for (item of districtBreakdown(); track item.name) {
-          <div class="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 transition-colors">
-            <span class="text-[13px] font-bold text-slate-700">{{ item.name }}</span>
-            <div class="flex items-center gap-2">
-              <span class="text-[13px] font-black text-emerald-600">{{ item.count }} sân</span>
-              <div class="w-16 h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div class="h-full bg-emerald-500 rounded-full" [style.width.%]="(item.count / districtMax()) * 100"></div>
-              </div>
-            </div>
-          </div>
+          <div class="chips" role="group" aria-label="Lọc theo trạng thái hồ sơ">
+          @for (item of mapStatuses; track item.status) {
+          <button type="button" [class]="'chip chip--' + item.tone" [class.is-active]="selectedMapStatus() === item.status"
+            [attr.aria-pressed]="selectedMapStatus() === item.status" (click)="toggleMapStatus(item.status)">
+            <i aria-hidden="true"></i>{{ item.label }} <b>{{ getMapMarkerCount(item.status) }}</b>
+          </button>
           }
         </div>
-      </div>
-    </div>
-
+        </header>
+        <div id="real-leaflet-map" class="map"></div>
+      </article>
+      <article class="panel" overviewRail aria-label="Hồ sơ theo tỉnh / thành">
+        <header class="panel__head">
+          <div>
+            <h2>Theo tỉnh / thành</h2>
+            <p>{{ applications().length }} hồ sơ đăng ký · bấm để xem quận / huyện</p>
+          </div>
+        </header>
+        @if (provinceBreakdown().length) {
+        <ul #provinceList class="provinces">
+          @if (provinceWindow.hasBefore()) {
+          <li class="provinces__sentinel" appInfiniteScroll (reached)="showPreviousProvinces()" aria-hidden="true"></li>
+          }
+          @for (item of provinceWindow.items(); track item.name) {
+          <li [attr.data-window-id]="item.name">
+            <button type="button" (click)="selectedProvince.set(item)" [attr.aria-label]="'Xem hồ sơ tại ' + item.name">
+              <span class="provinces__name">{{ item.name }}</span>
+              <i><b [style.width.%]="(item.count / provinceMax()) * 100"></b></i>
+              <strong>{{ item.count }}</strong>
+              <lucide-icon name="chevron-right" />
+            </button>
+          </li>
+          }
+          @if (provinceWindow.hasAfter()) {
+          <li class="provinces__sentinel" appInfiniteScroll (reached)="showMoreProvinces()" aria-hidden="true"></li>
+          }
+        </ul>
+        } @else {
+        <p class="panel__empty">{{ applicationsFailed() ? 'Không tải được hồ sơ chủ sân.' : 'Chưa có hồ sơ nào.' }}</p>
+        }
+      </article>
+    </app-admin-overview>
   </div>
+
+  @if (selectedProvince(); as province) {
+  <div class="modal-backdrop" (click)="selectedProvince.set(null)">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="province-title" (click)="$event.stopPropagation()">
+      <header class="modal__header">
+        <div>
+          <h2 id="province-title">{{ province.name }}</h2>
+          <p>{{ province.count }} hồ sơ · {{ province.districts.length }} quận / huyện</p>
+        </div>
+        <button type="button" class="icon-btn" aria-label="Đóng" (click)="selectedProvince.set(null)"><lucide-icon name="x" /></button>
+      </header>
+      <div class="modal__body">
+        @for (district of province.districts; track district.name) {
+        <section class="district">
+          <h3>{{ district.name }} <span>{{ district.applications.length }}</span></h3>
+          <ul>
+            @for (app of district.applications; track $index) {
+            <li>
+              <span class="district__venue"><strong>{{ app.businessName || 'Chưa đặt tên cơ sở' }}</strong><small>{{ app.fullName }}</small></span>
+              <span [class]="'badge badge--' + statusLabel[app.status].tone">{{ statusLabel[app.status].label }}</span>
+            </li>
+            }
+          </ul>
+        </section>
+        }
+      </div>
+      <footer class="modal__footer">
+        <a class="btn" routerLink="/admin/owner-applications">Mở trang Chủ sân</a>
+        <button type="button" class="btn btn--primary" (click)="selectedProvince.set(null)">Đóng</button>
+      </footer>
+    </section>
+  </div>
+  }
 }

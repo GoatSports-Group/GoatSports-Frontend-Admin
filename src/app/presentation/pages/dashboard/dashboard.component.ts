@@ -1,12 +1,16 @@
-import { ChangeDetectionStrategy, Component, OnInit, AfterViewInit, OnDestroy, inject, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, HostListener, Injector, OnInit, AfterViewInit, OnDestroy, inject, signal, computed, viewChild } from '@angular/core';
+import { TwoWayWindow } from '@shared/utils/two-way-window';
+import { InfiniteScrollDirective } from '@shared/directives/infinite-scroll.directive';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { GetAllOwnerApplicationsUseCase } from '@application/usecase/owner-application/get-all-owner-applications.usecase';
-import { OwnerApplicationStatus } from '@application/dto/owner-application/owner-application.dto';
+import { OwnerApplication, OwnerApplicationStatus } from '@application/dto/owner-application/owner-application.dto';
 import { AuthService } from '@presentation/services/auth.service';
 import { parseWeatherCode } from '@shared/utils/weather-parser.utils';
-import { VenueMapMarker } from './dashboard.models';
+import { ProvinceBreakdownItem, VenueMapMarker } from './dashboard.models';
 import { WeatherInfo } from '@shared/components/ui/weather-widget/weather-widget.models';
-import { buildDistrictBreakdown, createVenueMapMarker } from './dashboard.utils';
+import { buildProvinceBreakdown, createVenueMapMarker } from './dashboard.utils';
 import { DashboardMapService } from './dashboard-map.service';
 import { VenueOwnerDashboardComponent } from '../venue-owner-dashboard/venue-owner-dashboard.component';
 import { AdminOverviewComponent } from './admin-overview/admin-overview.component';
@@ -18,7 +22,7 @@ import { AdminOverviewComponent } from './admin-overview/admin-overview.componen
 @Component({
   selector: 'app-dashboard-overview',
   standalone: true,
-  imports: [CommonModule, VenueOwnerDashboardComponent, AdminOverviewComponent],
+  imports: [CommonModule, RouterLink, LucideIconComponent, InfiniteScrollDirective, VenueOwnerDashboardComponent, AdminOverviewComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
   providers: [DashboardMapService],
@@ -35,11 +39,13 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit, OnDest
   isVenueOwner = computed(() => this.userRole() === 'VENUE_OWNER');
   isAdmin = computed(() => this.userRole() === 'ADMIN');
 
-  pendingApps = signal(0);
+  /** null = đang tải (khối "Cần xử lý" hiện skeleton thay vì báo 0). */
+  pendingApps = signal<number | null>(null);
+  applicationsFailed = signal(false);
 
   // Bản đồ đơn đăng ký chủ sân
   mapMarkers = signal<VenueMapMarker[]>([]);
-  applicationDistricts = signal<string[]>([]);
+  applications = signal<OwnerApplication[]>([]);
   selectedMapStatus = signal<OwnerApplicationStatus | null>(null);
 
   filteredMapMarkers = computed(() => {
@@ -47,9 +53,25 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit, OnDest
     return status ? this.mapMarkers().filter(marker => marker.status === status) : this.mapMarkers();
   });
 
-  districtBreakdown = computed(() => buildDistrictBreakdown(this.applicationDistricts()));
-  /** Thanh của mỗi quận tỉ lệ với quận nhiều cơ sở nhất (trước đây chia cho tổng số người dùng). */
-  districtMax = computed(() => Math.max(1, ...this.districtBreakdown().map(item => item.count)));
+  provinceBreakdown = computed(() => buildProvinceBreakdown(this.applications()));
+  /** Thanh của mỗi tỉnh tỉ lệ với tỉnh nhiều hồ sơ nhất. */
+  provinceMax = computed(() => Math.max(1, ...this.provinceBreakdown().map(item => item.count)));
+  /** Danh sách tỉnh cuộn vô hạn: render 10 dòng mỗi lần, tối đa 30 dòng cùng lúc. */
+  readonly provinceWindow = new TwoWayWindow(this.provinceBreakdown, item => item.name, inject(Injector), 10, 30);
+  private readonly provinceList = viewChild<ElementRef<HTMLElement>>('provinceList');
+  /** Tỉnh / thành đang mở popup chi tiết (quận / huyện và trạng thái từng hồ sơ). */
+  selectedProvince = signal<ProvinceBreakdownItem | null>(null);
+  readonly mapStatuses = [
+    { status: OwnerApplicationStatus.APPROVED, label: 'Đã duyệt', tone: 'approved' },
+    { status: OwnerApplicationStatus.PENDING, label: 'Chờ duyệt', tone: 'pending' },
+    { status: OwnerApplicationStatus.REJECTED, label: 'Từ chối', tone: 'rejected' }
+  ] as const;
+  readonly statusLabel: Readonly<Record<OwnerApplicationStatus, { label: string; tone: string }>> = {
+    [OwnerApplicationStatus.APPROVED]: { label: 'Đã duyệt', tone: 'success' },
+    [OwnerApplicationStatus.PENDING]: { label: 'Chờ duyệt', tone: 'warning' },
+    [OwnerApplicationStatus.REJECTED]: { label: 'Từ chối', tone: 'danger' },
+    [OwnerApplicationStatus.CANCELLED]: { label: 'Đã hủy', tone: 'neutral' }
+  };
 
   weather = signal<WeatherInfo | null>(null);
   weatherLoading = signal(false);
@@ -70,12 +92,12 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit, OnDest
     this.getAllApplicationsUseCase.execute({ page: 0, size: 1000 }).subscribe({
       next: applications => {
         this.pendingApps.set(applications.result.filter(a => a.status === OwnerApplicationStatus.PENDING).length);
-        this.applicationDistricts.set(applications.result.map(app => app.address?.district?.trim() || 'Chưa xác định'));
+        this.applications.set(applications.result);
         const markers = applications.result.map((app, index) => createVenueMapMarker(app, index));
         this.mapMarkers.set(markers);
         this.dashboardMap.render(markers);
       },
-      error: err => console.error('Dashboard load error:', err)
+      error: () => this.applicationsFailed.set(true)
     });
   }
 
@@ -85,6 +107,19 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit, OnDest
 
   ngOnDestroy(): void {
     if (this.isAdmin()) this.dashboardMap.destroy();
+  }
+
+  showMoreProvinces(): void {
+    this.provinceWindow.next(this.provinceList()?.nativeElement);
+  }
+
+  showPreviousProvinces(): void {
+    this.provinceWindow.previous(this.provinceList()?.nativeElement);
+  }
+
+  @HostListener('document:keydown.escape')
+  closeProvince(): void {
+    this.selectedProvince.set(null);
   }
 
   toggleMapStatus(status: OwnerApplicationStatus): void {

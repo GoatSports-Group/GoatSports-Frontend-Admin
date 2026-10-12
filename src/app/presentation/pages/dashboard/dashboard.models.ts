@@ -11,7 +11,20 @@ export interface VenueMapMarker {
   isFallback: boolean;
 }
 
-export interface DistrictBreakdownItem {
+export interface ApplicationPlace {
+  businessName: string;
+  fullName: string;
+  status: OwnerApplicationStatus;
+}
+
+export interface DistrictGroup {
+  name: string;
+  applications: ApplicationPlace[];
+}
+
+/** Hồ sơ chủ sân gom theo tỉnh / thành, mỗi tỉnh gom tiếp theo quận / huyện. */
+export interface ProvinceBreakdownItem {
   name: string;
   count: number;
+  districts: DistrictGroup[];
 }

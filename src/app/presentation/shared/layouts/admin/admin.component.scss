@@ -764,7 +764,12 @@
 .command-results {
   max-height: 430px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 8px;
+  // Vẫn cuộn bằng chuột / phím mũi tên; chỉ ẩn thanh cuộn.
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar { display: none; }
 }
 
 .command-result {
@@ -851,6 +856,10 @@
   outline: 3px solid rgb(16 185 129 / 34%);
   outline-offset: 2px;
 }
+
+// Ô tìm là thứ duy nhất nhận gõ phím trong hộp lệnh và luôn được focus sẵn: con trỏ nhấp nháy đã đủ báo,
+// khung viền quanh ô chỉ thành vạch thừa giữa header.
+.admin-shell .command-dialog__search input:focus-visible { outline: none; }
 
 .sr-only {
   position: absolute;

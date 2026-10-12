@@ -2,7 +2,8 @@ import {
   OwnerApplication,
   OwnerApplicationStatus
 } from '@application/dto/owner-application/owner-application.dto';
-import { DistrictBreakdownItem, VenueMapMarker } from './dashboard.models';
+import { canonicalProvince } from '@shared/constants/vn-provinces';
+import { ApplicationPlace, ProvinceBreakdownItem, VenueMapMarker } from './dashboard.models';
 
 export const HCM_CENTER: [number, number] = [10.7760, 106.7009];
 
@@ -16,19 +17,41 @@ const VIETNAMESE_WEEKDAYS = [
   'Thứ Bảy'
 ];
 
-export function buildDistrictBreakdown(districts: string[]): DistrictBreakdownItem[] {
-  const counts = districts.reduce<Record<string, number>>((result, district) => {
-    const name = district.replace(/(quận|q\.|q)/i, '').trim() || 'Khác';
-    result[name] = (result[name] || 0) + 1;
-    return result;
-  }, {});
+const UNKNOWN_PLACE = 'Chưa xác định';
+export const UNKNOWN_PROVINCE = 'Chưa rõ tỉnh / thành';
 
-  return Object.entries(counts)
-    .map(([key, count]) => ({
-      name: isNaN(Number(key)) ? key : `Quận ${key}`,
-      count
+/**
+ * Tên tỉnh / thành chuẩn theo danh sách VN_PROVINCES ("Thành phố Hà Nội", "TP. Hà Nội", "Ha Noi" là một nơi).
+ * Giá trị người dùng gõ bừa (vd. "a") gom vào "Chưa rõ tỉnh / thành" thay vì thành một tỉnh riêng.
+ * (Hàm cũ gom theo quận dùng /(quận|q\.|q)/i nên còn xóa nhầm chữ "q" đầu tiên: "Quy Nhơn" thành "uy Nhơn".)
+ */
+export function provinceName(city: string | null | undefined): string {
+  return canonicalProvince(city) ?? UNKNOWN_PROVINCE;
+}
+
+export function buildProvinceBreakdown(applications: OwnerApplication[]): ProvinceBreakdownItem[] {
+  const provinces = new Map<string, Map<string, ApplicationPlace[]>>();
+  for (const app of applications) {
+    const province = provinceName(app.address?.city);
+    const district = app.address?.district?.trim() || UNKNOWN_PLACE;
+    const districts = provinces.get(province) ?? new Map<string, ApplicationPlace[]>();
+    districts.set(district, [
+      ...(districts.get(district) ?? []),
+      { businessName: app.businessName, fullName: app.fullName, status: app.status }
+    ]);
+    provinces.set(province, districts);
+  }
+  return [...provinces.entries()]
+    .map(([name, districts]) => ({
+      name,
+      count: [...districts.values()].reduce((sum, items) => sum + items.length, 0),
+      districts: [...districts.entries()]
+        .map(([district, items]) => ({ name: district, applications: items }))
+        .sort((a, b) => b.applications.length - a.applications.length || a.name.localeCompare(b.name, 'vi'))
     }))
-    .sort((a, b) => b.count - a.count);
+    // Nhóm không rõ tỉnh luôn xếp cuối, dù đông hồ sơ.
+    .sort((a, b) => Number(a.name === UNKNOWN_PROVINCE) - Number(b.name === UNKNOWN_PROVINCE)
+      || b.count - a.count || a.name.localeCompare(b.name, 'vi'));
 }
 
 export function createVenueMapMarker(app: OwnerApplication, index: number): VenueMapMarker {
@@ -63,6 +86,8 @@ export function createVenueMapMarker(app: OwnerApplication, index: number): Venu
 export function getVenueMarkerColor(status: OwnerApplicationStatus): string {
   if (status === OwnerApplicationStatus.PENDING) return '#f59e0b';
   if (status === OwnerApplicationStatus.REJECTED) return '#ef4444';
+  // Trước đây hồ sơ đã hủy rơi xuống nhánh mặc định và tô xanh như hồ sơ đã duyệt.
+  if (status === OwnerApplicationStatus.CANCELLED) return '#94a3b8';
   return '#10b981';
 }
 

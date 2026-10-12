@@ -8,6 +8,7 @@ export class DashboardMapService {
   private markersGroup: any;
   private elementId = '';
   private pendingMarkers: VenueMapMarker[] = [];
+  private resizeObserver?: ResizeObserver;
 
   init(elementId: string): void {
     this.elementId = elementId;
@@ -51,6 +52,8 @@ export class DashboardMapService {
   }
 
   destroy(): void {
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = undefined;
     this.map?.remove();
     this.map = null;
     this.markersGroup = null;
@@ -86,15 +89,25 @@ export class DashboardMapService {
 
     this.map = L.map(this.elementId, {
       zoomControl: true,
-      attributionControl: false
+      attributionControl: true
     }).setView(HCM_CENTER, 11);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19
+    // Cùng nguồn tile với client; CARTO basemaps giờ trả ảnh "API KEY REQUIRED" khi không có key.
+    L.tileLayer('https://tile.openstreetmap.de/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      keepBuffer: 2,
+      attribution: '&copy; OpenStreetMap contributors'
     }).addTo(this.map);
 
     this.markersGroup = L.layerGroup().addTo(this.map);
     this.render(this.pendingMarkers);
+
+    // Khung bản đồ giãn theo chiều cao cột bên cạnh (đổi khi số liệu về): báo Leaflet tính lại kích thước, nếu không
+    // phần mới giãn ra để trống không có tile.
+    if (typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => this.map?.invalidateSize());
+      this.resizeObserver.observe(element);
+    }
   }
 
   private fitToMarkers(bounds: Array<[number, number]>): void {
