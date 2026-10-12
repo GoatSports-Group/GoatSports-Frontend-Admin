@@ -6,6 +6,7 @@ import { APP_ICONS } from '../../../app-icons';
 import { OwnerBooking } from '@application/dto/owner-booking/owner-booking.dto';
 import { ADMIN_VENUE_REPOSITORY_TOKEN } from '@application/ports/persistence/admin-venue.repository';
 import { ADMIN_BOOKING_REPOSITORY_TOKEN } from '@application/ports/persistence/admin-booking.repository';
+import { provideRouter } from '@angular/router';
 import { AdminBookingsComponent } from './bookings.component';
 
 describe('AdminBookingsComponent', () => {
@@ -27,13 +28,16 @@ describe('AdminBookingsComponent', () => {
       { venueId: 'v-1', name: 'Goat Arena', courts: [{ venueCourtId: 'c-1', name: 'Sân 1' }, { venueCourtId: 'c-2', name: 'Sân 2' }] }
     ] }))
   };
-  const repository = { getBookings: vi.fn(), getBooking: vi.fn(), exportReport: vi.fn(), previewReport: vi.fn() };
+  const repository = {
+    getBookings: vi.fn(), getBooking: vi.fn(), requestExport: vi.fn(), listExports: vi.fn(() => of([])), downloadExport: vi.fn()
+  };
 
   beforeEach(async () => {
     repository.getBookings.mockReset().mockReturnValue(of({ items: [booking], page: 0, pageSize: 20, pages: 1, total: 1 }));
     await TestBed.configureTestingModule({
       imports: [AdminBookingsComponent],
       providers: [
+        provideRouter([]),
         provideLucideIcons(...APP_ICONS),
         { provide: ADMIN_BOOKING_REPOSITORY_TOKEN, useValue: repository },
         { provide: ADMIN_VENUE_REPOSITORY_TOKEN, useValue: venues }
@@ -69,28 +73,21 @@ describe('AdminBookingsComponent', () => {
     expect([...dialog.querySelectorAll('button')].map(button => button.textContent?.trim())).toEqual(['', 'Đóng']);
   });
 
-  it('previews the current filter first, then downloads Excel for that same filter', () => {
-    repository.previewReport.mockReset().mockReturnValue(of(new Blob(['%PDF'])));
-    repository.exportReport.mockReset().mockReturnValue(of(new Blob(['x'])));
-    globalThis.URL.createObjectURL = vi.fn(() => 'blob:x');
-    globalThis.URL.revokeObjectURL = vi.fn();
+  it('hands the export the current filter and a readable scope', () => {
     const fixture = TestBed.createComponent(AdminBookingsComponent);
     fixture.detectChanges();
     const page = fixture.componentInstance;
-    page.setStatus('CANCELLED');
-    page.goToPage(3);
 
-    page.openPreview();
-    const filter = { venueId: undefined, venueCourtId: undefined, status: 'CANCELLED', query: undefined, fromDate: undefined, toDate: undefined };
-    expect(repository.previewReport).toHaveBeenCalledWith(filter);
-    expect(page.previewUrl()).not.toBeNull();
-
+    page.setVenue('v-1');
+    page.setCourt('c-2');
     page.setStatus('COMPLETED');
-    page.download('xlsx');
-    expect(repository.exportReport).toHaveBeenCalledWith(filter, 'xlsx');
+    page.setDate('from', '2026-10-01');
 
-    page.download('pdf');
-    expect(repository.exportReport).toHaveBeenCalledTimes(1);
+    expect(page.exportCriteria()).toEqual({
+      venueId: 'v-1', venueCourtId: 'c-2', status: 'COMPLETED', query: undefined, fromDate: '2026-10-01', toDate: undefined
+    });
+    expect(page.exportLabels()).toEqual({ venueName: 'Goat Arena', courtName: 'Sân 2' });
+    expect(page.exportScope()).toEqual(['Goat Arena · Sân 2', 'Hoàn tất', '01/10/2026 – …']);
   });
 
   it('filters by venue, then by one of its courts, and resets the court when the venue changes', () => {

@@ -6,16 +6,14 @@ import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, Subscription, debounceTime, distinctUntilChanged, finalize } from 'rxjs';
 import { OwnerBooking, OwnerBookingStatus, OwnerPayment } from '@application/dto/owner-booking/owner-booking.dto';
-import { ADMIN_BOOKING_REPOSITORY_TOKEN } from '@application/ports/persistence/admin-booking.repository';
+import { ADMIN_BOOKING_REPOSITORY_TOKEN, AdminBookingCriteria } from '@application/ports/persistence/admin-booking.repository';
 import { ADMIN_VENUE_REPOSITORY_TOKEN } from '@application/ports/persistence/admin-venue.repository';
 import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/loading-skeleton.component';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { PaginationComponent } from '@shared/components/ui/pagination/pagination.component';
 import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
-import { NotifyService } from '@shared/components/notify/notify.service';
-import { blobErrorMessage, downloadBlob } from '@shared/utils/file.utils';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { BookingExportsComponent } from './booking-exports/booking-exports.component';
 
 type Tone = 'success' | 'warning' | 'danger' | 'info' | 'primary' | 'neutral';
 
@@ -39,17 +37,12 @@ const STATUS_META: Record<OwnerBookingStatus, { label: string; tone: Tone }> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [DatePickerComponent, DatePipe, FormsModule, LucideIconComponent, LoadingSkeletonComponent,
-    PaginationComponent, SelectComponent]
+    PaginationComponent, SelectComponent, BookingExportsComponent]
 })
 export class AdminBookingsComponent implements OnInit {
   private readonly repository = inject(ADMIN_BOOKING_REPOSITORY_TOKEN);
   private readonly destroyRef = inject(DestroyRef);
   private readonly venueRepository = inject(ADMIN_VENUE_REPOSITORY_TOKEN);
-  private readonly notify = inject(NotifyService);
-  private readonly sanitizer = inject(DomSanitizer);
-  private previewRequest?: Subscription;
-  private previewFile: Blob | null = null;
-  private previewObjectUrl: string | null = null;
   private readonly search$ = new Subject<string>();
   private request?: Subscription;
 
@@ -59,14 +52,6 @@ export class AdminBookingsComponent implements OnInit {
     { value: '', label: 'Tất cả trạng thái' },
     ...(Object.keys(STATUS_META) as OwnerBookingStatus[]).map(value => ({ value, label: STATUS_META[value].label }))
   ];
-  readonly exporting = signal(false);
-  readonly previewOpen = signal(false);
-  readonly previewLoading = signal(false);
-  readonly previewError = signal<string | null>(null);
-  readonly previewUrl = signal<SafeResourceUrl | null>(null);
-  /** Bộ lọc lúc mở xem trước: tải về đúng thứ đã xem, kể cả khi danh sách phía sau đổi lọc. */
-  private previewFilter: ReturnType<AdminBookingsComponent['currentFilter']> | null = null;
-
   readonly status = signal<OwnerBookingStatus | ''>('');
   readonly venueId = signal('');
   readonly venueCourtId = signal('');
@@ -92,6 +77,23 @@ export class AdminBookingsComponent implements OnInit {
   readonly paging = signal(false);
   readonly error = signal<string | null>(null);
   readonly selected = signal<OwnerBooking | null>(null);
+
+  /** Bộ lọc đang xem, gửi nguyên cho báo cáo xuất ở nền. */
+  readonly exportCriteria = computed<AdminBookingCriteria>(() => this.currentFilter());
+  readonly exportLabels = computed(() => ({
+    venueName: this.venueOptions().find(option => option.value === this.venueId())?.label,
+    courtName: this.courtOptions().find(option => option.value === this.venueCourtId())?.label
+  }));
+  /** Phạm vi đọc được để người dùng xác nhận trước khi xuất. */
+  readonly exportScope = computed<string[]>(() => {
+    const labels = this.exportLabels();
+    const scope: string[] = [];
+    if (this.venueId() && labels.venueName) scope.push(labels.venueName + (this.venueCourtId() && labels.courtName ? ' · ' + labels.courtName : ''));
+    if (this.status()) scope.push(STATUS_META[this.status() as OwnerBookingStatus].label);
+    if (this.fromDate() || this.toDate()) scope.push(`${this.shortDate(this.fromDate()) || '…'} – ${this.shortDate(this.toDate()) || '…'}`);
+    if (this.keyword()) scope.push(`"${this.keyword()}"`);
+    return scope;
+  });
 
   readonly hasFilters = computed(() => !!(this.status() || this.venueId() || this.keyword() || this.fromDate() || this.toDate()));
 
@@ -159,70 +161,6 @@ export class AdminBookingsComponent implements OnInit {
       });
   }
 
-  /** Xem trước bản PDF của báo cáo theo bộ lọc đang xem (mọi trang), rồi mới tải Excel hoặc PDF. */
-  openPreview(): void {
-    this.previewFilter = this.currentFilter();
-    this.previewOpen.set(true);
-    this.loadPreview();
-  }
-
-  loadPreview(): void {
-    if (!this.previewFilter) return;
-    this.previewRequest?.unsubscribe();
-    this.releasePreview();
-    this.previewError.set(null);
-    this.previewLoading.set(true);
-    this.previewRequest = this.repository.previewReport(this.previewFilter)
-      .pipe(finalize(() => this.previewLoading.set(false)), takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: file => {
-          if (!file.size) { this.previewError.set('Dịch vụ báo cáo không trả dữ liệu xem trước.'); return; }
-          this.previewFile = file;
-          this.previewObjectUrl = URL.createObjectURL(file);
-          this.previewUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(this.previewObjectUrl));
-        },
-        error: err => blobErrorMessage(err).then(message =>
-          this.previewError.set(message ?? 'Không tạo được bản xem trước. Vui lòng thử lại.'))
-      });
-  }
-
-  closePreview(): void {
-    if (this.exporting()) return;
-    this.previewRequest?.unsubscribe();
-    this.releasePreview();
-    this.previewOpen.set(false);
-    this.previewFilter = null;
-  }
-
-  /** PDF: lưu chính bản đang xem (không dựng lại). Excel: dựng từ cùng bộ lọc. */
-  download(format: 'xlsx' | 'pdf'): void {
-    const filename = `don-dat-san-${new Date().toISOString().slice(0, 10)}.${format}`;
-    if (format === 'pdf') {
-      if (this.previewFile) downloadBlob(this.previewFile, filename);
-      return;
-    }
-    if (this.exporting() || !this.previewFilter) return;
-    this.exporting.set(true);
-    this.repository.exportReport(this.previewFilter, 'xlsx')
-      .pipe(finalize(() => this.exporting.set(false)), takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: file => {
-          if (!file.size) { this.notify.error('Dịch vụ báo cáo không trả dữ liệu.'); return; }
-          downloadBlob(file, filename);
-          this.notify.success('Đã xuất báo cáo đơn đặt sân.');
-        },
-        error: err => blobErrorMessage(err).then(message =>
-          this.notify.error(message ?? 'Không xuất được file Excel. Vui lòng thử lại.'))
-      });
-  }
-
-  private releasePreview(): void {
-    if (this.previewObjectUrl) URL.revokeObjectURL(this.previewObjectUrl);
-    this.previewObjectUrl = null;
-    this.previewFile = null;
-    this.previewUrl.set(null);
-  }
-
   open(booking: OwnerBooking): void { this.selected.set(booking); }
 
   /** Danh sách cơ sở cho bộ lọc (kèm sân của từng cơ sở). */
@@ -247,6 +185,10 @@ export class AdminBookingsComponent implements OnInit {
     };
   }
   close(): void { this.selected.set(null); }
+
+  private shortDate(value: string): string {
+    return value ? value.split('-').reverse().join('/') : '';
+  }
 
   customerName(booking: OwnerBooking): string {
     return booking.walkInCustomerName?.trim() || `Khách #${(booking.playerId ?? '').slice(0, 8)}`;

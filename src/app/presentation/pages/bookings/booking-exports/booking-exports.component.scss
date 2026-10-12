@@ -1,0 +1,146 @@
+@use '../../ops' as t;
+@include t.ops;
+
+:host { display: contents; }
+
+.triggers { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.count-pill {
+  display: inline-grid;
+  min-width: 20px;
+  height: 20px;
+  place-items: center;
+  padding: 0 6px;
+  border-radius: 9999px;
+  background: var(--info-soft);
+  color: var(--info);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.modal__sub { margin: 4px 0 0; color: var(--body); font-size: 13px; }
+
+.export-form { display: grid; gap: 16px; }
+
+.scope { display: grid; gap: 8px; }
+.scope__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.scope__chip {
+  display: inline-flex;
+  height: 28px;
+  align-items: center;
+  padding: 0 10px;
+  border-radius: 9999px;
+  background: var(--surface-strong);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.formats { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.formats__options { display: grid; gap: 8px; }
+
+.format {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--transition-smooth, 180ms) ease, background-color var(--transition-smooth, 180ms) ease;
+
+  lucide-icon { width: 20px; height: 20px; flex: none; margin-top: 1px; color: var(--body); }
+  span { display: grid; gap: 2px; min-width: 0; }
+  strong { font-size: 14px; font-weight: 800; }
+  small { color: var(--body); font-size: 13px; line-height: 1.45; }
+  &:hover { border-color: var(--border-strong); }
+
+  &.is-active {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    box-shadow: inset 0 0 0 1px var(--primary);
+
+    lucide-icon { color: var(--primary); }
+  }
+}
+
+.callout {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--surface-subtle);
+  color: var(--body);
+  font-size: 13px;
+  line-height: 1.5;
+
+  lucide-icon { width: 16px; height: 16px; flex: none; margin-top: 2px; }
+  strong { color: var(--ink); }
+}
+
+.callout--danger { background: var(--danger-soft); color: var(--danger); }
+
+.modal--exports { width: min(100%, 640px); }
+
+.muted-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--body);
+  font-size: 14px;
+
+  lucide-icon { width: 16px; height: 16px; }
+}
+
+.jobs { display: grid; margin: 0; padding: 0; list-style: none; }
+
+.job {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--hairline);
+
+  &:last-child { border-bottom: 0; }
+}
+
+.job__icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--success-soft);
+  color: var(--success);
+
+  lucide-icon { width: 20px; height: 20px; }
+  &.is-pdf { background: var(--danger-soft); color: var(--danger); }
+}
+
+.job__actions { display: flex; gap: 6px; }
+
+.job__body { display: grid; gap: 2px; min-width: 0; }
+.job__title { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.job__title strong { color: var(--ink); font-size: 14px; font-weight: 800; }
+.job__title .badge { gap: 4px; }
+.job__title .badge lucide-icon { width: 12px; height: 12px; }
+
+.job__scope {
+  overflow: hidden;
+  margin: 0;
+  color: var(--ink);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.job__meta { margin: 0; color: var(--body); font-size: 12px; }
+.job__error { margin: 0; color: var(--danger); font-size: 12px; font-weight: 600; }

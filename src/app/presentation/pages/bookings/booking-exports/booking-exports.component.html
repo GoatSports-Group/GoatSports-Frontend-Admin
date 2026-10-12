@@ -1,0 +1,133 @@
+<div class="triggers">
+  <button type="button" class="btn" (click)="openPanel()" [attr.aria-label]="'Báo cáo đã xuất' + (activeCount() ? ', ' + activeCount() + ' đang tạo' : '')">
+    <lucide-icon [name]="activeCount() ? 'loader-2' : 'folder-open'" [class.spin]="activeCount() > 0" />Báo cáo đã xuất
+    @if (activeCount()) { <span class="count-pill">{{ activeCount() }}</span> }
+  </button>
+  <button type="button" class="btn btn--primary" (click)="openDialog()" [disabled]="!total()"
+    [title]="total() ? 'Xuất các đơn khớp bộ lọc hiện tại' : 'Không có đơn để xuất'">
+    <lucide-icon name="download" />Xuất báo cáo
+  </button>
+</div>
+
+@if (dialogOpen()) {
+<div class="modal-backdrop" (click)="closeDialog()">
+  <section class="modal" role="dialog" aria-modal="true" aria-labelledby="export-title" (click)="$event.stopPropagation()">
+    <header class="modal__header">
+      <div>
+        <h2 id="export-title">Xuất báo cáo đơn đặt sân</h2>
+        <p class="modal__sub">{{ total().toLocaleString('vi-VN') }} đơn khớp bộ lọc hiện tại, mọi trang.</p>
+      </div>
+      <button type="button" class="icon-btn" aria-label="Đóng" (click)="closeDialog()" [disabled]="requesting()"><lucide-icon
+          name="x" /></button>
+    </header>
+    <div class="modal__body export-form">
+      <div class="scope">
+        <span class="field__label">Phạm vi</span>
+        <div class="scope__chips">
+          @for (item of scope(); track item) { <span class="scope__chip">{{ item }}</span> }
+          @empty { <span class="scope__chip">Tất cả đơn đặt sân</span> }
+        </div>
+      </div>
+
+      <fieldset class="formats">
+        <legend class="field__label">Định dạng</legend>
+        <div role="radiogroup" aria-label="Định dạng báo cáo" class="formats__options">
+          @for (option of formats; track option.value) {
+          <button type="button" role="radio" class="format" [class.is-active]="format() === option.value"
+            [attr.aria-checked]="format() === option.value" (click)="format.set(option.value)">
+            <lucide-icon [name]="option.icon" />
+            <span><strong>{{ option.label }}</strong><small>{{ option.hint }}</small></span>
+          </button>
+          }
+        </div>
+      </fieldset>
+
+      @if (tooMany()) {
+      <p class="callout callout--danger" role="alert"><lucide-icon name="alert-circle" />Báo cáo tối đa {{
+        maxRows.toLocaleString('vi-VN') }} đơn. Hãy thu hẹp khoảng ngày hoặc chọn một cơ sở.</p>
+      } @else {
+      <p class="callout"><lucide-icon name="info" />Báo cáo được tạo ở nền, bạn có thể làm việc tiếp. Khi xong sẽ có
+        thông báo, file nằm trong <strong>Báo cáo đã xuất</strong> và giữ 7 ngày.</p>
+      }
+      @if (requestError()) { <p class="field__error" role="alert">{{ requestError() }}</p> }
+    </div>
+    <footer class="modal__footer">
+      <button type="button" class="btn" (click)="closeDialog()" [disabled]="requesting()">Hủy</button>
+      <button type="button" class="btn btn--primary" (click)="submit()" [disabled]="requesting() || tooMany()">
+        <lucide-icon [name]="requesting() ? 'loader-2' : 'download'" [class.spin]="requesting()" />Tạo báo cáo
+      </button>
+    </footer>
+  </section>
+</div>
+}
+
+@if (panelOpen()) {
+<div class="modal-backdrop" (click)="closePanel()">
+  <section class="modal modal--exports" role="dialog" aria-modal="true" aria-labelledby="exports-title"
+    (click)="$event.stopPropagation()">
+    <header class="modal__header">
+      <div>
+        <h2 id="exports-title">Báo cáo đã xuất</h2>
+        <p class="modal__sub">Báo cáo bạn đã tạo, giữ 7 ngày. Tải lại bất cứ lúc nào, không phải dựng lại.</p>
+      </div>
+      <button type="button" class="icon-btn" aria-label="Đóng" (click)="closePanel()"><lucide-icon name="x" /></button>
+    </header>
+    <div class="modal__body">
+      @if (listLoading() && !exports().length) {
+      <p class="muted-line" role="status"><lucide-icon name="loader-2" class="spin" />Đang tải danh sách...</p>
+      } @else if (listError() && !exports().length) {
+      <div class="state state--error" role="alert">
+        <lucide-icon name="alert-circle" /><strong>Chưa tải được danh sách</strong>
+        <p>{{ listError() }}</p>
+        <button type="button" class="btn" (click)="refresh()"><lucide-icon name="rotate-ccw" />Thử lại</button>
+      </div>
+      } @else if (!exports().length) {
+      <div class="state">
+        <lucide-icon name="inbox" /><strong>Chưa có báo cáo nào</strong>
+        <p>Bấm "Xuất báo cáo" để tạo báo cáo từ bộ lọc đang xem.</p>
+      </div>
+      } @else {
+      <ul class="jobs">
+        @for (job of exports(); track job.exportId) {
+        <li class="job" [class.is-failed]="job.status === 'FAILED'">
+          <span class="job__icon" [class.is-pdf]="job.format === 'pdf'"><lucide-icon [name]="formatMeta(job.format).icon" /></span>
+          <div class="job__body">
+            <div class="job__title">
+              <strong>{{ formatMeta(job.format).label }}</strong>
+              <span [class]="'badge badge--' + statusMeta(job.status).tone">
+                @if (job.status === 'RUNNING' || job.status === 'PENDING') { <lucide-icon name="loader-2" class="spin" /> }
+                {{ statusMeta(job.status).label }}
+              </span>
+            </div>
+            <p class="job__scope" [title]="job.filterSummary">{{ job.filterSummary }}</p>
+            <p class="job__meta">
+              Tạo {{ job.createdAt | date:'HH:mm dd/MM/yyyy' }}
+              @if (job.status === 'DONE') {
+              · {{ (job.rowCount ?? 0).toLocaleString('vi-VN') }} đơn · {{ size(job.fileSize) }} · còn {{ daysLeft(job.expiresAt) }} ngày
+              }
+            </p>
+            @if (job.status === 'FAILED') { <p class="job__error">{{ job.failureReason || 'Không tạo được báo cáo.' }}</p> }
+          </div>
+          @if (job.status === 'DONE') {
+          <div class="job__actions">
+          @if (job.format === 'pdf') {
+          <button type="button" class="btn btn--sm" (click)="preview(job)" title="Xem trước ở tab mới"
+            [attr.aria-label]="'Xem trước ' + (job.fileName || 'báo cáo') + ' ở tab mới'">
+            <lucide-icon name="external-link" />Xem
+          </button>
+          }
+          <button type="button" class="btn btn--sm" (click)="download(job)" [disabled]="downloadingId() === job.exportId"
+            [attr.aria-label]="'Tải ' + (job.fileName || 'báo cáo')">
+            <lucide-icon [name]="downloadingId() === job.exportId ? 'loader-2' : 'download'"
+              [class.spin]="downloadingId() === job.exportId" />Tải
+          </button>
+          </div>
+          }
+        </li>
+        }
+      </ul>
+      }
+    </div>
+  </section>
+</div>
+}

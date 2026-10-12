@@ -4,9 +4,13 @@
       <h1>Đơn đặt sân</h1>
       <p>Mọi đơn trên nền tảng, của tất cả cơ sở. Admin theo dõi và tra cứu.</p>
     </div>
+    <div class="actions">
+      <app-booking-exports [criteria]="exportCriteria()" [total]="total()" [scope]="exportScope()"
+        [labels]="exportLabels()" />
+    </div>
   </header>
 
-  <div class="filter-row" role="search">
+  <div class="filter-row filter-row--fit" role="search">
     <label class="search">
       <lucide-icon name="search" />
       <input type="search" [ngModel]="keyword()" (ngModelChange)="onKeyword($event)" name="keyword"
@@ -25,12 +29,6 @@
     @if (hasFilters()) {
     <button type="button" class="btn btn--ghost" (click)="clearFilters()"><lucide-icon name="x" />Xóa lọc</button>
     }
-    <div class="filter-row__end">
-      <button type="button" class="btn" (click)="openPreview()" [disabled]="!total()"
-        [title]="total() ? 'Xem trước báo cáo các đơn khớp bộ lọc' : 'Không có đơn để xuất'">
-        <lucide-icon name="download" />Xuất báo cáo
-      </button>
-    </div>
   </div>
 
   @if (loading()) {
@@ -189,41 +187,4 @@
   </div>
   }
 
-  @if (previewOpen()) {
-  <div class="modal-backdrop" (click)="closePreview()">
-    <section class="modal modal--preview" role="dialog" aria-modal="true" aria-labelledby="preview-title"
-      (click)="$event.stopPropagation()">
-      <header class="modal__header">
-        <div>
-          <h2 id="preview-title">Xem trước báo cáo đơn đặt sân</h2>
-          <p class="modal__sub">Mọi đơn khớp bộ lọc hiện tại ({{ total().toLocaleString('vi-VN') }} đơn), không chỉ trang đang xem.</p>
-        </div>
-        <button type="button" class="icon-btn" aria-label="Đóng" (click)="closePreview()" [disabled]="exporting()"><lucide-icon
-            name="x" /></button>
-      </header>
-      <div class="preview-stage">
-        @if (previewLoading()) {
-        <div class="preview-state" role="status"><lucide-icon name="loader-2" class="spin" /><strong>Đang dựng bản xem
-            trước...</strong><p>Báo cáo lớn có thể mất vài giây.</p></div>
-        } @else if (previewError()) {
-        <div class="preview-state preview-state--error" role="alert"><lucide-icon name="alert-circle" /><strong>Chưa tạo
-            được bản xem trước</strong>
-          <p>{{ previewError() }}</p>
-          <button type="button" class="btn" (click)="loadPreview()"><lucide-icon name="rotate-ccw" />Thử lại</button>
-        </div>
-        } @else if (previewUrl()) {
-        <iframe [src]="previewUrl()" title="Bản xem trước báo cáo đơn đặt sân"></iframe>
-        }
-      </div>
-      <footer class="modal__footer">
-        <button type="button" class="btn" (click)="closePreview()" [disabled]="exporting()">Đóng</button>
-        <button type="button" class="btn" (click)="download('pdf')" [disabled]="!previewUrl()"><lucide-icon
-            name="file-text" />Tải PDF</button>
-        <button type="button" class="btn btn--primary" (click)="download('xlsx')"
-          [disabled]="!previewUrl() || exporting()"><lucide-icon [name]="exporting() ? 'loader-2' : 'file-spreadsheet'"
-            [class.spin]="exporting()" />{{ exporting() ? 'Đang xuất...' : 'Tải Excel' }}</button>
-      </footer>
-    </section>
-  </div>
-  }
 </main>

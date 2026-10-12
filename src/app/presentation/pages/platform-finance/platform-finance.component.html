@@ -2,16 +2,19 @@
   <header class="page-head">
     <div>
       <h1>Tài chính</h1>
-      <p>Tiền thu, phí nền tảng, hoàn tiền và chi trả cho chủ sân trên toàn sàn. Theo dõi khoản kẹt và chi lại khoản hoàn đã hết lượt tự chi.</p>
+      <p>Tiền thu, phí nền tảng, hoàn tiền và chi trả cho chủ sân trên toàn sàn. Theo dõi khoản kẹt và chi lại khoản
+        hoàn đã hết lượt tự chi.</p>
     </div>
     <div class="period" role="group" aria-label="Kỳ thống kê">
       <label class="date-field">
         <span>Từ ngày</span>
-        <app-date-picker ariaLabel="Từ ngày" [clearable]="false" [max]="to()" [ngModel]="from()" (ngModelChange)="setPeriod('from', $event)"></app-date-picker>
+        <app-date-picker ariaLabel="Từ ngày" [clearable]="false" [max]="to()" [ngModel]="from()"
+          (ngModelChange)="setPeriod('from', $event)"></app-date-picker>
       </label>
       <label class="date-field">
         <span>Đến ngày</span>
-        <app-date-picker ariaLabel="Đến ngày" [clearable]="false" [min]="from()" [max]="today" [ngModel]="to()" (ngModelChange)="setPeriod('to', $event)"></app-date-picker>
+        <app-date-picker ariaLabel="Đến ngày" [clearable]="false" [min]="from()" [max]="today" [ngModel]="to()"
+          (ngModelChange)="setPeriod('to', $event)"></app-date-picker>
       </label>
     </div>
   </header>
@@ -19,7 +22,8 @@
   @if (notice()) {
   <div class="notice" role="status">
     <lucide-icon name="circle-check-big" /><span>{{ notice() }}</span>
-    <button type="button" class="icon-btn" aria-label="Ẩn thông báo" (click)="notice.set(null)"><lucide-icon name="x" /></button>
+    <button type="button" class="icon-btn" aria-label="Ẩn thông báo" (click)="notice.set(null)"><lucide-icon
+        name="x" /></button>
   </div>
   }
 
@@ -27,10 +31,14 @@
   <div class="note note--danger" role="alert"><lucide-icon name="alert-circle" />{{ summaryError() }}</div>
   } @else if (summary(); as s) {
   <section class="kpis" aria-label="Số liệu tài chính trong kỳ">
-    <div class="kpi"><span>Tiền thu</span><strong>{{ money(s.collected) }}</strong><small>{{ s.paymentCount.toLocaleString('vi-VN') }} giao dịch đã thu</small></div>
-    <div class="kpi"><span>Phí nền tảng</span><strong>{{ money(s.platformFee) }}</strong><small>phần nền tảng giữ lại</small></div>
-    <div class="kpi"><span>Đã hoàn cho người chơi</span><strong>{{ money(s.refunded) }}</strong><small>khoản hoàn thành công</small></div>
-    <div class="kpi"><span>Đã chi cho chủ sân</span><strong>{{ money(s.paidOutToOwners) }}</strong><small>lượt rút tiền thành công</small></div>
+    <div class="kpi"><span>Tiền thu</span><strong>{{ money(s.collected) }}</strong><small>{{
+        s.paymentCount.toLocaleString('vi-VN') }} giao dịch đã thu</small></div>
+    <div class="kpi"><span>Phí nền tảng</span><strong>{{ money(s.platformFee) }}</strong><small>phần nền tảng giữ
+        lại</small></div>
+    <div class="kpi"><span>Đã hoàn cho người chơi</span><strong>{{ money(s.refunded) }}</strong><small>khoản hoàn thành
+        công</small></div>
+    <div class="kpi"><span>Đã chi cho chủ sân</span><strong>{{ money(s.paidOutToOwners) }}</strong><small>lượt rút tiền
+        thành công</small></div>
     <button type="button" class="kpi kpi--link" [class.kpi--alert]="attention()" (click)="openAttention()">
       <span>Cần xử lý</span><strong>{{ attention() }}</strong>
       <small>{{ s.refundsNeedingAttention }} khoản hoàn · {{ s.payoutsNeedingAttention }} lượt rút tiền</small>
@@ -41,44 +49,49 @@
   }
 
   <nav class="tabs" role="tablist" aria-label="Loại giao dịch">
-    <button type="button" role="tab" class="tab" [class.is-active]="tab() === 'payments'" [attr.aria-selected]="tab() === 'payments'"
-      (click)="setTab('payments')"><lucide-icon name="receipt" />Giao dịch</button>
-    <button type="button" role="tab" class="tab" [class.is-active]="tab() === 'refunds'" [attr.aria-selected]="tab() === 'refunds'"
-      (click)="setTab('refunds')"><lucide-icon name="undo-2" />Hoàn tiền
-      @if (summary()?.refundsNeedingAttention) { <span class="count count--danger">{{ summary()!.refundsNeedingAttention }}</span> }
+    <button type="button" role="tab" class="tab" [class.is-active]="tab() === 'payments'"
+      [attr.aria-selected]="tab() === 'payments'" (click)="setTab('payments')"><lucide-icon name="receipt" />Giao
+      dịch</button>
+    <button type="button" role="tab" class="tab" [class.is-active]="tab() === 'refunds'"
+      [attr.aria-selected]="tab() === 'refunds'" (click)="setTab('refunds')"><lucide-icon name="undo-2" />Hoàn tiền
+      @if (summary()?.refundsNeedingAttention) { <span class="count count--danger">{{ summary()!.refundsNeedingAttention
+        }}</span> }
     </button>
-    <button type="button" role="tab" class="tab" [class.is-active]="tab() === 'payouts'" [attr.aria-selected]="tab() === 'payouts'"
-      (click)="setTab('payouts')"><lucide-icon name="hand-coins" />Chi trả
-      @if (summary()?.payoutsNeedingAttention) { <span class="count count--danger">{{ summary()!.payoutsNeedingAttention }}</span> }
+    <button type="button" role="tab" class="tab" [class.is-active]="tab() === 'payouts'"
+      [attr.aria-selected]="tab() === 'payouts'" (click)="setTab('payouts')"><lucide-icon name="hand-coins" />Chi trả
+      @if (summary()?.payoutsNeedingAttention) { <span class="count count--danger">{{ summary()!.payoutsNeedingAttention
+        }}</span> }
     </button>
   </nav>
 
   <div class="filters" role="search">
     @switch (tab()) {
-      @case ('payments') {
-      <label class="filter">Trạng thái
-        <app-select [ngModel]="paymentGroup()" (ngModelChange)="setFilter('paymentGroup', $event)" [options]="paymentStatusOptions" ariaLabel="Trạng thái giao dịch" />
-      </label>
-      <label class="filter">Khoản thu
-        <app-select [ngModel]="purpose()" (ngModelChange)="setFilter('purpose', $event)" [options]="purposeOptions" ariaLabel="Khoản thu" />
-      </label>
-      <p class="filter-note">Giao dịch tạo trong kỳ đã chọn ở trên.</p>
-      }
-      @case ('refunds') {
-      <label class="filter">Nhóm
-        <app-select [ngModel]="refundGroup()" (ngModelChange)="setFilter('refundGroup', $event)" [options]="refundGroupOptions" ariaLabel="Nhóm khoản hoàn" />
-      </label>
-      <p class="filter-note">Danh sách hiện tại, không theo kỳ: khoản kẹt cần thấy dù phát sinh từ lâu.</p>
-      }
-      @case ('payouts') {
-      <label class="filter">Loại chi
-        <app-select [ngModel]="payoutKind()" (ngModelChange)="setFilter('payoutKind', $event)" [options]="payoutKindOptions" ariaLabel="Loại chi trả" />
-      </label>
-      <label class="filter">Trạng thái
-        <app-select [ngModel]="payoutGroup()" (ngModelChange)="setFilter('payoutGroup', $event)" [options]="payoutGroupOptions" ariaLabel="Trạng thái chi trả" />
-      </label>
-      <p class="filter-note">Chủ sân rút tiền lỗi: tiền tự về lại số dư để họ rút lần khác.</p>
-      }
+    @case ('payments') {
+    <label class="filter">Trạng thái
+      <app-select [ngModel]="paymentGroup()" (ngModelChange)="setFilter('paymentGroup', $event)"
+        [options]="paymentStatusOptions" ariaLabel="Trạng thái giao dịch" />
+    </label>
+    <label class="filter">Khoản thu
+      <app-select [ngModel]="purpose()" (ngModelChange)="setFilter('purpose', $event)" [options]="purposeOptions"
+        ariaLabel="Khoản thu" />
+    </label>
+    }
+    @case ('refunds') {
+    <label class="filter">Nhóm
+      <app-select [ngModel]="refundGroup()" (ngModelChange)="setFilter('refundGroup', $event)"
+        [options]="refundGroupOptions" ariaLabel="Nhóm khoản hoàn" />
+    </label>
+    }
+    @case ('payouts') {
+    <label class="filter">Loại chi
+      <app-select [ngModel]="payoutKind()" (ngModelChange)="setFilter('payoutKind', $event)"
+        [options]="payoutKindOptions" ariaLabel="Loại chi trả" />
+    </label>
+    <label class="filter">Trạng thái
+      <app-select [ngModel]="payoutGroup()" (ngModelChange)="setFilter('payoutGroup', $event)"
+        [options]="payoutGroupOptions" ariaLabel="Trạng thái chi trả" />
+    </label>
+    }
     }
   </div>
 
@@ -86,94 +99,155 @@
   <app-loading-skeleton variant="table" [count]="6" [columns]="6" label="Đang tải dữ liệu tài chính" />
   } @else if (error()) {
   <div class="state state--error" role="alert">
-    <lucide-icon name="alert-circle" /><strong>Có lỗi</strong><p>{{ error() }}</p>
+    <lucide-icon name="alert-circle" /><strong>Có lỗi</strong>
+    <p>{{ error() }}</p>
     <button type="button" class="btn" (click)="load()"><lucide-icon name="rotate-ccw" />Tải lại</button>
   </div>
   } @else if (!total()) {
   <div class="state">
     <lucide-icon name="circle-check-big" />
     <strong>Không có mục nào</strong>
-    <p>{{ tab() === 'payments' ? 'Không có giao dịch khớp bộ lọc trong kỳ này.' : 'Không có khoản nào ở nhóm này.' }}</p>
+    <p>{{ tab() === 'payments' ? 'Không có giao dịch khớp bộ lọc trong kỳ này.' : 'Không có khoản nào ở nhóm này.' }}
+    </p>
   </div>
   } @else {
   <p class="result-count">{{ total().toLocaleString('vi-VN') }} mục</p>
   <section class="card table-wrap" [class.is-paging]="paging()">
     @switch (tab()) {
-      @case ('payments') {
-      <table class="table">
-        <thead><tr><th>Thời gian</th><th>Khoản thu</th><th>Người trả</th><th class="num">Số tiền</th><th class="num">Phí nền tảng</th><th>Trạng thái</th></tr></thead>
-        <tbody>
-          @for (item of payments(); track item.paymentId) {
-          <tr>
-            <td><div class="cell-title"><strong class="plain">{{ item.createdAt | date:'HH:mm dd/MM/yyyy' }}</strong>
-              @if (item.paidAt) { <small>thu lúc {{ item.paidAt | date:'HH:mm dd/MM' }}</small> }</div></td>
-            <td><div class="cell-title"><strong>{{ purposeLabel(item.purpose) }}</strong><small [title]="item.description ?? ''">{{ item.description || '—' }}</small></div></td>
-            <td><div class="cell-title"><strong class="plain">{{ person(item.payerId) }}</strong><small>{{ users.email(item.payerId) }}</small></div></td>
-            <td class="num">{{ money(item.amount) }}</td>
-            <td class="num">{{ item.platformFee ? money(item.platformFee) : '—' }}</td>
-            <td><span [class]="'badge badge--' + paymentStatus(item.status).tone">{{ paymentStatus(item.status).label }}</span></td>
-          </tr>
-          }
-        </tbody>
-      </table>
-      }
-      @case ('refunds') {
-      <table class="table">
-        <thead><tr><th>Cập nhật</th><th>Người nhận</th><th>Khoản gốc · lý do</th><th class="num">Số tiền</th><th>Trạng thái</th><th></th></tr></thead>
-        <tbody>
-          @for (item of refunds(); track item.refundId) {
-          <tr>
-            <td><div class="cell-title"><strong class="plain">{{ (item.updatedAt ?? item.createdAt) | date:'HH:mm dd/MM/yyyy' }}</strong>
-              <small>tạo {{ item.createdAt | date:'dd/MM' }}</small></div></td>
-            <td><div class="cell-title"><strong class="plain">{{ person(item.payerId) }}</strong><small>{{ users.email(item.payerId) }}</small></div></td>
-            <td><div class="cell-title"><strong>{{ purposeLabel(item.purpose) }}</strong><small [title]="item.reason">{{ item.reason }}</small></div></td>
-            <td class="num">{{ money(item.amount) }}</td>
-            <td>
-              <div class="status-cell">
-                <span [class]="'badge badge--' + refundStatus(item.status).tone">{{ refundStatus(item.status).label }}</span>
-                @if (item.failureReason && item.status !== 'SUCCEEDED') { <small class="danger" [title]="item.failureReason">{{ item.failureReason }}</small> }
-                @else if (refundStatus(item.status).hint) { <small>{{ refundStatus(item.status).hint }}</small> }
-                @if (item.status === 'FAILED') { <small>Đã tự chi lại {{ item.retryCount }} lần</small> }
-              </div>
-            </td>
-            <td class="row-action">
-              @if (item.retryable) {
-              <button type="button" class="btn btn--sm" (click)="retry(item)" [disabled]="retrying() === item.refundId">
-                <lucide-icon [name]="retrying() === item.refundId ? 'loader-2' : 'refresh-cw'" [class.spin]="retrying() === item.refundId" />Chi lại
-              </button>
-              }
-            </td>
-          </tr>
-          }
-        </tbody>
-      </table>
-      }
-      @case ('payouts') {
-      <table class="table">
-        <thead><tr><th>Yêu cầu lúc</th><th>{{ payoutKind() === 'OWNER_WITHDRAWAL' ? 'Chủ sân' : 'Người chơi' }}</th><th>Tài khoản nhận</th><th class="num">Số tiền</th><th>Trạng thái</th></tr></thead>
-        <tbody>
-          @for (item of payouts(); track item.payoutId) {
-          <tr>
-            <td><div class="cell-title"><strong class="plain">{{ item.requestedAt | date:'HH:mm dd/MM/yyyy' }}</strong>
-              @if (item.completedAt) { <small>xong {{ item.completedAt | date:'HH:mm dd/MM' }}</small> }</div></td>
-            <td><div class="cell-title"><strong class="plain">{{ person(item.payeeId) }}</strong><small>{{ users.email(item.payeeId) }}</small></div></td>
-            <td><div class="cell-title"><strong class="plain">{{ item.destinationAccountName || '—' }}</strong><small>{{ item.destinationAccountMasked }}</small></div></td>
-            <td class="num">{{ money(item.amount) }}</td>
-            <td>
-              <div class="status-cell">
-                <span [class]="'badge badge--' + payoutStatus(item.status).tone">{{ payoutStatus(item.status).label }}</span>
-                @if (item.failureReason) { <small class="danger" [title]="item.failureReason">{{ item.failureReason }}</small> }
-              </div>
-            </td>
-          </tr>
-          }
-        </tbody>
-      </table>
-      }
+    @case ('payments') {
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Thời gian</th>
+          <th>Khoản thu</th>
+          <th>Người trả</th>
+          <th class="num">Số tiền</th>
+          <th class="num">Phí nền tảng</th>
+          <th>Trạng thái</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of payments(); track item.paymentId) {
+        <tr>
+          <td>
+            <div class="cell-title"><strong class="plain">{{ item.createdAt | date:'HH:mm dd/MM/yyyy' }}</strong>
+              @if (item.paidAt) { <small>thu lúc {{ item.paidAt | date:'HH:mm dd/MM' }}</small> }</div>
+          </td>
+          <td>
+            <div class="cell-title"><strong>{{ purposeLabel(item.purpose) }}</strong><small
+                [title]="item.description ?? ''">{{ item.description || '—' }}</small></div>
+          </td>
+          <td>
+            <div class="cell-title"><strong class="plain">{{ person(item.payerId) }}</strong><small>{{
+                users.email(item.payerId) }}</small></div>
+          </td>
+          <td class="num">{{ money(item.amount) }}</td>
+          <td class="num">{{ item.platformFee ? money(item.platformFee) : '—' }}</td>
+          <td><span [class]="'badge badge--' + paymentStatus(item.status).tone">{{ paymentStatus(item.status).label
+              }}</span></td>
+        </tr>
+        }
+      </tbody>
+    </table>
+    }
+    @case ('refunds') {
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Cập nhật</th>
+          <th>Người nhận</th>
+          <th>Khoản gốc · lý do</th>
+          <th class="num">Số tiền</th>
+          <th>Trạng thái</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of refunds(); track item.refundId) {
+        <tr>
+          <td>
+            <div class="cell-title"><strong class="plain">{{ (item.updatedAt ?? item.createdAt) | date:'HH:mm
+                dd/MM/yyyy' }}</strong>
+              <small>tạo {{ item.createdAt | date:'dd/MM' }}</small>
+            </div>
+          </td>
+          <td>
+            <div class="cell-title"><strong class="plain">{{ person(item.payerId) }}</strong><small>{{
+                users.email(item.payerId) }}</small></div>
+          </td>
+          <td>
+            <div class="cell-title"><strong>{{ purposeLabel(item.purpose) }}</strong><small [title]="item.reason">{{
+                item.reason }}</small></div>
+          </td>
+          <td class="num">{{ money(item.amount) }}</td>
+          <td>
+            <div class="status-cell">
+              <span [class]="'badge badge--' + refundStatus(item.status).tone">{{ refundStatus(item.status).label
+                }}</span>
+              @if (item.failureReason && item.status !== 'SUCCEEDED') { <small class="danger"
+                [title]="item.failureReason">{{ item.failureReason }}</small> }
+              @else if (refundStatus(item.status).hint) { <small>{{ refundStatus(item.status).hint }}</small> }
+              @if (item.status === 'FAILED') { <small>Đã tự chi lại {{ item.retryCount }} lần</small> }
+            </div>
+          </td>
+          <td class="row-action">
+            @if (item.retryable) {
+            <button type="button" class="btn btn--sm" (click)="retry(item)" [disabled]="retrying() === item.refundId">
+              <lucide-icon [name]="retrying() === item.refundId ? 'loader-2' : 'refresh-cw'"
+                [class.spin]="retrying() === item.refundId" />Chi lại
+            </button>
+            }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+    }
+    @case ('payouts') {
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Yêu cầu lúc</th>
+          <th>{{ payoutKind() === 'OWNER_WITHDRAWAL' ? 'Chủ sân' : 'Người chơi' }}</th>
+          <th>Tài khoản nhận</th>
+          <th class="num">Số tiền</th>
+          <th>Trạng thái</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of payouts(); track item.payoutId) {
+        <tr>
+          <td>
+            <div class="cell-title"><strong class="plain">{{ item.requestedAt | date:'HH:mm dd/MM/yyyy' }}</strong>
+              @if (item.completedAt) { <small>xong {{ item.completedAt | date:'HH:mm dd/MM' }}</small> }</div>
+          </td>
+          <td>
+            <div class="cell-title"><strong class="plain">{{ person(item.payeeId) }}</strong><small>{{
+                users.email(item.payeeId) }}</small></div>
+          </td>
+          <td>
+            <div class="cell-title"><strong class="plain">{{ item.destinationAccountName || '—' }}</strong><small>{{
+                item.destinationAccountMasked }}</small></div>
+          </td>
+          <td class="num">{{ money(item.amount) }}</td>
+          <td>
+            <div class="status-cell">
+              <span [class]="'badge badge--' + payoutStatus(item.status).tone">{{ payoutStatus(item.status).label
+                }}</span>
+              @if (item.failureReason) { <small class="danger" [title]="item.failureReason">{{ item.failureReason
+                }}</small> }
+            </div>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+    }
     }
   </section>
   @if (total() > pageSize) {
-  <app-pagination [pageIndex]="pageIndex()" [pageSize]="pageSize" [totalItems]="total()" (pageChange)="goToPage($event)" />
+  <app-pagination [pageIndex]="pageIndex()" [pageSize]="pageSize" [totalItems]="total()"
+    (pageChange)="goToPage($event)" />
   }
   }
 </main>

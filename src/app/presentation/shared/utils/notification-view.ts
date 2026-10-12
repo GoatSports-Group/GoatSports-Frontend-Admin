@@ -16,6 +16,7 @@ const VIEWS: Record<string, TypeView> = {
   MESSAGE: { icon: 'message-circle', tone: 'primary', label: 'Tin nhắn' },
   TOURNAMENT: { icon: 'trophy', tone: 'primary', label: 'Giải đấu' },
   CONTENT_MODERATION: { icon: 'shield-alert', tone: 'danger', label: 'Kiểm duyệt' },
+  REPORT_EXPORT: { icon: 'file-down', tone: 'success', label: 'Báo cáo' },
   [NotificationType.USER]: { icon: 'user', tone: 'neutral', label: 'Tài khoản' },
   [NotificationType.SYSTEM]: { icon: 'bell', tone: 'neutral', label: 'Hệ thống' }
 };
@@ -38,6 +39,8 @@ export function notificationRoute(notification: Notification, isPlatformAdmin: b
     case 'TOURNAMENT': return isPlatformAdmin ? null : '/admin/tournaments';
     case 'CONTENT_MODERATION': return isPlatformAdmin ? '/admin/moderation' : null;
     case 'MESSAGE': return '/admin/messages';
+    // Báo cáo xuất ở nền đã xong / lỗi: mở thẳng danh sách Báo cáo đã xuất của trang Đơn đặt sân.
+    case 'REPORT_EXPORT': return isPlatformAdmin ? '/admin/bookings?exports=open' : null;
     default: return null;
   }
 }
