@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { of } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -53,10 +53,22 @@ describe('PlatformVenuesComponent', () => {
     expect(repository.suspend).toHaveBeenCalledWith('venue-1', 'Nhiều khiếu nại về an toàn sân');
     expect(page.suspending()).toBeNull();
     expect(page.statusOf(page.items()[0]).label).toBe('Bị đình chỉ');
-    expect(fixture.nativeElement.textContent).toContain('Gỡ đình chỉ');
+    expect(fixture.nativeElement.querySelector('.badge')?.textContent).toContain('Bị đình chỉ');
   });
 
-  it('drops a reinstated venue from the "Bị đình chỉ" tab', () => {
+  it('filters by owner id when opened from Messages, and the chip clears it', async () => {
+    TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { queryParamMap: convertToParamMap({ ownerId: 'owner-9', ownerName: 'Minh Khoa' }) } } });
+    const fixture = TestBed.createComponent(PlatformVenuesComponent);
+    fixture.detectChanges();
+
+    expect(repository.getVenues).toHaveBeenLastCalledWith(expect.objectContaining({ ownerId: 'owner-9' }));
+    expect(fixture.nativeElement.querySelector('.owner-chip')?.textContent).toContain('Minh Khoa');
+
+    fixture.componentInstance.clearOwner();
+    expect(repository.getVenues).toHaveBeenLastCalledWith(expect.objectContaining({ ownerId: undefined }));
+  });
+
+  it('drops a reinstated venue when filtering by "Bị đình chỉ"', () => {
     repository.getVenues.mockReturnValue(of({
       items: [{ ...venue, active: false, suspendedAt: '2026-09-29T10:00:00', suspensionReason: 'Vi phạm' }], total: 1
     }));

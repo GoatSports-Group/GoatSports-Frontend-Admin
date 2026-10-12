@@ -977,8 +977,8 @@
   }
 
   .command-dialog__footer {
+    flex-wrap: wrap;
     gap: 12px;
-    overflow-x: auto;
   }
 }
 

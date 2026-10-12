@@ -10,6 +10,10 @@ import { ADMIN_BOOKING_REPOSITORY_TOKEN } from '@application/ports/persistence/a
 import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/loading-skeleton.component';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { PaginationComponent } from '@shared/components/ui/pagination/pagination.component';
+import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
+import { NotifyService } from '@shared/components/notify/notify.service';
+import { downloadBlob } from '@shared/utils/file.utils';
+import { MatMenuModule } from '@angular/material/menu';
 
 type Tone = 'success' | 'warning' | 'danger' | 'info' | 'primary' | 'neutral';
 
@@ -32,17 +36,27 @@ const STATUS_META: Record<OwnerBookingStatus, { label: string; tone: Tone }> = {
   styleUrls: ['./bookings.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [DatePickerComponent, DatePipe, FormsModule, LucideIconComponent, LoadingSkeletonComponent, PaginationComponent]
+  imports: [DatePickerComponent, DatePipe, FormsModule, MatMenuModule, LucideIconComponent, LoadingSkeletonComponent,
+    PaginationComponent, SelectComponent]
 })
 export class AdminBookingsComponent implements OnInit {
   private readonly repository = inject(ADMIN_BOOKING_REPOSITORY_TOKEN);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly notify = inject(NotifyService);
   private readonly search$ = new Subject<string>();
   private request?: Subscription;
 
   readonly pageSize = PAGE_SIZE.table;
   readonly statusMeta = STATUS_META;
-  readonly statusTabs = Object.keys(STATUS_META) as OwnerBookingStatus[];
+  readonly statusOptions: readonly SelectOption[] = [
+    { value: '', label: 'Tất cả trạng thái' },
+    ...(Object.keys(STATUS_META) as OwnerBookingStatus[]).map(value => ({ value, label: STATUS_META[value].label }))
+  ];
+  readonly exportFormats = [
+    { value: 'xlsx', label: 'Excel (.xlsx)', icon: 'file-spreadsheet' },
+    { value: 'pdf', label: 'PDF', icon: 'file-text' }
+  ] as const;
+  readonly exporting = signal<'xlsx' | 'pdf' | null>(null);
 
   readonly status = signal<OwnerBookingStatus | ''>('');
   readonly keyword = signal('');
@@ -99,14 +113,7 @@ export class AdminBookingsComponent implements OnInit {
     this.request?.unsubscribe();
     this.error.set(null);
     (keepList ? this.paging : this.loading).set(true);
-    this.request = this.repository.getBookings({
-      status: this.status() || undefined,
-      query: this.keyword() || undefined,
-      fromDate: this.fromDate() || undefined,
-      toDate: this.toDate() || undefined,
-      page: this.pageIndex(),
-      size: this.pageSize
-    }).pipe(finalize(() => { this.loading.set(false); this.paging.set(false); }))
+    this.request = this.repository.getBookings({ ...this.currentFilter(), page: this.pageIndex(), size: this.pageSize }).pipe(finalize(() => { this.loading.set(false); this.paging.set(false); }))
       .subscribe({
         next: page => {
           this.items.set(page.items);
@@ -116,7 +123,32 @@ export class AdminBookingsComponent implements OnInit {
       });
   }
 
+  /** Xuất đúng bộ lọc đang xem (trạng thái, từ khóa, khoảng ngày), mọi trang. */
+  exportReport(format: 'xlsx' | 'pdf'): void {
+    if (this.exporting()) return;
+    this.exporting.set(format);
+    this.repository.exportReport(this.currentFilter(), format)
+      .pipe(finalize(() => this.exporting.set(null)), takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: file => {
+          if (!file.size) { this.notify.error('Dịch vụ báo cáo không trả dữ liệu.'); return; }
+          downloadBlob(file, `don-dat-san-${new Date().toISOString().slice(0, 10)}.${format}`);
+          this.notify.success('Đã xuất báo cáo đơn đặt sân.');
+        },
+        error: () => this.notify.error('Không xuất được báo cáo. Nếu quá 10.000 đơn, hãy thu hẹp khoảng ngày.')
+      });
+  }
+
   open(booking: OwnerBooking): void { this.selected.set(booking); }
+
+  private currentFilter() {
+    return {
+      status: this.status() || undefined,
+      query: this.keyword() || undefined,
+      fromDate: this.fromDate() || undefined,
+      toDate: this.toDate() || undefined
+    };
+  }
   close(): void { this.selected.set(null); }
 
   customerName(booking: OwnerBooking): string {

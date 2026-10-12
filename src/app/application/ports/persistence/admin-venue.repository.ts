@@ -12,6 +12,8 @@ export interface AdminVenueFilter {
   query?: string;
   /** Chỉ lấy các cơ sở này (tra tên theo lô, tối đa 50). */
   ids?: string[];
+  /** Chỉ lấy cơ sở của chủ sân này (Tin nhắn → "Xem cơ sở của chủ sân"). */
+  ownerId?: string;
   page: number;
   size: number;
 }

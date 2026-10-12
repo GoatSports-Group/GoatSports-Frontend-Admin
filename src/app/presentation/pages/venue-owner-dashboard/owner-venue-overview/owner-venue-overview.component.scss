@@ -28,7 +28,7 @@
 
 .venue-switcher { display: flex; min-width: 0; align-items: center; gap: 14px; padding: 11px 13px; border: 1px solid var(--hairline); border-radius: 12px; background: var(--surface-subtle); }
 .venue-switcher > span { flex: 0 0 auto; color: var(--body); font-size: 13px; font-weight: 700; }
-.venue-switcher > div { display: flex; min-width: 0; gap: 8px; overflow-x: auto; padding: 2px; }
+.venue-switcher > div { display: flex; min-width: 0; flex-wrap: wrap; gap: 8px; padding: 2px; }
 .venue-switcher button { display: inline-flex; min-height: 44px; flex: 0 0 auto; align-items: center; gap: 8px; padding: 0 13px; border: 1px solid var(--border-strong); border-radius: 12px; background: var(--surface); color: var(--ink-2); cursor: pointer; font: 600 14px/1.3 'Be Vietnam Pro', sans-serif; }
 .venue-switcher button.is-selected { border-color: #6fcea9; background: var(--primary-light); color: var(--primary-hover); }
 .venue-switcher button:focus-visible { outline: 3px solid rgb(16 185 129 / 30%); outline-offset: 2px; }

@@ -21,6 +21,7 @@ export class AdminVenueRepositoryImpl implements AdminVenueRepository {
     if (filter.status) params = params.set('status', filter.status);
     if (filter.query) params = params.set('query', filter.query);
     if (filter.ids?.length) params = params.set('ids', filter.ids.join(','));
+    if (filter.ownerId) params = params.set('ownerId', filter.ownerId);
     return this.http.get<BaseResponse<PageResult<OwnerVenueOverview>>>(`${this.baseUrl}/venues`, { params })
       .pipe(map(response => ({ items: response.data?.items ?? [], total: response.data?.total ?? 0 })));
   }

@@ -21,4 +21,8 @@ export class AdminBookingRepositoryImpl implements AdminBookingRepository {
   getBooking(bookingId: string): Observable<OwnerBooking> {
     return this.api.getBooking(bookingId).pipe(map(response => response.data));
   }
+
+  exportReport(filter: Omit<AdminBookingFilter, 'page' | 'size'>, format: 'xlsx' | 'pdf'): Observable<Blob> {
+    return this.api.exportReport(filter, format);
+  }
 }

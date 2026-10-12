@@ -1,3 +1,4 @@
+import { InfiniteScrollDirective } from '@shared/directives/infinite-scroll.directive';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SharedModule } from '@shared/shared.module';
@@ -49,6 +50,7 @@ import { OverlayModule } from '@angular/cdk/overlay';
     ChangePasswordDrawerComponent
   ],
   imports: [
+    InfiniteScrollDirective,
     CommonModule,
     SharedModule,
     AdminRoutingModule,

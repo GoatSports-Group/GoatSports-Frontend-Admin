@@ -20,7 +20,7 @@ describe('AdminBookingsComponent', () => {
     ],
     allowedTransitions: []
   };
-  const repository = { getBookings: vi.fn(), getBooking: vi.fn() };
+  const repository = { getBookings: vi.fn(), getBooking: vi.fn(), exportReport: vi.fn() };
 
   beforeEach(async () => {
     repository.getBookings.mockReset().mockReturnValue(of({ items: [booking], page: 0, pageSize: 20, pages: 1, total: 1 }));
@@ -59,6 +59,22 @@ describe('AdminBookingsComponent', () => {
     expect(dialog.textContent).toContain('Tiền cọc');
     expect(dialog.textContent).toContain('Không thành công');
     expect([...dialog.querySelectorAll('button')].map(button => button.textContent?.trim())).toEqual(['', 'Đóng']);
+  });
+
+  it('exports the current filter across all pages, not just the visible page', () => {
+    repository.exportReport.mockReset().mockReturnValue(of(new Blob(['x'])));
+    globalThis.URL.createObjectURL = vi.fn(() => 'blob:x');
+    globalThis.URL.revokeObjectURL = vi.fn();
+    const fixture = TestBed.createComponent(AdminBookingsComponent);
+    fixture.detectChanges();
+    fixture.componentInstance.setStatus('CANCELLED');
+    fixture.componentInstance.goToPage(3);
+
+    fixture.componentInstance.exportReport('xlsx');
+
+    expect(repository.exportReport).toHaveBeenCalledWith(
+      { status: 'CANCELLED', query: undefined, fromDate: undefined, toDate: undefined }, 'xlsx');
+    expect(fixture.componentInstance.exporting()).toBeNull();
   });
 
   it('shows a retryable error when the list fails', () => {

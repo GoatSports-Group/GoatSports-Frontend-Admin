@@ -241,10 +241,11 @@
   .cell-title strong { overflow: hidden; max-width: 320px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
   .cell-title small { color: var(--body); font-size: 13px; }
 
+  // Xuống dòng thay vì cuộn ngang: hàng cuộn ngang ăn mất con lăn chuột khi người dùng chỉ muốn cuộn trang.
   .tabs {
     display: flex;
+    flex-wrap: wrap;
     gap: 4px;
-    overflow-x: auto;
     border-bottom: 1px solid var(--hairline);
   }
 
@@ -461,6 +462,34 @@
     &:focus-within { border-color: var(--primary); }
   }
 
+  // Hàng lọc gọn: ô tìm ngắn + select trạng thái (thay tab) + nút phụ đẩy về cuối, tất cả một hàng.
+  .filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+
+    .search { flex: 0 1 340px; min-width: 220px; }
+    app-select, app-date-picker { flex: 0 0 200px; }
+    .filter-row__end { display: flex; gap: 8px; margin-left: auto; }
+  }
+
+  // Nút ba chấm mở menu thao tác của một dòng / một thẻ (menu: .goat-action-menu).
+  .kebab {
+    display: inline-grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--body);
+    cursor: pointer;
+
+    lucide-icon { width: 18px; height: 18px; }
+    &:hover, &[aria-expanded='true'] { border-color: var(--hairline); background: var(--surface-subtle); color: var(--ink); }
+  }
+
   .badge--neutral { background: var(--surface-strong); color: var(--body); }
 
   .btn--danger {
@@ -491,6 +520,8 @@
   @keyframes tournament-spin { to { transform: rotate(360deg); } }
 
   @media (max-width: 640px) {
+    .filter-row > *, .filter-row .search, .filter-row app-select, .filter-row app-date-picker { flex: 1 1 100%; }
+    .filter-row__end { margin-left: 0; }
     .modal-backdrop { align-items: end; padding: 0; }
     .modal { width: 100%; max-height: 92dvh; border-radius: 24px 24px 0 0; }
     .modal__header, .modal__body, .modal__footer { padding-inline: 16px; }

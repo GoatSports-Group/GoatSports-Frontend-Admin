@@ -5,6 +5,7 @@ import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
+import { MatMenuModule } from '@angular/material/menu';
 import { Subject, Subscription, debounceTime, distinctUntilChanged, finalize } from 'rxjs';
 import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { ADMIN_VENUE_REPOSITORY_TOKEN, AdminVenueStatus } from '@application/ports/persistence/admin-venue.repository';
@@ -12,9 +13,10 @@ import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/co
 import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/loading-skeleton.component';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { PaginationComponent } from '@shared/components/ui/pagination/pagination.component';
+import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
 
-const STATUS_TABS: readonly { value: AdminVenueStatus | ''; label: string }[] = [
-  { value: '', label: 'Tất cả' },
+const STATUS_OPTIONS: readonly SelectOption[] = [
+  { value: '', label: 'Tất cả trạng thái' },
   { value: 'ACTIVE', label: 'Đang mở' },
   { value: 'INACTIVE', label: 'Chủ sân tạm tắt' },
   { value: 'SUSPENDED', label: 'Bị đình chỉ' }
@@ -30,7 +32,8 @@ const STATUS_TABS: readonly { value: AdminVenueStatus | ''; label: string }[] = 
   styleUrls: ['./platform-venues.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [DatePipe, FormsModule, RouterLink, LucideIconComponent, LoadingSkeletonComponent, PaginationComponent]
+  imports: [DatePipe, FormsModule, RouterLink, MatMenuModule, LucideIconComponent, LoadingSkeletonComponent, PaginationComponent,
+    SelectComponent]
 })
 export class PlatformVenuesComponent implements OnInit {
   private readonly repository = inject(ADMIN_VENUE_REPOSITORY_TOKEN);
@@ -41,11 +44,13 @@ export class PlatformVenuesComponent implements OnInit {
   private request?: Subscription;
 
   readonly pageSize = PAGE_SIZE.table;
-  readonly tabs = STATUS_TABS;
+  readonly statusOptions = STATUS_OPTIONS;
   readonly minReason = 10;
 
   readonly status = signal<AdminVenueStatus | ''>('');
   readonly keyword = signal('');
+  /** Từ Tin nhắn ("Xem cơ sở của chủ sân"): lọc theo id chủ sân, vì email tài khoản khác email liên hệ của cơ sở. */
+  readonly owner = signal<{ id: string; name: string } | null>(null);
   readonly pageIndex = signal(0);
   readonly items = signal<OwnerVenueOverview[]>([]);
   readonly total = signal(0);
@@ -55,6 +60,7 @@ export class PlatformVenuesComponent implements OnInit {
   readonly notice = signal<string | null>(null);
 
   readonly suspending = signal<OwnerVenueOverview | null>(null);
+  readonly viewingReason = signal<OwnerVenueOverview | null>(null);
   readonly reason = signal('');
   readonly saving = signal(false);
   readonly actionError = signal<string | null>(null);
@@ -63,12 +69,12 @@ export class PlatformVenuesComponent implements OnInit {
     return length >= this.minReason && length <= 500;
   });
 
-  readonly hasFilters = computed(() => !!(this.status() || this.keyword()));
+  readonly hasFilters = computed(() => !!(this.status() || this.keyword() || this.owner()));
 
   ngOnInit(): void {
-    // Tu Tin nhan ("Xem co so cua chu san"): loc san theo email chu san.
-    const keyword = this.route.snapshot.queryParamMap.get('keyword')?.trim();
-    if (keyword) this.keyword.set(keyword);
+    const params = this.route.snapshot.queryParamMap;
+    const ownerId = params.get('ownerId');
+    if (ownerId) this.owner.set({ id: ownerId, name: params.get('ownerName') || 'chủ sân' });
     this.search$.pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
       .subscribe(value => { this.keyword.set(value.trim()); this.reload(); });
     this.load();
@@ -84,6 +90,12 @@ export class PlatformVenuesComponent implements OnInit {
   clearFilters(): void {
     this.status.set('');
     this.keyword.set('');
+    this.owner.set(null);
+    this.reload();
+  }
+
+  clearOwner(): void {
+    this.owner.set(null);
     this.reload();
   }
 
@@ -104,6 +116,7 @@ export class PlatformVenuesComponent implements OnInit {
     this.request = this.repository.getVenues({
       status: this.status() || undefined,
       query: this.keyword() || undefined,
+      ownerId: this.owner()?.id,
       page: this.pageIndex(),
       size: this.pageSize
     }).pipe(finalize(() => { this.loading.set(false); this.paging.set(false); }))

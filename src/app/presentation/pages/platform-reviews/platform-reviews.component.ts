@@ -13,6 +13,7 @@ import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/lo
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { PaginationComponent } from '@shared/components/ui/pagination/pagination.component';
 import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
+import { MatMenuModule } from '@angular/material/menu';
 
 const STATUS_META: Record<OwnerReviewStatus, { label: string; tone: string }> = {
   PUBLISHED: { label: 'Đang hiển thị', tone: 'success' },
@@ -30,7 +31,8 @@ const STATUS_META: Record<OwnerReviewStatus, { label: string; tone: string }> = 
   styleUrls: ['./platform-reviews.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [DatePipe, FormsModule, LucideIconComponent, LoadingSkeletonComponent, PaginationComponent, SelectComponent]
+  imports: [DatePipe, FormsModule, MatMenuModule, LucideIconComponent, LoadingSkeletonComponent, PaginationComponent,
+    SelectComponent]
 })
 export class PlatformReviewsComponent implements OnInit {
   private readonly repository = inject(ADMIN_VENUE_REPOSITORY_TOKEN);
@@ -42,7 +44,10 @@ export class PlatformReviewsComponent implements OnInit {
 
   readonly pageSize = PAGE_SIZE.table;
   readonly statusMeta = STATUS_META;
-  readonly statusTabs = Object.keys(STATUS_META) as OwnerReviewStatus[];
+  readonly statusOptions: readonly SelectOption[] = [
+    { value: '', label: 'Mọi trạng thái' },
+    ...(Object.keys(STATUS_META) as OwnerReviewStatus[]).map(value => ({ value, label: STATUS_META[value].label }))
+  ];
   readonly ratingOptions: readonly SelectOption[] = [
     { value: 0, label: 'Mọi số sao' },
     ...[1, 2, 3, 4, 5].map(value => ({ value, label: `${value} sao` }))

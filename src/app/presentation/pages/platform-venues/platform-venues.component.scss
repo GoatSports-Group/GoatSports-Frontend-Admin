@@ -1,13 +1,21 @@
 @use '../ops' as t;
 @include t.ops;
 
-.toolbar { grid-template-columns: minmax(0, 1fr) auto; }
+.result-count {
+  margin: 0;
+  color: var(--body);
+  font-size: 14px;
+  font-weight: 600;
+}
 
-.result-count { margin: 0; color: var(--body); font-size: 14px; font-weight: 600; }
+.is-paging {
+  opacity: .55;
+  pointer-events: none;
+}
 
-.is-paging { opacity: .55; pointer-events: none; }
-
-.cell-title strong.plain { font-weight: 600; }
+.cell-title strong.plain {
+  font-weight: 600;
+}
 
 .rating {
   display: inline-flex;
@@ -18,30 +26,75 @@
   font-weight: 800;
   text-decoration: none;
 
-  lucide-icon { width: 14px; height: 14px; color: var(--warning); }
-  small { color: var(--body); font-weight: 600; }
-  &:hover { color: var(--primary); }
+  lucide-icon {
+    width: 14px;
+    height: 14px;
+    color: var(--warning);
+  }
+
+  small {
+    color: var(--body);
+    font-weight: 600;
+  }
+
+  &:hover {
+    color: var(--primary);
+  }
 }
 
-.status-cell {
-  display: grid;
-  justify-items: start;
-  gap: 4px;
+.owner-chip {
+  display: inline-flex;
+  height: 36px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px 0 12px;
+  border-radius: 9999px;
+  background: var(--primary-light);
+  color: var(--primary-strong);
+  font-size: 14px;
 
-  // Lý do đình chỉ: một dòng, đủ nội dung ở tooltip.
-  small { overflow: hidden; max-width: 260px; color: var(--body); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+  > lucide-icon { width: 16px; height: 16px; }
+
+  button {
+    display: grid;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    border: 0;
+    border-radius: 9999px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+
+    lucide-icon { width: 14px; height: 14px; }
+    &:hover { background: var(--surface); }
+  }
+}
+
+.modal__sub {
+  margin: 4px 0 0;
+  color: var(--body);
+  font-size: 13px;
+}
+
+.reason-text {
+  margin: 0;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--surface-subtle);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.6;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 
 .consequences {
   display: grid;
   gap: 6px;
   margin: 0 0 16px;
-  padding-left: 18px;
+  padding-left: 0px;
   color: var(--body);
   font-size: 14px;
   line-height: 1.5;
-}
-
-@media (max-width: 639px) {
-  .toolbar { grid-template-columns: minmax(0, 1fr); }
 }

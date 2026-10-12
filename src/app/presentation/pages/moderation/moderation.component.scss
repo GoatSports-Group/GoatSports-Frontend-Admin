@@ -1,5 +1,6 @@
 @use '../ops' as t;
-:host { display: block; }
+// Dùng popup (modal-backdrop / modal) và token chung của các trang vận hành.
+@include t.ops;
 
 .moderation-page { color: var(--ink); display: grid; gap: 20px; }
 
@@ -67,19 +68,13 @@ button:disabled { opacity: .55; cursor: not-allowed; }
 .state-card p { color: var(--body); margin-top: 5px; }
 .error-state { border-color: var(--danger-soft); background: var(--danger-soft); }
 
-.result-strip {
-  padding: 14px 18px; border: 1px solid var(--info-soft); border-radius: 16px; background: var(--info-soft);
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-}
-.result-strip span, .result-strip strong { display: block; }
-.result-strip span { color: var(--body); font-size: .72rem; font-weight: 800; text-transform: uppercase; }
-.result-strip p { display: flex; align-items: center; gap: 6px; color: var(--body); margin: 0; font-size: .82rem; }
-
-.queue { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+// Hai thẻ một hàng, gọn: thẻ cùng hàng cao bằng nhau, nút Xử lý luôn nằm đáy thẻ.
+.queue { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .queue-card {
-  min-width: 0; background: var(--surface); border: 1px solid var(--hairline); border-radius: 16px; padding: 18px;
-  display: grid; gap: 14px; box-shadow: 0 8px 24px var(--hairline);
+  min-width: 0; background: var(--surface); border: 1px solid var(--hairline); border-radius: 16px; padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 10px;
 }
+.queue-card blockquote { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
 .queue-card header { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
 .title-row { display: flex; align-items: center; gap: 8px; }
 .meta { color: var(--muted); font-size: .75rem; font-weight: 700; }
@@ -99,8 +94,8 @@ blockquote {
   border-left: 3px solid var(--info-soft); padding-left: 12px;
 }
 
-dl { margin: 0; display: grid; gap: 9px; }
-dl div { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 10px; align-items: start; }
+dl { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px 12px; }
+dl div { display: grid; gap: 2px; align-content: start; }
 dt { color: var(--body); display: flex; gap: 5px; align-items: center; font-size: .75rem; }
 dd { margin: 0; font-weight: 700; font-size: .8rem; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
 
@@ -109,7 +104,11 @@ dd { margin: 0; font-weight: 700; font-size: .8rem; overflow-wrap: anywhere; fon
 .action-trail strong { color: var(--ink); }
 .action-trail time { margin-left: auto; color: var(--muted); white-space: nowrap; font-size: .74rem; }
 
-.queue-card footer { border-top: 1px solid var(--hairline); padding-top: 14px; }
+.queue-card footer { display: flex; justify-content: flex-end; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--hairline); }
+.queue-card footer button { min-height: 36px; }
+.dialog-sub { margin: 4px 0 0; color: var(--body); font-size: 13px; }
+.decision-help { display: grid; gap: 6px; margin: 0; padding-left: 18px; color: var(--body); font-size: 14px; line-height: 1.5; }
+.decision-help strong { color: var(--ink); }
 .action-form { display: grid; gap: 10px; }
 .hint { margin: 0; color: var(--body); font-size: .78rem; }
 .form-error { margin: 0; color: var(--danger); font-size: .78rem; font-weight: 700; }
@@ -122,17 +121,17 @@ dd { margin: 0; font-weight: 700; font-size: .8rem; overflow-wrap: anywhere; fon
 
 @media (max-width: 1100px) {
   .filter-panel { grid-template-columns: 1fr; }
+  .queue { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 680px) {
-  .hero, .result-strip { align-items: stretch; flex-direction: column; }
+  .hero { align-items: stretch; flex-direction: column; }
   .hero { padding: 22px 18px; }
   .scope-note { max-width: none; }
   .filter-panel { padding: 14px; }
   .lane-tabs { flex-direction: column; }
   .lane-tabs button { width: 100%; }
   .state-card { align-items: flex-start; flex-direction: column; }
-  dl div { grid-template-columns: 1fr; gap: 3px; }
   .form-buttons, .decision-row { flex-direction: column; }
   .form-buttons button, .decision-row button { width: 100%; }
   .action-trail time { margin-left: 0; }
@@ -155,5 +154,4 @@ dd { margin: 0; font-weight: 700; font-size: .8rem; overflow-wrap: anywhere; fon
 :host .secondary { border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); }
 :host .secondary:hover:not(:disabled) { border-color: var(--border-strong); color: var(--primary); }
 :host .error-state, :host .state-card { @include t.state-panel; }
-:host .result-strip { border-color: var(--hairline); background: var(--surface); }
 :host .filter-panel { grid-template-columns: minmax(200px, 320px) auto; justify-content: start; box-shadow: none; }

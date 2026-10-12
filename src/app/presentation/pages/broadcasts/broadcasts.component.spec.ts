@@ -27,7 +27,9 @@ describe('BroadcastsComponent', () => {
     const fixture = TestBed.createComponent(BroadcastsComponent);
     fixture.detectChanges();
     const page = fixture.componentInstance;
+    expect(repository.countAudience).not.toHaveBeenCalled();
 
+    page.openCompose();
     page.setAudience('VENUE_OWNER');
     expect(repository.countAudience).toHaveBeenLastCalledWith('VENUE_OWNER');
     page.openConfirm();
@@ -45,6 +47,7 @@ describe('BroadcastsComponent', () => {
 
     expect(repository.send).toHaveBeenCalledWith({ title: 'Bảo trì', content: 'Tối nay 23:00', audience: 'VENUE_OWNER' }, expect.any(String));
     expect(page.confirming()).toBe(false);
+    expect(page.composing()).toBe(false);
     expect(page.title()).toBe('');
   });
 

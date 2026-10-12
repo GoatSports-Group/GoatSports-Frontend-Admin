@@ -2,30 +2,32 @@
   <header class="page-head">
     <div>
       <h1>Cơ sở thể thao</h1>
-      <p>Mọi cơ sở trên nền tảng. Đình chỉ cơ sở vi phạm để ẩn khỏi tìm kiếm và chặn đơn mới; thông tin cơ sở vẫn do chủ sân chỉnh sửa.</p>
+      <p>Mọi cơ sở trên nền tảng. Đình chỉ cơ sở vi phạm để ẩn khỏi tìm kiếm và chặn đơn mới.</p>
     </div>
   </header>
 
   @if (notice()) {
   <div class="notice" role="status">
     <lucide-icon name="circle-check-big" /><span>{{ notice() }}</span>
-    <button type="button" class="icon-btn" aria-label="Ẩn thông báo" (click)="notice.set(null)"><lucide-icon name="x" /></button>
+    <button type="button" class="icon-btn" aria-label="Ẩn thông báo" (click)="notice.set(null)"><lucide-icon
+        name="x" /></button>
   </div>
   }
 
-  <nav class="tabs" role="tablist" aria-label="Lọc theo trạng thái">
-    @for (tab of tabs; track tab.value) {
-    <button type="button" role="tab" class="tab" [class.is-active]="status() === tab.value" [attr.aria-selected]="status() === tab.value"
-      (click)="setStatus(tab.value)">{{ tab.label }}</button>
-    }
-  </nav>
-
-  <div class="toolbar" role="search">
+  <div class="filter-row" role="search">
     <label class="search">
       <lucide-icon name="search" />
       <input type="search" [ngModel]="keyword()" (ngModelChange)="onKeyword($event)" name="keyword"
-        placeholder="Tên cơ sở, email, SĐT, quận, thành phố..." aria-label="Tìm cơ sở" />
+        placeholder="Tên, email, SĐT, khu vực..." aria-label="Tìm cơ sở" />
     </label>
+    <app-select [ngModel]="status()" (ngModelChange)="setStatus($event)" [options]="statusOptions"
+      ariaLabel="Lọc theo trạng thái" />
+    @if (owner(); as o) {
+    <span class="owner-chip">
+      <lucide-icon name="user" />Chủ sân: <strong>{{ o.name }}</strong>
+      <button type="button" aria-label="Bỏ lọc theo chủ sân" (click)="clearOwner()"><lucide-icon name="x" /></button>
+    </span>
+    }
     @if (hasFilters()) {
     <button type="button" class="btn btn--ghost" (click)="clearFilters()"><lucide-icon name="x" />Xóa lọc</button>
     }
@@ -35,55 +37,74 @@
   <app-loading-skeleton variant="table" [count]="6" [columns]="6" label="Đang tải cơ sở" />
   } @else if (error()) {
   <div class="state state--error" role="alert">
-    <lucide-icon name="alert-circle" /><strong>Chưa tải được danh sách cơ sở</strong><p>{{ error() }}</p>
+    <lucide-icon name="alert-circle" /><strong>Chưa tải được danh sách cơ sở</strong>
+    <p>{{ error() }}</p>
     <button type="button" class="btn" (click)="load()"><lucide-icon name="rotate-ccw" />Thử lại</button>
   </div>
   } @else if (!items().length) {
   <div class="state">
     <lucide-icon [name]="hasFilters() ? 'filter' : 'store'" />
     <strong>{{ hasFilters() ? 'Không có cơ sở khớp bộ lọc' : 'Chưa có cơ sở nào' }}</strong>
-    <p>{{ hasFilters() ? 'Thử đổi trạng thái hoặc từ khóa.' : 'Cơ sở xuất hiện tại đây sau khi đơn chủ sân được duyệt.' }}</p>
-    @if (hasFilters()) { <button type="button" class="btn" (click)="clearFilters()"><lucide-icon name="x" />Xóa lọc</button> }
+    <p>{{ hasFilters() ? 'Thử đổi trạng thái hoặc từ khóa.' : 'Cơ sở xuất hiện tại đây sau khi đơn chủ sân được duyệt.'
+      }}</p>
+    @if (hasFilters()) { <button type="button" class="btn" (click)="clearFilters()"><lucide-icon name="x" />Xóa
+      lọc</button> }
   </div>
   } @else {
   <p class="result-count">{{ total() }} cơ sở</p>
   <section class="card table-wrap" [class.is-paging]="paging()">
     <table class="table">
       <thead>
-        <tr><th>Cơ sở</th><th>Liên hệ</th><th class="num">Sân</th><th class="num">Đánh giá</th><th>Trạng thái</th><th></th></tr>
+        <tr>
+          <th>Cơ sở</th>
+          <th>Liên hệ</th>
+          <th class="num">Sân</th>
+          <th class="num">Đánh giá</th>
+          <th>Trạng thái</th>
+          <th></th>
+        </tr>
       </thead>
       <tbody>
         @for (item of items(); track item.venueId) {
         <tr>
-          <td><div class="cell-title"><strong>{{ item.name }}</strong><small>{{ place(item) }}</small></div></td>
-          <td><div class="cell-title"><strong class="plain">{{ item.phone || '—' }}</strong><small>{{ item.email || '—' }}</small></div></td>
+          <td>
+            <div class="cell-title"><strong>{{ item.name }}</strong><small>{{ place(item) }}</small></div>
+          </td>
+          <td>
+            <div class="cell-title"><strong class="plain">{{ item.phone || '—' }}</strong><small>{{ item.email || '—'
+                }}</small></div>
+          </td>
           <td class="num">{{ item.courts.length }}</td>
           <td class="num">
             @if (item.totalReviews) {
-            <a class="rating" [routerLink]="['/admin/platform-reviews']" [queryParams]="{ venueId: item.venueId, venueName: item.name }"
+            <a class="rating" [routerLink]="['/admin/platform-reviews']"
+              [queryParams]="{ venueId: item.venueId, venueName: item.name }"
               [attr.aria-label]="'Xem ' + item.totalReviews + ' đánh giá của ' + item.name">
               <lucide-icon name="star" />{{ rating(item) }}<small>({{ item.totalReviews }})</small>
             </a>
             } @else { <span class="muted">—</span> }
           </td>
           <td>
-            <div class="status-cell">
-              <span [class]="'badge badge--' + statusOf(item).tone">{{ statusOf(item).label }}</span>
-              @if (item.suspendedAt) {
-              <small [title]="item.suspensionReason ?? ''">{{ item.suspendedAt | date:'dd/MM/yyyy' }} · {{ item.suspensionReason }}</small>
-              }
-            </div>
+            <span [class]="'badge badge--' + statusOf(item).tone">{{ statusOf(item).label }}</span>
           </td>
           <td class="row-action">
-            @if (item.ownerId) {
-            <a class="btn btn--sm btn--ghost" routerLink="/admin/messages" [queryParams]="{ owner: item.ownerId }"
-              [attr.aria-label]="'Nhắn chủ sân của ' + item.name"><lucide-icon name="message-circle" />Nhắn chủ sân</a>
-            }
-            @if (item.suspendedAt) {
-            <button type="button" class="btn btn--sm" (click)="reinstate(item)"><lucide-icon name="lock-open" />Gỡ đình chỉ</button>
-            } @else {
-            <button type="button" class="btn btn--sm btn--danger-ghost" (click)="openSuspend(item)"><lucide-icon name="ban" />Đình chỉ</button>
-            }
+            <button type="button" class="kebab" [matMenuTriggerFor]="rowMenu"
+              [attr.aria-label]="'Thao tác với ' + item.name"><lucide-icon name="more-vertical" /></button>
+            <mat-menu #rowMenu="matMenu" class="goat-action-menu" xPosition="before">
+              @if (item.ownerId) {
+              <a mat-menu-item routerLink="/admin/messages" [queryParams]="{ owner: item.ownerId }"><lucide-icon
+                  name="message-circle" />Nhắn chủ sân</a>
+              }
+              @if (item.suspendedAt) {
+              <button mat-menu-item type="button" (click)="viewingReason.set(item)"><lucide-icon name="eye" />Xem lý
+                do đình chỉ</button>
+              <button mat-menu-item type="button" (click)="reinstate(item)"><lucide-icon name="lock-open" />Gỡ đình
+                chỉ</button>
+              } @else {
+              <button mat-menu-item type="button" class="is-danger" (click)="openSuspend(item)"><lucide-icon
+                  name="ban" />Đình chỉ</button>
+              }
+            </mat-menu>
           </td>
         </tr>
         }
@@ -91,16 +112,45 @@
     </table>
   </section>
   @if (total() > 0) {
-  <app-pagination [pageIndex]="pageIndex()" [pageSize]="pageSize" [totalItems]="total()" (pageChange)="goToPage($event)" />
+  <app-pagination [pageIndex]="pageIndex()" [pageSize]="pageSize" [totalItems]="total()"
+    (pageChange)="goToPage($event)" />
   }
+  }
+
+  @if (viewingReason(); as venue) {
+  <div class="modal-backdrop" (click)="viewingReason.set(null)">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="reason-title"
+      (click)="$event.stopPropagation()">
+      <header class="modal__header">
+        <div>
+          <h2 id="reason-title">Lý do đình chỉ</h2>
+          <p class="modal__sub">{{ venue.name }}@if (venue.suspendedAt) { · từ {{ venue.suspendedAt | date:'HH:mm dd/MM/yyyy' }} }</p>
+        </div>
+        <button type="button" class="icon-btn" aria-label="Đóng" (click)="viewingReason.set(null)"><lucide-icon
+            name="x" /></button>
+      </header>
+      <div class="modal__body">
+        <p class="reason-text">{{ venue.suspensionReason || 'Không ghi lý do.' }}</p>
+      </div>
+      <footer class="modal__footer">
+        <button type="button" class="btn" (click)="viewingReason.set(null)">Đóng</button>
+        <button type="button" class="btn btn--primary" (click)="viewingReason.set(null); reinstate(venue)"><lucide-icon
+            name="lock-open" />Gỡ đình chỉ</button>
+      </footer>
+    </section>
+  </div>
   }
 
   @if (suspending(); as venue) {
   <div class="modal-backdrop" (click)="closeSuspend()">
-    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="suspend-title" (click)="$event.stopPropagation()">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="suspend-title"
+      (click)="$event.stopPropagation()">
       <header class="modal__header">
-        <div><h2 id="suspend-title">Đình chỉ {{ venue.name }}</h2></div>
-        <button type="button" class="icon-btn" aria-label="Đóng" (click)="closeSuspend()"><lucide-icon name="x" /></button>
+        <div>
+          <h2 id="suspend-title">Đình chỉ {{ venue.name }}</h2>
+        </div>
+        <button type="button" class="icon-btn" aria-label="Đóng" (click)="closeSuspend()"><lucide-icon
+            name="x" /></button>
       </header>
       <div class="modal__body">
         <ul class="consequences">
@@ -110,16 +160,19 @@
         </ul>
         <label class="field">
           <span class="field__label">Lý do đình chỉ</span>
-          <textarea class="field__control" rows="4" maxlength="500" [ngModel]="reason()" (ngModelChange)="reason.set($event)"
-            name="reason" placeholder="Ví dụ: Nhiều khiếu nại về an toàn mặt sân chưa được khắc phục"
+          <textarea class="field__control" rows="4" maxlength="500" [ngModel]="reason()"
+            (ngModelChange)="reason.set($event)" name="reason"
+            placeholder="Ví dụ: Nhiều khiếu nại về an toàn mặt sân chưa được khắc phục"
             aria-describedby="reason-hint"></textarea>
-          <p id="reason-hint" class="field__hint">Chủ sân sẽ đọc lý do này. Từ {{ minReason }} đến 500 ký tự ({{ reason().trim().length }}/500).</p>
+          <p id="reason-hint" class="field__hint">Chủ sân sẽ đọc lý do này. Từ {{ minReason }} đến 500 ký tự ({{
+            reason().trim().length }}/500).</p>
         </label>
         @if (actionError()) { <p class="field__error" role="alert">{{ actionError() }}</p> }
       </div>
       <footer class="modal__footer">
         <button type="button" class="btn" (click)="closeSuspend()" [disabled]="saving()">Hủy</button>
-        <button type="button" class="btn btn--danger" (click)="confirmSuspend()" [disabled]="!reasonValid() || saving()">
+        <button type="button" class="btn btn--danger" (click)="confirmSuspend()"
+          [disabled]="!reasonValid() || saving()">
           <lucide-icon [name]="saving() ? 'loader-2' : 'ban'" [class.spin]="saving()" />Đình chỉ cơ sở
         </button>
       </footer>

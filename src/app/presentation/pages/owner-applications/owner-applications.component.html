@@ -11,7 +11,7 @@
         </div>
         <span
           class="inline-flex h-8 shrink-0 items-center rounded-full border border-emerald-100 bg-emerald-50 px-3 text-[13px] font-extrabold text-emerald-700">
-          {{ filteredApplications.length }} hồ sơ
+          {{ totalItems }} hồ sơ
         </span>
       </div>
 
@@ -23,7 +23,7 @@
           class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50/80 pl-10 pr-4 text-sm font-semibold text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:bg-surface focus:ring-4 focus:ring-emerald-500/10">
       </div>
 
-      <div class="mt-3 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none" aria-label="Lọc trạng thái hồ sơ">
+      <div class="mt-3 flex flex-wrap items-center gap-2" aria-label="Lọc trạng thái hồ sơ">
         <button type="button" (click)="onFilterStatusChange('ALL')" [attr.aria-pressed]="filterStatus === 'ALL'"
           [ngClass]="filterStatus === 'ALL' ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-200 bg-surface text-slate-600 hover:border-emerald-200 hover:text-emerald-700'"
           class="h-8 shrink-0 cursor-pointer rounded-xl border px-3.5 text-[13px] font-bold transition-colors">
@@ -40,7 +40,7 @@
       </div>
     </header>
 
-    <div class="flex-1 space-y-2.5 overflow-y-auto bg-slate-50/60 p-3.5">
+    <div #applicationList class="flex-1 space-y-2.5 overflow-y-auto bg-slate-50/60 p-3.5 scrollbar-none">
       @if (loadingList) {
       <app-loading-skeleton variant="rows" [count]="5" label="Đang tải hồ sơ"></app-loading-skeleton>
       } @else if (filteredApplications.length === 0) {
@@ -52,8 +52,11 @@
         <p class="mt-1 text-[13px] font-medium leading-relaxed text-slate-400">Thử thay đổi từ khóa hoặc trạng thái lọc.</p>
       </div>
       } @else {
-      @for (app of filteredApplications; track app.ownerApplicationId) {
-      <button type="button" (click)="selectApplication(app)"
+      @if (listWindow.hasBefore()) {
+      <div appInfiniteScroll (reached)="showPreviousApplications()" class="h-px" aria-hidden="true"></div>
+      }
+      @for (app of listWindow.items(); track app.ownerApplicationId) {
+      <button type="button" (click)="selectApplication(app)" [attr.data-window-id]="app.ownerApplicationId"
         [attr.aria-current]="selectedApplication?.ownerApplicationId === app.ownerApplicationId ? 'true' : null"
         [ngClass]="selectedApplication?.ownerApplicationId === app.ownerApplicationId
           ? 'border-emerald-400 bg-surface shadow-[0_8px_24px_rgba(5,150,105,0.10)] ring-1 ring-emerald-100'
@@ -89,11 +92,17 @@
         </div>
       </button>
       }
+      @if (listWindow.hasAfter() || hasMoreOnServer) {
+      <div appInfiniteScroll (reached)="showMoreApplications()" class="h-px" aria-hidden="true"></div>
+      }
+      @if (loadingMore) {
+      <p class="py-2 text-center text-[13px] font-semibold text-slate-500" role="status">Đang tải thêm hồ sơ...</p>
+      } @else if (!hasMoreOnServer && !listWindow.hasAfter() && filteredApplications.length > pageSize) {
+      <p class="py-2 text-center text-[13px] font-semibold text-slate-400">Đã hiện hết {{ totalItems }} hồ sơ</p>
+      }
       }
     </div>
 
-    <app-pagination class="shrink-0 is-embedded" [pageIndex]="pageIndex" [pageSize]="pageSize" [totalItems]="totalItems"
-      (pageChange)="goToPage($event)"></app-pagination>
   </aside>
 
   <!-- Review workspace -->

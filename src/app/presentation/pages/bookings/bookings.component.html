@@ -6,34 +6,34 @@
     </div>
   </header>
 
-  <nav class="tabs" role="tablist" aria-label="Lọc theo trạng thái">
-    <button type="button" role="tab" class="tab" [class.is-active]="!status()" [attr.aria-selected]="!status()"
-      (click)="setStatus('')">Tất cả</button>
-    @for (value of statusTabs; track value) {
-    <button type="button" role="tab" class="tab" [class.is-active]="status() === value"
-      [attr.aria-selected]="status() === value" (click)="setStatus(value)">{{ statusMeta[value].label }}</button>
-    }
-  </nav>
-
-  <div class="toolbar" role="search">
+  <div class="filter-row" role="search">
     <label class="search">
       <lucide-icon name="search" />
       <input type="search" [ngModel]="keyword()" (ngModelChange)="onKeyword($event)" name="keyword"
-        placeholder="Mã đơn, tên / SĐT khách, tên cơ sở..." aria-label="Tìm đơn đặt sân" />
+        placeholder="Mã đơn, khách, cơ sở..." aria-label="Tìm đơn đặt sân" />
     </label>
-    <label class="date-field">
-      <span>Từ ngày</span>
-      <app-date-picker ariaLabel="Từ ngày" placeholder="Từ ngày" [max]="toDate()" [ngModel]="fromDate()"
-        (ngModelChange)="setDate('from', $event)"></app-date-picker>
-    </label>
-    <label class="date-field">
-      <span>Đến ngày</span>
-      <app-date-picker ariaLabel="Đến ngày" placeholder="Đến ngày" [min]="fromDate()" [ngModel]="toDate()"
-        (ngModelChange)="setDate('to', $event)"></app-date-picker>
-    </label>
+    <app-select [ngModel]="status()" (ngModelChange)="setStatus($event)" [options]="statusOptions"
+      ariaLabel="Lọc theo trạng thái" />
+    <app-date-picker ariaLabel="Từ ngày" placeholder="Từ ngày" [max]="toDate()" [ngModel]="fromDate()"
+      (ngModelChange)="setDate('from', $event)" />
+    <app-date-picker ariaLabel="Đến ngày" placeholder="Đến ngày" [min]="fromDate()" [ngModel]="toDate()"
+      (ngModelChange)="setDate('to', $event)" />
     @if (hasFilters()) {
     <button type="button" class="btn btn--ghost" (click)="clearFilters()"><lucide-icon name="x" />Xóa lọc</button>
     }
+    <div class="filter-row__end">
+      <button type="button" class="btn" [matMenuTriggerFor]="exportMenu" [disabled]="!!exporting() || !total()"
+        [title]="total() ? 'Xuất các đơn khớp bộ lọc hiện tại' : 'Không có đơn để xuất'">
+        <lucide-icon [name]="exporting() ? 'loader-2' : 'download'" [class.spin]="!!exporting()" />
+        {{ exporting() ? 'Đang xuất...' : 'Xuất báo cáo' }}
+      </button>
+      <mat-menu #exportMenu="matMenu" class="goat-action-menu" xPosition="before">
+        @for (format of exportFormats; track format.value) {
+        <button mat-menu-item type="button" (click)="exportReport(format.value)"><lucide-icon [name]="format.icon" />{{
+          format.label }}</button>
+        }
+      </mat-menu>
+    </div>
   </div>
 
   @if (loading()) {

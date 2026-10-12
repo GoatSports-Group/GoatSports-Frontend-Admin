@@ -15,6 +15,8 @@ export interface AdminBookingFilter {
 export interface AdminBookingRepository {
   getBookings(filter: AdminBookingFilter): Observable<OwnerBookingPage>;
   getBooking(bookingId: string): Observable<OwnerBooking>;
+  /** Báo cáo theo bộ lọc hiện tại (bỏ qua trang), tối đa 10.000 đơn. */
+  exportReport(filter: Omit<AdminBookingFilter, 'page' | 'size'>, format: 'xlsx' | 'pdf'): Observable<Blob>;
 }
 
 export const ADMIN_BOOKING_REPOSITORY_TOKEN = new InjectionToken<AdminBookingRepository>(

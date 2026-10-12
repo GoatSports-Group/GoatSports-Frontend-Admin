@@ -4,9 +4,14 @@ import {
   ChangeDetectorRef,
   Component,
   DestroyRef,
+  ElementRef,
+  Injector,
   OnInit,
-  inject
+  ViewChild,
+  inject,
+  signal
 } from '@angular/core';
+import { TwoWayWindow } from '@shared/utils/two-way-window';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { GetAllOwnerApplicationsUseCase } from '@application/usecase/owner-application/get-all-owner-applications.usecase';
 import { GetOwnerApplicationDetailUseCase } from '@application/usecase/owner-application/get-owner-application-detail.usecase';
@@ -65,7 +70,15 @@ export class OwnerApplicationsComponent implements OnInit {
   readonly getIdCardDocs = getIdCardDocuments;
   readonly getNonIdCardDocs = getNonIdCardDocuments;
 
-  filteredApplications: OwnerApplication[] = [];
+  /** Các trang đã tải, nối dần khi cuộn xuống; chỉ render một cửa sổ (TwoWayWindow) để DOM không phình. */
+  private readonly applications = signal<OwnerApplication[]>([]);
+  readonly listWindow = new TwoWayWindow(this.applications, app => app.ownerApplicationId, inject(Injector));
+  @ViewChild('applicationList') private applicationList?: ElementRef<HTMLElement>;
+  loadingMore = false;
+
+  get filteredApplications(): OwnerApplication[] { return this.applications(); }
+  set filteredApplications(value: OwnerApplication[]) { this.applications.set(value); }
+  get hasMoreOnServer(): boolean { return this.applications().length < this.totalItems; }
   selectedApplication: OwnerApplication | null = null;
 
   loadingList = false;
@@ -83,16 +96,17 @@ export class OwnerApplicationsComponent implements OnInit {
     this.searchChanges.pipe(
       debounceTime(300),
       takeUntilDestroyed(this.destroyRef)
-    ).subscribe(() => {
-      this.pageIndex = 0;
-      this.loadApplications();
-    });
+    ).subscribe(() => this.loadApplications());
     this.loadApplications();
   }
 
   loadApplications() {
     this.listSubscription?.unsubscribe();
     this.loadingList = true;
+    this.loadingMore = false;
+    this.pageIndex = 0;
+    this.listWindow.reset();
+    this.applicationList?.nativeElement.scrollTo({ top: 0 });
     const filterQuery = buildOwnerApplicationFilter(this.filterStatus, this.searchQuery);
 
     this.listSubscription = this.getAllUseCase.execute({
@@ -130,8 +144,37 @@ export class OwnerApplicationsComponent implements OnInit {
 
   onFilterStatusChange(status: string) {
     this.filterStatus = status;
-    this.pageIndex = 0;
     this.loadApplications();
+  }
+
+  /** Chạm đáy: hiện tiếp phần đã tải; hết thì tải trang kế tiếp từ server rồi hiện. */
+  showMoreApplications(): void {
+    const list = this.applicationList?.nativeElement;
+    if (this.listWindow.hasAfter()) { this.listWindow.next(list); return; }
+    if (!this.hasMoreOnServer || this.loadingMore || this.loadingList) return;
+    this.loadingMore = true;
+    this.listSubscription = this.getAllUseCase.execute({
+      page: this.pageIndex + 1,
+      size: this.pageSize,
+      filter: buildOwnerApplicationFilter(this.filterStatus, this.searchQuery)
+    }).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => { this.loadingMore = false; this.changeDetectorRef.markForCheck(); })
+    ).subscribe({
+      next: response => {
+        const known = new Set(this.applications().map(app => app.ownerApplicationId));
+        const fresh = (response?.result ?? []).filter(app => !known.has(app.ownerApplicationId));
+        this.pageIndex++;
+        this.totalItems = response?.meta?.total ?? this.totalItems;
+        this.applications.update(list => [...list, ...sortOwnerApplications(fresh)]);
+        this.listWindow.next(list);
+      },
+      error: () => this.snackBar.open('Không tải thêm được hồ sơ.', 'Đóng', { duration: 4000 })
+    });
+  }
+
+  showPreviousApplications(): void {
+    this.listWindow.previous(this.applicationList?.nativeElement);
   }
 
   onSearchChange() {
@@ -284,8 +327,4 @@ export class OwnerApplicationsComponent implements OnInit {
     });
   }
 
-  goToPage(page: number): void {
-    this.pageIndex = page;
-    this.loadApplications();
-  }
 }

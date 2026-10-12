@@ -82,6 +82,9 @@ export class ModerationComponent {
   readonly notice = signal<string | null>(null);
 
   readonly openReportId = signal<string | null>(null);
+  readonly openReport = computed(() => this.reports().find(report => report.reportId === this.openReportId()) ?? null);
+  readonly openAppealId = signal<string | null>(null);
+  readonly openAppeal = computed(() => this.appeals().find(appeal => appeal.appealId === this.openAppealId()) ?? null);
   readonly draftAction = signal<ModerationActionType>('HIDE_CONTENT');
   readonly draftReason = signal('');
 
@@ -96,6 +99,7 @@ export class ModerationComponent {
     if (this.lane() === lane || this.loading()) return;
     this.lane.set(lane);
     this.openReportId.set(null);
+    this.openAppealId.set(null);
     this.notice.set(null);
     this.load(0);
   }
@@ -164,6 +168,13 @@ export class ModerationComponent {
     }
   }
 
+  /** Đóng popup xử lý; đang gửi thì giữ lại để không mất phản hồi lỗi. */
+  closeDialog(): void {
+    if (this.submitting()) return;
+    this.openReportId.set(null);
+    this.openAppealId.set(null);
+  }
+
   selectAction(value: ModerationActionType): void {
     this.draftAction.set(value);
   }
@@ -211,6 +222,7 @@ export class ModerationComponent {
         this.notice.set(decision === 'APPROVED'
           ? 'Đã chấp nhận khiếu nại và khôi phục nội dung.'
           : 'Đã từ chối khiếu nại.');
+        this.openAppealId.set(null);
         this.load(this.page());
       },
       error: error => this.fail(error)

@@ -290,8 +290,9 @@
     </section>
     }
 
-    @if (isAdmin && room.type === 'SUPPORT' && who?.email) {
-    <a class="btn btn--ghost context__link" routerLink="/admin/platform-venues" [queryParams]="{ keyword: who!.email }">
+    @if (isAdmin && room.type === 'SUPPORT' && counterpartId(room)) {
+    <a class="btn btn--ghost context__link" routerLink="/admin/platform-venues"
+      [queryParams]="{ ownerId: counterpartId(room), ownerName: name }">
       <lucide-icon name="store" />Xem cơ sở của chủ sân
     </a>
     }

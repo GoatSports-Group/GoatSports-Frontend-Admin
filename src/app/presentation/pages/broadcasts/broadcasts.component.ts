@@ -57,6 +57,7 @@ export class BroadcastsComponent implements OnInit {
   readonly content = signal('');
   readonly recipients = signal<number | null>(null);
   readonly countingRecipients = signal(false);
+  readonly composing = signal(false);
   readonly confirming = signal(false);
   readonly sending = signal(false);
   readonly sendError = signal<string | null>(null);
@@ -76,8 +77,21 @@ export class BroadcastsComponent implements OnInit {
   readonly audienceLabel = computed(() => AUDIENCES.find(item => item.value === this.audience())!.label);
 
   ngOnInit(): void {
-    this.countAudience();
     this.load();
+  }
+
+  openCompose(): void {
+    this.sendError.set(null);
+    this.confirming.set(false);
+    this.composing.set(true);
+    this.countAudience();
+  }
+
+  /** Đóng không mất bản nháp: mở lại vẫn còn tiêu đề và nội dung đang soạn. */
+  closeCompose(): void {
+    if (this.sending()) return;
+    this.composing.set(false);
+    this.confirming.set(false);
   }
 
   setAudience(value: BroadcastAudience): void {
@@ -105,7 +119,8 @@ export class BroadcastsComponent implements OnInit {
       .subscribe({
         next: broadcast => {
           this.confirming.set(false);
-          this.notice.set(`Đang gửi "${broadcast.title}" tới ${this.audienceLabel().toLowerCase()}. Tiến độ cập nhật trong lịch sử bên dưới.`);
+          this.composing.set(false);
+          this.notice.set(`Đang gửi "${broadcast.title}" tới ${this.audienceLabel().toLowerCase()}. Tiến độ cập nhật trong danh sách bên dưới.`);
           this.title.set('');
           this.content.set('');
           // Lần soạn mới = khóa mới; khóa cũ chỉ để thử lại đúng thông báo vừa bấm gửi.

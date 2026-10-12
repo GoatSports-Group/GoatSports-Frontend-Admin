@@ -66,11 +66,6 @@
       <div><h2>Không có khiếu nại</h2><p>Chưa có tác giả nào khiếu nại quyết định kiểm duyệt.</p></div>
     </section>
   } @else {
-    <section class="result-strip">
-      <div><span>Tổng cộng</span><strong>{{ total() }} mục</strong></div>
-      <p><lucide-icon name="list" /> Trang {{ page() + 1 }} / {{ pages() }}</p>
-    </section>
-
     @if (lane() === 'REPORTS') {
       <ul class="queue" data-list-top [class.is-paging]="paging()" [attr.aria-busy]="paging()">
         @for (report of reports(); track report.reportId) {
@@ -110,36 +105,9 @@
 
             @if (report.status === 'PENDING' || report.status === 'REVIEWING') {
               <footer>
-                @if (openReportId() === report.reportId) {
-                  <div class="action-form">
-                    <label>Hành động
-                      <app-select [ngModel]="draftAction()" (ngModelChange)="selectAction($event)" [disabled]="submitting()"
-                        [options]="actionChoices" ariaLabel="Cách xử lý"></app-select>
-                    </label>
-                    <p class="hint">{{ activeHint() }}</p>
-                    <label>Lý do xử lý
-                      <textarea rows="3" [value]="draftReason()" [disabled]="submitting()"
-                        placeholder="Ghi rõ căn cứ để tác giả và kiểm toán viên hiểu được quyết định"
-                        (input)="updateReason($event)"></textarea>
-                    </label>
-                    @if (reasonTooShort()) {
-                      <p class="form-error">Lý do phải có ít nhất 10 ký tự.</p>
-                    }
-                    <div class="form-buttons">
-                      <button type="button" class="primary" [disabled]="submitting() || reasonTooShort()"
-                        (click)="submitAction(report.reportId)">
-                        @if (submitting()) { <lucide-icon name="loader-2" class="spin" /> Đang gửi }
-                        @else { <lucide-icon name="check" /> Xác nhận }
-                      </button>
-                      <button type="button" class="ghost" [disabled]="submitting()"
-                        (click)="toggleReport(report.reportId)">Hủy</button>
-                    </div>
-                  </div>
-                } @else {
-                  <button type="button" class="secondary" (click)="toggleReport(report.reportId)">
-                    <lucide-icon name="gavel" /> Xử lý báo cáo
-                  </button>
-                }
+                <button type="button" class="secondary" (click)="toggleReport(report.reportId)">
+                  <lucide-icon name="gavel" /> Xử lý
+                </button>
               </footer>
             }
           </li>
@@ -173,14 +141,9 @@
             </dl>
 
             @if (appeal.status === 'PENDING') {
-              <footer class="decision-row">
-                <button type="button" class="primary" [disabled]="submitting()"
-                  (click)="reviewAppeal(appeal.appealId, 'APPROVED')">
-                  <lucide-icon name="undo-2" /> Chấp nhận &amp; khôi phục
-                </button>
-                <button type="button" class="danger" [disabled]="submitting()"
-                  (click)="reviewAppeal(appeal.appealId, 'REJECTED')">
-                  <lucide-icon name="x" /> Từ chối
+              <footer>
+                <button type="button" class="secondary" (click)="openAppealId.set(appeal.appealId)">
+                  <lucide-icon name="gavel" /> Xử lý
                 </button>
               </footer>
             }
@@ -192,5 +155,77 @@
     @if (total() > 0) {
       <app-pagination [pageIndex]="page()" [pageSize]="pageSize" [totalItems]="total()" (pageChange)="goToPage($event)" />
     }
+  }
+
+  @if (openReport(); as report) {
+  <div class="modal-backdrop" (click)="closeDialog()">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="report-dialog-title"
+      (click)="$event.stopPropagation()">
+      <header class="modal__header">
+        <div>
+          <h2 id="report-dialog-title">Xử lý báo cáo #{{ shortId(report.reportId) }}</h2>
+          <p class="dialog-sub">{{ targetLabel(report.targetType) }} · báo cáo lúc {{ report.createdAt | date:'HH:mm dd/MM/yyyy' }}</p>
+        </div>
+        <button type="button" class="icon-btn" aria-label="Đóng" (click)="closeDialog()" [disabled]="submitting()"><lucide-icon
+            name="x" /></button>
+      </header>
+      <div class="modal__body action-form">
+        <blockquote>{{ report.reason }}</blockquote>
+        <label>Hành động
+          <app-select [ngModel]="draftAction()" (ngModelChange)="selectAction($event)" [disabled]="submitting()"
+            [options]="actionChoices" ariaLabel="Cách xử lý"></app-select>
+        </label>
+        <p class="hint">{{ activeHint() }}</p>
+        <label>Lý do xử lý
+          <textarea rows="4" [value]="draftReason()" [disabled]="submitting()"
+            placeholder="Ghi rõ căn cứ để tác giả và kiểm toán viên hiểu được quyết định"
+            (input)="updateReason($event)"></textarea>
+        </label>
+        @if (reasonTooShort()) {
+          <p class="form-error">Lý do phải có ít nhất 10 ký tự.</p>
+        }
+      </div>
+      <footer class="modal__footer">
+        <button type="button" class="ghost" [disabled]="submitting()" (click)="closeDialog()">Hủy</button>
+        <button type="button" class="primary" [disabled]="submitting() || reasonTooShort()"
+          (click)="submitAction(report.reportId)">
+          @if (submitting()) { <lucide-icon name="loader-2" class="spin" /> Đang gửi }
+          @else { <lucide-icon name="check" /> Xác nhận }
+        </button>
+      </footer>
+    </section>
+  </div>
+  }
+
+  @if (openAppeal(); as appeal) {
+  <div class="modal-backdrop" (click)="closeDialog()">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="appeal-dialog-title"
+      (click)="$event.stopPropagation()">
+      <header class="modal__header">
+        <div>
+          <h2 id="appeal-dialog-title">Xét khiếu nại #{{ shortId(appeal.appealId) }}</h2>
+          <p class="dialog-sub">Quyết định bị khiếu nại: {{ actionLabel(appeal.actionType) }} · {{ targetLabel(appeal.targetType) }}</p>
+        </div>
+        <button type="button" class="icon-btn" aria-label="Đóng" (click)="closeDialog()" [disabled]="submitting()"><lucide-icon
+            name="x" /></button>
+      </header>
+      <div class="modal__body action-form">
+        <blockquote>{{ appeal.reason }}</blockquote>
+        <ul class="decision-help">
+          <li><strong>Chấp nhận</strong>: gỡ quyết định kiểm duyệt, nội dung hiển thị lại.</li>
+          <li><strong>Từ chối</strong>: giữ nguyên quyết định; tác giả được thông báo.</li>
+        </ul>
+      </div>
+      <footer class="modal__footer">
+        <button type="button" class="danger" [disabled]="submitting()" (click)="reviewAppeal(appeal.appealId, 'REJECTED')">
+          <lucide-icon name="x" /> Từ chối
+        </button>
+        <button type="button" class="primary" [disabled]="submitting()" (click)="reviewAppeal(appeal.appealId, 'APPROVED')">
+          @if (submitting()) { <lucide-icon name="loader-2" class="spin" /> Đang gửi }
+          @else { <lucide-icon name="undo-2" /> Chấp nhận &amp; khôi phục }
+        </button>
+      </footer>
+    </section>
+  </div>
   }
 </main>

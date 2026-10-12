@@ -12,12 +12,23 @@ export class AdminBookingApi {
   private readonly baseUrl = `${environment.apiUrl}/venue-service/api/v1/admin/bookings`;
 
   getBookings(filter: AdminBookingFilter): Observable<BaseResponse<BaseListResponse<OwnerBooking>>> {
-    let params = new HttpParams().set('page', filter.page).set('size', filter.size);
+    const params = this.filterParams(filter).set('page', filter.page).set('size', filter.size);
+    return this.http.get<BaseResponse<BaseListResponse<OwnerBooking>>>(this.baseUrl, { params });
+  }
+
+  exportReport(filter: Omit<AdminBookingFilter, 'page' | 'size'>, format: 'xlsx' | 'pdf'): Observable<Blob> {
+    const params = this.filterParams(filter).set('format', format);
+    return this.http.get(`${environment.apiUrl}/report-service/api/v1/reports/export/admin-bookings`,
+      { params, responseType: 'blob' });
+  }
+
+  private filterParams(filter: Omit<AdminBookingFilter, 'page' | 'size'>): HttpParams {
+    let params = new HttpParams();
     if (filter.status) params = params.set('status', filter.status);
     if (filter.query) params = params.set('query', filter.query);
     if (filter.fromDate) params = params.set('fromDate', filter.fromDate);
     if (filter.toDate) params = params.set('toDate', filter.toDate);
-    return this.http.get<BaseResponse<BaseListResponse<OwnerBooking>>>(this.baseUrl, { params });
+    return params;
   }
 
   getBooking(bookingId: string): Observable<BaseResponse<OwnerBooking>> {

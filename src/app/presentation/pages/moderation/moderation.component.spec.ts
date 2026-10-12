@@ -72,6 +72,7 @@ describe('ModerationComponent', () => {
     const component = fixture.componentInstance;
 
     component.toggleReport('report-1');
+    expect(component.openReport()?.reportId).toBe('report-1');
     component.draftReason.set('ngắn');
     expect(component.reasonTooShort()).toBe(true);
 
