@@ -1,3 +1,4 @@
+import { WheelScrollXDirective } from '@shared/directives/wheel-scroll-x.directive';
 import { ChangeDetectionStrategy, Component, DestroyRef, HostListener, OnInit, inject, signal } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -21,7 +22,7 @@ type ScheduledType = Exclude<PeriodicReportType, 'CUSTOM'>;
 @Component({
   selector: 'app-owner-periodic-reports',
   standalone: true,
-  imports: [LucideIconComponent],
+  imports: [LucideIconComponent, WheelScrollXDirective],
   templateUrl: './owner-periodic-reports.component.html',
   styleUrl: './owner-periodic-reports.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

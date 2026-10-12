@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { BaseResponse } from '@application/dto/base/base-response';
 import {
-  AdminClub, AdminCommunityRepository, AdminTournament, AdminTournamentStatus, ClubState, CommunityFilter, CommunityPage
+  AdminClub, AdminClubMember, AdminCommunityRepository, AdminTournament, AdminTournamentStatus, ClubState, CommunityFilter, CommunityPage
 } from '@application/ports/persistence/admin-community.repository';
 import { environment } from '@environments/environment';
 
@@ -21,6 +21,13 @@ export class AdminCommunityRepositoryImpl implements AdminCommunityRepository {
 
   getTournaments(filter: CommunityFilter<AdminTournamentStatus>): Observable<CommunityPage<AdminTournament>> {
     return this.page<AdminTournament>('tournaments', this.params(filter, 'status'));
+  }
+
+  getClubMembers(clubId: string, page: number, size: number): Observable<CommunityPage<AdminClubMember>> {
+    const params = new HttpParams().set('status', 'ACTIVE').set('page', page).set('size', size).set('sort', 'joinedAt,asc');
+    return this.http.get<BaseResponse<PagedModel<AdminClubMember>>>(
+      `${environment.apiUrl}/club-service/api/v1/clubs/${clubId}/members/page`, { params })
+      .pipe(map(response => ({ items: response.data?.content ?? [], total: response.data?.page?.totalElements ?? 0 })));
   }
 
   private params(filter: CommunityFilter<string>, stateParam: 'state' | 'status'): HttpParams {

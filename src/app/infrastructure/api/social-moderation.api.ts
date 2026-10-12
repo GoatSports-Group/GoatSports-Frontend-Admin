@@ -7,6 +7,8 @@ import {
   ContentReport,
   ModerateContentPayload,
   ModerationPageFilter,
+  ModerationTarget,
+  ReportTargetType,
   ReviewAppealPayload
 } from '@application/dto/moderation/moderation.dto';
 import { environment } from '@environments/environment';
@@ -51,6 +53,10 @@ export class SocialModerationApi {
       `${this.baseUrl}/appeals/${payload.appealId}`,
       { decision: payload.decision }
     );
+  }
+
+  getTarget(targetType: ReportTargetType, targetId: string): Observable<BaseResponse<ModerationTarget>> {
+    return this.http.get<BaseResponse<ModerationTarget>>(`${this.baseUrl}/targets/${targetType}/${targetId}`);
   }
 
   private pageParams(filter: ModerationPageFilter): HttpParams {

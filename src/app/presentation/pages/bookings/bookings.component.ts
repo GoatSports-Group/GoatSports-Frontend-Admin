@@ -7,13 +7,15 @@ import { FormsModule } from '@angular/forms';
 import { Subject, Subscription, debounceTime, distinctUntilChanged, finalize } from 'rxjs';
 import { OwnerBooking, OwnerBookingStatus, OwnerPayment } from '@application/dto/owner-booking/owner-booking.dto';
 import { ADMIN_BOOKING_REPOSITORY_TOKEN } from '@application/ports/persistence/admin-booking.repository';
+import { ADMIN_VENUE_REPOSITORY_TOKEN } from '@application/ports/persistence/admin-venue.repository';
+import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/loading-skeleton.component';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { PaginationComponent } from '@shared/components/ui/pagination/pagination.component';
 import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
 import { NotifyService } from '@shared/components/notify/notify.service';
-import { downloadBlob } from '@shared/utils/file.utils';
-import { MatMenuModule } from '@angular/material/menu';
+import { blobErrorMessage, downloadBlob } from '@shared/utils/file.utils';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 type Tone = 'success' | 'warning' | 'danger' | 'info' | 'primary' | 'neutral';
 
@@ -36,13 +38,18 @@ const STATUS_META: Record<OwnerBookingStatus, { label: string; tone: Tone }> = {
   styleUrls: ['./bookings.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [DatePickerComponent, DatePipe, FormsModule, MatMenuModule, LucideIconComponent, LoadingSkeletonComponent,
+  imports: [DatePickerComponent, DatePipe, FormsModule, LucideIconComponent, LoadingSkeletonComponent,
     PaginationComponent, SelectComponent]
 })
 export class AdminBookingsComponent implements OnInit {
   private readonly repository = inject(ADMIN_BOOKING_REPOSITORY_TOKEN);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly venueRepository = inject(ADMIN_VENUE_REPOSITORY_TOKEN);
   private readonly notify = inject(NotifyService);
+  private readonly sanitizer = inject(DomSanitizer);
+  private previewRequest?: Subscription;
+  private previewFile: Blob | null = null;
+  private previewObjectUrl: string | null = null;
   private readonly search$ = new Subject<string>();
   private request?: Subscription;
 
@@ -52,13 +59,28 @@ export class AdminBookingsComponent implements OnInit {
     { value: '', label: 'Tất cả trạng thái' },
     ...(Object.keys(STATUS_META) as OwnerBookingStatus[]).map(value => ({ value, label: STATUS_META[value].label }))
   ];
-  readonly exportFormats = [
-    { value: 'xlsx', label: 'Excel (.xlsx)', icon: 'file-spreadsheet' },
-    { value: 'pdf', label: 'PDF', icon: 'file-text' }
-  ] as const;
-  readonly exporting = signal<'xlsx' | 'pdf' | null>(null);
+  readonly exporting = signal(false);
+  readonly previewOpen = signal(false);
+  readonly previewLoading = signal(false);
+  readonly previewError = signal<string | null>(null);
+  readonly previewUrl = signal<SafeResourceUrl | null>(null);
+  /** Bộ lọc lúc mở xem trước: tải về đúng thứ đã xem, kể cả khi danh sách phía sau đổi lọc. */
+  private previewFilter: ReturnType<AdminBookingsComponent['currentFilter']> | null = null;
 
   readonly status = signal<OwnerBookingStatus | ''>('');
+  readonly venueId = signal('');
+  readonly venueCourtId = signal('');
+  private readonly venues = signal<OwnerVenueOverview[]>([]);
+  readonly venueOptions = computed<SelectOption[]>(() => [
+    { value: '', label: 'Tất cả cơ sở' },
+    ...this.venues().map(venue => ({ value: venue.venueId, label: venue.name }))
+  ]);
+  /** Sân của cơ sở đang chọn (chưa chọn cơ sở thì chỉ có "Tất cả sân"). */
+  readonly courtOptions = computed<SelectOption[]>(() => [
+    { value: '', label: 'Tất cả sân' },
+    ...(this.venues().find(venue => venue.venueId === this.venueId())?.courts ?? [])
+      .map(court => ({ value: court.venueCourtId, label: court.name }))
+  ]);
   readonly keyword = signal('');
   readonly fromDate = signal('');
   readonly toDate = signal('');
@@ -71,18 +93,30 @@ export class AdminBookingsComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly selected = signal<OwnerBooking | null>(null);
 
-  readonly hasFilters = computed(() => !!(this.status() || this.keyword() || this.fromDate() || this.toDate()));
+  readonly hasFilters = computed(() => !!(this.status() || this.venueId() || this.keyword() || this.fromDate() || this.toDate()));
 
   ngOnInit(): void {
     this.search$.pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
       .subscribe(value => { this.keyword.set(value.trim()); this.reload(); });
     this.load();
+    this.loadVenues();
   }
 
   onKeyword(value: string): void { this.search$.next(value); }
 
   setStatus(value: OwnerBookingStatus | ''): void {
     this.status.set(value);
+    this.reload();
+  }
+
+  setVenue(value: string): void {
+    this.venueId.set(value ?? '');
+    this.venueCourtId.set('');
+    this.reload();
+  }
+
+  setCourt(value: string): void {
+    this.venueCourtId.set(value ?? '');
     this.reload();
   }
 
@@ -93,6 +127,8 @@ export class AdminBookingsComponent implements OnInit {
 
   clearFilters(): void {
     this.status.set('');
+    this.venueId.set('');
+    this.venueCourtId.set('');
     this.keyword.set('');
     this.fromDate.set('');
     this.toDate.set('');
@@ -123,26 +159,87 @@ export class AdminBookingsComponent implements OnInit {
       });
   }
 
-  /** Xuất đúng bộ lọc đang xem (trạng thái, từ khóa, khoảng ngày), mọi trang. */
-  exportReport(format: 'xlsx' | 'pdf'): void {
+  /** Xem trước bản PDF của báo cáo theo bộ lọc đang xem (mọi trang), rồi mới tải Excel hoặc PDF. */
+  openPreview(): void {
+    this.previewFilter = this.currentFilter();
+    this.previewOpen.set(true);
+    this.loadPreview();
+  }
+
+  loadPreview(): void {
+    if (!this.previewFilter) return;
+    this.previewRequest?.unsubscribe();
+    this.releasePreview();
+    this.previewError.set(null);
+    this.previewLoading.set(true);
+    this.previewRequest = this.repository.previewReport(this.previewFilter)
+      .pipe(finalize(() => this.previewLoading.set(false)), takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: file => {
+          if (!file.size) { this.previewError.set('Dịch vụ báo cáo không trả dữ liệu xem trước.'); return; }
+          this.previewFile = file;
+          this.previewObjectUrl = URL.createObjectURL(file);
+          this.previewUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(this.previewObjectUrl));
+        },
+        error: err => blobErrorMessage(err).then(message =>
+          this.previewError.set(message ?? 'Không tạo được bản xem trước. Vui lòng thử lại.'))
+      });
+  }
+
+  closePreview(): void {
     if (this.exporting()) return;
-    this.exporting.set(format);
-    this.repository.exportReport(this.currentFilter(), format)
-      .pipe(finalize(() => this.exporting.set(null)), takeUntilDestroyed(this.destroyRef))
+    this.previewRequest?.unsubscribe();
+    this.releasePreview();
+    this.previewOpen.set(false);
+    this.previewFilter = null;
+  }
+
+  /** PDF: lưu chính bản đang xem (không dựng lại). Excel: dựng từ cùng bộ lọc. */
+  download(format: 'xlsx' | 'pdf'): void {
+    const filename = `don-dat-san-${new Date().toISOString().slice(0, 10)}.${format}`;
+    if (format === 'pdf') {
+      if (this.previewFile) downloadBlob(this.previewFile, filename);
+      return;
+    }
+    if (this.exporting() || !this.previewFilter) return;
+    this.exporting.set(true);
+    this.repository.exportReport(this.previewFilter, 'xlsx')
+      .pipe(finalize(() => this.exporting.set(false)), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: file => {
           if (!file.size) { this.notify.error('Dịch vụ báo cáo không trả dữ liệu.'); return; }
-          downloadBlob(file, `don-dat-san-${new Date().toISOString().slice(0, 10)}.${format}`);
+          downloadBlob(file, filename);
           this.notify.success('Đã xuất báo cáo đơn đặt sân.');
         },
-        error: () => this.notify.error('Không xuất được báo cáo. Nếu quá 10.000 đơn, hãy thu hẹp khoảng ngày.')
+        error: err => blobErrorMessage(err).then(message =>
+          this.notify.error(message ?? 'Không xuất được file Excel. Vui lòng thử lại.'))
       });
+  }
+
+  private releasePreview(): void {
+    if (this.previewObjectUrl) URL.revokeObjectURL(this.previewObjectUrl);
+    this.previewObjectUrl = null;
+    this.previewFile = null;
+    this.previewUrl.set(null);
   }
 
   open(booking: OwnerBooking): void { this.selected.set(booking); }
 
+  /** Danh sách cơ sở cho bộ lọc (kèm sân của từng cơ sở). */
+  // ponytail: tải 50 cơ sở đầu (giới hạn trang của API admin); cần ô tìm gọi server khi nền tảng vượt 50 cơ sở.
+  private loadVenues(): void {
+    this.venueRepository.getVenues({ page: 0, size: 50 })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: page => this.venues.set([...page.items].sort((a, b) => a.name.localeCompare(b.name, 'vi'))),
+        error: () => this.venues.set([])
+      });
+  }
+
   private currentFilter() {
     return {
+      venueId: this.venueId() || undefined,
+      venueCourtId: this.venueCourtId() || undefined,
       status: this.status() || undefined,
       query: this.keyword() || undefined,
       fromDate: this.fromDate() || undefined,

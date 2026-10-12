@@ -22,8 +22,15 @@ export class AdminBookingApi {
       { params, responseType: 'blob' });
   }
 
+  previewReport(filter: Omit<AdminBookingFilter, 'page' | 'size'>): Observable<Blob> {
+    return this.http.get(`${environment.apiUrl}/report-service/api/v1/reports/preview/admin-bookings`,
+      { params: this.filterParams(filter), responseType: 'blob' });
+  }
+
   private filterParams(filter: Omit<AdminBookingFilter, 'page' | 'size'>): HttpParams {
     let params = new HttpParams();
+    if (filter.venueId) params = params.set('venueId', filter.venueId);
+    if (filter.venueCourtId) params = params.set('venueCourtId', filter.venueCourtId);
     if (filter.status) params = params.set('status', filter.status);
     if (filter.query) params = params.set('query', filter.query);
     if (filter.fromDate) params = params.set('fromDate', filter.fromDate);

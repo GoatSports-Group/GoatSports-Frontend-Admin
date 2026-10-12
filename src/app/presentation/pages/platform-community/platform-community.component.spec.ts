@@ -19,7 +19,7 @@ describe('PlatformCommunityComponent', () => {
     organizerId: 'u-2', venueId: 'v-1', maxParticipants: 16, currentParticipants: 5, entryFee: 100_000, prizePool: null,
     registrationOpenDate: '2026-10-01', registrationCloseDate: '2026-10-15', startDate: '2026-10-20', endDate: '2026-10-21', createdAt: null
   };
-  const repository = { getClubs: vi.fn(), getTournaments: vi.fn() };
+  const repository = { getClubs: vi.fn(), getTournaments: vi.fn(), getClubMembers: vi.fn() };
   const venues = { getVenues: vi.fn() };
   const users = { getSummaries: vi.fn() };
 
@@ -49,6 +49,52 @@ describe('PlatformCommunityComponent', () => {
     expect(users.getSummaries).toHaveBeenCalledTimes(1);
     expect(fixture.nativeElement.textContent).toContain('Chủ CLB');
     expect(fixture.nativeElement.textContent).toContain('18');
+  });
+
+  it('opens a club row into its members with names and roles', () => {
+    repository.getClubMembers.mockReset().mockReturnValue(of({
+      items: [
+        { membershipId: 'm-1', userId: 'u-1', role: 'OWNER', joinedAt: '2026-09-01T10:00:00' },
+        { membershipId: 'm-2', userId: 'u-3', role: 'MEMBER', joinedAt: '2026-09-02T10:00:00' }
+      ],
+      total: 2
+    }));
+    const fixture = TestBed.createComponent(PlatformCommunityComponent);
+    fixture.detectChanges();
+
+    (fixture.nativeElement.querySelector('tbody tr') as HTMLElement).click();
+    fixture.detectChanges();
+
+    expect(repository.getClubMembers).toHaveBeenCalledWith('c-1', 0, 5);
+    const dialog = fixture.nativeElement.querySelector('[role="dialog"]') as HTMLElement;
+    expect(dialog.textContent).toContain('Chủ CLB');
+    expect(dialog.textContent).toContain('Thành viên');
+    expect(dialog.textContent).toContain('u-3@goat.test');
+
+    // Đã tải hết (2/2): chạm đáy không gọi thêm.
+    fixture.componentInstance.showMoreMembers();
+    expect(repository.getClubMembers).toHaveBeenCalledTimes(1);
+
+    fixture.componentInstance.closeClub();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="dialog"]')).toBeNull();
+  });
+
+  it('loads the next 5 members from where it stopped when scrolled to the bottom', () => {
+    const member = (n: number) => ({ membershipId: `m-${n}`, userId: `u-${n}`, role: 'MEMBER', joinedAt: null });
+    repository.getClubMembers.mockReset()
+      .mockReturnValueOnce(of({ items: [1, 2, 3, 4, 5].map(member), total: 7 }))
+      .mockReturnValueOnce(of({ items: [6, 7].map(member), total: 7 }));
+    const fixture = TestBed.createComponent(PlatformCommunityComponent);
+    fixture.detectChanges();
+    const page = fixture.componentInstance;
+
+    page.openClub(club);
+    page.showMoreMembers();
+
+    expect(repository.getClubMembers).toHaveBeenLastCalledWith('c-1', 1, 5);
+    expect(page.members()).toHaveLength(7);
+    expect(page.hasMoreMembers()).toBe(false);
   });
 
   it('resolves tournament venues and organizers by id in batches', () => {

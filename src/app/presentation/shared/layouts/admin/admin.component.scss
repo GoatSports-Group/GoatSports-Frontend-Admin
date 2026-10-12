@@ -580,11 +580,52 @@
 .sidebar-group h2 {
   margin: 0 0 3px;
   padding: 0 12px;
-  color: var(--body);
+  color: var(--primary);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: .065em;
   text-transform: uppercase;
+}
+
+// Accordion: tiêu đề nhóm là nút mở / thu gọn; danh sách co giãn bằng grid-template-rows (0fr ↔ 1fr).
+.sidebar-group h2:has(.sidebar-group__toggle) { padding: 0; }
+
+.admin-sidebar .sidebar-group__toggle {
+  display: flex;
+  width: 100%;
+  min-height: 32px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+
+  lucide-icon { width: 16px; height: 16px; flex: none; transition: transform var(--motion-fast, 180ms) ease; }
+  &:hover { background: var(--primary-light); }
+  &:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+}
+
+.sidebar-group.is-closed .sidebar-group__toggle lucide-icon { transform: rotate(-90deg); }
+
+.sidebar-group__items {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows var(--motion-base, 220ms) ease;
+
+  > div { display: grid; gap: 4px; min-height: 0; overflow: hidden; }
+}
+
+.sidebar-group.is-closed .sidebar-group__items { grid-template-rows: 0fr; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-group__items, .admin-sidebar .sidebar-group__toggle lucide-icon { transition: none; }
 }
 
 .admin-sidebar a,
@@ -977,8 +1018,8 @@
   }
 
   .command-dialog__footer {
-    flex-wrap: wrap;
     gap: 12px;
+    overflow-x: auto;
   }
 }
 

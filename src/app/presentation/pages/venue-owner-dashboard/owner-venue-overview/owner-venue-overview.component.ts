@@ -1,3 +1,4 @@
+import { WheelScrollXDirective } from '@shared/directives/wheel-scroll-x.directive';
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
@@ -6,7 +7,7 @@ import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-ic
 @Component({
   selector: 'app-owner-venue-overview',
   standalone: true,
-  imports: [RouterModule, LucideIconComponent],
+  imports: [RouterModule, LucideIconComponent, WheelScrollXDirective],
   templateUrl: './owner-venue-overview.component.html',
   styleUrl: './owner-venue-overview.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

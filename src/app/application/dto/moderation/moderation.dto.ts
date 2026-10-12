@@ -1,5 +1,5 @@
 export type ReportStatus = 'PENDING' | 'REVIEWING' | 'RESOLVED' | 'REJECTED';
-export type ReportTargetType = 'POST' | 'COMMENT' | 'USER' | 'VENUE';
+export type ReportTargetType = 'POST' | 'COMMENT' | 'USER' | 'VENUE' | 'MESSAGE' | 'REVIEW';
 export type AppealStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 export type ModerationActionType =
   | 'HIDE_CONTENT'
@@ -43,6 +43,19 @@ export interface ContentAppeal {
   actionType: ModerationActionType | null;
   targetType: ReportTargetType | null;
   targetId: string | null;
+}
+
+/** Nội dung bị báo cáo / khiếu nại (đọc được cả khi đã ẩn hoặc gỡ). `found = false`: không còn, hoặc không thuộc mạng xã hội. */
+export interface ModerationTarget {
+  targetType: ReportTargetType;
+  targetId: string;
+  found: boolean;
+  authorId: string | null;
+  content: string | null;
+  status: string | null;
+  attachmentCount: number;
+  postId: string | null;
+  createdAt: string | null;
 }
 
 export interface ModerationPageFilter {

@@ -38,7 +38,7 @@
     @if (venues().length > 1) {
       <div class="venue-switcher" aria-label="Chọn cơ sở để xem chi tiết">
         <span>{{ venues().length }} cơ sở</span>
-        <div>
+        <div appWheelScrollX>
           @for (venueOption of venues(); track venueOption.venueId) {
             <button
               type="button"

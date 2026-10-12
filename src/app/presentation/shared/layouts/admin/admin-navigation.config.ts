@@ -11,6 +11,8 @@ export interface AdminNavigationItem {
 export interface AdminNavigationGroup {
   readonly label: string;
   readonly items: readonly AdminNavigationItem[];
+  /** Nhóm luôn mở, không thu gọn được (Tổng quan). */
+  readonly fixed?: boolean;
 }
 
 export const PLATFORM_ADMIN_NAVIGATION: readonly AdminNavigationItem[] = [
@@ -50,7 +52,7 @@ export const VENUE_OWNER_NAVIGATION: readonly AdminNavigationItem[] = [
 const platformItems = (routes: readonly string[]) => PLATFORM_ADMIN_NAVIGATION.filter(item => routes.includes(item.route));
 
 export const PLATFORM_ADMIN_NAVIGATION_GROUPS: readonly AdminNavigationGroup[] = [
-  { label: 'Tổng quan', items: platformItems(['/dashboard']) },
+  { label: 'Tổng quan', items: platformItems(['/dashboard']), fixed: true },
   { label: 'Sân và đặt sân', items: platformItems(['/bookings', '/platform-venues', '/owner-applications', '/platform-reviews']) },
   { label: 'Tài chính', items: platformItems(['/platform-finance']) },
   { label: 'Cộng đồng', items: platformItems(['/platform-community', '/moderation', '/messages', '/broadcasts']) },

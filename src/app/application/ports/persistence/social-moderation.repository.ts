@@ -6,6 +6,8 @@ import {
   ModerateContentPayload,
   ModerationPage,
   ModerationPageFilter,
+  ModerationTarget,
+  ReportTargetType,
   ReviewAppealPayload
 } from '@application/dto/moderation/moderation.dto';
 
@@ -14,6 +16,7 @@ export interface SocialModerationRepository {
   actOnReport(payload: ModerateContentPayload): Observable<ContentReport>;
   getAppealQueue(filter: ModerationPageFilter): Observable<ModerationPage<ContentAppeal>>;
   reviewAppeal(payload: ReviewAppealPayload): Observable<ContentAppeal>;
+  getTarget(targetType: ReportTargetType, targetId: string): Observable<ModerationTarget>;
 }
 
 export const SOCIAL_MODERATION_REPOSITORY_TOKEN = new InjectionToken<SocialModerationRepository>(

@@ -1,3 +1,4 @@
+import { WheelScrollXDirective } from '@shared/directives/wheel-scroll-x.directive';
 import {
   AfterViewChecked, ChangeDetectionStrategy, Component, DestroyRef, ElementRef, OnDestroy, OnInit, ViewChild,
   computed, effect, inject, signal, untracked
@@ -50,7 +51,8 @@ interface Person { name: string; avatar: string; email?: string; phone?: string;
   styleUrls: ['./messages.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [FormsModule, RouterLink, LucideIconComponent, LoadingSkeletonComponent, InfiniteScrollDirective]
+  imports: [FormsModule, RouterLink, LucideIconComponent, LoadingSkeletonComponent, InfiniteScrollDirective,
+    WheelScrollXDirective]
 })
 export class AdminMessagesComponent implements OnInit, AfterViewChecked, OnDestroy {
   private readonly chat = inject(CHAT_REPOSITORY_TOKEN);

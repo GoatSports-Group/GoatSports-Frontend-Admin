@@ -12,6 +12,10 @@
       <input type="search" [ngModel]="keyword()" (ngModelChange)="onKeyword($event)" name="keyword"
         placeholder="Mã đơn, khách, cơ sở..." aria-label="Tìm đơn đặt sân" />
     </label>
+    <app-select [ngModel]="venueId()" (ngModelChange)="setVenue($event)" [options]="venueOptions()" [searchable]="true"
+      searchPlaceholder="Tìm cơ sở..." leadingIcon="store" ariaLabel="Lọc theo cơ sở" />
+    <app-select [ngModel]="venueCourtId()" (ngModelChange)="setCourt($event)" [options]="courtOptions()"
+      [disabled]="!venueId()" ariaLabel="Lọc theo sân" />
     <app-select [ngModel]="status()" (ngModelChange)="setStatus($event)" [options]="statusOptions"
       ariaLabel="Lọc theo trạng thái" />
     <app-date-picker ariaLabel="Từ ngày" placeholder="Từ ngày" [max]="toDate()" [ngModel]="fromDate()"
@@ -22,17 +26,10 @@
     <button type="button" class="btn btn--ghost" (click)="clearFilters()"><lucide-icon name="x" />Xóa lọc</button>
     }
     <div class="filter-row__end">
-      <button type="button" class="btn" [matMenuTriggerFor]="exportMenu" [disabled]="!!exporting() || !total()"
-        [title]="total() ? 'Xuất các đơn khớp bộ lọc hiện tại' : 'Không có đơn để xuất'">
-        <lucide-icon [name]="exporting() ? 'loader-2' : 'download'" [class.spin]="!!exporting()" />
-        {{ exporting() ? 'Đang xuất...' : 'Xuất báo cáo' }}
+      <button type="button" class="btn" (click)="openPreview()" [disabled]="!total()"
+        [title]="total() ? 'Xem trước báo cáo các đơn khớp bộ lọc' : 'Không có đơn để xuất'">
+        <lucide-icon name="download" />Xuất báo cáo
       </button>
-      <mat-menu #exportMenu="matMenu" class="goat-action-menu" xPosition="before">
-        @for (format of exportFormats; track format.value) {
-        <button mat-menu-item type="button" (click)="exportReport(format.value)"><lucide-icon [name]="format.icon" />{{
-          format.label }}</button>
-        }
-      </mat-menu>
     </div>
   </div>
 
@@ -187,6 +184,44 @@
       </div>
       <footer class="modal__footer">
         <button type="button" class="btn" (click)="close()">Đóng</button>
+      </footer>
+    </section>
+  </div>
+  }
+
+  @if (previewOpen()) {
+  <div class="modal-backdrop" (click)="closePreview()">
+    <section class="modal modal--preview" role="dialog" aria-modal="true" aria-labelledby="preview-title"
+      (click)="$event.stopPropagation()">
+      <header class="modal__header">
+        <div>
+          <h2 id="preview-title">Xem trước báo cáo đơn đặt sân</h2>
+          <p class="modal__sub">Mọi đơn khớp bộ lọc hiện tại ({{ total().toLocaleString('vi-VN') }} đơn), không chỉ trang đang xem.</p>
+        </div>
+        <button type="button" class="icon-btn" aria-label="Đóng" (click)="closePreview()" [disabled]="exporting()"><lucide-icon
+            name="x" /></button>
+      </header>
+      <div class="preview-stage">
+        @if (previewLoading()) {
+        <div class="preview-state" role="status"><lucide-icon name="loader-2" class="spin" /><strong>Đang dựng bản xem
+            trước...</strong><p>Báo cáo lớn có thể mất vài giây.</p></div>
+        } @else if (previewError()) {
+        <div class="preview-state preview-state--error" role="alert"><lucide-icon name="alert-circle" /><strong>Chưa tạo
+            được bản xem trước</strong>
+          <p>{{ previewError() }}</p>
+          <button type="button" class="btn" (click)="loadPreview()"><lucide-icon name="rotate-ccw" />Thử lại</button>
+        </div>
+        } @else if (previewUrl()) {
+        <iframe [src]="previewUrl()" title="Bản xem trước báo cáo đơn đặt sân"></iframe>
+        }
+      </div>
+      <footer class="modal__footer">
+        <button type="button" class="btn" (click)="closePreview()" [disabled]="exporting()">Đóng</button>
+        <button type="button" class="btn" (click)="download('pdf')" [disabled]="!previewUrl()"><lucide-icon
+            name="file-text" />Tải PDF</button>
+        <button type="button" class="btn btn--primary" (click)="download('xlsx')"
+          [disabled]="!previewUrl() || exporting()"><lucide-icon [name]="exporting() ? 'loader-2' : 'file-spreadsheet'"
+            [class.spin]="exporting()" />{{ exporting() ? 'Đang xuất...' : 'Tải Excel' }}</button>
       </footer>
     </section>
   </div>

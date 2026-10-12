@@ -241,11 +241,10 @@
   .cell-title strong { overflow: hidden; max-width: 320px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
   .cell-title small { color: var(--body); font-size: 13px; }
 
-  // Xuống dòng thay vì cuộn ngang: hàng cuộn ngang ăn mất con lăn chuột khi người dùng chỉ muốn cuộn trang.
   .tabs {
     display: flex;
-    flex-wrap: wrap;
     gap: 4px;
+    overflow-x: auto;
     border-bottom: 1px solid var(--hairline);
   }
 

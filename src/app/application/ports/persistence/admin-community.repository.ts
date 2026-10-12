@@ -42,6 +42,15 @@ export interface AdminTournament {
   createdAt: string | null;
 }
 
+export type ClubRole = 'OWNER' | 'ADMIN' | 'MEMBER';
+
+export interface AdminClubMember {
+  membershipId: string;
+  userId: string;
+  role: ClubRole;
+  joinedAt: string | null;
+}
+
 export interface CommunityFilter<S> {
   state?: S;
   sportType?: SportType;
@@ -59,6 +68,8 @@ export interface CommunityPage<T> {
 export interface AdminCommunityRepository {
   getClubs(filter: CommunityFilter<ClubState>): Observable<CommunityPage<AdminClub>>;
   getTournaments(filter: CommunityFilter<AdminTournamentStatus>): Observable<CommunityPage<AdminTournament>>;
+  /** Thành viên đang hoạt động của một CLB, theo thứ tự tham gia. */
+  getClubMembers(clubId: string, page: number, size: number): Observable<CommunityPage<AdminClubMember>>;
 }
 
 export const ADMIN_COMMUNITY_REPOSITORY_TOKEN = new InjectionToken<AdminCommunityRepository>('ADMIN_COMMUNITY_REPOSITORY_TOKEN');

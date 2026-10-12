@@ -25,4 +25,8 @@ export class AdminBookingRepositoryImpl implements AdminBookingRepository {
   exportReport(filter: Omit<AdminBookingFilter, 'page' | 'size'>, format: 'xlsx' | 'pdf'): Observable<Blob> {
     return this.api.exportReport(filter, format);
   }
+
+  previewReport(filter: Omit<AdminBookingFilter, 'page' | 'size'>): Observable<Blob> {
+    return this.api.previewReport(filter);
+  }
 }

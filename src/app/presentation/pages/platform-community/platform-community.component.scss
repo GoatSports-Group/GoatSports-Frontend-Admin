@@ -44,3 +44,61 @@
 @media (max-width: 760px) {
   .filters { grid-template-columns: minmax(0, 1fr); }
 }
+
+// Bấm một dòng CLB để mở danh sách thành viên.
+tr.is-clickable { cursor: pointer; }
+tr.is-clickable:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+
+.modal--members { width: min(100%, 620px); }
+.modal--members .modal__body { scrollbar-width: none; overscroll-behavior: contain; }
+.modal--members .modal__body::-webkit-scrollbar { display: none; }
+.sentinel { height: 1px; list-style: none; }
+
+.members__more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  color: var(--body);
+  font-size: 13px;
+  font-weight: 600;
+
+  lucide-icon { width: 14px; height: 14px; }
+}
+
+.members__more--error { color: var(--danger); }
+.modal--members h2 { margin: 0; color: var(--ink); font-size: 18px; font-weight: 800; }
+
+.members { display: grid; margin: 0; padding: 0; list-style: none; }
+
+.member {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--hairline);
+
+  &:last-child { border-bottom: 0; }
+}
+
+.member__avatar {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 9999px;
+  background: var(--primary-light);
+  color: var(--primary-strong);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.member__meta {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+
+  small { color: var(--body); font-size: 12px; }
+}

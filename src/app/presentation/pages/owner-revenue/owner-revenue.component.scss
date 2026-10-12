@@ -147,7 +147,8 @@ select:focus-visible {
 
 .period-presets {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  grid-template-columns: repeat(6, minmax(100px, 1fr));
+  overflow-x: auto;
   border-bottom: 1px solid var(--line);
   background: var(--surface-subtle);
 }

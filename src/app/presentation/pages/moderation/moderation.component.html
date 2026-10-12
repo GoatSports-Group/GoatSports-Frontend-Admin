@@ -69,7 +69,8 @@
     @if (lane() === 'REPORTS') {
       <ul class="queue" data-list-top [class.is-paging]="paging()" [attr.aria-busy]="paging()">
         @for (report of reports(); track report.reportId) {
-          <li class="queue-card">
+          <li class="queue-card is-clickable" tabindex="0" (click)="openReportDetail(report)"
+            (keydown.enter)="openReportDetail(report)" [attr.aria-label]="'Xem chi tiết báo cáo ' + shortId(report.reportId)">
             <header>
               <div class="title-row">
                 <span class="target-pill">{{ targetLabel(report.targetType) }}</span>
@@ -84,7 +85,7 @@
             <blockquote>{{ report.reason }}</blockquote>
 
             <dl>
-              <div><dt><lucide-icon name="user" /> Người báo cáo</dt><dd>{{ shortId(report.reporterId) }}</dd></div>
+              <div><dt><lucide-icon name="user" /> Người báo cáo</dt><dd>{{ who(report.reporterId) }}</dd></div>
               <div><dt><lucide-icon name="file-text" /> Nội dung</dt><dd>{{ shortId(report.targetId) }}</dd></div>
               @if (report.evidence.length) {
                 <div><dt><lucide-icon name="paperclip" /> Minh chứng</dt><dd>{{ report.evidence.length }} tệp</dd></div>
@@ -105,7 +106,7 @@
 
             @if (report.status === 'PENDING' || report.status === 'REVIEWING') {
               <footer>
-                <button type="button" class="secondary" (click)="toggleReport(report.reportId)">
+                <button type="button" class="secondary" (click)="$event.stopPropagation(); toggleReport(report.reportId)">
                   <lucide-icon name="gavel" /> Xử lý
                 </button>
               </footer>
@@ -116,7 +117,8 @@
     } @else {
       <ul class="queue" data-list-top [class.is-paging]="paging()" [attr.aria-busy]="paging()">
         @for (appeal of appeals(); track appeal.appealId) {
-          <li class="queue-card">
+          <li class="queue-card is-clickable" tabindex="0" (click)="openAppealDetail(appeal)"
+            (keydown.enter)="openAppealDetail(appeal)" [attr.aria-label]="'Xem chi tiết khiếu nại ' + shortId(appeal.appealId)">
             <header>
               <div class="title-row">
                 <span class="target-pill">{{ actionLabel(appeal.actionType) }}</span>
@@ -131,7 +133,7 @@
             <blockquote>{{ appeal.reason }}</blockquote>
 
             <dl>
-              <div><dt><lucide-icon name="user" /> Người khiếu nại</dt><dd>{{ shortId(appeal.appellantId) }}</dd></div>
+              <div><dt><lucide-icon name="user" /> Người khiếu nại</dt><dd>{{ who(appeal.appellantId) }}</dd></div>
               <div><dt><lucide-icon name="file-text" /> Nội dung</dt>
                 <dd>{{ targetLabel(appeal.targetType) }} · {{ shortId(appeal.targetId) }}</dd></div>
               @if (appeal.reviewedAt) {
@@ -142,7 +144,7 @@
 
             @if (appeal.status === 'PENDING') {
               <footer>
-                <button type="button" class="secondary" (click)="openAppealId.set(appeal.appealId)">
+                <button type="button" class="secondary" (click)="$event.stopPropagation(); openAppealId.set(appeal.appealId)">
                   <lucide-icon name="gavel" /> Xử lý
                 </button>
               </footer>
@@ -224,6 +226,85 @@
           @if (submitting()) { <lucide-icon name="loader-2" class="spin" /> Đang gửi }
           @else { <lucide-icon name="undo-2" /> Chấp nhận &amp; khôi phục }
         </button>
+      </footer>
+    </section>
+  </div>
+  }
+
+  @if (detailReport() || detailAppeal()) {
+  @let report = detailReport();
+  @let appeal = detailAppeal();
+  <div class="modal-backdrop" (click)="closeDetail()">
+    <section class="modal modal--detail" role="dialog" aria-modal="true" aria-labelledby="detail-title"
+      (click)="$event.stopPropagation()">
+      <header class="modal__header">
+        <div>
+          <h2 id="detail-title">{{ report ? 'Báo cáo #' + shortId(report.reportId) : 'Khiếu nại #' + shortId(appeal!.appealId) }}</h2>
+          <p class="dialog-sub">
+            {{ statusLabel(report ? report.status : appeal!.status) }} · gửi lúc {{ (report ? report.createdAt : appeal!.createdAt) | date:'HH:mm dd/MM/yyyy' }}
+          </p>
+        </div>
+        <button type="button" class="icon-btn" aria-label="Đóng" (click)="closeDetail()"><lucide-icon name="x" /></button>
+      </header>
+      <div class="modal__body detail">
+        <section class="detail__block">
+          <h3>{{ report ? 'Người báo cáo' : 'Người khiếu nại' }}</h3>
+          @let senderId = report ? report.reporterId : appeal!.appellantId;
+          <p class="person"><strong>{{ who(senderId) }}</strong><span>{{ users.email(senderId) || 'Chưa có email' }}</span></p>
+        </section>
+
+        <section class="detail__block">
+          <h3>{{ report ? 'Lý do báo cáo' : 'Lý do khiếu nại' }}</h3>
+          <blockquote class="full">{{ report ? report.reason : appeal!.reason }}</blockquote>
+          @if (report?.evidence?.length) { <p class="muted-line"><lucide-icon name="paperclip" /> {{ report!.evidence.length }} tệp minh chứng</p> }
+          @if (appeal) { <p class="muted-line">Quyết định bị khiếu nại: <strong>{{ actionLabel(appeal.actionType) }}</strong></p> }
+        </section>
+
+        <section class="detail__block">
+          <h3>Nội dung bị báo cáo · {{ targetLabel(report ? report.targetType : appeal!.targetType) }}</h3>
+          @if (targetLoading()) {
+          <p class="muted-line"><lucide-icon name="loader-2" class="spin" /> Đang tải nội dung...</p>
+          } @else if (targetError()) {
+          <p class="form-error" role="alert">{{ targetError() }}</p>
+          } @else if (target(); as t) {
+            @if (!t.found) {
+            <p class="muted-line">Nội dung không còn trên hệ thống hoặc không thuộc mạng xã hội.</p>
+            } @else {
+            <div class="target">
+              <p class="person"><strong>{{ t.targetType === 'USER' ? 'Tài khoản' : 'Tác giả' }}: {{ who(t.authorId) }}</strong>
+                <span>{{ users.email(t.authorId) || 'Chưa có email' }}</span></p>
+              @if (t.content) { <p class="target__content">{{ t.content }}</p> }
+              @else if (t.targetType !== 'USER') { <p class="muted-line">Không có nội dung chữ.</p> }
+              <p class="muted-line">
+                @if (t.status) { {{ contentStatus(t.status) }} }
+                @if (t.attachmentCount) { · {{ t.attachmentCount }} tệp đính kèm }
+                @if (t.createdAt) { · đăng {{ t.createdAt | date:'HH:mm dd/MM/yyyy' }} }
+              </p>
+            </div>
+            }
+          }
+        </section>
+
+        @if (report?.actions?.length) {
+        <section class="detail__block">
+          <h3>Lịch sử xử lý</h3>
+          <ul class="action-trail">
+            @for (action of report!.actions; track action.actionId) {
+            <li><lucide-icon name="check" /><span><strong>{{ actionLabel(action.actionType) }}</strong> — {{ action.reason }}
+                <small> · {{ who(action.moderatorId) }}</small></span><time>{{ action.actionAt | date:'dd/MM HH:mm' }}</time></li>
+            }
+          </ul>
+        </section>
+        }
+        @if (appeal?.reviewedAt) {
+        <p class="muted-line">Đã xét bởi {{ who(appeal!.reviewedBy) }} lúc {{ appeal!.reviewedAt | date:'HH:mm dd/MM/yyyy' }}</p>
+        }
+      </div>
+      <footer class="modal__footer">
+        <button type="button" class="ghost" (click)="closeDetail()">Đóng</button>
+        @if ((report && (report.status === 'PENDING' || report.status === 'REVIEWING')) || appeal?.status === 'PENDING') {
+        <button type="button" class="primary" (click)="handleFromDetail()"><lucide-icon name="gavel" /> Xử lý</button>
+        }
       </footer>
     </section>
   </div>

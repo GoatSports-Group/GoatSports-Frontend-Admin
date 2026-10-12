@@ -14,7 +14,7 @@
         [placeholder]="isAdmin ? 'Tìm chủ sân hoặc nội dung...' : 'Tìm khách hoặc nội dung...'" aria-label="Tìm cuộc trò chuyện" />
     </label>
 
-    <div class="chips" role="tablist" aria-label="Lọc cuộc trò chuyện">
+    <div class="chips" appWheelScrollX role="tablist" aria-label="Lọc cuộc trò chuyện">
       @if (isAdmin) {
         @for (chip of adminFilters; track chip.value) {
         <button type="button" role="tab" class="chip" [class.is-active]="adminFilter() === chip.value"

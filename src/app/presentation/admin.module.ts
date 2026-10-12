@@ -1,3 +1,4 @@
+import { WheelScrollXDirective } from '@shared/directives/wheel-scroll-x.directive';
 import { InfiniteScrollDirective } from '@shared/directives/infinite-scroll.directive';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -51,6 +52,7 @@ import { OverlayModule } from '@angular/cdk/overlay';
   ],
   imports: [
     InfiniteScrollDirective,
+    WheelScrollXDirective,
     CommonModule,
     SharedModule,
     AdminRoutingModule,

@@ -58,6 +58,8 @@ export class AdminComponent implements OnInit {
 
   // Signals state management
   sidebarCollapsed = signal(false);
+  /** Nhóm menu đang thu gọn (accordion), nhớ theo trình duyệt. */
+  readonly closedGroups = signal<ReadonlySet<string>>(readClosedGroups());
   isOnline = signal(true);
   searchQuery = signal('');
   isSearchOpen = signal(false);
@@ -174,6 +176,7 @@ export class AdminComponent implements OnInit {
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(event => {
       this.currentUrl.set(event.urlAfterRedirects.split('?')[0]);
+      this.openActiveGroup();
       if (window.innerWidth < 1024) this.sidebarCollapsed.set(true);
     });
 
@@ -195,6 +198,26 @@ export class AdminComponent implements OnInit {
         next: (connected) => this.isOnline.set(connected),
         error: () => this.isOnline.set(false)
       });
+  }
+
+  private openActiveGroup(): void {
+    const active = this.currentNavigationItem();
+    const group = this.visibleNavigationGroups().find(item => item.items.includes(active));
+    if (group && this.closedGroups().has(group.label)) this.toggleGroup(group);
+  }
+
+  isGroupOpen(group: AdminNavigationGroup): boolean {
+    return !!group.fixed || !this.closedGroups().has(group.label);
+  }
+
+  toggleGroup(group: AdminNavigationGroup): void {
+    if (group.fixed) return;
+    this.closedGroups.update(current => {
+      const next = new Set(current);
+      if (!next.delete(group.label)) next.add(group.label);
+      return next;
+    });
+    writeClosedGroups(this.closedGroups());
   }
 
   toggleSidebar() {
@@ -267,5 +290,24 @@ export class AdminComponent implements OnInit {
     return this.userProfile
       ? getFallbackAvatar(this.userProfile)
       : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80';
+  }
+}
+
+const CLOSED_GROUPS_KEY = 'goat.admin.sidebar.closedGroups';
+
+function readClosedGroups(): ReadonlySet<string> {
+  try {
+    const value = JSON.parse(localStorage.getItem(CLOSED_GROUPS_KEY) ?? '[]');
+    return new Set(Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function writeClosedGroups(groups: ReadonlySet<string>): void {
+  try {
+    localStorage.setItem(CLOSED_GROUPS_KEY, JSON.stringify([...groups]));
+  } catch {
+    // Không lưu được (chế độ riêng tư): chỉ mất ghi nhớ, menu vẫn chạy.
   }
 }

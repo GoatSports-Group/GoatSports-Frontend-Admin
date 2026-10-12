@@ -6,19 +6,23 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
-import { Observable, finalize, take } from 'rxjs';
+import { Observable, Subscription, finalize, take } from 'rxjs';
 import {
   AppealStatus,
   ContentAppeal,
   ContentReport,
   ModerationActionType,
   ModerationPage,
-  ReportStatus
+  ReportStatus,
+  ModerationTarget,
+  ReportTargetType
 } from '@application/dto/moderation/moderation.dto';
 import { ActOnReportUseCase } from '@application/usecase/moderation/act-on-report.usecase';
 import { GetAppealQueueUseCase } from '@application/usecase/moderation/get-appeal-queue.usecase';
 import { GetReportQueueUseCase } from '@application/usecase/moderation/get-report-queue.usecase';
 import { ReviewAppealUseCase } from '@application/usecase/moderation/review-appeal.usecase';
+import { GetModerationTargetUseCase } from '@application/usecase/moderation/get-moderation-target.usecase';
+import { UserDirectoryService } from '@presentation/services/user-directory.service';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-loading.component';
 import { PaginationComponent } from '@shared/components/ui/pagination/pagination.component';
@@ -49,6 +53,9 @@ export class ModerationComponent {
   private readonly getAppeals = inject(GetAppealQueueUseCase);
   private readonly reviewAppealUseCase = inject(ReviewAppealUseCase);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly getTarget = inject(GetModerationTargetUseCase);
+  readonly users = inject(UserDirectoryService);
+  private targetRequest?: Subscription;
 
   readonly actionChoices: readonly ActionChoice[] = [
     { value: 'HIDE_CONTENT', label: 'Ẩn nội dung', hint: 'Nội dung biến mất khỏi bảng tin, tác giả có thể khiếu nại.' },
@@ -80,6 +87,13 @@ export class ModerationComponent {
   readonly submitting = signal(false);
   readonly error = signal<string | null>(null);
   readonly notice = signal<string | null>(null);
+
+  /** Popup chi tiết (bấm vào thẻ): đọc đầy đủ lý do, người gửi và nội dung bị báo cáo trước khi xử lý. */
+  readonly detailReport = signal<ContentReport | null>(null);
+  readonly detailAppeal = signal<ContentAppeal | null>(null);
+  readonly target = signal<ModerationTarget | null>(null);
+  readonly targetLoading = signal(false);
+  readonly targetError = signal<string | null>(null);
 
   readonly openReportId = signal<string | null>(null);
   readonly openReport = computed(() => this.reports().find(report => report.reportId === this.openReportId()) ?? null);
@@ -165,6 +179,70 @@ export class ModerationComponent {
     if (next) {
       this.draftAction.set('HIDE_CONTENT');
       this.draftReason.set('');
+    }
+  }
+
+  openReportDetail(report: ContentReport): void {
+    this.detailAppeal.set(null);
+    this.detailReport.set(report);
+    this.users.resolve([report.reporterId, ...report.actions.map(action => action.moderatorId)]);
+    this.loadTarget(report.targetType, report.targetId);
+  }
+
+  openAppealDetail(appeal: ContentAppeal): void {
+    this.detailReport.set(null);
+    this.detailAppeal.set(appeal);
+    this.users.resolve([appeal.appellantId, appeal.reviewedBy]);
+    this.loadTarget(appeal.targetType, appeal.targetId);
+  }
+
+  closeDetail(): void {
+    this.targetRequest?.unsubscribe();
+    this.detailReport.set(null);
+    this.detailAppeal.set(null);
+    this.target.set(null);
+  }
+
+  /** Từ popup chi tiết sang popup xử lý của cùng mục. */
+  handleFromDetail(): void {
+    const report = this.detailReport();
+    const appeal = this.detailAppeal();
+    this.closeDetail();
+    if (report) this.toggleReport(report.reportId);
+    if (appeal) this.openAppealId.set(appeal.appealId);
+  }
+
+  loadTarget(type: ReportTargetType | null, id: string | null): void {
+    this.targetRequest?.unsubscribe();
+    this.target.set(null);
+    this.targetError.set(null);
+    if (!type || !id) return;
+    this.targetLoading.set(true);
+    this.targetRequest = this.getTarget.execute(type, id).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.targetLoading.set(false))
+    ).subscribe({
+      next: target => {
+        this.target.set(target);
+        this.users.resolve([target.authorId]);
+      },
+      error: error => this.targetError.set(error?.error?.message ?? 'Không tải được nội dung bị báo cáo.')
+    });
+  }
+
+  /** Tên kèm email; chưa tra xong thì mã rút gọn. */
+  who(id: string | null | undefined): string {
+    if (!id) return '—';
+    return this.users.name(id) || this.shortId(id);
+  }
+
+  contentStatus(status: string | null): string {
+    switch (status) {
+      case 'PUBLISHED': case 'SENT': case 'DELIVERED': case 'READ': return 'Đang hiển thị';
+      case 'HIDDEN': return 'Đã ẩn';
+      case 'REMOVED': case 'DELETED': return 'Đã gỡ / xóa';
+      case 'DRAFT': return 'Bản nháp';
+      default: return status ?? '—';
     }
   }
 

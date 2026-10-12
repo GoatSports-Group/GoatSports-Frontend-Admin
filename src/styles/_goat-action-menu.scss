@@ -19,8 +19,10 @@
     font-size: 14px;
     font-weight: 600;
 
-    .mdc-list-item__primary-text { display: inline-flex; align-items: center; gap: 10px; }
-    lucide-icon { width: 16px; height: 16px; flex: none; color: var(--body); }
+    // Chữ và icon của mat-menu nằm chung trong .mat-mdc-menu-item-text: phải là flex, nếu không icon (inline) bám
+    // theo baseline và trồi lên trên chữ.
+    .mat-mdc-menu-item-text { display: inline-flex; align-items: center; gap: 10px; line-height: 20px; }
+    lucide-icon { display: inline-flex; width: 16px; height: 16px; flex: none; color: var(--body); }
 
     &:hover:not([disabled]) { background: var(--primary-light); color: var(--primary-strong); lucide-icon { color: var(--primary); } }
     &.is-danger { color: var(--danger); lucide-icon { color: var(--danger); } }

@@ -2,6 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { provideLucideIcons } from '@lucide/angular';
+import { GetModerationTargetUseCase } from '@application/usecase/moderation/get-moderation-target.usecase';
+import { USER_REPOSITORY_TOKEN } from '@application/ports/persistence/user.repository';
 import { APP_ICONS } from '../../../app-icons';
 import {
   ContentAppeal,
@@ -38,6 +40,8 @@ describe('ModerationComponent', () => {
   const actOnReport = { execute: vi.fn() };
   const getAppeals = { execute: vi.fn() };
   const reviewAppeal = { execute: vi.fn() };
+  const getTarget = { execute: vi.fn() };
+  const userRepository = { getSummaries: vi.fn() };
 
   beforeEach(async () => {
     getReports.execute.mockReset().mockReturnValue(of(reportPage));
@@ -52,7 +56,9 @@ describe('ModerationComponent', () => {
         { provide: GetReportQueueUseCase, useValue: getReports },
         { provide: ActOnReportUseCase, useValue: actOnReport },
         { provide: GetAppealQueueUseCase, useValue: getAppeals },
-        { provide: ReviewAppealUseCase, useValue: reviewAppeal }
+        { provide: ReviewAppealUseCase, useValue: reviewAppeal },
+        { provide: GetModerationTargetUseCase, useValue: getTarget },
+        { provide: USER_REPOSITORY_TOKEN, useValue: userRepository }
       ]
     }).compileComponents();
   });
@@ -112,6 +118,29 @@ describe('ModerationComponent', () => {
 
     expect(reviewAppeal.execute).toHaveBeenCalledWith({ appealId: 'appeal-1', decision: 'APPROVED' });
     expect(component.notice()).toContain('khôi phục');
+  });
+
+  it('opens a report card into the full detail with reporter email and the reported content', () => {
+    userRepository.getSummaries.mockImplementation((ids: string[]) =>
+      of(ids.map(userId => ({ userId, fullName: `Người ${userId}`, email: `${userId}@goat.test` }))));
+    getTarget.execute.mockReturnValue(of({
+      targetType: 'POST', targetId: pendingReport.targetId, found: true, authorId: 'author-1',
+      content: 'Mua bán vé chợ đen tại đây', status: 'PUBLISHED', attachmentCount: 2, postId: null, createdAt: null
+    }));
+    const fixture = TestBed.createComponent(ModerationComponent);
+    fixture.detectChanges();
+
+    (fixture.nativeElement.querySelector('.queue-card') as HTMLElement).click();
+    fixture.detectChanges();
+
+    expect(getTarget.execute).toHaveBeenCalledWith(pendingReport.targetType, pendingReport.targetId);
+    const dialog = fixture.nativeElement.querySelector('.modal--detail') as HTMLElement;
+    expect(dialog.textContent).toContain(`${pendingReport.reporterId}@goat.test`);
+    expect(dialog.textContent).toContain('Mua bán vé chợ đen tại đây');
+    expect(dialog.textContent).toContain('author-1@goat.test');
+
+    fixture.componentInstance.handleFromDetail();
+    expect(fixture.componentInstance.openReportId()).toBe(pendingReport.reportId);
   });
 
   it('surfaces the backend message when the queue cannot be loaded', () => {

@@ -17,3 +17,14 @@ export function downloadBlob(file: Blob, filename: string): void {
   anchor.remove();
   URL.revokeObjectURL(url);
 }
+
+/** Lỗi của request `responseType: 'blob'` cũng về dạng Blob: đọc JSON bên trong để lấy message của backend. */
+export async function blobErrorMessage(error: unknown): Promise<string | null> {
+  const body = (error as { error?: unknown })?.error;
+  if (!(body instanceof Blob)) return (body as { message?: string } | undefined)?.message ?? null;
+  try {
+    return JSON.parse(await body.text())?.message ?? null;
+  } catch {
+    return null;
+  }
+}

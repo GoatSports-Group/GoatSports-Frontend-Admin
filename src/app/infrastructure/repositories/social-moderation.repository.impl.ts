@@ -6,6 +6,8 @@ import {
   ModerateContentPayload,
   ModerationPage,
   ModerationPageFilter,
+  ModerationTarget,
+  ReportTargetType,
   ReviewAppealPayload
 } from '@application/dto/moderation/moderation.dto';
 import { SocialModerationRepository } from '@application/ports/persistence/social-moderation.repository';
@@ -29,6 +31,10 @@ export class SocialModerationRepositoryImpl implements SocialModerationRepositor
 
   reviewAppeal(payload: ReviewAppealPayload): Observable<ContentAppeal> {
     return this.api.reviewAppeal(payload).pipe(map(response => response.data));
+  }
+
+  getTarget(targetType: ReportTargetType, targetId: string): Observable<ModerationTarget> {
+    return this.api.getTarget(targetType, targetId).pipe(map(response => response.data));
   }
 }
 

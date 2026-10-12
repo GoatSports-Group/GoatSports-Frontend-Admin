@@ -116,8 +116,20 @@
 
     <nav>
       @for (group of visibleNavigationGroups(); track group.label) {
-        <section class="sidebar-group">
+        @let open = sidebarCollapsed() || isGroupOpen(group);
+        <section class="sidebar-group" [class.is-closed]="!open">
+          @if (group.fixed) {
           <h2 class="sidebar-text">{{ group.label }}</h2>
+          } @else {
+          <h2 class="sidebar-text">
+            <button type="button" class="sidebar-group__toggle" (click)="toggleGroup(group)"
+              [attr.aria-expanded]="open" [attr.aria-controls]="'nav-group-' + $index">
+              <span>{{ group.label }}</span><lucide-icon name="chevron-down" />
+            </button>
+          </h2>
+          }
+          <div class="sidebar-group__items" [id]="'nav-group-' + $index" [attr.inert]="open ? null : ''">
+          <div>
           @for (item of group.items; track item.route) {
             <a [routerLink]="'/admin' + item.route" routerLinkActive="is-active"
               [title]="item.title" [attr.aria-label]="item.title">
@@ -131,6 +143,8 @@
               }
             </a>
           }
+          </div>
+          </div>
         </section>
       }
     </nav>

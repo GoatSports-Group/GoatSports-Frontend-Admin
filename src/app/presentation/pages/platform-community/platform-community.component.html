@@ -68,7 +68,8 @@
       </thead>
       <tbody>
         @for (item of clubs(); track item.clubId) {
-        <tr>
+        <tr class="is-clickable" tabindex="0" (click)="openClub(item)" (keydown.enter)="openClub(item)"
+          [attr.aria-label]="'Xem thành viên của ' + item.name">
           <td>
             <div class="club">
               @if (item.logoUrl) { <img class="club__logo" [src]="item.logoUrl" alt="" loading="lazy" /> }
@@ -146,5 +147,68 @@
   <app-pagination [pageIndex]="pageIndex()" [pageSize]="pageSize" [totalItems]="total()"
     (pageChange)="goToPage($event)" />
   }
+  }
+
+  @if (selectedClub(); as club) {
+  <div class="modal-backdrop" (click)="closeClub()">
+    <section class="modal modal--members" role="dialog" aria-modal="true" aria-labelledby="club-members-title"
+      (click)="$event.stopPropagation()">
+      <header class="modal__header">
+        <div class="club">
+          @if (club.logoUrl) { <img class="club__logo" [src]="club.logoUrl" alt="" /> }
+          @else { <span class="club__logo club__logo--empty" aria-hidden="true">{{ club.name.charAt(0) }}</span> }
+          <div class="cell-title">
+            <h2 id="club-members-title">{{ club.name }}</h2>
+            <small>{{ club.memberCount.toLocaleString('vi-VN') }} thành viên · {{ sportLabel[club.sportType] }} · {{
+              club.privacy === 'PUBLIC' ? 'Công khai' : 'Riêng tư' }}</small>
+          </div>
+        </div>
+        <button type="button" class="icon-btn" aria-label="Đóng" (click)="closeClub()"><lucide-icon name="x" /></button>
+      </header>
+      <div class="modal__body" #memberList>
+        @if (membersLoading() && !members().length) {
+        <app-loading-skeleton variant="rows" [count]="5" label="Đang tải thành viên" />
+        } @else if (membersError() && !members().length) {
+        <div class="state state--error" role="alert">
+          <lucide-icon name="alert-circle" /><strong>Chưa tải được thành viên</strong>
+          <p>{{ membersError() }}</p>
+          <button type="button" class="btn" (click)="fetchMembers()"><lucide-icon name="rotate-ccw" />Thử lại</button>
+        </div>
+        } @else if (!members().length) {
+        <div class="state"><lucide-icon name="users" /><strong>CLB chưa có thành viên đang hoạt động</strong></div>
+        } @else {
+        <ul class="members">
+          @if (memberWindow.hasBefore()) {
+          <li appInfiniteScroll (reached)="showPreviousMembers()" class="sentinel" aria-hidden="true"></li>
+          }
+          @for (member of memberWindow.items(); track member.membershipId) {
+          <li class="member" [attr.data-window-id]="member.membershipId">
+            <span class="member__avatar" aria-hidden="true">{{ (users.name(member.userId) || '?').charAt(0) }}</span>
+            <div class="cell-title">
+              <strong>{{ person(member.userId) }}</strong>
+              <small>{{ users.email(member.userId) || '—' }}</small>
+            </div>
+            <div class="member__meta">
+              <span [class]="'badge badge--' + roleMeta[member.role].tone">{{ roleMeta[member.role].label }}</span>
+              @if (member.joinedAt) { <small>tham gia {{ member.joinedAt | date:'dd/MM/yyyy' }}</small> }
+            </div>
+          </li>
+          }
+          @if (memberWindow.hasAfter() || hasMoreMembers()) {
+          <li appInfiniteScroll (reached)="showMoreMembers()" class="sentinel" aria-hidden="true"></li>
+          }
+        </ul>
+        @if (membersLoading()) {
+        <p class="members__more" role="status"><lucide-icon name="loader-2" class="spin" />Đang tải thêm thành viên...</p>
+        } @else if (membersError()) {
+        <p class="members__more members__more--error" role="alert">{{ membersError() }}
+          <button type="button" class="btn btn--sm" (click)="fetchMembers()">Thử lại</button></p>
+        } @else if (!hasMoreMembers() && members().length > memberChunk) {
+        <p class="members__more">Đã hiện hết {{ membersTotal() }} thành viên</p>
+        }
+        }
+      </div>
+    </section>
+  </div>
   }
 </main>
