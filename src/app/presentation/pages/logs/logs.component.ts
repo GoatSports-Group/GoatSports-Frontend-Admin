@@ -2,9 +2,11 @@ import { ChangeDetectionStrategy, Component, DestroyRef, HostListener, OnInit, c
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, Subscription, debounceTime, distinctUntilChanged, finalize } from 'rxjs';
+import { Observable, Subject, Subscription, catchError, debounceTime, distinctUntilChanged, finalize, map, of, switchMap } from 'rxjs';
 import { Log } from '@application/dto/log/log.dto';
-import { LogStatsResult } from '@application/dto/log/log-stats.dto';
+import { FailedLoginBurst, LogStatsResult } from '@application/dto/log/log-stats.dto';
+import { USER_REPOSITORY_TOKEN } from '@application/ports/persistence/user.repository';
+import { buildRsqlSearch } from '@presentation/shared/utils/api.helper';
 import { LogService } from '@presentation/services/log.service';
 import { UserDirectoryService } from '@presentation/services/user-directory.service';
 import { PAGE_SIZE } from '@shared/constants/page-size';
@@ -35,6 +37,7 @@ export class LogsComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly search$ = new Subject<string>();
   readonly users = inject(UserDirectoryService);
+  private readonly userRepository = inject(USER_REPOSITORY_TOKEN);
   private request?: Subscription;
 
   readonly pageSize = PAGE_SIZE.table;
@@ -47,6 +50,11 @@ export class LogsComponent implements OnInit {
   readonly fromDate = signal('');
   readonly toDate = signal('');
   readonly pageIndex = signal(0);
+  /** Lọc nhanh: chỉ thao tác nhạy cảm (đổi quyền, khóa, đình chỉ, tiền, gửi hàng loạt, xuất dữ liệu). */
+  readonly sensitive = signal(false);
+  /** Đang xem một chuỗi sự kiện (cùng mã tương quan). */
+  readonly correlation = signal('');
+  readonly failedLogins = signal<FailedLoginBurst[]>([]);
 
   readonly logs = signal<Log[]>([]);
   readonly total = signal(0);
@@ -66,7 +74,7 @@ export class LogsComponent implements OnInit {
     { value: '', label: 'Mọi kết quả' }, { value: 'ok', label: 'Thành công' }, { value: 'error', label: 'Lỗi / bị từ chối' }
   ];
   readonly hasFilters = computed(() =>
-    !!(this.keyword() || this.source() || this.result() || this.fromDate() || this.toDate()));
+    !!(this.keyword() || this.sensitive() || this.correlation() || this.source() || this.result() || this.fromDate() || this.toDate()));
 
   /** Thao tác lỗi hôm nay (4xx + 5xx) và tỉ lệ. */
   readonly errorsToday = computed(() => {
@@ -102,6 +110,7 @@ export class LogsComponent implements OnInit {
       .subscribe(value => { this.keyword.set(value.trim()); this.reload(); });
     this.load();
     this.loadStats();
+    this.loadFailedLogins();
   }
 
   onKeyword(value: string): void { this.search$.next(value ?? ''); }
@@ -109,6 +118,8 @@ export class LogsComponent implements OnInit {
 
   clearFilters(): void {
     this.keyword.set('');
+    this.sensitive.set(false);
+    this.correlation.set('');
     this.source.set('');
     this.result.set('');
     this.fromDate.set('');
@@ -119,6 +130,7 @@ export class LogsComponent implements OnInit {
   refresh(): void {
     this.load(true);
     this.loadStats();
+    this.loadFailedLogins();
   }
 
   goToPage(index: number): void {
@@ -135,12 +147,17 @@ export class LogsComponent implements OnInit {
     this.request?.unsubscribe();
     this.error.set(null);
     (keepList ? this.paging : this.loading).set(true);
-    // Mã hành động có trong số liệu hôm nay cũng tìm được theo mã (kể cả mã chưa có nhãn).
-    const filter = buildLogFilter({
-      query: this.keyword(), source: this.source(), result: this.result(), fromDate: this.fromDate(), toDate: this.toDate()
-    }, this.stats()?.actions ?? []);
-    this.request = this.logService.getLogs({ page: this.pageIndex(), size: this.pageSize, filter: filter || undefined })
-      .pipe(finalize(() => { this.loading.set(false); this.paging.set(false); }), takeUntilDestroyed(this.destroyRef))
+    const keyword = this.keyword();
+    this.request = this.peopleMatching(keyword).pipe(
+      switchMap(people => {
+        // Mã hành động có trong số liệu hôm nay cũng tìm được theo mã (kể cả mã chưa có nhãn).
+        const filter = buildLogFilter({
+          query: keyword, people, sensitive: this.sensitive(), correlationId: this.correlation() || undefined,
+          source: this.source(), result: this.result(), fromDate: this.fromDate(), toDate: this.toDate()
+        }, this.stats()?.actions ?? []);
+        return this.logService.getLogs({ page: this.pageIndex(), size: this.pageSize, filter: filter || undefined });
+      }),
+      finalize(() => { this.loading.set(false); this.paging.set(false); }), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: page => {
           const items = page?.result ?? [];
@@ -150,6 +167,49 @@ export class LogsComponent implements OnInit {
         },
         error: err => this.error.set(err?.error?.message ?? 'Không tải được nhật ký hoạt động.')
       });
+  }
+
+  /**
+   * Tìm theo tên người: nhật ký lưu email (thao tác qua API) hoặc mã (sự kiện), nên tra tên / email ở auth-service
+   * rồi tìm theo cả hai. Không tra được thì vẫn tìm theo từ khóa như cũ.
+   */
+  private peopleMatching(keyword: string): Observable<string[]> {
+    if (keyword.trim().length < 2) return of([]);
+    return this.userRepository.getUsers({ page: 0, size: 20, filter: buildRsqlSearch(keyword, ['fullName', 'email']) }).pipe(
+      map(page => (page?.result ?? []).flatMap(user => [user.email, user.userId].filter((value): value is string => !!value))),
+      catchError(() => of([]))
+    );
+  }
+
+  loadFailedLogins(): void {
+    this.logService.getFailedLoginBursts().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: bursts => this.failedLogins.set(bursts),
+      error: () => this.failedLogins.set([])
+    });
+  }
+
+  toggleSensitive(): void {
+    this.sensitive.update(value => !value);
+    this.reload();
+  }
+
+  /** Từ popup chi tiết: xem mọi bản ghi cùng mã tương quan, theo thứ tự thời gian. */
+  showChain(correlationId: string): void {
+    this.correlation.set(correlationId);
+    this.close();
+    this.reload();
+  }
+
+  clearChain(): void {
+    this.correlation.set('');
+    this.reload();
+  }
+
+  /** Từ cảnh báo đăng nhập thất bại: lọc đúng tài khoản đó và các lần lỗi. */
+  inspectAccount(account: string): void {
+    this.keyword.set(account);
+    this.result.set('error');
+    this.reload();
   }
 
   loadStats(): void {

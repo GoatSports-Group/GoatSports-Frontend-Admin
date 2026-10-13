@@ -2,7 +2,8 @@
   <header class="page-head">
     <div>
       <h1>Nhật ký hoạt động</h1>
-      <p>Ai đã làm gì, lúc nào và kết quả ra sao: đăng nhập, phân quyền, duyệt hồ sơ, xuất báo cáo, thanh toán.</p>
+      <p>Ai đã làm gì, lúc nào và kết quả ra sao: đăng nhập, phân quyền, duyệt hồ sơ, xuất báo cáo, thanh toán. Thao tác
+        chỉ đọc không được ghi; bản ghi tự xóa sau 180 ngày.</p>
     </div>
     <div class="actions">
       <button type="button" class="btn" (click)="refresh()" [disabled]="paging()">
@@ -59,12 +60,32 @@
     }
   </section>
 
+  @if (failedLogins().length) {
+  <section class="note note--danger alert" role="alert" aria-label="Đăng nhập thất bại liên tục">
+    <lucide-icon name="shield-alert" />
+    <div class="alert__body">
+      <strong>{{ failedLogins().length }} tài khoản đăng nhập sai liên tục trong 15 phút gần nhất</strong>
+      <ul>
+        @for (burst of failedLogins(); track burst.account) {
+        <li><span class="mono">{{ burst.account }}</span> · {{ burst.attempts }} lần · lần cuối {{ burst.lastAt |
+          date:'HH:mm' }}@if (burst.lastIp) { · IP {{ burst.lastIp }} }
+          <button type="button" class="btn btn--sm" (click)="inspectAccount(burst.account)">Xem</button></li>
+        }
+      </ul>
+    </div>
+  </section>
+  }
+
   <div class="filter-row filter-row--logs" role="search">
     <label class="search">
       <lucide-icon name="search" />
       <input type="search" [ngModel]="keyword()" (ngModelChange)="onKeyword($event)" name="keyword"
         placeholder="Tìm hành động, người, mô tả..." aria-label="Tìm theo hành động, người thực hiện hoặc mô tả" />
     </label>
+    <button type="button" class="btn chip-toggle" [class.is-active]="sensitive()" [attr.aria-pressed]="sensitive()"
+      (click)="toggleSensitive()" title="Đổi quyền, khóa tài khoản, đình chỉ cơ sở, hoàn tiền, gửi hàng loạt, xuất dữ liệu">
+      <lucide-icon name="shield-alert" />Thao tác nhạy cảm
+    </button>
     <app-select [ngModel]="source()" (ngModelChange)="source.set($event ?? ''); reload()" [options]="sourceOptions"
       ariaLabel="Lọc theo nguồn" />
     <app-select [ngModel]="result()" (ngModelChange)="result.set($event ?? ''); reload()" [options]="resultOptions"
@@ -92,7 +113,13 @@
     <p>{{ hasFilters() ? 'Không có bản ghi khớp bộ lọc. Hãy nới khoảng ngày hoặc xóa lọc.' : 'Chưa có hoạt động nào được ghi.' }}</p>
   </div>
   } @else {
-  <p class="result-count">{{ total().toLocaleString('vi-VN') }} bản ghi</p>
+  <div class="result-line">
+    <p class="result-count">{{ total().toLocaleString('vi-VN') }} bản ghi</p>
+    @if (correlation()) {
+    <span class="scope-chip"><lucide-icon name="link-2" />Chuỗi sự kiện <span class="mono">{{ correlation().slice(0, 8) }}</span>
+      <button type="button" class="icon-btn" aria-label="Bỏ lọc chuỗi sự kiện" (click)="clearChain()"><lucide-icon name="x" /></button></span>
+    }
+  </div>
   <section class="card" [class.is-paging]="paging()">
     <div class="table-wrap">
       <table class="table">
@@ -172,6 +199,8 @@
           @if (log.correlationId) {
           <div class="facts__wide"><dt>Mã tương quan</dt>
             <dd class="copy-row"><span class="mono">{{ log.correlationId }}</span>
+              <button type="button" class="btn btn--sm" (click)="showChain(log.correlationId)"><lucide-icon
+                  name="link-2" />Xem cả chuỗi</button>
               <button type="button" class="btn btn--sm" (click)="copy(log.correlationId)"><lucide-icon
                   [name]="copied() ? 'check' : 'copy'" />{{ copied() ? 'Đã chép' : 'Chép' }}</button></dd></div>
           }

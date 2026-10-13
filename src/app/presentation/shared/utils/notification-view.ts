@@ -45,6 +45,12 @@ export function notificationRoute(notification: Notification, isPlatformAdmin: b
       return notification.referenceType === 'FINANCE_REPORT_EXPORT'
         ? '/admin/platform-finance?tab=refunds&exports=open'
         : '/admin/bookings?exports=open';
+    // Cảnh báo vận hành từ audit-service: dịch vụ ngừng -> Giám sát; đăng nhập thất bại liên tục -> Nhật ký.
+    case NotificationType.SYSTEM:
+      if (!isPlatformAdmin) return null;
+      if (notification.referenceType === 'SYSTEM_ALERT') return '/admin/system';
+      if (notification.referenceType === 'SECURITY_ALERT') return '/admin/logs?alerts=open';
+      return null;
     default: return null;
   }
 }

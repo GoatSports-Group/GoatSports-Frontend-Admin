@@ -105,7 +105,40 @@
   app-select, app-date-picker { flex: 1 1 150px; min-width: 150px; max-width: 240px; }
 }
 
+.result-line { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .result-count { margin: 0; color: var(--body); font-size: 14px; font-weight: 600; }
+
+.scope-chip {
+  display: inline-flex;
+  height: 32px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px 0 12px;
+  border: 1px solid var(--primary);
+  border-radius: 9999px;
+  background: var(--primary-light);
+  color: var(--primary-strong);
+  font-size: 13px;
+  font-weight: 700;
+
+  lucide-icon { width: 14px; height: 14px; }
+  .icon-btn { width: 24px; height: 24px; }
+}
+
+// Nút lọc nhanh dạng chip bật / tắt.
+.chip-toggle {
+  flex: none;
+  border-radius: 9999px;
+
+  &.is-active { border-color: var(--primary); background: var(--primary-light); color: var(--primary-strong); }
+}
+
+// Cảnh báo đăng nhập thất bại liên tục (audit-service, 5 lần / 15 phút).
+.alert { align-items: flex-start; }
+.alert__body { display: grid; gap: 6px; }
+.alert__body ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.alert__body li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--ink); font-size: 14px; }
+.alert__body .btn--sm { min-height: 28px; }
 
 tr.is-clickable { cursor: pointer; }
 tr.is-clickable:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }

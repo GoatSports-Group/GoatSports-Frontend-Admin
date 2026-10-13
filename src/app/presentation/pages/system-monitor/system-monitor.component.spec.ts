@@ -25,12 +25,35 @@ describe('SystemMonitorComponent', () => {
       activeModel: { modelName: 'chronos-bolt-tiny', version: 'a0e552d', trainedAt: null, metrics: { mae: 0.149 }, status: 'ACTIVE' }
     }]
   };
-  const repository = { getServicesHealth: vi.fn(), getAiStatus: vi.fn() };
+  const repository = {
+    getServicesHealth: vi.fn(), getAiStatus: vi.fn(), getTrends: vi.fn(), getIncidents: vi.fn(), getInfrastructure: vi.fn(),
+    getJobs: vi.fn()
+  };
 
   beforeEach(async () => {
     vi.useFakeTimers();
     repository.getServicesHealth.mockReset().mockReturnValue(of(health));
     repository.getAiStatus.mockReset().mockReturnValue(of(ai));
+    repository.getTrends.mockReset().mockReturnValue(of({
+      range: '1h', start: '2026-10-14T02:00:00Z', stepSeconds: 60,
+      requestsPerSecond: { 'venue-service': [1, null, 3, 2], 'payment-service': [null, null] }
+    }));
+    repository.getIncidents.mockReset().mockReturnValue(of([
+      { id: 'i-1', service: 'payment-service', status: 'DOWN', startedAt: '2026-10-14T02:50:00Z', endedAt: null, durationSeconds: 600, alerted: true },
+      { id: 'i-2', service: 'venue-service', status: 'DEGRADED', startedAt: '2026-10-13T10:00:00Z', endedAt: '2026-10-13T10:04:00Z', durationSeconds: 240, alerted: false }
+    ]));
+    repository.getInfrastructure.mockReset().mockReturnValue(of({
+      checkedAt: '2026-10-14T03:00:00Z',
+      checks: [{ name: 'PostgreSQL', status: 'UP', latencyMs: 4, detail: 'localhost:5432' },
+        { name: 'Kafka', status: 'DOWN', latencyMs: null, detail: 'Không gọi được broker' }],
+      consumers: [{ groupId: 'audit-service-group', state: 'Stable', members: 1, topics: ['user-log-topic'], lag: 1500 }]
+    }));
+    repository.getJobs.mockReset().mockReturnValue(of([
+      { service: 'report-service', job: 'REPORT_EXPORTS', label: 'Xuất báo cáo chạy nền', pending: 1, running: 0, failedLast24h: 0,
+        oldestPendingAt: new Date(Date.now() - 20 * 60_000).toISOString(), available: true, error: null },
+      { service: 'payment-service', job: null, label: null, pending: 0, running: 0, failedLast24h: 0, oldestPendingAt: null,
+        available: false, error: 'Không gọi được payment-service' }
+    ]));
     await TestBed.configureTestingModule({
       imports: [SystemMonitorComponent],
       providers: [provideRouter([]), provideLucideIcons(...APP_ICONS), { provide: SYSTEM_MONITOR_REPOSITORY_TOKEN, useValue: repository }]
@@ -59,6 +82,36 @@ describe('SystemMonitorComponent', () => {
     expect(page.overall().detail).toContain('1 ngừng: Thanh toán');
     expect(page.uptime(90_000)).toBe('1 ngày 1 giờ');
     expect(fixture.nativeElement.textContent).toContain('Mở Grafana');
+  });
+
+  it('draws a trend line per service with gaps, and lists incidents with their duration', async () => {
+    const fixture = await render();
+    const page = fixture.componentInstance;
+
+    expect(page.sparkline('venue-service')).toMatchObject({ peak: 3, last: 2 });
+    // Điểm thiếu làm đường đứt: bắt đầu lại bằng "M".
+    expect(page.sparkline('venue-service')!.path.match(/M/g)).toHaveLength(2);
+    expect(page.sparkline('payment-service')).toBeNull();
+    expect(page.duration(600)).toBe('10 phút');
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Lịch sử sự cố');
+    expect(text).toContain('đang diễn ra');
+    expect(text).toContain('đã báo admin');
+  });
+
+  it('flags infrastructure and background job problems on their tabs', async () => {
+    const fixture = await render();
+    const page = fixture.componentInstance;
+
+    expect(page.infraProblems()).toBe(1);
+    // Việc chờ 20 phút = đang chậm; service không gọi được = lỗi.
+    expect(page.jobs()!.map(job => page.jobTone(job))).toEqual(['warning', 'danger']);
+    expect(page.jobProblems()).toBe(2);
+    expect(page.lagTone(1500)).toBe('danger');
+
+    page.setTab('infra');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('audit-service-group');
   });
 
   it('refreshes every 30 seconds', async () => {

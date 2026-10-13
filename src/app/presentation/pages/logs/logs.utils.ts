@@ -32,15 +32,33 @@ export const ACTION_LABEL: Readonly<Record<string, string>> = {
 
 /** Nguồn ghi nhật ký: thao tác qua API (gateway) hoặc sự kiện do service phát ra. */
 export const SOURCE_LABEL: Readonly<Record<string, string>> = {
-  'api-gateway': 'Thao tác qua API',
-  'payment-service': 'Sự kiện thanh toán'
+  'auth-service': 'Tài khoản', 'venue-service': 'Sân & đặt sân', 'payment-service': 'Thanh toán',
+  'club-service': 'CLB & giải đấu', 'social-service': 'Cộng đồng', 'notification-service': 'Thông báo',
+  'report-service': 'Báo cáo', 'storage-service': 'Lưu trữ tệp', 'workflow-service': 'Quy trình duyệt',
+  // Bản ghi trước khi ghi tên service nguồn.
+  'api-gateway': 'Thao tác qua API (bản ghi cũ)'
 };
 
 export type LogResult = '' | 'ok' | 'error';
 
+/** "Thao tác nhạy cảm": đổi quyền / trạng thái tài khoản, đình chỉ cơ sở, tiền, gửi hàng loạt, kiểm duyệt, xuất dữ liệu. */
+export const SENSITIVE_ACTIONS: readonly string[] = [
+  'ADMIN_CHANGE_USER_STATUS', 'ADMIN_ASSIGN_ROLE', 'ASSIGN_ROLE', 'ADMIN_TOGGLE_VERIFY', 'ADMIN_RESET_PASSWORD',
+  'ADMIN_CREATE_USER', 'CREATE_ROLE', 'UPDATE_ROLE', 'DELETE_ROLE', 'ACTIVATE_ROLE', 'DEACTIVE_ROLE',
+  'ADMIN_SUSPEND_VENUE', 'ADMIN_REINSTATE_VENUE', 'RETRY_FAILED_REFUNDS', 'REMIND_REFUND', 'SEND_BROADCAST',
+  'MODERATE_SOCIAL_CONTENT', 'MODERATE_REVIEW', 'REVIEW_CONTENT_APPEAL', 'EXPORT_ALL_BOOKINGS', 'EXPORT_PLATFORM_FINANCE',
+  'refund.processing.v1', 'refund.succeeded.v1'
+];
+
 export interface LogQuery {
   /** Khớp mô tả, người thực hiện, hoặc hành động (theo mã hay nhãn tiếng Việt). */
   query: string;
+  /** Email / mã của người có tên hoặc email khớp từ khóa (tra ở auth-service), để tìm theo tên người. */
+  people?: readonly string[];
+  /** Chỉ các thao tác nhạy cảm. */
+  sensitive?: boolean;
+  /** Mọi bản ghi của một chuỗi sự kiện (cùng mã tương quan). */
+  correlationId?: string;
   source: string;
   result: LogResult;
   /** yyyy-MM-dd theo giờ máy. */
@@ -78,9 +96,12 @@ export function buildLogFilter(query: LogQuery, extraCodes: readonly string[] = 
     // bằng "\" vì parser chuỗi của bộ lọc cũng dùng "\" (cho dấu ').
     const pattern = quote(text.replace(/[.*+?^${}()|[\]\\]/g, '.'));
     const any = [`description ~ '${pattern}'`, `userId ~ '${pattern}'`,
+      ...(query.people ?? []).map(person => `userId = '${quote(person)}'`),
       ...matchingActions(text, extraCodes).map(code => `action = '${quote(code)}'`)];
     parts.push(`(${any.join(' or ')})`);
   }
+  if (query.sensitive) parts.push(`(${SENSITIVE_ACTIONS.map(code => `action = '${quote(code)}'`).join(' or ')})`);
+  if (query.correlationId) parts.push(`correlationId = '${quote(query.correlationId)}'`);
   if (query.source) parts.push(`sourceService = '${quote(query.source)}'`);
   if (query.result === 'error') parts.push('statusCode >= 400');
   if (query.result === 'ok') parts.push('statusCode < 400');

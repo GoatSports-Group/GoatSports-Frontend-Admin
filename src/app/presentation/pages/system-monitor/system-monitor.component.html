@@ -19,6 +19,14 @@
       (click)="setTab('services')"><lucide-icon name="server" />Microservice
       @if (counts().down + counts().degraded) { <span class="count count--danger">{{ counts().down + counts().degraded }}</span> }
     </button>
+    <button type="button" role="tab" class="tab" [class.is-active]="tab() === 'infra'" [attr.aria-selected]="tab() === 'infra'"
+      (click)="setTab('infra')"><lucide-icon name="database" />Hạ tầng
+      @if (infraProblems()) { <span class="count count--danger">{{ infraProblems() }}</span> }
+    </button>
+    <button type="button" role="tab" class="tab" [class.is-active]="tab() === 'jobs'" [attr.aria-selected]="tab() === 'jobs'"
+      (click)="setTab('jobs')"><lucide-icon name="list-checks" />Job nền
+      @if (jobProblems()) { <span class="count count--danger">{{ jobProblems() }}</span> }
+    </button>
     <button type="button" role="tab" class="tab" [class.is-active]="tab() === 'ai'" [attr.aria-selected]="tab() === 'ai'"
       (click)="setTab('ai')"><lucide-icon name="sparkles" />AI</button>
   </nav>
@@ -68,6 +76,15 @@
               <th class="num">CPU</th>
               <th class="num">Bộ nhớ</th>
               <th class="num">Đã chạy</th>
+              <th class="trend-head">
+                <span>Xu hướng request</span>
+                <span class="segmented" role="group" aria-label="Khoảng xu hướng">
+                  <button type="button" [class.is-active]="trendRange() === '1h'" [attr.aria-pressed]="trendRange() === '1h'"
+                    (click)="setTrendRange('1h')">1 giờ</button>
+                  <button type="button" [class.is-active]="trendRange() === '24h'" [attr.aria-pressed]="trendRange() === '24h'"
+                    (click)="setTrendRange('24h')">24 giờ</button>
+                </span>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -93,14 +110,128 @@
               <td class="num">{{ percent(item.cpuUsage) }}</td>
               <td class="num">{{ memory(item.memoryUsedBytes) }}</td>
               <td class="num">{{ uptime(item.uptimeSeconds) }}</td>
+              <td class="trend">
+                @if (sparkline(item.service); as spark) {
+                <svg viewBox="0 0 120 28" preserveAspectRatio="none" role="img"
+                  [attr.aria-label]="'Request/giây ' + (trendRange() === '1h' ? '1 giờ' : '24 giờ') + ', cao nhất ' + rate(spark.peak)">
+                  <path [attr.d]="spark.path" />
+                </svg>
+                <small>đỉnh {{ rate(spark.peak) }}</small>
+                } @else { <small class="muted">—</small> }
+              </td>
             </tr>
             }
           </tbody>
         </table>
       </div>
       <p class="legend">Ngưỡng: lỗi 5xx từ 5% hoặc độ trễ p95 từ 1 giây là <strong>suy giảm</strong> (chữ đỏ); Prometheus không gọi được là
-        <strong>ngừng</strong>. Số liệu tính trên 5 phút gần nhất.</p>
+        <strong>ngừng</strong>. Số liệu tính trên 5 phút gần nhất. Dịch vụ ngừng quá 2 phút được báo vào chuông thông báo.</p>
     </section>
+
+    <section class="card" aria-labelledby="incidents-title">
+      <header class="card__head">
+        <div><h2 id="incidents-title">Lịch sử sự cố</h2><p>7 ngày gần nhất · ghi tự động mỗi 30 giây</p></div>
+      </header>
+      @if (incidents() === null) {
+      <p class="empty-line">Đang tải lịch sử sự cố...</p>
+      } @else if (!incidents()!.length) {
+      <p class="empty-line"><lucide-icon name="circle-check-big" />Không có sự cố nào trong 7 ngày.</p>
+      } @else {
+      <ul class="incidents">
+        @for (item of incidents(); track item.id) {
+        <li [class.is-open]="!item.endedAt">
+          <span [class]="'dot dot--' + (item.status === 'DOWN' ? 'danger' : 'warning')" aria-hidden="true"></span>
+          <div class="cell-title">
+            <strong>{{ label(item.service) }} {{ item.status === 'DOWN' ? 'ngừng' : 'suy giảm' }}</strong>
+            <small>{{ item.startedAt | date:'HH:mm dd/MM' }} →
+              {{ item.endedAt ? (item.endedAt | date:'HH:mm dd/MM') : 'đang diễn ra' }}
+              @if (item.alerted) { · đã báo admin }</small>
+          </div>
+          <span [class]="'badge badge--' + (item.endedAt ? 'neutral' : (item.status === 'DOWN' ? 'danger' : 'warning'))">
+            {{ item.endedAt ? duration(item.durationSeconds) : 'Đang diễn ra · ' + duration(item.durationSeconds) }}</span>
+        </li>
+        }
+      </ul>
+      }
+    </section>
+    }
+  } @else if (tab() === 'infra') {
+    @if (infraError()) {
+    <div class="state state--error" role="alert">
+      <lucide-icon name="alert-circle" /><strong>Chưa kiểm tra được hạ tầng</strong><p>{{ infraError() }}</p>
+      <button type="button" class="btn" (click)="refresh()"><lucide-icon name="rotate-ccw" />Thử lại</button>
+    </div>
+    } @else if (infrastructure(); as infra) {
+    <section class="kpis" aria-label="Hạ tầng dùng chung">
+      @for (check of infra.checks; track check.name) {
+      <div class="kpi infra" [class.kpi--danger]="check.status !== 'UP'">
+        <span>{{ check.name }}</span>
+        <strong>{{ check.status === 'UP' ? (check.latencyMs ?? 0) + ' ms' : 'Mất kết nối' }}</strong>
+        <small class="kpi__state"><i [class]="'dot dot--' + (check.status === 'UP' ? 'success' : 'danger')"></i>
+          <span [title]="check.detail ?? ''">{{ check.status === 'UP' ? 'Hoạt động · ' + (check.detail ?? '') : (check.detail ?? 'Không phản hồi') }}</span></small>
+      </div>
+      }
+    </section>
+    <section class="card" aria-labelledby="consumers-title">
+      <header class="card__head">
+        <div><h2 id="consumers-title">Consumer Kafka</h2><p>Số message đã vào topic mà nhóm chưa xử lý (lag). Kiểm tra lúc {{
+            infra.checkedAt | date:'HH:mm:ss' }}</p></div>
+      </header>
+      @if (!infra.consumers.length) {
+      <p class="empty-line">Không đọc được nhóm consumer nào (Kafka không phản hồi hoặc chưa có service nào kết nối).</p>
+      } @else {
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Nhóm consumer</th><th>Topic</th><th>Trạng thái</th><th class="num">Thành viên</th><th class="num">Lag</th></tr></thead>
+          <tbody>
+            @for (group of infra.consumers; track group.groupId) {
+            <tr>
+              <td class="mono">{{ group.groupId }}</td>
+              <td><small class="muted">{{ group.topics.join(', ') || '—' }}</small></td>
+              <td><span [class]="'badge badge--' + (group.state === 'Stable' ? 'success' : group.state === 'Empty' ? 'neutral' : 'warning')">{{ group.state }}</span></td>
+              <td class="num">{{ group.members }}</td>
+              <td class="num"><span [class]="'badge badge--' + lagTone(group.lag)">{{ group.lag.toLocaleString('vi-VN') }}</span></td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      }
+    </section>
+    } @else {
+    <app-loading-skeleton variant="stats" [count]="4" label="Đang kiểm tra hạ tầng" />
+    }
+  } @else if (tab() === 'jobs') {
+    @if (jobsError()) {
+    <div class="state state--error" role="alert">
+      <lucide-icon name="alert-circle" /><strong>Chưa đọc được job nền</strong><p>{{ jobsError() }}</p>
+      <button type="button" class="btn" (click)="refresh()"><lucide-icon name="rotate-ccw" />Thử lại</button>
+    </div>
+    } @else if (jobs(); as list) {
+    <section class="card" aria-label="Job nền">
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Job</th><th>Trạng thái</th><th class="num">Đang chờ</th><th class="num">Đang chạy</th><th class="num">Lỗi 24 giờ</th><th>Chờ lâu nhất</th></tr></thead>
+          <tbody>
+            @for (job of list; track job.service + (job.job ?? '')) {
+            @let tone = jobTone(job);
+            <tr [class]="'service service--' + tone">
+              <td><div class="cell-title"><strong>{{ job.label ?? label(job.service) }}</strong><small>{{ job.service }}{{ job.job ? ' · ' + job.job : '' }}</small></div></td>
+              <td><span [class]="'badge badge--' + tone">{{ jobState(job) }}</span></td>
+              <td class="num">{{ job.available ? job.pending : '—' }}</td>
+              <td class="num">{{ job.available ? job.running : '—' }}</td>
+              <td class="num" [class.is-bad]="job.failedLast24h > 0">{{ job.available ? job.failedLast24h : '—' }}</td>
+              <td>{{ job.oldestPendingAt ? (job.oldestPendingAt | date:'HH:mm dd/MM') : (job.available ? 'Không có việc chờ' : (job.error ?? '')) }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="legend">Việc chờ quá 10 phút là <strong>đang chậm</strong>; có lỗi trong 24 giờ thì tô đỏ. Xử lý chi tiết ở trang
+        tương ứng (Đơn đặt sân, Gửi thông báo, Tài chính).</p>
+    </section>
+    } @else {
+    <app-loading-skeleton variant="table" [count]="4" [columns]="5" label="Đang đọc job nền" />
     }
   } @else {
     @if (aiError()) {

@@ -4,12 +4,16 @@ import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, catchError, filter, merge, of, switchMap, timer } from 'rxjs';
 import {
-  AiCapabilityOverview, AiStatus, SYSTEM_MONITOR_REPOSITORY_TOKEN, ServiceHealth, ServiceHealthStatus, SystemHealth
+  AiCapabilityOverview, AiStatus, BackgroundJob, InfrastructureStatus, SYSTEM_MONITOR_REPOSITORY_TOKEN, ServiceHealth,
+  ServiceHealthStatus, ServiceIncident, ServiceTrends, SystemHealth
 } from '@application/ports/persistence/system-monitor.repository';
 import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/loading-skeleton.component';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 
-type Tab = 'services' | 'ai';
+type Tab = 'services' | 'infra' | 'jobs' | 'ai';
+const TABS: readonly Tab[] = ['services', 'infra', 'jobs', 'ai'];
+/** Job có việc chờ lâu hơn mức này coi như đang chậm. */
+const STALE_JOB_MS = 10 * 60_000;
 type Tone = 'success' | 'warning' | 'danger' | 'neutral';
 
 const REFRESH_MS = 30_000;
@@ -67,6 +71,20 @@ export class SystemMonitorComponent implements OnInit {
   private readonly refresh$ = new Subject<void>();
 
   readonly tab = signal<Tab>('services');
+  readonly trendRange = signal<'1h' | '24h'>('1h');
+  readonly trends = signal<ServiceTrends | null>(null);
+  readonly incidents = signal<ServiceIncident[] | null>(null);
+  readonly infrastructure = signal<InfrastructureStatus | null>(null);
+  readonly infraLoading = signal(false);
+  readonly infraError = signal<string | null>(null);
+  readonly jobs = signal<BackgroundJob[] | null>(null);
+  readonly jobsError = signal<string | null>(null);
+  /** Hạ tầng hoặc job nền có vấn đề: hiện số trên tab. */
+  readonly infraProblems = computed(() => {
+    const infra = this.infrastructure();
+    return infra ? infra.checks.filter(check => check.status !== 'UP').length : 0;
+  });
+  readonly jobProblems = computed(() => (this.jobs() ?? []).filter(job => this.jobTone(job) !== 'success').length);
   readonly health = signal<SystemHealth | null>(null);
   readonly ai = signal<AiStatus | null>(null);
   readonly loading = signal(true);
@@ -144,7 +162,13 @@ export class SystemMonitorComponent implements OnInit {
   closeCapability(): void { this.selectedCapability.set(null); }
 
   ngOnInit(): void {
-    if (this.route.snapshot.queryParamMap.get('tab') === 'ai') this.tab.set('ai');
+    const requested = this.route.snapshot.queryParamMap.get('tab') as Tab | null;
+    if (requested && TABS.includes(requested)) this.tab.set(requested);
+    // Xu hướng, sự cố, hạ tầng, job nền: làm mới cùng nhịp nhưng tách khỏi luồng chính để chỗ chậm (Kafka lần đầu
+    // vài giây) không giữ cả trang.
+    merge(timer(0, REFRESH_MS).pipe(filter(() => !document.hidden)), this.refresh$)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.loadExtras());
     // Tab trình duyệt đang ẩn thì bỏ lượt tự làm mới; bấm "Làm mới" vẫn chạy ngay.
     merge(timer(0, REFRESH_MS).pipe(filter(() => !document.hidden)), this.refresh$).pipe(
       switchMap(() => {
@@ -176,8 +200,87 @@ export class SystemMonitorComponent implements OnInit {
 
   setTab(tab: Tab): void {
     this.tab.set(tab);
-    this.router.navigate([], { relativeTo: this.route, queryParams: { tab: tab === 'ai' ? 'ai' : null }, replaceUrl: true });
+    this.router.navigate([], { relativeTo: this.route, queryParams: { tab: tab === 'services' ? null : tab }, replaceUrl: true });
+    this.loadExtras();
   }
+
+  setTrendRange(range: '1h' | '24h'): void {
+    this.trendRange.set(range);
+    this.loadTrends();
+  }
+
+  /** Luôn tải xu hướng + sự cố (rẻ); hạ tầng / job nền khi đang xem tab đó hoặc chưa tải lần nào (để hiện số trên tab). */
+  private loadExtras(): void {
+    this.loadTrends();
+    this.repository.getIncidents(7).pipe(catchError(() => of(null)), takeUntilDestroyed(this.destroyRef))
+      .subscribe(list => { if (list) this.incidents.set(list); });
+    if (this.tab() === 'infra' || !this.infrastructure()) this.loadInfrastructure();
+    if (this.tab() === 'jobs' || !this.jobs()) this.loadJobs();
+  }
+
+  private loadTrends(): void {
+    this.repository.getTrends(this.trendRange()).pipe(catchError(() => of(null)), takeUntilDestroyed(this.destroyRef))
+      .subscribe(trends => this.trends.set(trends));
+  }
+
+  private loadInfrastructure(): void {
+    if (this.infraLoading()) return;
+    this.infraLoading.set(true);
+    this.repository.getInfrastructure().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: infra => { this.infrastructure.set(infra); this.infraError.set(null); this.infraLoading.set(false); },
+      error: err => { this.infraError.set(err?.error?.message ?? 'Không kiểm tra được hạ tầng.'); this.infraLoading.set(false); }
+    });
+  }
+
+  private loadJobs(): void {
+    this.repository.getJobs().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: jobs => { this.jobs.set(jobs); this.jobsError.set(null); },
+      error: err => this.jobsError.set(err?.error?.message ?? 'Không đọc được tình trạng job nền.')
+    });
+  }
+
+  /** Đường nhỏ (SVG 120 × 28) của request/giây; null = điểm thiếu, đường đứt ở đó. */
+  sparkline(service: string): { path: string; peak: number; last: number | null } | null {
+    const values = this.trends()?.requestsPerSecond[service];
+    if (!values?.length || values.every(value => value == null)) return null;
+    const peak = Math.max(...values.map(value => value ?? 0));
+    const top = peak > 0 ? peak : 1;
+    const step = values.length > 1 ? 120 / (values.length - 1) : 0;
+    let path = '';
+    let drawing = false;
+    values.forEach((value, index) => {
+      if (value == null) { drawing = false; return; }
+      const x = (index * step).toFixed(1);
+      const y = (26 - value / top * 24).toFixed(1);
+      path += `${drawing ? 'L' : 'M'}${x},${y}`;
+      drawing = true;
+    });
+    const last = [...values].reverse().find(value => value != null) ?? null;
+    return { path, peak, last };
+  }
+
+  duration(seconds: number): string {
+    if (seconds < 60) return `${seconds} giây`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} phút`;
+    const hours = Math.floor(minutes / 60);
+    return hours < 24 ? `${hours} giờ ${minutes % 60} phút` : `${Math.floor(hours / 24)} ngày ${hours % 24} giờ`;
+  }
+
+  jobTone(job: BackgroundJob): Tone {
+    if (!job.available) return 'danger';
+    if (job.failedLast24h > 0) return 'danger';
+    const waited = job.oldestPendingAt ? Date.now() - new Date(job.oldestPendingAt).getTime() : 0;
+    return waited > STALE_JOB_MS ? 'warning' : 'success';
+  }
+
+  jobState(job: BackgroundJob): string {
+    if (!job.available) return 'Không gọi được';
+    if (job.failedLast24h > 0) return `${job.failedLast24h} lỗi / 24 giờ`;
+    return this.jobTone(job) === 'warning' ? 'Đang chậm' : (job.pending + job.running ? 'Đang chạy' : 'Rảnh');
+  }
+
+  lagTone(lag: number): Tone { return lag >= 1000 ? 'danger' : lag > 0 ? 'warning' : 'success'; }
 
   label(service: string): string { return SERVICE_LABEL[service]?.name ?? service; }
   role(service: string): string { return SERVICE_LABEL[service]?.role ?? ''; }

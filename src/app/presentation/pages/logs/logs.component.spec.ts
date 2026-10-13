@@ -14,8 +14,8 @@ describe('LogsComponent', () => {
     logId: 'l-1', userId: 'admin@gmail.com', action: 'LOGIN', description: 'Đăng nhập', ipAddress: '127.0.0.1',
     statusCode: 200, timestamp: '2026-10-13T08:00:00', errorMessage: '', ...extra
   });
-  const logService = { getLogs: vi.fn(), getStats: vi.fn() };
-  const users = { getSummaries: vi.fn() };
+  const logService = { getLogs: vi.fn(), getStats: vi.fn(), getFailedLoginBursts: vi.fn() };
+  const users = { getSummaries: vi.fn(), getUsers: vi.fn() };
 
   beforeEach(async () => {
     logService.getLogs.mockReset().mockReturnValue(of({
@@ -27,6 +27,10 @@ describe('LogsComponent', () => {
       from: '', to: '', totalRequests: 40, errorRequests: 4, status2xx: 36, status3xx: 0, status4xx: 3, status5xx: 1,
       activeUsers: 5, actions: ['LOGIN', 'CUSTOM_ACTION'], hourly: Array.from({ length: 24 }, (_, hour) => hour === 9 ? 30 : 0)
     }));
+    logService.getFailedLoginBursts.mockReset().mockReturnValue(of([
+      { account: 'attacker@x.vn', attempts: 7, firstAt: '2026-10-14T08:00:00', lastAt: '2026-10-14T08:10:00', lastIp: '1.2.3.4' }
+    ]));
+    users.getUsers.mockReset().mockReturnValue(of({ result: [{ userId: 'u-9', email: 'huy@goat.vn' }], meta: { total: 1 } }));
     users.getSummaries.mockReset().mockImplementation((ids: string[]) =>
       of(ids.map(userId => ({ userId, fullName: 'Minh Đạt', email: 'dat@goat.test' }))));
     await TestBed.configureTestingModule({
@@ -67,6 +71,39 @@ describe('LogsComponent', () => {
     page.open(page.logs()[1]);
     fixture.detectChanges();
     expect((fixture.nativeElement.querySelector('[role="dialog"]') as HTMLElement).textContent).toContain('c-9');
+  });
+
+  it('narrows to sensitive actions, follows a correlation chain and finds people by name', () => {
+    const fixture = TestBed.createComponent(LogsComponent);
+    fixture.detectChanges();
+    const page = fixture.componentInstance;
+    const lastFilter = () => logService.getLogs.mock.calls.at(-1)![0].filter as string;
+
+    page.toggleSensitive();
+    expect(lastFilter()).toContain("action = 'ADMIN_CHANGE_USER_STATUS'");
+
+    page.showChain('c-9');
+    expect(lastFilter()).toContain("correlationId = 'c-9'");
+    page.clearChain();
+    page.toggleSensitive();
+
+    page.keyword.set('Huy');
+    page.reload();
+    expect(users.getUsers).toHaveBeenCalled();
+    expect(lastFilter()).toContain("userId = 'huy@goat.vn'");
+    expect(lastFilter()).toContain("userId = 'u-9'");
+  });
+
+  it('warns about repeated failed logins and filters to that account in one click', () => {
+    const fixture = TestBed.createComponent(LogsComponent);
+    fixture.detectChanges();
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('attacker@x.vn');
+    expect(text).toContain('7 lần');
+
+    fixture.componentInstance.inspectAccount('attacker@x.vn');
+    expect(fixture.componentInstance.result()).toBe('error');
+    expect(fixture.componentInstance.keyword()).toBe('attacker@x.vn');
   });
 
   it('builds a safe filter: regex characters in the keyword cannot break the query', () => {

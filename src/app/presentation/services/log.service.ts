@@ -4,7 +4,7 @@ import { Log } from '@application/dto/log/log.dto';
 import { PageFilter } from '@application/dto/page.filter';
 import { GetLogsUseCase } from '@application/usecase/log/get-logs.usecase';
 import { BaseListResponse } from '@application/dto/base/base-response';
-import { LogStatsResult } from '@application/dto/log/log-stats.dto';
+import { FailedLoginBurst, LogStatsResult } from '@application/dto/log/log-stats.dto';
 import { LOG_REPOSITORY_TOKEN } from '@application/ports/persistence/log.repository';
 
 @Injectable({
@@ -21,5 +21,9 @@ export class LogService {
   /** Thong ke [from, to) dem o audit-service (khong tai log ve client de dem). */
   getStats(from: string, to: string): Observable<LogStatsResult> {
     return this.logRepository.getStats(from, to);
+  }
+
+  getFailedLoginBursts(): Observable<FailedLoginBurst[]> {
+    return this.logRepository.getFailedLoginBursts();
   }
 }
