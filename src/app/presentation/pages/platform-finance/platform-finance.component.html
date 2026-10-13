@@ -43,9 +43,13 @@
       <span>Cần xử lý</span><strong>{{ attention() }}</strong>
       <small>{{ s.refundsNeedingAttention }} khoản hoàn · {{ s.payoutsNeedingAttention }} lượt rút tiền</small>
     </button>
+    <button type="button" class="kpi kpi--link" [class.kpi--warn]="s.staleRefunds" (click)="openStale()">
+      <span>Treo quá 7 ngày</span><strong>{{ s.staleRefunds }}</strong>
+      <small>khoản hoàn chờ người nhận, nhắc được</small>
+    </button>
   </section>
   } @else {
-  <app-loading-skeleton variant="stats" [count]="5" label="Đang tải số liệu" />
+  <app-loading-skeleton variant="stats" [count]="6" label="Đang tải số liệu" />
   }
 
   <nav class="tabs" role="tablist" aria-label="Loại giao dịch">
@@ -81,6 +85,10 @@
       <app-select [ngModel]="refundGroup()" (ngModelChange)="setFilter('refundGroup', $event)"
         [options]="refundGroupOptions" ariaLabel="Nhóm khoản hoàn" />
     </label>
+    <label class="filter">Thời gian chờ
+      <app-select [ngModel]="refundAge()" (ngModelChange)="setFilter('refundAge', $event)" [options]="ageOptions"
+        ariaLabel="Thời gian khoản hoàn đã chờ" />
+    </label>
     }
     @case ('payouts') {
     <label class="filter">Loại chi
@@ -93,7 +101,37 @@
     </label>
     }
     }
+    @if (tab() !== 'payments') {
+    <label class="filter filter--search">Tìm
+      <span class="search">
+        <lucide-icon name="search" />
+        <input type="search" [ngModel]="keyword()" (ngModelChange)="onKeyword($event)" name="keyword"
+          [placeholder]="tab() === 'refunds' ? 'Tên, email, mã đặt sân, lý do...' : 'Tên, email, chủ tài khoản, mã tham chiếu...'"
+          [attr.aria-label]="tab() === 'refunds' ? 'Tìm khoản hoàn' : 'Tìm lượt chi'" />
+      </span>
+    </label>
+    <div class="filters__end">
+      @if (tab() === 'refunds' && summary()?.failedRefunds) {
+      <button type="button" class="btn" (click)="retryAllFailed()" [disabled]="bulkRetrying()">
+        <lucide-icon [name]="bulkRetrying() ? 'loader-2' : 'refresh-cw'" [class.spin]="bulkRetrying()" />Chi lại tất cả
+        khoản lỗi ({{ summary()!.failedRefunds }})
+      </button>
+      }
+      <button type="button" class="btn btn--ghost" (click)="exportCsv()" [disabled]="exporting()"
+        [title]="'Xuất CSV theo bộ lọc, trong kỳ ' + (from() | date:'dd/MM/yyyy') + ' – ' + (to() | date:'dd/MM/yyyy')">
+        <lucide-icon [name]="exporting() ? 'loader-2' : 'download'" [class.spin]="exporting()" />Xuất CSV
+      </button>
+    </div>
+    }
   </div>
+
+  @if (actionError()) {
+  <div class="note note--danger" role="alert">
+    <lucide-icon name="alert-circle" /><span>{{ actionError() }}</span>
+    <button type="button" class="icon-btn" aria-label="Ẩn lỗi" (click)="actionError.set(null)"><lucide-icon
+        name="x" /></button>
+  </div>
+  }
 
   @if (loading()) {
   <app-loading-skeleton variant="table" [count]="6" [columns]="6" label="Đang tải dữ liệu tài chính" />
@@ -188,15 +226,20 @@
                 [title]="item.failureReason">{{ item.failureReason }}</small> }
               @else if (refundStatus(item.status).hint) { <small>{{ refundStatus(item.status).hint }}</small> }
               @if (item.status === 'FAILED') { <small>Đã tự chi lại {{ item.retryCount }} lần</small> }
+              @if (item.lastRemindedAt) { <small>Đã nhắc {{ item.lastRemindedAt | date:'HH:mm dd/MM' }}</small> }
             </div>
           </td>
           <td class="row-action">
-            @if (item.retryable) {
-            <button type="button" class="btn btn--sm" (click)="retry(item)" [disabled]="retrying() === item.refundId">
-              <lucide-icon [name]="retrying() === item.refundId ? 'loader-2' : 'refresh-cw'"
-                [class.spin]="retrying() === item.refundId" />Chi lại
+            @if (item.remindable) {
+            <button type="button" class="btn btn--sm btn--ghost" (click)="remind(item)"
+              [disabled]="reminding() === item.refundId || recentlyReminded(item)"
+              [title]="recentlyReminded(item) ? 'Đã nhắc trong 24 giờ qua' : (item.status === 'MANUAL_REVIEW' ? 'Nhắc chủ sân hoàn tay' : 'Nhắc người chơi')">
+              <lucide-icon [name]="reminding() === item.refundId ? 'loader-2' : 'bell'"
+                [class.spin]="reminding() === item.refundId" />Nhắc
             </button>
             }
+            <button type="button" class="icon-btn" aria-label="Xem chi tiết khoản hoàn" title="Chi tiết"
+              (click)="openRefund(item)"><lucide-icon name="eye" /></button>
           </td>
         </tr>
         }
@@ -212,6 +255,7 @@
           <th>Tài khoản nhận</th>
           <th class="num">Số tiền</th>
           <th>Trạng thái</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -238,6 +282,10 @@
                 }}</small> }
             </div>
           </td>
+          <td class="row-action">
+            <button type="button" class="icon-btn" aria-label="Xem chi tiết lượt chi" title="Chi tiết"
+              (click)="openPayout(item)"><lucide-icon name="eye" /></button>
+          </td>
         </tr>
         }
       </tbody>
@@ -249,5 +297,107 @@
   <app-pagination [pageIndex]="pageIndex()" [pageSize]="pageSize" [totalItems]="total()"
     (pageChange)="goToPage($event)" />
   }
+  }
+
+  @if (detail(); as d) {
+  <div class="modal-backdrop" (click)="closeDetail()">
+    <section class="modal modal--wide" role="dialog" aria-modal="true" aria-labelledby="finance-detail-title"
+      (click)="$event.stopPropagation()" (keydown.escape)="closeDetail()">
+      @if (d.kind === 'refund') {
+      <header class="modal__header">
+        <div>
+          <h2 id="finance-detail-title">Khoản hoàn {{ money(d.refund.amount) }}</h2>
+          <p><span [class]="'badge badge--' + refundStatus(d.refund.status).tone">{{ refundStatus(d.refund.status).label
+              }}</span> {{ refundStatus(d.refund.status).hint }}</p>
+        </div>
+        <button type="button" class="icon-btn" aria-label="Đóng" (click)="closeDetail()"><lucide-icon name="x" /></button>
+      </header>
+      <div class="modal__body">
+        <dl class="facts">
+          <div><dt>Người nhận</dt><dd>{{ person(d.refund.payerId) }}<small>{{ users.email(d.refund.payerId) }}</small></dd></div>
+          <div><dt>Khoản gốc</dt><dd>{{ purposeLabel(d.refund.purpose) }}<small>{{ d.refund.paymentDescription || '—' }}</small></dd></div>
+          <div class="facts__wide"><dt>Lý do hoàn</dt><dd>{{ d.refund.reason }}</dd></div>
+          @if (d.refund.failureReason && d.refund.status !== 'SUCCEEDED') {
+          <div class="facts__wide"><dt>Lỗi gần nhất</dt><dd class="danger">{{ d.refund.failureReason }}</dd></div>
+          }
+          <div><dt>Tạo lúc</dt><dd>{{ d.refund.createdAt | date:'HH:mm dd/MM/yyyy' }}</dd></div>
+          <div><dt>Cập nhật</dt><dd>{{ (d.refund.updatedAt | date:'HH:mm dd/MM/yyyy') || '—' }}</dd></div>
+          <div><dt>Hoàn xong lúc</dt><dd>{{ (d.refund.refundedAt | date:'HH:mm dd/MM/yyyy') || '—' }}</dd></div>
+          <div><dt>Số lần tự chi lại</dt><dd>{{ d.refund.retryCount }}</dd></div>
+          <div><dt>Mã giao dịch</dt><dd class="mono">{{ d.refund.providerRefundId || '—' }}</dd></div>
+          <div><dt>Nhắc lần cuối</dt><dd>{{ (d.refund.lastRemindedAt | date:'HH:mm dd/MM/yyyy') || 'Chưa nhắc' }}</dd></div>
+          <div><dt>Mã khoản hoàn</dt><dd class="mono">{{ d.refund.refundId }}</dd></div>
+          <div><dt>Mã thanh toán</dt><dd class="mono">{{ d.refund.paymentId }}</dd></div>
+        </dl>
+        <section class="detail-block" aria-labelledby="finance-detail-payout">
+          <h3 id="finance-detail-payout">Lượt chi payOS</h3>
+          @if (d.payout === undefined) {
+          <p class="muted">Đang tải...</p>
+          } @else if (d.payout === null) {
+          <p class="muted">Chưa chi lần nào: người chơi chưa nhận / chưa liên kết ngân hàng, hoặc khoản này hoàn tay.</p>
+          } @else {
+          <dl class="facts">
+            <div><dt>Tài khoản nhận</dt><dd>{{ d.payout.destinationAccountName || '—' }}<small>BIN {{
+                  d.payout.destinationBankBin || '—' }} · {{ d.payout.destinationAccountMasked || '—' }}</small></dd></div>
+            <div><dt>Trạng thái</dt><dd><span [class]="'badge badge--' + payoutStatus(d.payout.status).tone">{{
+                  payoutStatus(d.payout.status).label }}</span></dd></div>
+            <div><dt>Gửi lúc</dt><dd>{{ (d.payout.requestedAt | date:'HH:mm dd/MM/yyyy') || '—' }}</dd></div>
+            <div><dt>Xong lúc</dt><dd>{{ (d.payout.completedAt | date:'HH:mm dd/MM/yyyy') || '—' }}</dd></div>
+            <div><dt>Mã tham chiếu</dt><dd class="mono">{{ d.payout.referenceId || '—' }}</dd></div>
+            <div><dt>Mã payOS</dt><dd class="mono">{{ d.payout.providerPayoutId || '—' }}</dd></div>
+            @if (d.payout.failureCode || d.payout.failureReason) {
+            <div class="facts__wide"><dt>Phản hồi gốc của payOS</dt><dd class="danger">{{ d.payout.failureCode }} {{
+                d.payout.failureReason }}</dd></div>
+            }
+          </dl>
+          }
+        </section>
+      </div>
+      <footer class="modal__footer">
+        @if (d.refund.remindable) {
+        <button type="button" class="btn btn--ghost" (click)="remind(d.refund)"
+          [disabled]="reminding() === d.refund.refundId || recentlyReminded(d.refund)">
+          <lucide-icon name="bell" />{{ recentlyReminded(d.refund) ? 'Đã nhắc trong 24 giờ' : 'Nhắc' }}
+        </button>
+        }
+        <button type="button" class="btn btn--primary" (click)="closeDetail()">Đóng</button>
+      </footer>
+      } @else {
+      <header class="modal__header">
+        <div>
+          <h2 id="finance-detail-title">{{ d.payout.kind === 'OWNER_WITHDRAWAL' ? 'Chủ sân rút' : 'Chi hoàn' }} {{
+            money(d.payout.amount) }}</h2>
+          <p><span [class]="'badge badge--' + payoutStatus(d.payout.status).tone">{{ payoutStatus(d.payout.status).label
+              }}</span></p>
+        </div>
+        <button type="button" class="icon-btn" aria-label="Đóng" (click)="closeDetail()"><lucide-icon name="x" /></button>
+      </header>
+      <div class="modal__body">
+        <dl class="facts">
+          <div><dt>{{ d.payout.kind === 'OWNER_WITHDRAWAL' ? 'Chủ sân' : 'Người chơi' }}</dt><dd>{{
+              person(d.payout.payeeId) }}<small>{{ users.email(d.payout.payeeId) }}</small></dd></div>
+          <div><dt>Tài khoản nhận</dt><dd>{{ d.payout.destinationAccountName || '—' }}<small>BIN {{
+                d.payout.destinationBankBin || '—' }} · {{ d.payout.destinationAccountMasked || '—' }}</small></dd></div>
+          <div><dt>Yêu cầu lúc</dt><dd>{{ (d.payout.requestedAt | date:'HH:mm dd/MM/yyyy') || '—' }}</dd></div>
+          <div><dt>Xong lúc</dt><dd>{{ (d.payout.completedAt | date:'HH:mm dd/MM/yyyy') || '—' }}</dd></div>
+          <div><dt>Mã tham chiếu</dt><dd class="mono">{{ d.payout.referenceId || '—' }}</dd></div>
+          <div><dt>Mã payOS</dt><dd class="mono">{{ d.payout.providerPayoutId || '—' }}</dd></div>
+          @if (d.payout.failureCode || d.payout.failureReason) {
+          <div class="facts__wide"><dt>Phản hồi gốc của payOS</dt><dd class="danger">{{ d.payout.failureCode }} {{
+              d.payout.failureReason }}</dd></div>
+          }
+          <div class="facts__wide"><dt>Mã lượt chi</dt><dd class="mono">{{ d.payout.payoutId }}</dd></div>
+        </dl>
+        @if (d.payout.kind === 'OWNER_WITHDRAWAL' && (d.payout.status === 'FAILED' || d.payout.status === 'CANCELLED')) {
+        <p class="note"><lucide-icon name="info" />Tiền của lượt rút lỗi đã về lại số dư chủ sân; chủ sân rút lại được
+          sau khi sửa tài khoản nhận.</p>
+        }
+      </div>
+      <footer class="modal__footer">
+        <button type="button" class="btn btn--primary" (click)="closeDetail()">Đóng</button>
+      </footer>
+      }
+    </section>
+  </div>
   }
 </main>

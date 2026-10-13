@@ -20,6 +20,10 @@ export interface FinanceSummary {
   /** Tính tại thời điểm xem (không theo kỳ). */
   refundsNeedingAttention: number;
   payoutsNeedingAttention: number;
+  /** Khoản hoàn đang lỗi: số trên nút "Chi lại tất cả". */
+  failedRefunds: number;
+  /** Khoản hoàn chờ người nhận quá 7 ngày. */
+  staleRefunds: number;
 }
 
 export interface FinancePayment {
@@ -52,8 +56,25 @@ export interface FinanceRefund {
   createdAt: string;
   updatedAt: string | null;
   refundedAt: string | null;
-  /** Do backend quyết định (chỉ khoản đang lỗi). */
-  retryable: boolean;
+  /** Mã giao dịch payOS, hoặc mã chuyển khoản chủ sân nhập khi hoàn tay. */
+  providerRefundId: string | null;
+  paymentDescription: string | null;
+  lastRemindedAt: string | null;
+  /** Đang chờ người chơi / chủ sân: gửi nhắc được. */
+  remindable: boolean;
+}
+
+export interface FinanceRefundDetail {
+  refund: FinanceRefund;
+  /** Lượt chi payOS gắn với khoản hoàn (null nếu chưa chi lần nào). */
+  payout: FinancePayout | null;
+}
+
+export interface BulkRetryResult {
+  attempted: number;
+  succeeded: number;
+  processing: number;
+  failed: number;
 }
 
 export interface FinancePayout {
@@ -69,6 +90,8 @@ export interface FinancePayout {
   failureReason: string | null;
   requestedAt: string | null;
   completedAt: string | null;
+  referenceId: string | null;
+  providerPayoutId: string | null;
 }
 
 export interface FinancePage<T> {
@@ -85,13 +108,35 @@ export interface PaymentFilter {
   size: number;
 }
 
+/** {@code keyword} khớp lý do / mã đặt sân / tên chủ tài khoản; {@code people} là mã người dùng khớp tên/email. */
+export interface RefundQuery {
+  statuses: RefundStatus[];
+  keyword?: string;
+  people?: string[];
+  olderThanDays?: number;
+}
+
+export interface PayoutQuery {
+  kind: PayoutKind;
+  statuses: PayoutStatus[];
+  keyword?: string;
+  people?: string[];
+}
+
 /** Tài chính toàn sàn (payment-service, phía admin). */
 export interface AdminFinanceRepository {
   getSummary(from: string, to: string): Observable<FinanceSummary>;
   getPayments(filter: PaymentFilter): Observable<FinancePage<FinancePayment>>;
-  getRefunds(statuses: RefundStatus[], page: number, size: number): Observable<FinancePage<FinanceRefund>>;
-  getPayouts(kind: PayoutKind, statuses: PayoutStatus[], page: number, size: number): Observable<FinancePage<FinancePayout>>;
-  retryRefund(refundId: string): Observable<FinanceRefund>;
+  getRefunds(query: RefundQuery, page: number, size: number): Observable<FinancePage<FinanceRefund>>;
+  getRefund(refundId: string): Observable<FinanceRefundDetail>;
+  getPayouts(query: PayoutQuery, page: number, size: number): Observable<FinancePage<FinancePayout>>;
+  /** Dự phòng sự cố phía nền tảng; từng khoản lỗi thì người chơi tự bấm "Thử lại". */
+  retryFailedRefunds(): Observable<BulkRetryResult>;
+  /** Tối đa một lần / 24 giờ mỗi khoản (backend chặn). */
+  remindRefund(refundId: string): Observable<FinanceRefund>;
+  /** CSV trong kỳ [from, to] theo ngày tạo / ngày yêu cầu chi. */
+  exportRefunds(query: RefundQuery, from: string, to: string): Observable<Blob>;
+  exportPayouts(query: PayoutQuery, from: string, to: string): Observable<Blob>;
 }
 
 export const ADMIN_FINANCE_REPOSITORY_TOKEN = new InjectionToken<AdminFinanceRepository>('ADMIN_FINANCE_REPOSITORY_TOKEN');

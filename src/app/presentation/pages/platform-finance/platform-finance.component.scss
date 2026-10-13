@@ -24,14 +24,53 @@
 button.kpi { font: inherit; text-align: left; cursor: pointer; }
 
 .kpi--alert { border-color: var(--danger); background: var(--danger-soft); }
+.kpi--warn { border-color: var(--warning); background: var(--warning-soft); }
 
 .count--danger { background: var(--danger-soft); color: var(--danger); }
 
 .filters {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(180px, 240px)) minmax(0, 1fr);
-  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
   gap: 12px;
+
+  .filter { flex: 0 1 220px; }
+  .filter--search { flex: 1 1 260px; max-width: 380px; }
+}
+
+.filters__end { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+
+.note--danger { align-items: center; span { flex: 1; } }
+
+.row-action {
+  .btn, .icon-btn { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; }
+  > * + * { margin-left: 6px; }
+}
+
+// Chi tiết khoản hoàn / lượt chi: lưới nhãn – giá trị hai cột.
+.facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 20px;
+  margin: 0;
+
+  div { display: grid; gap: 2px; min-width: 0; }
+  .facts__wide { grid-column: 1 / -1; }
+  dt { color: var(--body); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+  dd { display: grid; gap: 2px; margin: 0; color: var(--ink); font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+  dd small { color: var(--body); font-size: 12px; font-weight: 500; }
+  dd.danger { color: var(--danger); font-weight: 500; }
+  dd.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; font-weight: 500; }
+}
+
+.detail-block {
+  display: grid;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--hairline);
+
+  h3 { margin: 0; color: var(--ink); font-size: 15px; font-weight: 800; }
+  p { margin: 0; font-size: 14px; }
 }
 
 .filter-note { margin: 0; color: var(--body); font-size: 13px; line-height: 1.5; align-self: center; }
@@ -54,5 +93,7 @@ button.kpi { font: inherit; text-align: left; cursor: pointer; }
 
 @media (max-width: 760px) {
   .period { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
-  .filters { grid-template-columns: minmax(0, 1fr); }
+  .filters .filter, .filters .filter--search { flex: 1 1 100%; max-width: none; }
+  .filters__end { width: 100%; margin-left: 0; }
+  .facts { grid-template-columns: minmax(0, 1fr); }
 }
