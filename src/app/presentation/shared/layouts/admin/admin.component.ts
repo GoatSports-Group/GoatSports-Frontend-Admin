@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal, computed, HostListener } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, signal, computed, HostListener } from '@angular/core';
 import { ThemeToggleComponent } from '../../components/theme-toggle/theme-toggle.component';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -44,8 +44,9 @@ import {
     LucideIconComponent,
   ],
   templateUrl: './admin.component.html',
-  styleUrl: './admin.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrl: './admin.component.scss'
+  // Không OnPush: layout bọc router-outlet, OnPush ở đây làm các trang con còn gán trường thường (Người dùng, Vai trò,
+  // Nhật ký và drawer/dialog của chúng) không vẽ lại khi HTTP trả về, chỉ cập nhật sau khi người dùng bấm vào trang.
 })
 export class AdminComponent implements OnInit {
   readonly getRelativeTime = formatRelativeTime;
@@ -207,11 +208,10 @@ export class AdminComponent implements OnInit {
   }
 
   isGroupOpen(group: AdminNavigationGroup): boolean {
-    return !!group.fixed || !this.closedGroups().has(group.label);
+    return !this.closedGroups().has(group.label);
   }
 
   toggleGroup(group: AdminNavigationGroup): void {
-    if (group.fixed) return;
     this.closedGroups.update(current => {
       const next = new Set(current);
       if (!next.delete(group.label)) next.add(group.label);

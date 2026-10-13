@@ -9,7 +9,6 @@ import { NotifyService } from '@shared/components/notify/notify.service';
 import { RoleDialogComponent } from './role-dialog/role-dialog.component';
 import { RolePermissionsDialogComponent } from './role-permissions-dialog/role-permissions-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
-import { PageEvent } from '@angular/material/paginator';
 import { buildRsqlSearch } from '@shared/utils/api.helper';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 
@@ -116,11 +115,6 @@ export class RolesComponent implements OnInit {
     this.loadRoles();
   }
 
-  onPageChange(event: PageEvent): void {
-    this.pageIndex = event.pageIndex;
-    this.pageSize = event.pageSize;
-    this.loadRoles();
-  }
 
   openRoleDialog(role?: Role): void {
     const dialogRef = this.dialog.open(RoleDialogComponent, {

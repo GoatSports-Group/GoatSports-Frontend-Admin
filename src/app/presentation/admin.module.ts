@@ -21,14 +21,10 @@ import { AdminBookingsComponent } from '@presentation/pages/bookings/bookings.co
 import { PlatformVenuesComponent } from '@presentation/pages/platform-venues/platform-venues.component';
 import { PlatformReviewsComponent } from '@presentation/pages/platform-reviews/platform-reviews.component';
 import { StatusBadgeComponent } from '@shared/components/ui/status-badge/status-badge.component';
-import { OverviewStatsComponent } from '@presentation/pages/logs/components/overview-stats/overview-stats.component';
-import { LogFilterComponent } from '@presentation/pages/logs/components/log-filter/log-filter.component';
-import { LogTableComponent } from '@presentation/pages/logs/components/log-table/log-table.component';
 
 // Users page child subcomponents
 import { UserDetailsComponent } from '@presentation/pages/users/user-details/user-details.component';
 import { CreateUserDrawerComponent } from '@presentation/pages/users/create-user-drawer/create-user-drawer.component';
-import { EditUserDrawerComponent } from '@presentation/pages/users/edit-user-drawer/edit-user-drawer.component';
 import { ChangePasswordDrawerComponent } from '@presentation/pages/users/change-password-drawer/change-password-drawer.component';
 
 import { DragDropModule } from '@angular/cdk/drag-drop';
@@ -44,10 +40,8 @@ import { OverlayModule } from '@angular/cdk/overlay';
     RolePermissionsDialogComponent,
     OwnerApplicationsComponent,
     DocumentPreviewDialogComponent,
-    LogsComponent,
     UserDetailsComponent,
     CreateUserDrawerComponent,
-    EditUserDrawerComponent,
     ChangePasswordDrawerComponent
   ],
   imports: [
@@ -61,9 +55,7 @@ import { OverlayModule } from '@angular/cdk/overlay';
     StatusBadgeComponent,
     DragDropModule,
     OverlayModule,
-    OverviewStatsComponent,
-    LogFilterComponent,
-    LogTableComponent,
+    LogsComponent,
     AdminBookingsComponent,
     PlatformVenuesComponent,
     PlatformReviewsComponent

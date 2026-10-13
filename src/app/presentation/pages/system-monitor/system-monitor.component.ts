@@ -96,6 +96,26 @@ export class SystemMonitorComponent implements OnInit {
     };
   });
 
+  /** Một câu tình trạng chung cho dải đầu tab: nêu tên dịch vụ có sự cố, nặng nhất trước. */
+  readonly overall = computed<{ tone: Tone; icon: string; title: string; detail: string }>(() => {
+    const list = this.services();
+    const names = (status: ServiceHealthStatus) => list.filter(item => item.status === status).map(item => this.label(item.service));
+    const down = names('DOWN');
+    const degraded = names('DEGRADED');
+    const unknown = names('UNKNOWN');
+    const parts = [
+      down.length ? `${down.length} ngừng: ${down.join(', ')}` : '',
+      degraded.length ? `${degraded.length} suy giảm: ${degraded.join(', ')}` : '',
+      unknown.length ? `${unknown.length} chưa có số liệu` : ''
+    ].filter(Boolean);
+    if (down.length) return { tone: 'danger', icon: 'alert-circle', title: 'Có dịch vụ đang ngừng', detail: parts.join(' · ') };
+    if (degraded.length) return { tone: 'warning', icon: 'alert-triangle', title: 'Một số dịch vụ đang chậm hoặc lỗi', detail: parts.join(' · ') };
+    return {
+      tone: 'success', icon: 'circle-check-big', title: 'Tất cả dịch vụ hoạt động bình thường',
+      detail: parts.length ? parts.join(' · ') : `${list.length}/${list.length} dịch vụ hoạt động`
+    };
+  });
+
   readonly aiReady = computed(() => (this.ai()?.capabilities ?? []).filter(item => item.status === 'READY').length);
 
   ngOnInit(): void {

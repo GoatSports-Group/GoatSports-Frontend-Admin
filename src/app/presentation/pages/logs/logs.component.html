@@ -1,27 +1,176 @@
-<div class="flex flex-col gap-6 animate-fade-in relative z-10 h-full min-h-0">
-
-  <!-- Page Header -->
-  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-2">
-    <div class="flex flex-col">
-      <h1 class="m-0 text-ink font-extrabold tracking-[-0.035em] leading-[1.15] text-[clamp(28px,3vw,40px)]">Nhật ký hoạt động</h1>
-      <p class="mt-1.5 max-w-[68ch] text-base text-slate-500 leading-relaxed">
-        Giám sát và kiểm vết các yêu cầu HTTP API, trạng thái xử lý và thời gian phản hồi hệ thống
-      </p>
+<main class="page">
+  <header class="page-head">
+    <div>
+      <h1>Nhật ký hoạt động</h1>
+      <p>Ai đã làm gì, lúc nào và kết quả ra sao: đăng nhập, phân quyền, duyệt hồ sơ, xuất báo cáo, thanh toán.</p>
     </div>
+    <div class="actions">
+      <button type="button" class="btn" (click)="refresh()" [disabled]="paging()">
+        <lucide-icon name="rotate-ccw" [class.spin]="paging()" />Làm mới
+      </button>
+    </div>
+  </header>
+
+  <section class="today" aria-label="Hoạt động hôm nay">
+    @if (statsError()) {
+    <div class="note note--danger" role="alert"><lucide-icon name="alert-circle" />Không tải được số liệu hôm nay.</div>
+    } @else if (stats(); as s) {
+    <div class="kpis">
+      <div class="kpi"><span>Hoạt động hôm nay</span><strong>{{ s.totalRequests.toLocaleString('vi-VN') }}</strong>
+        <small>thao tác và sự kiện được ghi</small></div>
+      <div class="kpi" [class.kpi--alert]="errorsToday()!.count > 0"><span>Lỗi / bị từ chối</span>
+        <strong>{{ errorsToday()!.count.toLocaleString('vi-VN') }}</strong>
+        <small>{{ (errorsToday()!.rate * 100).toLocaleString('vi-VN', { maximumFractionDigits: 1 }) }}% số thao tác ·
+          {{ s.status5xx }} lỗi hệ thống</small></div>
+      <div class="kpi"><span>Người hoạt động</span><strong>{{ s.activeUsers.toLocaleString('vi-VN') }}</strong>
+        <small>tài khoản có thao tác hôm nay</small></div>
+      <div class="kpi"><span>Loại thao tác</span><strong>{{ s.actions.length }}</strong>
+        <small>hành động khác nhau hôm nay</small></div>
+    </div>
+    <div class="card hourly">
+      <div class="card__head">
+        <h2>Hoạt động theo giờ</h2><span class="muted">hôm nay, giờ máy</span>
+      </div>
+      <div class="bars" role="img"
+        [attr.aria-label]="'Số hoạt động theo giờ hôm nay, giờ nhiều nhất ' + peak() + ' hoạt động'">
+        @for (bar of hourly(); track bar.hour) {
+        <div class="bar" [class.is-future]="bar.future" [title]="bar.hour + ':00 · ' + bar.value + ' hoạt động'">
+          <span [style.height.%]="bar.height"></span>
+          @if (bar.hour % 3 === 0) { <small>{{ bar.hour < 10 ? '0' + bar.hour : bar.hour }}</small> }
+        </div>
+        }
+      </div>
+    </div>
+    } @else {
+    <app-loading-skeleton variant="stats" [count]="4" label="Đang tải số liệu hôm nay" />
+    }
+  </section>
+
+  <div class="filter-row filter-row--logs" role="search">
+    <label class="search">
+      <lucide-icon name="search" />
+      <input type="search" [ngModel]="keyword()" (ngModelChange)="onKeyword($event)" name="keyword"
+        placeholder="Tìm trong mô tả, email..." aria-label="Tìm trong nhật ký" />
+    </label>
+    <app-select [ngModel]="action()" (ngModelChange)="action.set($event ?? ''); reload()" [options]="actionOptions()"
+      [searchable]="true" searchPlaceholder="Tìm hành động..." ariaLabel="Lọc theo hành động" />
+    <app-select [ngModel]="source()" (ngModelChange)="source.set($event ?? ''); reload()" [options]="sourceOptions"
+      ariaLabel="Lọc theo nguồn" />
+    <app-select [ngModel]="result()" (ngModelChange)="result.set($event ?? ''); reload()" [options]="resultOptions"
+      ariaLabel="Lọc theo kết quả" />
+    <app-date-picker ariaLabel="Từ ngày" placeholder="Từ ngày" [max]="toDate()" [ngModel]="fromDate()"
+      (ngModelChange)="fromDate.set($event ?? ''); reload()" />
+    <app-date-picker ariaLabel="Đến ngày" placeholder="Đến ngày" [min]="fromDate()" [ngModel]="toDate()"
+      (ngModelChange)="toDate.set($event ?? ''); reload()" />
+    @if (hasFilters()) {
+    <button type="button" class="btn btn--ghost" (click)="clearFilters()"><lucide-icon name="x" />Xóa lọc</button>
+    }
   </div>
 
-  <!-- Section 1-5: Overview & Statistics Dashboard -->
-  <app-overview-stats [stats]="stats" [loading]="loadingStats"></app-overview-stats>
+  @if (loading()) {
+  <app-loading-skeleton variant="table" [count]="8" [columns]="6" label="Đang tải nhật ký" />
+  } @else if (error()) {
+  <div class="state state--error" role="alert">
+    <lucide-icon name="alert-circle" /><strong>Chưa tải được nhật ký</strong>
+    <p>{{ error() }}</p>
+    <button type="button" class="btn" (click)="load()"><lucide-icon name="rotate-ccw" />Thử lại</button>
+  </div>
+  } @else if (!logs().length) {
+  <div class="state">
+    <lucide-icon name="scroll-text" /><strong>Không có hoạt động nào</strong>
+    <p>{{ hasFilters() ? 'Không có bản ghi khớp bộ lọc. Hãy nới khoảng ngày hoặc xóa lọc.' : 'Chưa có hoạt động nào được ghi.' }}</p>
+  </div>
+  } @else {
+  <p class="result-count">{{ total().toLocaleString('vi-VN') }} bản ghi</p>
+  <section class="card" [class.is-paging]="paging()">
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Thời gian</th>
+            <th>Người thực hiện</th>
+            <th>Hành động</th>
+            <th>Kết quả</th>
+            <th>Nguồn · IP</th>
+            <th aria-label="Chi tiết"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (log of logs(); track log.logId) {
+          @let who = actor(log);
+          @let res = resultOf(log.statusCode);
+          <tr class="is-clickable" tabindex="0" (click)="open(log)" (keydown.enter)="open(log)">
+            <td class="when"><strong>{{ log.timestamp | date:'HH:mm:ss' }}</strong><small>{{ log.timestamp |
+                date:'dd/MM/yyyy' }}</small></td>
+            <td>
+              <div class="cell-title"><strong>{{ who.name }}</strong>@if (who.detail) { <small>{{ who.detail }}</small> }
+              </div>
+            </td>
+            <td class="what">
+              <div class="cell-title"><strong>{{ actionLabel(log.action) }}</strong>
+                <small class="desc" [title]="log.description">{{ log.description || log.action }}</small></div>
+            </td>
+            <td><span [class]="'badge badge--' + res.tone">{{ res.label }}</span></td>
+            <td>
+              <div class="cell-title"><span>{{ sourceLabel(log) }}</span><small>{{ log.ipAddress || '—' }}</small></div>
+            </td>
+            <td class="row-action"><lucide-icon name="chevron-right" /></td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <app-pagination [pageIndex]="pageIndex()" [pageSize]="pageSize" [totalItems]="total()"
+    (pageChange)="goToPage($event)" />
+  }
 
-  <!-- Filters Section -->
-  <app-log-filter [(filterDescription)]="filterDescription" [(filterAction)]="filterAction"
-    [actions]="uniqueActions"
-    [(filterFromDate)]="filterFromDate" [(filterToDate)]="filterToDate" (search)="onSearch()" (reset)="resetFilters()">
-  </app-log-filter>
-
-  <!-- Log Table & Details Overlay -->
-  <app-log-table [logs]="logs" [loading]="loading" [pageIndex]="pageIndex" [pageSize]="pageSize"
-    [totalItems]="totalItems" (prevPage)="onPrevPage()" (nextPage)="onNextPage()" (goToPage)="goToPage($event)">
-  </app-log-table>
-
-</div>
+  @if (selected(); as log) {
+  @let who = actor(log);
+  @let res = resultOf(log.statusCode);
+  <div class="modal-backdrop" (click)="close()">
+    <section class="modal modal--wide" role="dialog" aria-modal="true" aria-labelledby="log-title"
+      (click)="$event.stopPropagation()">
+      <header class="modal__header">
+        <div>
+          <h2 id="log-title">{{ actionLabel(log.action) }}</h2>
+          <p class="modal__sub"><span [class]="'badge badge--' + res.tone">{{ res.label }}</span> {{ log.timestamp |
+            date:'HH:mm:ss dd/MM/yyyy' }}</p>
+        </div>
+        <button type="button" class="icon-btn" aria-label="Đóng" (click)="close()"><lucide-icon name="x" /></button>
+      </header>
+      <div class="modal__body">
+        <dl class="facts">
+          <div><dt>Người thực hiện</dt><dd>{{ who.name }}@if (who.detail) { <small>{{ who.detail }}</small> }</dd></div>
+          <div><dt>Mã hành động</dt><dd class="mono">{{ log.action || '—' }}</dd></div>
+          <div class="facts__wide"><dt>Mô tả</dt><dd>{{ log.description || '—' }}</dd></div>
+          @if (log.errorMessage) {
+          <div class="facts__wide"><dt>Lỗi</dt><dd class="danger">{{ log.errorMessage }}</dd></div>
+          }
+          <div><dt>Nguồn</dt><dd>{{ sourceLabel(log) }}<small>{{ log.sourceService || '' }}</small></dd></div>
+          <div><dt>Địa chỉ IP</dt><dd>{{ log.ipAddress || '—' }}</dd></div>
+          @if (log.httpMethod || log.requestUri) {
+          <div class="facts__wide"><dt>Yêu cầu</dt><dd class="mono">{{ log.httpMethod }} {{ log.requestUri }}</dd></div>
+          }
+          @if (log.resourceType || log.resourceId) {
+          <div><dt>Đối tượng</dt><dd>{{ log.resourceType || '—' }}<small class="mono">{{ log.resourceId }}</small></dd></div>
+          }
+          @if (log.eventType) {
+          <div><dt>Loại sự kiện</dt><dd class="mono">{{ log.eventType }}</dd></div>
+          }
+          @if (log.correlationId) {
+          <div class="facts__wide"><dt>Mã tương quan</dt>
+            <dd class="copy-row"><span class="mono">{{ log.correlationId }}</span>
+              <button type="button" class="btn btn--sm" (click)="copy(log.correlationId)"><lucide-icon
+                  [name]="copied() ? 'check' : 'copy'" />{{ copied() ? 'Đã chép' : 'Chép' }}</button></dd></div>
+          }
+          @if (log.userAgent) {
+          <div class="facts__wide"><dt>Trình duyệt</dt><dd><small>{{ log.userAgent }}</small></dd></div>
+          }
+          <div class="facts__wide"><dt>Mã bản ghi</dt><dd class="mono"><small>{{ log.logId }}</small></dd></div>
+        </dl>
+      </div>
+    </section>
+  </div>
+  }
+</main>

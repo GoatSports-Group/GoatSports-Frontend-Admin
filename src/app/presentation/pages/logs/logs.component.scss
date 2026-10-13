@@ -1,40 +1,117 @@
-.animate-fade-in {
-  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+@use '../ops' as t;
+@include t.ops;
+
+.kpi--alert { border-color: var(--danger); background: var(--danger-soft); }
+
+// KPI hôm nay bên trái, biểu đồ theo giờ bên phải; màn hẹp thì xếp chồng.
+.today {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 16px;
+
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
+.hourly {
+  display: flex;
+  flex-direction: column;
+
+  .card__head { padding: 14px 20px; }
+  .card__head h2 { font-size: 16px; }
+}
+
+.bars {
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(24, minmax(0, 1fr));
+  align-items: end;
+  gap: 4px;
+  min-height: 150px;
+  padding: 16px 20px 12px;
+}
+
+.bar {
+  display: grid;
+  height: 100%;
+  grid-template-rows: 1fr 16px;
+  align-items: end;
+  justify-items: center;
+
+  span {
+    width: 100%;
+    min-height: 0;
+    border-radius: 4px 4px 0 0;
+    background: var(--primary);
+    transition: height var(--motion-base, 220ms) ease;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+
+  small { grid-row: 2; color: var(--body); font-size: 11px; font-variant-numeric: tabular-nums; }
+  &:hover span { background: var(--primary-strong); }
+  &.is-future span { background: var(--surface-strong); }
 }
 
-.animate-slide-in {
-  animation: slideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+// Từ khóa + 5 bộ lọc trên một hàng, co giãn đều; hẹp thì xuống dòng theo từng ô.
+.filter-row--logs {
+  .search { flex: 1.6 1 220px; min-width: 200px; }
+  app-select, app-date-picker { flex: 1 1 150px; min-width: 150px; max-width: 240px; }
 }
 
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-  }
-  to {
-    transform: translateX(0);
-  }
+.result-count { margin: 0; color: var(--body); font-size: 14px; font-weight: 600; }
+
+tr.is-clickable { cursor: pointer; }
+tr.is-clickable:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+
+.when {
+  white-space: nowrap;
+
+  strong { display: block; font-variant-numeric: tabular-nums; }
+  small { color: var(--body); font-size: 12px; }
 }
 
-:host {
-  display: block;
-  min-height: calc(100vh - 96px - 20px);
+.cell-title small { overflow: hidden; color: var(--body); font-size: 12px; text-overflow: ellipsis; }
+
+// Mô tả hai dòng là đủ để nhận ra; đầy đủ ở popup chi tiết.
+.what { max-width: 520px; }
+.what .desc {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
 }
 
-.cdk-user-stat-preview {
-  border-radius: 12px;
-  background-color: var(--surface);
-  box-shadow: 0 10px 15px -3px var(--hairline), 0 4px 6px -2px var(--hairline);
-  border: 1px solid var(--hairline);
-  opacity: 0.85;
+.row-action lucide-icon { width: 18px; height: 18px; color: var(--body); }
+
+.modal__sub { display: flex; align-items: center; gap: 8px; margin: 6px 0 0; color: var(--body); font-size: 13px; }
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 20px;
+  margin: 0;
+
+  div { display: grid; gap: 2px; min-width: 0; }
+  .facts__wide { grid-column: 1 / -1; }
+  dt { color: var(--body); font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+  dd { display: grid; gap: 2px; margin: 0; color: var(--ink); font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+  dd small { color: var(--body); font-size: 12px; font-weight: 500; }
+  dd.danger { color: var(--danger); font-weight: 500; white-space: pre-line; }
+}
+
+.mono { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 13px; }
+
+.facts .copy-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 1100px) {
+  .today { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 767px) {
+  .today .kpis { grid-template-columns: minmax(0, 1fr); }
+  .facts { grid-template-columns: minmax(0, 1fr); }
+  .bars { gap: 2px; padding-inline: 12px; }
 }

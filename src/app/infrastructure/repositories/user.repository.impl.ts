@@ -35,13 +35,7 @@ export class UserRepositoryImpl implements UserRepository {
     return this.userApi.getSummaries(userIds).pipe(map(response => response.data ?? []));
   }
 
-  exportUsersReport(format: string): Observable<Blob> {
-    return this.userApi.exportUsersReport(format);
-  }
 
-  exportUserDetailReport(userId: string, format: string): Observable<Blob> {
-    return this.userApi.exportUserDetailReport(userId, format);
-  }
 
   getUserById(userId: string): Observable<User> {
     return this.userApi.getUserById(userId).pipe(
@@ -49,17 +43,7 @@ export class UserRepositoryImpl implements UserRepository {
     );
   }
 
-  updateUser(userId: string, data: Partial<User>): Observable<User> {
-    return this.userApi.updateUser(userId, data).pipe(
-      map(response => response.data)
-    );
-  }
 
-  updateAvatar(userId: string, tempKey: string): Observable<void> {
-    return this.userApi.updateAvatar(userId, tempKey).pipe(
-      map(response => response.data)
-    );
-  }
 
   updatePasswordByAdmin(userId: string, data: any): Observable<void> {
     return this.userApi.updatePasswordByAdmin(userId, data).pipe(

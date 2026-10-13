@@ -2,12 +2,9 @@
   <header class="page-head">
     <div>
       <h1>Giám sát hệ thống</h1>
-      <p>Trạng thái và tài nguyên của từng dịch vụ trong 5 phút gần nhất, cùng tình trạng các tính năng AI. Tự làm mới mỗi 30 giây.</p>
+      <p>Dịch vụ nào đang chạy, chậm hay ngừng, và các tính năng AI có sẵn sàng không. Số liệu 5 phút gần nhất.</p>
     </div>
     <div class="actions">
-      @if (health()?.checkedAt; as checkedAt) {
-      <span class="checked-at">Cập nhật {{ checkedAt | date:'HH:mm:ss' }}</span>
-      }
       <button type="button" class="btn" (click)="refresh()" [disabled]="refreshing()">
         <lucide-icon name="rotate-ccw" [class.spin]="refreshing()" />Làm mới
       </button>
@@ -27,7 +24,7 @@
   </nav>
 
   @if (loading()) {
-  <app-loading-skeleton variant="cards" [count]="6" label="Đang tải số liệu giám sát" />
+  <app-loading-skeleton variant="table" [count]="8" [columns]="6" label="Đang tải số liệu giám sát" />
   } @else if (tab() === 'services') {
     @if (healthError()) {
     <div class="state state--error" role="alert">
@@ -41,37 +38,68 @@
       <p>Đây là lỗi của hệ thống giám sát, không có nghĩa các dịch vụ đang ngừng. Kiểm tra container Prometheus trong observability/docker-compose.yml.</p>
     </div>
     } @else {
+    @let state = overall();
+    <section class="overall" [class]="'overall overall--' + state.tone" role="status">
+      <span class="overall__dot" aria-hidden="true"></span>
+      <lucide-icon [name]="state.icon" />
+      <div class="overall__text"><strong>{{ state.title }}</strong><span>{{ state.detail }}</span></div>
+      @if (health()?.checkedAt; as checkedAt) {
+      <small class="overall__time">Cập nhật {{ checkedAt | date:'HH:mm:ss' }} · tự làm mới mỗi 30 giây</small>
+      }
+    </section>
+
     <section class="kpis" aria-label="Tổng quan dịch vụ">
       <div class="kpi"><span>Đang hoạt động</span><strong>{{ counts().up }}/{{ counts().total }}</strong><small>dịch vụ</small></div>
       <div class="kpi" [class.kpi--alert]="counts().degraded"><span>Suy giảm</span><strong>{{ counts().degraded }}</strong><small>lỗi 5xx từ 5% hoặc p95 từ 1 giây</small></div>
       <div class="kpi" [class.kpi--danger]="counts().down"><span>Ngừng</span><strong>{{ counts().down }}</strong><small>Prometheus không gọi được</small></div>
-      <div class="kpi"><span>Lưu lượng toàn hệ thống</span><strong>{{ rate(counts().requestRate) }}</strong><small>request/giây</small></div>
+      <div class="kpi"><span>Lưu lượng toàn hệ thống</span><strong>{{ rate(counts().requestRate) }}</strong><small>request/giây, 5 phút gần nhất</small></div>
     </section>
 
-    <section class="services" aria-label="Danh sách dịch vụ">
-      @for (item of services(); track item.service) {
-      <article class="card service" [class]="'service--' + status(item.status).tone">
-        <header class="service__head">
-          <div class="cell-title">
-            <strong>{{ label(item.service) }}</strong>
-            <small>{{ item.service }}</small>
-          </div>
-          <span [class]="'badge badge--' + status(item.status).tone">{{ status(item.status).label }}</span>
-        </header>
-        <p class="service__role">{{ role(item.service) }}</p>
-        <dl class="metrics">
-          <div><dt>Request/giây</dt><dd>{{ rate(item.requestsPerSecond) }}</dd></div>
-          <div><dt>Lỗi 5xx</dt><dd [class.is-bad]="(item.errorRate ?? 0) >= 0.05">{{ percent(item.errorRate) }}</dd></div>
-          <div><dt>Độ trễ p95</dt><dd [class.is-bad]="(item.p95LatencyMs ?? 0) >= 1000">{{ latency(item.p95LatencyMs) }}</dd></div>
-          <div><dt>CPU</dt><dd>{{ percent(item.cpuUsage) }}</dd></div>
-          <div><dt>Bộ nhớ</dt><dd>{{ memory(item.memoryUsedBytes) }}</dd></div>
-          <div><dt>Đã chạy</dt><dd>{{ uptime(item.uptimeSeconds) }}</dd></div>
-        </dl>
-        @if (item.status === 'UNKNOWN') {
-        <p class="service__hint">Prometheus chưa thu được số liệu: dịch vụ chưa khởi động hoặc chưa có trong cấu hình scrape.</p>
-        }
-      </article>
-      }
+    <section class="card" aria-label="Danh sách dịch vụ">
+      <div class="table-wrap">
+        <table class="table services">
+          <thead>
+            <tr>
+              <th>Dịch vụ</th>
+              <th>Trạng thái</th>
+              <th class="num">Request/giây</th>
+              <th class="num">Lỗi 5xx</th>
+              <th class="num">Độ trễ p95</th>
+              <th class="num">CPU</th>
+              <th class="num">Bộ nhớ</th>
+              <th class="num">Đã chạy</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of services(); track item.service) {
+            @let meta = status(item.status);
+            <tr [class]="'service service--' + meta.tone">
+              <td>
+                <div class="service__name">
+                  <span [class]="'dot dot--' + meta.tone" aria-hidden="true"></span>
+                  <div class="cell-title">
+                    <strong>{{ label(item.service) }}</strong>
+                    <small [title]="role(item.service)">{{ item.service }} · {{ role(item.service) }}</small>
+                    @if (item.status === 'UNKNOWN') {
+                    <small class="service__hint">Prometheus chưa thu được số liệu: dịch vụ chưa chạy hoặc chưa có trong cấu hình scrape.</small>
+                    }
+                  </div>
+                </div>
+              </td>
+              <td><span [class]="'badge badge--' + meta.tone">{{ meta.label }}</span></td>
+              <td class="num">{{ rate(item.requestsPerSecond) }}</td>
+              <td class="num" [class.is-bad]="(item.errorRate ?? 0) >= 0.05">{{ percent(item.errorRate) }}</td>
+              <td class="num" [class.is-bad]="(item.p95LatencyMs ?? 0) >= 1000">{{ latency(item.p95LatencyMs) }}</td>
+              <td class="num">{{ percent(item.cpuUsage) }}</td>
+              <td class="num">{{ memory(item.memoryUsedBytes) }}</td>
+              <td class="num">{{ uptime(item.uptimeSeconds) }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="legend">Ngưỡng: lỗi 5xx từ 5% hoặc độ trễ p95 từ 1 giây là <strong>suy giảm</strong> (chữ đỏ); Prometheus không gọi được là
+        <strong>ngừng</strong>. Số liệu tính trên 5 phút gần nhất.</p>
     </section>
     }
   } @else {

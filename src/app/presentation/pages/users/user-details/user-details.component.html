@@ -50,10 +50,6 @@
           </button>
 
           <mat-menu #detailActionMenu="matMenu" class="custom-premium-menu">
-            <button mat-menu-item (click)="edit.emit(selectedUser)">
-              <lucide-icon name="pencil" class="h-5 w-5 mr-2"></lucide-icon>
-              <span>Chỉnh sửa</span>
-            </button>
             <button mat-menu-item (click)="assignRole.emit(selectedUser)">
               <lucide-icon name="user-cog" class="h-5 w-5 mr-2"></lucide-icon>
               <span>Gán vai trò</span>
@@ -61,10 +57,6 @@
             <button mat-menu-item (click)="changePassword.emit(selectedUser)">
               <lucide-icon name="key" class="h-5 w-5 mr-2"></lucide-icon>
               <span>Đổi mật khẩu</span>
-            </button>
-            <button mat-menu-item (click)="exportProfile.emit(selectedUser)">
-              <lucide-icon name="file-down" class="h-5 w-5 mr-2"></lucide-icon>
-              <span>Xuất hồ sơ (PDF)</span>
             </button>
             @if (selectedUser.status === 'BLOCKED') {
               <button mat-menu-item (click)="changeStatus.emit({ user: selectedUser, status: 'ACTIVE' })">

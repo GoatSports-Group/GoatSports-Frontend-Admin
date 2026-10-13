@@ -55,6 +55,8 @@ describe('SystemMonitorComponent', () => {
     expect(page.services()).toHaveLength(12);
     expect(page.services().find(item => item.service === 'ai-service')?.status).toBe('UNKNOWN');
     expect(page.counts()).toMatchObject({ up: 1, down: 1, unknown: 10 });
+    expect(page.overall().tone).toBe('danger');
+    expect(page.overall().detail).toContain('1 ngừng: Thanh toán');
     expect(page.uptime(90_000)).toBe('1 ngày 1 giờ');
     expect(fixture.nativeElement.textContent).toContain('Mở Grafana');
   });

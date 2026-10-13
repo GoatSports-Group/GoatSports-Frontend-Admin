@@ -33,33 +33,14 @@ export class UserApi {
     return this.http.get<BaseResponse<User>>(`${this.apiBase}/auth-service/api/v1/users/${userId}`);
   }
 
-  updateUser(userId: string, payload: Partial<User>): Observable<BaseResponse<User>> {
-    return this.http.put<BaseResponse<User>>(`${this.apiBase}/auth-service/api/v1/users/${userId}`, payload);
-  }
 
-  updateAvatar(userId: string, tempKey: string): Observable<BaseResponse<void>> {
-    const params = new HttpParams().set('tempKey', tempKey);
-    return this.http.put<BaseResponse<void>>(`${this.apiBase}/auth-service/api/v1/users/${userId}/avatar`, null, { params });
-  }
 
   getSummaries(userIds: string[]): Observable<BaseResponse<{ userId: string; fullName: string; email: string }[]>> {
     return this.http.post<BaseResponse<{ userId: string; fullName: string; email: string }[]>>(
       `${this.apiBase}/auth-service/api/v1/admin/users/summaries`, { userIds });
   }
 
-  exportUsersReport(format: string): Observable<Blob> {
-    return this.http.get(`${this.apiBase}/report-service/api/v1/reports/export/users`, {
-      params: new HttpParams().set('format', format),
-      responseType: 'blob'
-    });
-  }
 
-  exportUserDetailReport(userId: string, format: string): Observable<Blob> {
-    return this.http.get(`${this.apiBase}/report-service/api/v1/reports/export/users/${userId}`, {
-      params: new HttpParams().set('format', format),
-      responseType: 'blob'
-    });
-  }
 
   updatePasswordByAdmin(userId: string, payload: any): Observable<BaseResponse<void>> {
     return this.http.put<BaseResponse<void>>(`${this.apiBase}/auth-service/api/v1/admin/users/${userId}/password`, payload);
