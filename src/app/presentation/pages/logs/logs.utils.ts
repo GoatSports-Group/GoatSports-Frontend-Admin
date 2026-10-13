@@ -39,8 +39,8 @@ export const SOURCE_LABEL: Readonly<Record<string, string>> = {
 export type LogResult = '' | 'ok' | 'error';
 
 export interface LogQuery {
+  /** Khớp mô tả, người thực hiện, hoặc hành động (theo mã hay nhãn tiếng Việt). */
   query: string;
-  action: string;
   source: string;
   result: LogResult;
   /** yyyy-MM-dd theo giờ máy. */
@@ -61,36 +61,55 @@ export function resultOf(statusCode: number): { label: string; tone: 'success' |
   return { label: 'Thành công', tone: 'success' };
 }
 
+/** Mã hành động có nhãn hoặc mã chứa từ khóa, không phân biệt hoa thường và dấu ("dang nhap" khớp "Đăng nhập"). */
+export function matchingActions(keyword: string, extraCodes: readonly string[] = []): string[] {
+  const needle = fold(keyword);
+  if (!needle) return [];
+  const codes = new Set([...Object.keys(ACTION_LABEL), ...extraCodes]);
+  return [...codes].filter(code => fold(code).includes(needle) || fold(actionLabel(code)).includes(needle)).slice(0, 30);
+}
+
 /** Bộ lọc kiểu RSQL mà audit-service hiểu (MongoCriteriaConverter). */
-export function buildLogFilter(query: LogQuery): string {
+export function buildLogFilter(query: LogQuery, extraCodes: readonly string[] = []): string {
   const parts: string[] = [];
   const text = query.query.trim();
-  // `~` là regex của Mongo: ký tự đặc biệt đổi thành "." (một ký tự bất kỳ) để từ khóa không phá regex. Không escape
-  // bằng "\" vì parser chuỗi của bộ lọc cũng dùng "\" (cho dấu ').
-  if (text) parts.push(`description ~ '${quote(text.replace(/[.*+?^${}()|[\]\\]/g, '.'))}'`);
-  if (query.action) parts.push(`action = '${quote(query.action)}'`);
+  if (text) {
+    // `~` là regex của Mongo: ký tự đặc biệt đổi thành "." (một ký tự bất kỳ) để từ khóa không phá regex. Không escape
+    // bằng "\" vì parser chuỗi của bộ lọc cũng dùng "\" (cho dấu ').
+    const pattern = quote(text.replace(/[.*+?^${}()|[\]\\]/g, '.'));
+    const any = [`description ~ '${pattern}'`, `userId ~ '${pattern}'`,
+      ...matchingActions(text, extraCodes).map(code => `action = '${quote(code)}'`)];
+    parts.push(`(${any.join(' or ')})`);
+  }
   if (query.source) parts.push(`sourceService = '${quote(query.source)}'`);
   if (query.result === 'error') parts.push('statusCode >= 400');
   if (query.result === 'ok') parts.push('statusCode < 400');
-  if (query.fromDate) parts.push(`timestamp >= '${localDayUtc(query.fromDate, 0)}'`);
-  if (query.toDate) parts.push(`timestamp < '${localDayUtc(query.toDate, 1)}'`);
+  if (query.fromDate) parts.push(`timestamp >= '${query.fromDate}T00:00:00'`);
+  if (query.toDate) parts.push(`timestamp < '${localDateTime(addDays(query.toDate, 1))}'`);
   return parts.join(' and ');
 }
 
-/** [00:00 hôm nay, 00:00 ngày mai) theo giờ máy, đổi sang UTC 'yyyy-MM-ddTHH:mm:ss' như timestamp đã lưu. */
-export function todayUtcRange(now = new Date()): { from: string; to: string; dayStart: Date } {
+/**
+ * [00:00 hôm nay, 00:00 ngày mai) theo giờ máy, ở dạng 'yyyy-MM-ddTHH:mm:ss' không kèm múi giờ: audit-service lưu
+ * `timestamp` theo giờ máy chủ (LocalDateTime). Trước đây gửi giờ UTC nên lệch 7 tiếng (hoạt động 22:00 hiện ở cột 05).
+ */
+export function todayRange(now = new Date()): { from: string; to: string; dayStart: Date } {
   const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  return { from: utc(dayStart), to: utc(new Date(dayStart.getTime() + 86_400_000)), dayStart };
+  return { from: localDateTime(dayStart), to: localDateTime(new Date(dayStart.getTime() + 86_400_000)), dayStart };
 }
 
-/** 00:00 (giờ máy) của ngày `yyyy-MM-dd` cộng `plusDays`, ở dạng UTC như timestamp đã lưu. */
-function localDayUtc(date: string, plusDays: number): string {
+function addDays(date: string, days: number): Date {
   const [year, month, day] = date.split('-').map(Number);
-  return utc(new Date(year, month - 1, day + plusDays));
+  return new Date(year, month - 1, day + days);
 }
 
-function utc(date: Date): string {
-  return date.toISOString().slice(0, 19);
+function localDateTime(date: Date): string {
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:00`;
+}
+
+function fold(value: string): string {
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().trim();
 }
 
 function quote(value: string): string {

@@ -109,43 +109,102 @@
       <button type="button" class="btn" (click)="refresh()"><lucide-icon name="rotate-ccw" />Thử lại</button>
     </div>
     } @else if (ai(); as status) {
-    <section class="kpis" aria-label="Tổng quan AI">
-      <div class="kpi"><span>Tính năng sẵn sàng</span><strong>{{ aiReady() }}/{{ status.capabilities.length }}</strong><small>kiểm tra lúc {{ status.checkedAt | date:'HH:mm:ss' }}</small></div>
+    @let state = aiOverall();
+    <section [class]="'overall overall--' + state.tone" role="status">
+      <span class="overall__dot" aria-hidden="true"></span>
+      <lucide-icon [name]="state.icon" />
+      <div class="overall__text"><strong>{{ state.title }}</strong><span>{{ state.detail }}</span></div>
+      <small class="overall__time">Kiểm tra lúc {{ status.checkedAt | date:'HH:mm:ss' }}</small>
+    </section>
+
+    <section class="kpis kpis--ai" aria-label="Tổng quan AI">
+      <div class="kpi"><span>Tính năng sẵn sàng</span><strong>{{ aiReady() }}/{{ status.capabilities.length }}</strong>
+        <small>{{ status.capabilities.length - aiReady() ? (status.capabilities.length - aiReady()) + ' đang hạn chế' : 'không có tính năng hạn chế' }}</small></div>
       @for (dependency of status.dependencies; track dependency.name) {
       <div class="kpi" [class.kpi--danger]="dependency.status === 'DOWN'">
         <span>{{ dependency.name }}</span>
-        <strong>{{ dependency.status === 'UP' ? 'Kết nối tốt' : 'Mất kết nối' }}</strong>
-        <small>{{ dependency.status === 'UP' ? (dependency.latencyMs ?? 0) + ' ms' : dependency.detail }}</small>
+        <strong>{{ dependency.status === 'UP' ? (dependency.latencyMs ?? 0) + ' ms' : 'Mất kết nối' }}</strong>
+        <small class="kpi__state"><i [class]="'dot dot--' + (dependency.status === 'UP' ? 'success' : 'danger')"></i>{{
+          dependency.status === 'UP' ? 'Kết nối tốt' : (dependency.detail || 'Không phản hồi') }}</small>
       </div>
       }
     </section>
 
-    <section class="capabilities" aria-label="Tính năng AI">
-      @for (item of status.capabilities; track item.capability) {
-      <article class="card capability">
-        <header class="service__head">
-          <strong class="capability__name">{{ capability(item) }}</strong>
-          <span [class]="'badge badge--' + (item.status === 'READY' ? 'success' : 'warning')">
-            {{ item.status === 'READY' ? 'Sẵn sàng' : 'Hạn chế' }}
-          </span>
-        </header>
-        <p class="capability__detail">{{ item.detail }}</p>
-        <dl class="facts">
-          <div><dt>Thuật toán</dt><dd>{{ item.algorithm }}</dd></div>
-          <div><dt>Dữ liệu</dt><dd>{{ item.storage }}</dd></div>
-          @if (item.activeModel; as model) {
-          <div><dt>Model đang dùng</dt><dd>{{ model.modelName }} · {{ model.version }}</dd></div>
-          @if (model.trainedAt) { <div><dt>Huấn luyện</dt><dd>{{ model.trainedAt | date:'HH:mm dd/MM/yyyy' }}</dd></div> }
-          }
-        </dl>
-        @if (metrics(item).length) {
-        <ul class="model-metrics" aria-label="Chỉ số model">
-          @for (metric of metrics(item); track metric.key) { <li><span>{{ metric.key }}</span><strong>{{ metric.value }}</strong></li> }
-        </ul>
-        }
-      </article>
-      }
+    <section class="card" aria-label="Tính năng AI">
+      <div class="table-wrap">
+        <table class="table capabilities">
+          <thead>
+            <tr>
+              <th>Tính năng</th>
+              <th>Trạng thái</th>
+              <th>Model đang dùng</th>
+              <th>Huấn luyện</th>
+              <th aria-label="Chi tiết"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of status.capabilities; track item.capability) {
+            @let ready = item.status === 'READY';
+            <tr [class]="'is-clickable service--' + (ready ? 'success' : 'warning')" tabindex="0"
+              (click)="selectedCapability.set(item)" (keydown.enter)="selectedCapability.set(item)">
+              <td>
+                <div class="cell-title capability__name">
+                  <strong>{{ capability(item) }}</strong>
+                  <small>{{ item.detail }}</small>
+                </div>
+              </td>
+              <td><span [class]="'badge badge--' + (ready ? 'success' : 'warning')">{{ ready ? 'Sẵn sàng' : 'Hạn chế' }}</span></td>
+              <td>
+                @if (item.activeModel; as model) {
+                <div class="cell-title"><strong class="mono">{{ model.modelName }} · {{ model.version }}</strong>
+                  <small>{{ item.algorithm }}</small></div>
+                } @else {
+                <div class="cell-title"><span>Không dùng model huấn luyện</span><small>{{ item.algorithm }}</small></div>
+                }
+              </td>
+              <td class="nowrap">{{ item.activeModel?.trainedAt ? (item.activeModel!.trainedAt | date:'HH:mm dd/MM/yyyy') : '—' }}</td>
+              <td class="row-action"><lucide-icon name="chevron-right" /></td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     </section>
+
+    @if (selectedCapability(); as item) {
+    <div class="modal-backdrop" (click)="closeCapability()">
+      <section class="modal modal--wide" role="dialog" aria-modal="true" aria-labelledby="capability-title"
+        (click)="$event.stopPropagation()">
+        <header class="modal__header">
+          <div>
+            <h2 id="capability-title">{{ capability(item) }}</h2>
+            <p class="modal__sub"><span [class]="'badge badge--' + (item.status === 'READY' ? 'success' : 'warning')">{{
+                item.status === 'READY' ? 'Sẵn sàng' : 'Hạn chế' }}</span></p>
+          </div>
+          <button type="button" class="icon-btn" aria-label="Đóng" (click)="closeCapability()"><lucide-icon name="x" /></button>
+        </header>
+        <div class="modal__body">
+          <dl class="detail-facts">
+            <div class="detail-facts__wide"><dt>Mô tả</dt><dd>{{ item.detail }}</dd></div>
+            <div><dt>Thuật toán</dt><dd>{{ item.algorithm }}</dd></div>
+            <div><dt>Dữ liệu</dt><dd>{{ item.storage }}</dd></div>
+            @if (item.activeModel; as model) {
+            <div><dt>Model đang dùng</dt><dd class="mono">{{ model.modelName }}</dd></div>
+            <div><dt>Phiên bản</dt><dd class="mono">{{ model.version }}</dd></div>
+            <div><dt>Huấn luyện</dt><dd>{{ model.trainedAt ? (model.trainedAt | date:'HH:mm dd/MM/yyyy') : '—' }}</dd></div>
+            <div><dt>Trạng thái model</dt><dd>{{ model.status }}</dd></div>
+            }
+          </dl>
+          @if (metrics(item).length) {
+          <h3 class="metrics-title">Chỉ số model</h3>
+          <ul class="model-metrics" aria-label="Chỉ số model">
+            @for (metric of metrics(item); track metric.key) { <li><span>{{ metric.key }}</span><strong>{{ metric.value }}</strong></li> }
+          </ul>
+          }
+        </div>
+      </section>
+    </div>
+    }
     }
   }
 </main>

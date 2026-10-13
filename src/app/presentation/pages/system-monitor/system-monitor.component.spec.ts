@@ -88,6 +88,7 @@ describe('SystemMonitorComponent', () => {
     expect(text).toContain('Dự báo nhu cầu đặt sân');
     expect(text).toContain('chronos-bolt-tiny · a0e552d');
     expect(text).toContain('Mất kết nối');
+    expect(fixture.componentInstance.aiOverall()).toMatchObject({ tone: 'danger', title: 'Mất kết nối Redis' });
   });
 
   it('keeps the services tab usable when ai-service is down', async () => {

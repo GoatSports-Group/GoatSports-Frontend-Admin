@@ -6,28 +6,34 @@
 .kpi--alert { border-color: var(--warning); }
 .kpi--danger { border-color: var(--danger); }
 
-.capabilities {
+// Tab AI: ô hạ tầng nhỏ gọn (độ trễ là số chính), bảng tính năng như bảng dịch vụ.
+.kpis--ai .kpi strong { font-size: 24px; }
+.kpi__state { display: inline-flex; align-items: center; gap: 6px; }
+.kpi__state .dot { margin-top: 0; }
+
+table.capabilities table.capabilities .cell-title small { color: var(--body); font-size: 12px; }
+.nowrap { white-space: nowrap; }
+
+tr.is-clickable { cursor: pointer; }
+tr.is-clickable:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.row-action lucide-icon { width: 18px; height: 18px; color: var(--body); }
+.mono { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 13px; }
+
+.modal__sub { margin: 6px 0 0; }
+
+.detail-facts {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 20px;
+  margin: 0;
+
+  div { display: grid; gap: 2px; min-width: 0; }
+  .detail-facts__wide { grid-column: 1 / -1; }
+  dt { color: var(--body); font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+  dd { margin: 0; color: var(--ink); font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
 }
 
-.capability {
-  display: grid;
-  align-content: start;
-  gap: 12px;
-  padding: 18px 20px;
-}
-
-.service__head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.capability__detail { margin: 0; color: var(--body); font-size: 14px; line-height: 1.5; }
-.capability__name { color: var(--ink); font-size: 16px; font-weight: 800; }
+.metrics-title { margin: 20px 0 10px; color: var(--ink); font-size: 14px; font-weight: 800; }
 
 // Dải tình trạng chung (kiểu status page): một câu trả lời "hệ thống có ổn không" trước mọi con số.
 .overall {
@@ -83,15 +89,6 @@ table.services {
   strong { color: var(--ink); }
 }
 
-.facts {
-  display: grid;
-  gap: 8px;
-  margin: 0;
-
-  div { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 12px; }
-  dt { color: var(--body); font-size: 13px; }
-  dd { margin: 0; color: var(--ink); font-size: 13px; font-weight: 700; overflow-wrap: anywhere; }
-}
 
 .model-metrics {
   display: flex;
@@ -116,5 +113,5 @@ table.services {
 }
 
 @media (max-width: 640px) {
-  .facts div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .detail-facts { grid-template-columns: minmax(0, 1fr); }
 }

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -118,6 +118,31 @@ export class SystemMonitorComponent implements OnInit {
 
   readonly aiReady = computed(() => (this.ai()?.capabilities ?? []).filter(item => item.status === 'READY').length);
 
+  /** Tình trạng chung của AI: hạ tầng mất kết nối nặng hơn tính năng chạy hạn chế. */
+  readonly aiOverall = computed<{ tone: Tone; icon: string; title: string; detail: string }>(() => {
+    const status = this.ai();
+    if (!status) return { tone: 'neutral', icon: 'sparkles', title: '', detail: '' };
+    const down = status.dependencies.filter(item => item.status === 'DOWN').map(item => item.name);
+    const limited = status.capabilities.filter(item => item.status !== 'READY').map(item => this.capability(item));
+    const total = status.capabilities.length;
+    if (down.length) {
+      return { tone: 'danger', icon: 'alert-circle', title: `Mất kết nối ${down.join(', ')}`,
+        detail: `Các tính năng dùng ${down.join(', ')} có thể gián đoạn · ${this.aiReady()}/${total} tính năng sẵn sàng` };
+    }
+    if (limited.length) {
+      return { tone: 'warning', icon: 'alert-triangle', title: `${limited.length} tính năng AI đang chạy hạn chế`,
+        detail: `${limited.join(', ')} · ${this.aiReady()}/${total} tính năng sẵn sàng` };
+    }
+    return { tone: 'success', icon: 'circle-check-big', title: `Tất cả ${total} tính năng AI sẵn sàng`,
+      detail: status.dependencies.map(item => `${item.name} ${item.latencyMs ?? 0} ms`).join(' · ') };
+  });
+
+  /** Tính năng đang mở popup chi tiết kỹ thuật. */
+  readonly selectedCapability = signal<AiCapabilityOverview | null>(null);
+
+  @HostListener('document:keydown.escape')
+  closeCapability(): void { this.selectedCapability.set(null); }
+
   ngOnInit(): void {
     if (this.route.snapshot.queryParamMap.get('tab') === 'ai') this.tab.set('ai');
     // Tab trình duyệt đang ẩn thì bỏ lượt tự làm mới; bấm "Làm mới" vẫn chạy ngay.
@@ -188,7 +213,7 @@ export class SystemMonitorComponent implements OnInit {
   }
 
   metrics(item: AiCapabilityOverview): { key: string; value: string }[] {
-    return Object.entries(item.activeModel?.metrics ?? {}).slice(0, 4).map(([key, value]) => ({
+    return Object.entries(item.activeModel?.metrics ?? {}).map(([key, value]) => ({
       key, value: Number.isInteger(value) ? value.toLocaleString('vi-VN') : value.toLocaleString('vi-VN', { maximumFractionDigits: 3 })
     }));
   }

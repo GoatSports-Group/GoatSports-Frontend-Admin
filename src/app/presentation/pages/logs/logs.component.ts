@@ -13,7 +13,7 @@ import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/lo
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { PaginationComponent } from '@shared/components/ui/pagination/pagination.component';
 import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
-import { ACTION_LABEL, LogResult, SOURCE_LABEL, actionLabel, buildLogFilter, resultOf, todayUtcRange } from './logs.utils';
+import { LogResult, SOURCE_LABEL, actionLabel, buildLogFilter, resultOf, todayRange } from './logs.utils';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -42,7 +42,6 @@ export class LogsComponent implements OnInit {
   readonly resultOf = resultOf;
 
   readonly keyword = signal('');
-  readonly action = signal('');
   readonly source = signal('');
   readonly result = signal<LogResult>('');
   readonly fromDate = signal('');
@@ -66,17 +65,8 @@ export class LogsComponent implements OnInit {
   readonly resultOptions: readonly SelectOption[] = [
     { value: '', label: 'Mọi kết quả' }, { value: 'ok', label: 'Thành công' }, { value: 'error', label: 'Lỗi / bị từ chối' }
   ];
-  /** Hành động đã biết + mọi mã xuất hiện hôm nay, xếp theo nhãn. */
-  readonly actionOptions = computed<SelectOption[]>(() => {
-    const codes = new Set([...Object.keys(ACTION_LABEL), ...(this.stats()?.actions ?? [])]);
-    return [
-      { value: '', label: 'Mọi hành động' },
-      ...[...codes].map(value => ({ value, label: actionLabel(value) })).sort((a, b) => a.label.localeCompare(b.label, 'vi'))
-    ];
-  });
-
   readonly hasFilters = computed(() =>
-    !!(this.keyword() || this.action() || this.source() || this.result() || this.fromDate() || this.toDate()));
+    !!(this.keyword() || this.source() || this.result() || this.fromDate() || this.toDate()));
 
   /** Thao tác lỗi hôm nay (4xx + 5xx) và tỉ lệ. */
   readonly errorsToday = computed(() => {
@@ -86,21 +76,26 @@ export class LogsComponent implements OnInit {
     return { count, rate: stats.totalRequests ? count / stats.totalRequests : 0 };
   });
 
-  /** 24 cột theo giờ (giờ máy), cao theo tỉ lệ với giờ nhiều nhất. */
+  readonly hovered = signal<number | null>(null);
+
+  /** 24 cột theo giờ (giờ máy) như biểu đồ trang Tổng quan: cao theo tỉ lệ với giờ nhiều nhất. */
   readonly hourly = computed(() => {
     const stats = this.stats();
-    if (!stats) return [];
-    const { dayStart } = todayUtcRange();
-    const max = Math.max(1, ...stats.hourly);
-    const now = new Date();
-    return stats.hourly.slice(0, 24).map((value, index) => {
-      const at = new Date(dayStart.getTime() + index * 3_600_000);
-      // Giờ có hoạt động luôn cao ít nhất 4% để vẫn nhìn thấy cạnh giờ cao điểm.
-      return { hour: at.getHours(), value, height: value ? Math.max(4, Math.round(value / max * 100)) : 0, future: at > now };
-    });
+    if (!stats) return { hours: [], max: 0, total: 0, peakHour: null as number | null };
+    const values = stats.hourly.slice(0, 24);
+    const max = Math.max(0, ...values);
+    const currentHour = new Date().getHours();
+    return {
+      hours: values.map((value, hour) => ({
+        hour, value, future: hour > currentHour,
+        // Giờ có hoạt động luôn cao ít nhất 3% để vẫn thấy được cạnh giờ cao điểm.
+        height: value && max ? Math.max(3, Math.round(value / max * 100)) : 0
+      })),
+      max,
+      total: values.reduce((sum, value) => sum + value, 0),
+      peakHour: max ? values.indexOf(max) : null
+    };
   });
-
-  readonly peak = computed(() => Math.max(0, ...(this.stats()?.hourly ?? [])));
 
   ngOnInit(): void {
     this.search$.pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
@@ -114,7 +109,6 @@ export class LogsComponent implements OnInit {
 
   clearFilters(): void {
     this.keyword.set('');
-    this.action.set('');
     this.source.set('');
     this.result.set('');
     this.fromDate.set('');
@@ -141,10 +135,10 @@ export class LogsComponent implements OnInit {
     this.request?.unsubscribe();
     this.error.set(null);
     (keepList ? this.paging : this.loading).set(true);
+    // Mã hành động có trong số liệu hôm nay cũng tìm được theo mã (kể cả mã chưa có nhãn).
     const filter = buildLogFilter({
-      query: this.keyword(), action: this.action(), source: this.source(), result: this.result(),
-      fromDate: this.fromDate(), toDate: this.toDate()
-    });
+      query: this.keyword(), source: this.source(), result: this.result(), fromDate: this.fromDate(), toDate: this.toDate()
+    }, this.stats()?.actions ?? []);
     this.request = this.logService.getLogs({ page: this.pageIndex(), size: this.pageSize, filter: filter || undefined })
       .pipe(finalize(() => { this.loading.set(false); this.paging.set(false); }), takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -159,7 +153,7 @@ export class LogsComponent implements OnInit {
   }
 
   loadStats(): void {
-    const { from, to } = todayUtcRange();
+    const { from, to } = todayRange();
     this.logService.getStats(from, to).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: stats => { this.stats.set(stats); this.statsError.set(false); },
       error: () => this.statsError.set(true)

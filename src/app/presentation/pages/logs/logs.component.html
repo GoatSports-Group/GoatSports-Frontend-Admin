@@ -27,20 +27,33 @@
       <div class="kpi"><span>Loại thao tác</span><strong>{{ s.actions.length }}</strong>
         <small>hành động khác nhau hôm nay</small></div>
     </div>
-    <div class="card hourly">
-      <div class="card__head">
-        <h2>Hoạt động theo giờ</h2><span class="muted">hôm nay, giờ máy</span>
-      </div>
-      <div class="bars" role="img"
-        [attr.aria-label]="'Số hoạt động theo giờ hôm nay, giờ nhiều nhất ' + peak() + ' hoạt động'">
-        @for (bar of hourly(); track bar.hour) {
-        <div class="bar" [class.is-future]="bar.future" [title]="bar.hour + ':00 · ' + bar.value + ' hoạt động'">
-          <span [style.height.%]="bar.height"></span>
-          @if (bar.hour % 3 === 0) { <small>{{ bar.hour < 10 ? '0' + bar.hour : bar.hour }}</small> }
+    <section class="card hourly" aria-labelledby="hourly-title">
+      <header class="card__head">
+        <div>
+          <h2 id="hourly-title">Hoạt động theo giờ</h2>
+          <p><strong>{{ hourly().total.toLocaleString('vi-VN') }}</strong> hoạt động hôm nay
+            @if (hourly().peakHour !== null) { · cao điểm {{ hourly().peakHour }}:00 }</p>
         </div>
-        }
+      </header>
+      <div class="chart" (mouseleave)="hovered.set(null)">
+        <div class="chart__axis" aria-hidden="true"><span>{{ hourly().max.toLocaleString('vi-VN') }}</span><span>0</span></div>
+        <div class="chart__plot">
+          @for (bar of hourly().hours; track bar.hour; let i = $index) {
+          <button type="button" class="chart__bar" [class.is-zero]="!bar.value" [class.is-future]="bar.future"
+            [class.is-active]="hovered() === i" (mouseenter)="hovered.set(i)" (focus)="hovered.set(i)"
+            (blur)="hovered.set(null)" [attr.aria-label]="bar.hour + ':00: ' + bar.value + ' hoạt động'"><i
+              [style.height.%]="bar.height"></i></button>
+          }
+          @if (hovered() !== null && hourly().hours[hovered()!]; as bar) {
+          <div class="tooltip" [style.left.%]="((hovered()! + 0.5) / 24) * 100" role="status">
+            <strong>{{ bar.hour }}:00 – {{ bar.hour + 1 }}:00</strong>
+            <span>{{ bar.future ? 'Chưa tới' : bar.value.toLocaleString('vi-VN') + ' hoạt động' }}</span>
+          </div>
+          }
+        </div>
+        <div class="chart__hours" aria-hidden="true"><span>00</span><span>06</span><span>12</span><span>18</span><span>23</span></div>
       </div>
-    </div>
+    </section>
     } @else {
     <app-loading-skeleton variant="stats" [count]="4" label="Đang tải số liệu hôm nay" />
     }
@@ -50,10 +63,8 @@
     <label class="search">
       <lucide-icon name="search" />
       <input type="search" [ngModel]="keyword()" (ngModelChange)="onKeyword($event)" name="keyword"
-        placeholder="Tìm trong mô tả, email..." aria-label="Tìm trong nhật ký" />
+        placeholder="Tìm hành động, người, mô tả..." aria-label="Tìm theo hành động, người thực hiện hoặc mô tả" />
     </label>
-    <app-select [ngModel]="action()" (ngModelChange)="action.set($event ?? ''); reload()" [options]="actionOptions()"
-      [searchable]="true" searchPlaceholder="Tìm hành động..." ariaLabel="Lọc theo hành động" />
     <app-select [ngModel]="source()" (ngModelChange)="source.set($event ?? ''); reload()" [options]="sourceOptions"
       ariaLabel="Lọc theo nguồn" />
     <app-select [ngModel]="result()" (ngModelChange)="result.set($event ?? ''); reload()" [options]="resultOptions"
