@@ -32,7 +32,7 @@ describe('AdminOverviewComponent', () => {
     }));
     finance.getSummary.mockReset().mockReturnValue(of({
       from: '2026-09-01', to: '2026-09-30', collected: 3_000_000, platformFee: 150_000, paymentCount: 9, refunded: 0,
-      paidOutToOwners: 0, refundsNeedingAttention: 2, payoutsNeedingAttention: 0
+      paidOutToOwners: 0, refundsNeedingAttention: 2, failedRefunds: 1, staleRefunds: 0
     }));
     moderation.getReportQueue.mockReset().mockReturnValue(of({ items: [], total: 5, page: 0, pageSize: 1, pages: 5 }));
     moderation.getAppealQueue.mockReset().mockReturnValue(of({ items: [], total: 0, page: 0, pageSize: 1, pages: 0 }));
@@ -100,7 +100,7 @@ describe('AdminOverviewComponent', () => {
     moderation.getReportQueue.mockReturnValue(of({ items: [], total: 0, page: 0, pageSize: 1, pages: 0 }));
     finance.getSummary.mockReturnValue(of({
       from: '', to: '', collected: 0, platformFee: 0, paymentCount: 0, refunded: 0, paidOutToOwners: 0,
-      refundsNeedingAttention: 0, payoutsNeedingAttention: 0
+      refundsNeedingAttention: 0, failedRefunds: 0, staleRefunds: 0
     }));
     monitor.getServicesHealth.mockReturnValue(of({ checkedAt: '', metricsAvailable: true, grafanaUrl: null, services: [] }));
     const fixture = render(0);

@@ -2,8 +2,8 @@
   <header class="page-head">
     <div>
       <h1>Tài chính</h1>
-      <p>Tiền thu, phí nền tảng, hoàn tiền và chi trả cho chủ sân trên toàn sàn. Theo dõi khoản kẹt và chi lại khoản
-        hoàn đã hết lượt tự chi.</p>
+      <p>Tiền thu, phí nền tảng, hoàn tiền và chi trả cho chủ sân trên toàn sàn, theo kỳ đã chọn. Theo dõi khoản hoàn
+        bị kẹt và nhắc người nhận.</p>
     </div>
     <div class="period" role="group" aria-label="Kỳ thống kê">
       <label class="date-field">
@@ -41,7 +41,7 @@
         thành công</small></div>
     <button type="button" class="kpi kpi--link" [class.kpi--alert]="attention()" (click)="openAttention()">
       <span>Cần xử lý</span><strong>{{ attention() }}</strong>
-      <small>{{ s.refundsNeedingAttention }} khoản hoàn · {{ s.payoutsNeedingAttention }} lượt rút tiền</small>
+      <small>{{ s.failedRefunds }} chi lỗi · {{ manualRefunds() }} chờ chủ sân hoàn tay</small>
     </button>
     <button type="button" class="kpi kpi--link" [class.kpi--warn]="s.staleRefunds" (click)="openStale()">
       <span>Treo quá 7 ngày</span><strong>{{ s.staleRefunds }}</strong>
@@ -63,8 +63,6 @@
     </button>
     <button type="button" role="tab" class="tab" [class.is-active]="tab() === 'payouts'"
       [attr.aria-selected]="tab() === 'payouts'" (click)="setTab('payouts')"><lucide-icon name="hand-coins" />Chi trả
-      @if (summary()?.payoutsNeedingAttention) { <span class="count count--danger">{{ summary()!.payoutsNeedingAttention
-        }}</span> }
     </button>
   </nav>
 
@@ -131,6 +129,11 @@
     <button type="button" class="icon-btn" aria-label="Ẩn lỗi" (click)="actionError.set(null)"><lucide-icon
         name="x" /></button>
   </div>
+  }
+
+  @if (outsidePeriod()) {
+  <p class="note" role="status"><lucide-icon name="info" />Còn {{ outsidePeriod() }} khoản của nhóm này nằm ngoài kỳ
+    {{ from() | date:'dd/MM/yyyy' }} – {{ to() | date:'dd/MM/yyyy' }} (số trên thẻ tính mọi lúc). Nới "Từ ngày" để thấy.</p>
   }
 
   @if (loading()) {

@@ -19,8 +19,8 @@ export interface FinanceSummary {
   refunded: number;
   paidOutToOwners: number;
   /** Tính tại thời điểm xem (không theo kỳ). */
+  /** Hàng đợi việc (mọi lúc, không theo kỳ): khoản hoàn chi lỗi + chờ chủ sân hoàn tay. */
   refundsNeedingAttention: number;
-  payoutsNeedingAttention: number;
   /** Khoản hoàn đang lỗi: số trên nút "Chi lại tất cả". */
   failedRefunds: number;
   /** Khoản hoàn chờ người nhận quá 7 ngày. */
@@ -112,6 +112,9 @@ export interface PaymentFilter {
 /** {@code keyword} khớp lý do / mã đặt sân / tên chủ tài khoản; {@code people} là mã người dùng khớp tên/email. */
 export interface RefundQuery {
   statuses: RefundStatus[];
+  /** Kỳ theo ngày tạo (yyyy-MM-dd); bỏ trống = mọi lúc. */
+  from?: string;
+  to?: string;
   keyword?: string;
   people?: string[];
   olderThanDays?: number;
@@ -120,6 +123,9 @@ export interface RefundQuery {
 export interface PayoutQuery {
   kind: PayoutKind;
   statuses: PayoutStatus[];
+  /** Kỳ theo ngày yêu cầu chi (yyyy-MM-dd); bỏ trống = mọi lúc. */
+  from?: string;
+  to?: string;
   keyword?: string;
   people?: string[];
 }

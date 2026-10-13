@@ -149,9 +149,6 @@ export class AdminOverviewComponent implements OnInit {
       { key: 'refunds', icon: 'undo-2', label: 'Khoản hoàn cần xử lý', hint: 'Chi lỗi hoặc chờ chủ sân hoàn tay',
         count: money.data?.refundsNeedingAttention ?? null, link: '/admin/platform-finance', query: { tab: 'refunds' },
         failed: money.error },
-      { key: 'payouts', icon: 'hand-coins', label: 'Lượt rút tiền lỗi', hint: 'Chủ sân rút tiền chưa thành công',
-        count: money.data?.payoutsNeedingAttention ?? null, link: '/admin/platform-finance', query: { tab: 'payouts' },
-        failed: money.error },
       { key: 'services', icon: 'server', label: 'Dịch vụ gặp sự cố', hint: 'Ngừng hoặc suy giảm',
         count: incidents, link: '/admin/system', failed: health.error || (!!health.data && !health.data.metricsAvailable) }
     ];

@@ -13,7 +13,7 @@ import { PlatformFinanceComponent } from './platform-finance.component';
 describe('PlatformFinanceComponent', () => {
   const summary: FinanceSummary = {
     from: '2026-09-11', to: '2026-10-10', collected: 300_000, platformFee: 15_000, paymentCount: 2, refunded: 30_000,
-    paidOutToOwners: 0, refundsNeedingAttention: 2, payoutsNeedingAttention: 0, failedRefunds: 1, staleRefunds: 3
+    paidOutToOwners: 0, refundsNeedingAttention: 2, failedRefunds: 1, staleRefunds: 3
   };
   const failedRefund: FinanceRefund = {
     refundId: 'r-1', paymentId: 'p-1', payerId: 'u-1', purpose: 'BOOKING_DEPOSIT', referenceType: 'BOOKING', referenceId: 'b-1',
@@ -66,8 +66,11 @@ describe('PlatformFinanceComponent', () => {
     fixture.detectChanges();
 
     expect(page.tab()).toBe('refunds');
-    expect(repository.getRefunds).toHaveBeenLastCalledWith(
-      { statuses: ['FAILED', 'MANUAL_REVIEW'], keyword: '', people: [], olderThanDays: undefined }, 0, 20);
+    // Danh sách theo kỳ đầu trang, như tab Giao dịch.
+    expect(repository.getRefunds).toHaveBeenLastCalledWith({
+      statuses: ['FAILED', 'MANUAL_REVIEW'], from, to, keyword: '', people: [], olderThanDays: undefined
+    }, 0, 20);
+    expect(fixture.nativeElement.textContent).toContain('1 chi lỗi · 1 chờ chủ sân hoàn tay');
     // Một lần tra tên cho cả trang.
     expect(users.getSummaries).toHaveBeenCalledWith(['u-1']);
     expect(fixture.nativeElement.textContent).toContain('Nguyễn Văn A');
@@ -82,9 +85,11 @@ describe('PlatformFinanceComponent', () => {
 
     fixture.componentInstance.openStale();
 
-    expect(repository.getRefunds).toHaveBeenLastCalledWith({
-      statuses: ['AWAITING_CLAIM', 'AWAITING_BANK_ACCOUNT', 'FAILED', 'MANUAL_REVIEW'], keyword: '', people: [], olderThanDays: 7
-    }, 0, 20);
+    expect(repository.getRefunds).toHaveBeenLastCalledWith(expect.objectContaining({
+      statuses: ['AWAITING_CLAIM', 'AWAITING_BANK_ACCOUNT', 'FAILED', 'MANUAL_REVIEW'], olderThanDays: 7
+    }), 0, 20);
+    // Thẻ đếm 3 khoản mọi lúc, danh sách trong kỳ chỉ có 1: báo 2 khoản nằm ngoài kỳ.
+    expect(fixture.componentInstance.outsidePeriod()).toBe(2);
   });
 
   it('searches by name or email through the user directory and sends the matching ids', () => {
@@ -99,8 +104,8 @@ describe('PlatformFinanceComponent', () => {
       vi.advanceTimersByTime(300);
 
       expect(users.getUsers.mock.calls[0][0].filter).toContain("fullName ~~ '*nguyễn*' or email ~~ '*nguyễn*'");
-      expect(repository.getRefunds).toHaveBeenLastCalledWith(
-        { statuses: ['FAILED', 'MANUAL_REVIEW'], keyword: 'Nguyễn', people: ['u-1'], olderThanDays: undefined }, 0, 20);
+      expect(repository.getRefunds).toHaveBeenLastCalledWith(expect.objectContaining(
+        { statuses: ['FAILED', 'MANUAL_REVIEW'], keyword: 'Nguyễn', people: ['u-1'] }), 0, 20);
     } finally {
       vi.useRealTimers();
     }
@@ -142,6 +147,7 @@ describe('PlatformFinanceComponent', () => {
     fixture.detectChanges();
     const page = fixture.componentInstance;
     page.setFilter('payoutKind', 'REFUND');
+    page.setFilter('payoutGroup', 'failed');
     page.setTab('payouts');
     fixture.detectChanges();
 
@@ -149,7 +155,7 @@ describe('PlatformFinanceComponent', () => {
 
     expect(repository.requestExport).toHaveBeenCalledWith({
       kind: 'PAYOUTS', format: 'pdf', from: page.from(), to: page.to(),
-      query: { kind: 'REFUND', statuses: ['FAILED', 'CANCELLED'], keyword: '', people: [] },
+      query: { kind: 'REFUND', statuses: ['FAILED', 'CANCELLED'], from: page.from(), to: page.to(), keyword: '', people: [] },
       scopeLabel: 'Chi hoàn cho người chơi · Lỗi / đã hủy'
     });
     expect(page.exportScope()[1]).toBe('Chi hoàn cho người chơi · Lỗi / đã hủy');
@@ -157,5 +163,19 @@ describe('PlatformFinanceComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Xuất báo cáo');
     expect(fixture.nativeElement.textContent).not.toContain('Xuất CSV');
     expect(exports.list).toHaveBeenCalledWith(['FINANCE_REFUNDS', 'FINANCE_PAYOUTS']);
+  });
+
+  it('changing the period reloads the refunds and payouts lists too, and payouts are a lookup list', () => {
+    const fixture = TestBed.createComponent(PlatformFinanceComponent);
+    fixture.detectChanges();
+    const page = fixture.componentInstance;
+    page.setTab('payouts');
+
+    page.setPeriod('from', '2026-09-14');
+
+    expect(repository.getPayouts).toHaveBeenLastCalledWith(expect.objectContaining(
+      { kind: 'OWNER_WITHDRAWAL', statuses: [], from: '2026-09-14' }), 0, 20);
+    // Lượt rút lỗi không phải việc của admin: tab Chi trả không có badge, mặc định xem tất cả.
+    expect(fixture.nativeElement.querySelector('.tabs .count')?.textContent?.trim()).toBe('2');
   });
 });

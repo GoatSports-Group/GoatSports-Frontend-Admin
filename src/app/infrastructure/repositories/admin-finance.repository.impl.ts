@@ -76,13 +76,19 @@ export class AdminFinanceRepositoryImpl implements AdminFinanceRepository {
 }
 
 function refundParams(query: RefundQuery): HttpParams {
-  let params = searchParams(query.statuses, query.keyword, query.people);
+  let params = periodParams(searchParams(query.statuses, query.keyword, query.people), query);
   if (query.olderThanDays) params = params.set('olderThanDays', query.olderThanDays);
   return params;
 }
 
 function payoutParams(query: PayoutQuery): HttpParams {
-  return searchParams(query.statuses, query.keyword, query.people).set('kind', query.kind);
+  return periodParams(searchParams(query.statuses, query.keyword, query.people), query).set('kind', query.kind);
+}
+
+function periodParams(params: HttpParams, query: { from?: string; to?: string }): HttpParams {
+  if (query.from) params = params.set('from', query.from);
+  if (query.to) params = params.set('to', query.to);
+  return params;
 }
 
 function searchParams(statuses: readonly string[], keyword?: string, people?: readonly string[]): HttpParams {

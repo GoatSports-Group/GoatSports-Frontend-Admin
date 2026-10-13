@@ -62,8 +62,9 @@ const REFUND_GROUPS: Readonly<Record<string, RefundStatus[]>> = {
   done: ['SUCCEEDED'],
   '': []
 };
+/** Chi trả chỉ để tra cứu: lượt rút lỗi thì tiền đã về số dư chủ sân, chủ sân tự rút lại (admin không làm gì). */
 const PAYOUT_GROUPS: Readonly<Record<string, PayoutStatus[]>> = {
-  attention: ['FAILED', 'CANCELLED'],
+  failed: ['FAILED', 'CANCELLED'],
   processing: ['PENDING', 'PROCESSING'],
   done: ['SUCCEEDED'],
   '': []
@@ -144,7 +145,7 @@ export class PlatformFinanceComponent implements OnInit {
     ...(Object.keys(PURPOSE_LABEL) as PaymentPurpose[]).map(value => ({ value, label: PURPOSE_LABEL[value] }))
   ];
   readonly refundGroupOptions: readonly SelectOption[] = [
-    { value: 'attention', label: 'Cần xử lý' }, { value: 'open', label: 'Chưa xong (chờ người nhận)' },
+    { value: 'attention', label: 'Cần xử lý' }, { value: 'open', label: 'Chưa xong' },
     { value: 'waiting', label: 'Chờ người chơi' }, { value: 'processing', label: 'Đang chi' },
     { value: 'done', label: 'Đã hoàn' }, { value: '', label: 'Tất cả' }
   ];
@@ -156,8 +157,8 @@ export class PlatformFinanceComponent implements OnInit {
     { value: 'OWNER_WITHDRAWAL', label: 'Chủ sân rút tiền' }, { value: 'REFUND', label: 'Chi hoàn cho người chơi' }
   ];
   readonly payoutGroupOptions: readonly SelectOption[] = [
-    { value: 'attention', label: 'Lỗi / đã hủy' }, { value: 'processing', label: 'Đang xử lý' },
-    { value: 'done', label: 'Thành công' }, { value: '', label: 'Tất cả' }
+    { value: '', label: 'Tất cả' }, { value: 'failed', label: 'Lỗi / đã hủy' },
+    { value: 'processing', label: 'Đang xử lý' }, { value: 'done', label: 'Thành công' }
   ];
 
   readonly tab = signal<Tab>('payments');
@@ -171,7 +172,7 @@ export class PlatformFinanceComponent implements OnInit {
   readonly refundGroup = signal('attention');
   readonly refundAge = signal('');
   readonly payoutKind = signal<PayoutKind>('OWNER_WITHDRAWAL');
-  readonly payoutGroup = signal('attention');
+  readonly payoutGroup = signal('');
   /** Từ khóa (lý do, mã đặt sân, chủ tài khoản) và mã người dùng khớp tên/email của nó. */
   readonly keyword = signal('');
   private people: string[] = [];
@@ -212,7 +213,20 @@ export class PlatformFinanceComponent implements OnInit {
     ? { kind: 'PAYOUTS', query: this.payoutQuery(), from: this.from(), to: this.to(), format, scopeLabel: this.exportScopeLabel() }
     : { kind: 'REFUNDS', query: this.refundQuery(), from: this.from(), to: this.to(), format, scopeLabel: this.exportScopeLabel() });
 
-  readonly attention = computed(() => (this.summary()?.refundsNeedingAttention ?? 0) + (this.summary()?.payoutsNeedingAttention ?? 0));
+  /** "Cần xử lý" chỉ gồm việc admin làm được: khoản hoàn chi lỗi (Chi lại tất cả) và chờ chủ sân hoàn tay (Nhắc). */
+  readonly attention = computed(() => this.summary()?.refundsNeedingAttention ?? 0);
+  readonly manualRefunds = computed(() => Math.max(0, this.attention() - (this.summary()?.failedRefunds ?? 0)));
+  /**
+   * Thẻ "Cần xử lý" / "Treo quá 7 ngày" đếm mọi lúc (để khoản kẹt lâu không bị khuất), còn danh sách theo kỳ: số khoản
+   * của hàng đợi đó nằm ngoài kỳ đang chọn.
+   */
+  readonly outsidePeriod = computed(() => {
+    const summary = this.summary();
+    if (!summary || this.tab() !== 'refunds' || this.keyword() || this.loading() || this.error()) return 0;
+    const queue = this.refundGroup() === 'attention' && !this.refundAge() ? summary.refundsNeedingAttention
+      : this.refundGroup() === 'open' && this.refundAge() === STALE_DAYS ? summary.staleRefunds : null;
+    return queue === null ? 0 : Math.max(0, queue - this.total());
+  });
 
   ngOnInit(): void {
     const tab = this.route.snapshot.queryParamMap.get('tab');
@@ -240,15 +254,11 @@ export class PlatformFinanceComponent implements OnInit {
     this.reload();
   }
 
-  /** Thẻ "Cần xử lý": mở đúng danh sách cần làm (hoàn tiền trước, vì có thao tác). */
+  /** Thẻ "Cần xử lý": khoản hoàn chi lỗi / chờ chủ sân hoàn tay. */
   openAttention(): void {
-    const summary = this.summary();
     this.refundGroup.set('attention');
     this.refundAge.set('');
-    this.payoutGroup.set('attention');
-    this.payoutKind.set('OWNER_WITHDRAWAL');
-    if (summary && !summary.refundsNeedingAttention && summary.payoutsNeedingAttention) this.setTab('payouts');
-    else this.openRefunds();
+    this.openRefunds();
   }
 
   /** Thẻ "Treo quá 7 ngày": khoản đang chờ người nhận, tạo quá 7 ngày, để nhắc. */
@@ -262,7 +272,7 @@ export class PlatformFinanceComponent implements OnInit {
     if (!value) return;
     (edge === 'from' ? this.from : this.to).set(value);
     this.loadSummary();
-    if (this.tab() === 'payments') this.reload();
+    this.reload();
   }
 
   setFilter(target: 'paymentGroup' | 'purpose' | 'refundGroup' | 'refundAge' | 'payoutKind' | 'payoutGroup', value: string): void {
@@ -423,13 +433,16 @@ export class PlatformFinanceComponent implements OnInit {
 
   private refundQuery(): RefundQuery {
     return {
-      statuses: REFUND_GROUPS[this.refundGroup()], keyword: this.keyword(), people: this.people,
+      statuses: REFUND_GROUPS[this.refundGroup()], from: this.from(), to: this.to(), keyword: this.keyword(), people: this.people,
       olderThanDays: this.refundAge() ? Number(this.refundAge()) : undefined
     };
   }
 
   private payoutQuery(): PayoutQuery {
-    return { kind: this.payoutKind(), statuses: PAYOUT_GROUPS[this.payoutGroup()], keyword: this.keyword(), people: this.people };
+    return {
+      kind: this.payoutKind(), statuses: PAYOUT_GROUPS[this.payoutGroup()], from: this.from(), to: this.to(),
+      keyword: this.keyword(), people: this.people
+    };
   }
 
   /** Tối đa 50 người khớp tên/email; tra lỗi (vd. thiếu quyền xem người dùng) thì chỉ tìm theo chữ. */
