@@ -3,15 +3,18 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { BaseResponse } from '@application/dto/base/base-response';
 import {
-  AdminFinanceRepository, BulkRetryResult, FinancePage, FinancePayment, FinancePayout, FinanceRefund, FinanceRefundDetail,
-  FinanceSummary, PaymentFilter, PayoutQuery, RefundQuery
+  AdminFinanceRepository, BulkRetryResult, FinanceExportRequest, FinancePage, FinancePayment, FinancePayout, FinanceRefund,
+  FinanceRefundDetail, FinanceSummary, PaymentFilter, PayoutQuery, RefundQuery
 } from '@application/ports/persistence/admin-finance.repository';
+import { ReportExport } from '@application/ports/persistence/report-export.repository';
 import { environment } from '@environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AdminFinanceRepositoryImpl implements AdminFinanceRepository {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/payment-service/api/v1/admin/finance`;
+  /** Báo cáo dựng ở report-service (Jasper), không phải payment-service. */
+  private readonly exportsUrl = `${environment.apiUrl}/report-service/api/v1/reports/exports/finance`;
 
   getSummary(from: string, to: string): Observable<FinanceSummary> {
     return this.http.get<BaseResponse<FinanceSummary>>(`${this.baseUrl}/summary`, { params: { from, to } })
@@ -48,14 +51,22 @@ export class AdminFinanceRepositoryImpl implements AdminFinanceRepository {
       .pipe(map(response => response.data));
   }
 
-  exportRefunds(query: RefundQuery, from: string, to: string): Observable<Blob> {
-    return this.http.get(`${this.baseUrl}/refunds/export`,
-      { params: refundParams(query).set('from', from).set('to', to), responseType: 'blob' });
-  }
-
-  exportPayouts(query: PayoutQuery, from: string, to: string): Observable<Blob> {
-    return this.http.get(`${this.baseUrl}/payouts/export`,
-      { params: payoutParams(query).set('from', from).set('to', to), responseType: 'blob' });
+  requestExport(request: FinanceExportRequest): Observable<ReportExport> {
+    const query = request.query;
+    return this.http.post<BaseResponse<ReportExport>>(this.exportsUrl, {
+      kind: request.kind,
+      format: request.format,
+      scopeLabel: request.scopeLabel,
+      filter: {
+        payoutKind: request.kind === 'PAYOUTS' ? request.query.kind : null,
+        statuses: query.statuses,
+        keyword: query.keyword?.trim() || null,
+        people: query.keyword?.trim() ? query.people ?? [] : [],
+        olderThanDays: request.kind === 'REFUNDS' ? request.query.olderThanDays ?? null : null,
+        fromDate: request.from,
+        toDate: request.to
+      }
+    }).pipe(map(response => response.data));
   }
 
   private page<T>(path: string, params: HttpParams): Observable<FinancePage<T>> {

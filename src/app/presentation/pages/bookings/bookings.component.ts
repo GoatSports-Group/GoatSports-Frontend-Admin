@@ -13,9 +13,15 @@ import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/lo
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { PaginationComponent } from '@shared/components/ui/pagination/pagination.component';
 import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
-import { BookingExportsComponent } from './booking-exports/booking-exports.component';
+import { ExportFormatOption, ReportExportsComponent } from '@shared/components/report-exports/report-exports.component';
+import { ReportExportFormat } from '@application/ports/persistence/report-export.repository';
 
 type Tone = 'success' | 'warning' | 'danger' | 'info' | 'primary' | 'neutral';
+
+const EXPORT_FORMATS: readonly ExportFormatOption[] = [
+  { value: 'xlsx', label: 'Excel · danh sách đơn', hint: 'Mọi đơn khớp bộ lọc, mỗi đơn một dòng; lọc và tính toán tiếp được.', icon: 'file-spreadsheet' },
+  { value: 'pdf', label: 'PDF · báo cáo tổng hợp', hint: 'Tổng đơn, giá trị, đã thu, tỉ lệ không thành; theo trạng thái, cơ sở, nguồn đặt. Để in hoặc gửi.', icon: 'file-text' }
+];
 
 const STATUS_META: Record<OwnerBookingStatus, { label: string; tone: Tone }> = {
   PENDING_PAYMENT: { label: 'Chờ thanh toán', tone: 'warning' },
@@ -37,7 +43,7 @@ const STATUS_META: Record<OwnerBookingStatus, { label: string; tone: Tone }> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [DatePickerComponent, DatePipe, FormsModule, LucideIconComponent, LoadingSkeletonComponent,
-    PaginationComponent, SelectComponent, BookingExportsComponent]
+    PaginationComponent, SelectComponent, ReportExportsComponent]
 })
 export class AdminBookingsComponent implements OnInit {
   private readonly repository = inject(ADMIN_BOOKING_REPOSITORY_TOKEN);
@@ -78,8 +84,11 @@ export class AdminBookingsComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly selected = signal<OwnerBooking | null>(null);
 
+  readonly exportFormats = EXPORT_FORMATS;
   /** Bộ lọc đang xem, gửi nguyên cho báo cáo xuất ở nền. */
   readonly exportCriteria = computed<AdminBookingCriteria>(() => this.currentFilter());
+  readonly exportRequest = (format: ReportExportFormat) =>
+    this.repository.requestExport(this.exportCriteria(), format, this.exportLabels());
   readonly exportLabels = computed(() => ({
     venueName: this.venueOptions().find(option => option.value === this.venueId())?.label,
     courtName: this.courtOptions().find(option => option.value === this.venueCourtId())?.label

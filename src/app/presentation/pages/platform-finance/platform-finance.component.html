@@ -117,10 +117,10 @@
         khoản lỗi ({{ summary()!.failedRefunds }})
       </button>
       }
-      <button type="button" class="btn btn--ghost" (click)="exportCsv()" [disabled]="exporting()"
-        [title]="'Xuất CSV theo bộ lọc, trong kỳ ' + (from() | date:'dd/MM/yyyy') + ' – ' + (to() | date:'dd/MM/yyyy')">
-        <lucide-icon [name]="exporting() ? 'loader-2' : 'download'" [class.spin]="exporting()" />Xuất CSV
-      </button>
+      <app-report-exports [title]="tab() === 'refunds' ? 'Xuất báo cáo hoàn tiền' : 'Xuất báo cáo chi trả'"
+        [types]="exportTypes" [kinds]="exportKinds" [formats]="exportFormats" [request]="exportRequest"
+        [total]="total()" [unit]="tab() === 'refunds' ? 'khoản hoàn' : 'lượt chi'" [scope]="exportScope()"
+        narrowHint="Hãy thu hẹp kỳ hoặc bộ lọc." />
     </div>
     }
   </div>

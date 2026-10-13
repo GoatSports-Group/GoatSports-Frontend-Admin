@@ -11,7 +11,8 @@ import {
 import { USER_REPOSITORY_TOKEN } from '@application/ports/persistence/user.repository';
 import { PAGE_SIZE } from '@shared/constants/page-size';
 import { buildRsqlSearch } from '@shared/utils/api.helper';
-import { blobErrorMessage, downloadBlob } from '@shared/utils/file.utils';
+import { ExportFormatOption, ReportExportsComponent } from '@shared/components/report-exports/report-exports.component';
+import { ReportExportFormat } from '@application/ports/persistence/report-export.repository';
 import { ConfirmService } from '@presentation/services/confirm.service';
 import { UserDirectoryService } from '@presentation/services/user-directory.service';
 import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
@@ -27,6 +28,16 @@ type Tone = 'success' | 'warning' | 'danger' | 'info' | 'neutral';
 type Detail =
   | { kind: 'refund'; refund: FinanceRefund; payout: FinancePayout | null | undefined }
   | { kind: 'payout'; payout: FinancePayout };
+
+/** Báo cáo dựng ở report-service bằng Jasper: Excel để đối soát, PDF để xem trước / in. */
+const EXPORT_FORMATS: readonly ExportFormatOption[] = [
+  { value: 'xlsx', label: 'Excel · danh sách', hint: 'Mỗi khoản một dòng: người nhận, số tiền, trạng thái, mã giao dịch; lọc và đối soát tiếp được.', icon: 'file-spreadsheet' },
+  { value: 'pdf', label: 'PDF · xem trước, in', hint: 'Cùng danh sách, có tổng số khoản và tổng tiền; mở xem trước ở tab mới.', icon: 'file-text' }
+];
+const EXPORT_KINDS = {
+  FINANCE_REFUNDS: { label: 'Hoàn tiền', unit: 'khoản hoàn' },
+  FINANCE_PAYOUTS: { label: 'Chi trả', unit: 'lượt chi' }
+} as const;
 
 /** Trùng REMIND_COOLDOWN_HOURS của payment-service: trong khoảng này nút "Nhắc" tắt. */
 const REMIND_COOLDOWN_MS = 24 * 3_600_000;
@@ -105,7 +116,7 @@ const PAYOUT_META: Readonly<Record<PayoutStatus, { label: string; tone: Tone }>>
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [DatePipe, FormsModule, LucideIconComponent, LoadingSkeletonComponent, PaginationComponent, SelectComponent,
-    DatePickerComponent]
+    DatePickerComponent, ReportExportsComponent]
 })
 export class PlatformFinanceComponent implements OnInit {
   private readonly repository = inject(ADMIN_FINANCE_REPOSITORY_TOKEN);
@@ -178,8 +189,28 @@ export class PlatformFinanceComponent implements OnInit {
   readonly actionError = signal<string | null>(null);
   readonly reminding = signal<string | null>(null);
   readonly bulkRetrying = signal(false);
-  readonly exporting = signal(false);
   readonly detail = signal<Detail | null>(null);
+
+  readonly exportFormats = EXPORT_FORMATS;
+  readonly exportKinds = EXPORT_KINDS;
+  readonly exportTypes = Object.keys(EXPORT_KINDS);
+  /** Nhóm / loại đang lọc, in lên báo cáo và hiện để xác nhận trước khi xuất. */
+  readonly exportScopeLabel = computed(() => {
+    if (this.tab() === 'payouts') {
+      return `${label(this.payoutKindOptions, this.payoutKind())} · ${label(this.payoutGroupOptions, this.payoutGroup())}`;
+    }
+    return label(this.refundGroupOptions, this.refundGroup());
+  });
+  readonly exportScope = computed(() => {
+    const scope = [`${shortDate(this.from())} – ${shortDate(this.to())}`, this.exportScopeLabel()];
+    if (this.tab() === 'refunds' && this.refundAge()) scope.push(label(this.ageOptions, this.refundAge()));
+    if (this.keyword()) scope.push(`"${this.keyword()}"`);
+    return scope;
+  });
+  /** Xuất đúng danh sách đang xem (mọi trang), trong kỳ "Từ ngày – Đến ngày" ở đầu trang. */
+  readonly exportRequest = (format: ReportExportFormat) => this.repository.requestExport(this.tab() === 'payouts'
+    ? { kind: 'PAYOUTS', query: this.payoutQuery(), from: this.from(), to: this.to(), format, scopeLabel: this.exportScopeLabel() }
+    : { kind: 'REFUNDS', query: this.refundQuery(), from: this.from(), to: this.to(), format, scopeLabel: this.exportScopeLabel() });
 
   readonly attention = computed(() => (this.summary()?.refundsNeedingAttention ?? 0) + (this.summary()?.payoutsNeedingAttention ?? 0));
 
@@ -352,22 +383,6 @@ export class PlatformFinanceComponent implements OnInit {
     return !!refund.lastRemindedAt && Date.now() - new Date(refund.lastRemindedAt).getTime() < REMIND_COOLDOWN_MS;
   }
 
-  /** CSV theo tab và bộ lọc đang chọn, trong kỳ "Từ ngày – Đến ngày" ở đầu trang. */
-  exportCsv(): void {
-    const tab = this.tab();
-    if (tab === 'payments') return;
-    const name = tab === 'refunds' ? 'hoan-tien' : this.payoutKind() === 'REFUND' ? 'chi-hoan' : 'chu-san-rut-tien';
-    const source = tab === 'refunds'
-      ? this.repository.exportRefunds(this.refundQuery(), this.from(), this.to())
-      : this.repository.exportPayouts(this.payoutQuery(), this.from(), this.to());
-    this.exporting.set(true);
-    this.actionError.set(null);
-    source.pipe(finalize(() => this.exporting.set(false)), takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: file => downloadBlob(file, `${name}_${this.from()}_${this.to()}.csv`),
-      error: async err => this.actionError.set(await blobErrorMessage(err) ?? 'Chưa xuất được file CSV.')
-    });
-  }
-
   openRefund(refund: FinanceRefund): void {
     this.detailRequest?.unsubscribe();
     this.detail.set({ kind: 'refund', refund, payout: undefined });
@@ -431,4 +446,14 @@ export class PlatformFinanceComponent implements OnInit {
       error: err => this.error.set(err?.error?.message ?? 'Không tải được dữ liệu tài chính.')
     });
   }
+}
+
+function label(options: readonly SelectOption[], value: string): string {
+  return options.find(option => option.value === value)?.label ?? '';
+}
+
+/** 2026-10-01 → 01/10/2026. */
+function shortDate(value: string): string {
+  const [year, month, day] = value.split('-');
+  return `${day}/${month}/${year}`;
 }

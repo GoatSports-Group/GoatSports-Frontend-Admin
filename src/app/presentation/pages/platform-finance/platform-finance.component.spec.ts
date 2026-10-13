@@ -6,6 +6,7 @@ import { provideLucideIcons } from '@lucide/angular';
 import { APP_ICONS } from '../../../app-icons';
 import { ADMIN_FINANCE_REPOSITORY_TOKEN, FinanceRefund, FinanceSummary } from '@application/ports/persistence/admin-finance.repository';
 import { USER_REPOSITORY_TOKEN } from '@application/ports/persistence/user.repository';
+import { REPORT_EXPORT_REPOSITORY_TOKEN } from '@application/ports/persistence/report-export.repository';
 import { ConfirmService } from '@presentation/services/confirm.service';
 import { PlatformFinanceComponent } from './platform-finance.component';
 
@@ -22,9 +23,10 @@ describe('PlatformFinanceComponent', () => {
   };
   const repository = {
     getSummary: vi.fn(), getPayments: vi.fn(), getRefunds: vi.fn(), getRefund: vi.fn(), getPayouts: vi.fn(),
-    retryFailedRefunds: vi.fn(), remindRefund: vi.fn(), exportRefunds: vi.fn(), exportPayouts: vi.fn()
+    retryFailedRefunds: vi.fn(), remindRefund: vi.fn(), requestExport: vi.fn()
   };
   const users = { getSummaries: vi.fn(), getUsers: vi.fn() };
+  const exports = { list: vi.fn(() => of([])), download: vi.fn() };
   const confirm = { ask: vi.fn() };
 
   beforeEach(async () => {
@@ -45,6 +47,7 @@ describe('PlatformFinanceComponent', () => {
         provideLucideIcons(...APP_ICONS),
         { provide: ADMIN_FINANCE_REPOSITORY_TOKEN, useValue: repository },
         { provide: USER_REPOSITORY_TOKEN, useValue: users },
+        { provide: REPORT_EXPORT_REPOSITORY_TOKEN, useValue: exports },
         { provide: ConfirmService, useValue: confirm }
       ]
     }).compileComponents();
@@ -131,5 +134,28 @@ describe('PlatformFinanceComponent', () => {
     expect(repository.retryFailedRefunds).toHaveBeenCalledTimes(1);
     expect(page.notice()).toBe('Đã thử 3 khoản: 1 thành công, 1 đang chuyển, 1 vẫn lỗi.');
     expect(repository.getSummary).toHaveBeenCalledTimes(2);
+  });
+
+  it('exports the list being viewed through report-service, with the period and filters as its scope', () => {
+    repository.requestExport.mockReturnValue(of({ exportId: 'e-1', status: 'PENDING' }));
+    const fixture = TestBed.createComponent(PlatformFinanceComponent);
+    fixture.detectChanges();
+    const page = fixture.componentInstance;
+    page.setFilter('payoutKind', 'REFUND');
+    page.setTab('payouts');
+    fixture.detectChanges();
+
+    page.exportRequest('pdf').subscribe();
+
+    expect(repository.requestExport).toHaveBeenCalledWith({
+      kind: 'PAYOUTS', format: 'pdf', from: page.from(), to: page.to(),
+      query: { kind: 'REFUND', statuses: ['FAILED', 'CANCELLED'], keyword: '', people: [] },
+      scopeLabel: 'Chi hoàn cho người chơi · Lỗi / đã hủy'
+    });
+    expect(page.exportScope()[1]).toBe('Chi hoàn cho người chơi · Lỗi / đã hủy');
+    // Nút xuất dùng chung (report-service) thay cho CSV tự dựng.
+    expect(fixture.nativeElement.textContent).toContain('Xuất báo cáo');
+    expect(fixture.nativeElement.textContent).not.toContain('Xuất CSV');
+    expect(exports.list).toHaveBeenCalledWith(['FINANCE_REFUNDS', 'FINANCE_PAYOUTS']);
   });
 });

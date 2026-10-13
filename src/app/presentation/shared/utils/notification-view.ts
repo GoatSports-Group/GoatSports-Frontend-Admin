@@ -39,8 +39,12 @@ export function notificationRoute(notification: Notification, isPlatformAdmin: b
     case 'TOURNAMENT': return isPlatformAdmin ? null : '/admin/tournaments';
     case 'CONTENT_MODERATION': return isPlatformAdmin ? '/admin/moderation' : null;
     case 'MESSAGE': return '/admin/messages';
-    // Báo cáo xuất ở nền đã xong / lỗi: mở thẳng danh sách Báo cáo đã xuất của trang Đơn đặt sân.
-    case 'REPORT_EXPORT': return isPlatformAdmin ? '/admin/bookings?exports=open' : null;
+    // Báo cáo xuất ở nền đã xong / lỗi: mở thẳng danh sách Báo cáo đã xuất của trang đã tạo báo cáo.
+    case 'REPORT_EXPORT':
+      if (!isPlatformAdmin) return null;
+      return notification.referenceType === 'FINANCE_REPORT_EXPORT'
+        ? '/admin/platform-finance?tab=refunds&exports=open'
+        : '/admin/bookings?exports=open';
     default: return null;
   }
 }

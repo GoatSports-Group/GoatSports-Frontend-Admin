@@ -5,8 +5,9 @@
       <p>Mọi đơn trên nền tảng, của tất cả cơ sở. Admin theo dõi và tra cứu.</p>
     </div>
     <div class="actions">
-      <app-booking-exports [criteria]="exportCriteria()" [total]="total()" [scope]="exportScope()"
-        [labels]="exportLabels()" />
+      <app-report-exports title="Xuất báo cáo đơn đặt sân" [types]="['ADMIN_BOOKINGS']" [formats]="exportFormats"
+        [request]="exportRequest" [total]="total()" unit="đơn" [scope]="exportScope()" emptyScope="Tất cả đơn đặt sân"
+        narrowHint="Hãy thu hẹp khoảng ngày hoặc chọn một cơ sở." />
     </div>
   </header>
 

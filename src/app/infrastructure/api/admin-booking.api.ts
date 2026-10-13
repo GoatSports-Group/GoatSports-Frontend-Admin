@@ -3,9 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { BaseListResponse, BaseResponse } from '@application/dto/base/base-response';
 import { OwnerBooking } from '@application/dto/owner-booking/owner-booking.dto';
-import {
-  AdminBookingCriteria, AdminBookingFilter, ReportExport, ReportExportFormat
-} from '@application/ports/persistence/admin-booking.repository';
+import { AdminBookingCriteria, AdminBookingFilter } from '@application/ports/persistence/admin-booking.repository';
+import { ReportExport, ReportExportFormat } from '@application/ports/persistence/report-export.repository';
 import { environment } from '@environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -44,13 +43,5 @@ export class AdminBookingApi {
       venueName: labels.venueName ?? null,
       courtName: labels.courtName ?? null
     });
-  }
-
-  listExports(): Observable<BaseResponse<ReportExport[]>> {
-    return this.http.get<BaseResponse<ReportExport[]>>(this.exportsUrl, { params: { type: 'ADMIN_BOOKINGS' } });
-  }
-
-  downloadExport(exportId: string): Observable<Blob> {
-    return this.http.get(`${this.exportsUrl}/${exportId}/file`, { responseType: 'blob' });
   }
 }

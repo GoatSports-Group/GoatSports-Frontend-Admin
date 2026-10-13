@@ -1,8 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import {
-  AdminBookingCriteria, AdminBookingFilter, AdminBookingRepository, ReportExport, ReportExportFormat
+  AdminBookingCriteria, AdminBookingFilter, AdminBookingRepository
 } from '@application/ports/persistence/admin-booking.repository';
+import { ReportExport, ReportExportFormat } from '@application/ports/persistence/report-export.repository';
 import { OwnerBooking, OwnerBookingPage } from '@application/dto/owner-booking/owner-booking.dto';
 import { AdminBookingApi } from '@infrastructure/api/admin-booking.api';
 
@@ -27,13 +28,5 @@ export class AdminBookingRepositoryImpl implements AdminBookingRepository {
   requestExport(criteria: AdminBookingCriteria, format: ReportExportFormat,
     labels: { venueName?: string; courtName?: string }): Observable<ReportExport> {
     return this.api.requestExport(criteria, format, labels).pipe(map(response => response.data));
-  }
-
-  listExports(): Observable<ReportExport[]> {
-    return this.api.listExports().pipe(map(response => response.data ?? []));
-  }
-
-  downloadExport(exportId: string): Observable<Blob> {
-    return this.api.downloadExport(exportId);
   }
 }

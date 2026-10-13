@@ -8,6 +8,8 @@ export interface Notification {
   content: string;
   type: NotificationType;
   status: NotificationStatus;
+  /** Loại của referenceId (vd REPORT_EXPORT, FINANCE_REPORT_EXPORT): chọn trang mở khi bấm. */
+  referenceType?: string;
   referenceId?: string;
   createdAt: string;
   readAt?: string;

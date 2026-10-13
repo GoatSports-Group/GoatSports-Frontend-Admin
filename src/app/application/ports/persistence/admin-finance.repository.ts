@@ -1,5 +1,6 @@
 import { InjectionToken } from '@angular/core';
 import { Observable } from 'rxjs';
+import { ReportExport, ReportExportFormat } from '@application/ports/persistence/report-export.repository';
 
 export type PaymentStatus =
   'CREATED' | 'PENDING' | 'SUCCEEDED' | 'FAILED' | 'CANCELLED' | 'EXPIRED' | 'PARTIALLY_REFUNDED' | 'REFUNDED';
@@ -123,6 +124,10 @@ export interface PayoutQuery {
   people?: string[];
 }
 
+export type FinanceExportRequest =
+  | { kind: 'REFUNDS'; query: RefundQuery; from: string; to: string; format: ReportExportFormat; scopeLabel: string }
+  | { kind: 'PAYOUTS'; query: PayoutQuery; from: string; to: string; format: ReportExportFormat; scopeLabel: string };
+
 /** Tài chính toàn sàn (payment-service, phía admin). */
 export interface AdminFinanceRepository {
   getSummary(from: string, to: string): Observable<FinanceSummary>;
@@ -134,9 +139,11 @@ export interface AdminFinanceRepository {
   retryFailedRefunds(): Observable<BulkRetryResult>;
   /** Tối đa một lần / 24 giờ mỗi khoản (backend chặn). */
   remindRefund(refundId: string): Observable<FinanceRefund>;
-  /** CSV trong kỳ [from, to] theo ngày tạo / ngày yêu cầu chi. */
-  exportRefunds(query: RefundQuery, from: string, to: string): Observable<Blob>;
-  exportPayouts(query: PayoutQuery, from: string, to: string): Observable<Blob>;
+  /**
+   * Tạo job xuất báo cáo ở report-service (Jasper; Excel danh sách hoặc PDF xem trước) theo bộ lọc đang xem, trong kỳ
+   * [from, to]. `scopeLabel` chỉ để in lên báo cáo. Danh sách / tải: REPORT_EXPORT_REPOSITORY_TOKEN.
+   */
+  requestExport(request: FinanceExportRequest): Observable<ReportExport>;
 }
 
 export const ADMIN_FINANCE_REPOSITORY_TOKEN = new InjectionToken<AdminFinanceRepository>('ADMIN_FINANCE_REPOSITORY_TOKEN');

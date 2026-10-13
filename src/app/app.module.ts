@@ -30,6 +30,8 @@ import { BROADCAST_REPOSITORY_TOKEN } from '@application/ports/persistence/broad
 import { BroadcastRepositoryImpl } from '@infrastructure/repositories/broadcast.repository.impl';
 import { ADMIN_FINANCE_REPOSITORY_TOKEN } from '@application/ports/persistence/admin-finance.repository';
 import { AdminFinanceRepositoryImpl } from '@infrastructure/repositories/admin-finance.repository.impl';
+import { REPORT_EXPORT_REPOSITORY_TOKEN } from '@application/ports/persistence/report-export.repository';
+import { ReportExportRepositoryImpl } from '@infrastructure/repositories/report-export.repository.impl';
 import { ADMIN_COMMUNITY_REPOSITORY_TOKEN } from '@application/ports/persistence/admin-community.repository';
 import { AdminCommunityRepositoryImpl } from '@infrastructure/repositories/admin-community.repository.impl';
 import { AdminStatsRepositoryImpl } from '@infrastructure/repositories/admin-stats.repository.impl';
@@ -112,6 +114,7 @@ import { APP_ICONS } from './app-icons';
     { provide: SYSTEM_MONITOR_REPOSITORY_TOKEN, useClass: SystemMonitorRepositoryImpl },
     { provide: BROADCAST_REPOSITORY_TOKEN, useClass: BroadcastRepositoryImpl },
     { provide: ADMIN_FINANCE_REPOSITORY_TOKEN, useClass: AdminFinanceRepositoryImpl },
+    { provide: REPORT_EXPORT_REPOSITORY_TOKEN, useClass: ReportExportRepositoryImpl },
     { provide: ADMIN_COMMUNITY_REPOSITORY_TOKEN, useClass: AdminCommunityRepositoryImpl },
     { provide: VENUE_OWNER_DASHBOARD_REPOSITORY_TOKEN, useClass: VenueOwnerDashboardRepositoryImpl },
     { provide: OWNER_SCHEDULE_REPOSITORY_TOKEN, useClass: OwnerScheduleRepositoryImpl },

@@ -5,6 +5,7 @@ import { provideLucideIcons } from '@lucide/angular';
 import { APP_ICONS } from '../../../app-icons';
 import { OwnerBooking } from '@application/dto/owner-booking/owner-booking.dto';
 import { ADMIN_VENUE_REPOSITORY_TOKEN } from '@application/ports/persistence/admin-venue.repository';
+import { REPORT_EXPORT_REPOSITORY_TOKEN } from '@application/ports/persistence/report-export.repository';
 import { ADMIN_BOOKING_REPOSITORY_TOKEN } from '@application/ports/persistence/admin-booking.repository';
 import { provideRouter } from '@angular/router';
 import { AdminBookingsComponent } from './bookings.component';
@@ -29,8 +30,9 @@ describe('AdminBookingsComponent', () => {
     ] }))
   };
   const repository = {
-    getBookings: vi.fn(), getBooking: vi.fn(), requestExport: vi.fn(), listExports: vi.fn(() => of([])), downloadExport: vi.fn()
+    getBookings: vi.fn(), getBooking: vi.fn(), requestExport: vi.fn()
   };
+  const exports = { list: vi.fn(() => of([])), download: vi.fn() };
 
   beforeEach(async () => {
     repository.getBookings.mockReset().mockReturnValue(of({ items: [booking], page: 0, pageSize: 20, pages: 1, total: 1 }));
@@ -40,6 +42,7 @@ describe('AdminBookingsComponent', () => {
         provideRouter([]),
         provideLucideIcons(...APP_ICONS),
         { provide: ADMIN_BOOKING_REPOSITORY_TOKEN, useValue: repository },
+        { provide: REPORT_EXPORT_REPOSITORY_TOKEN, useValue: exports },
         { provide: ADMIN_VENUE_REPOSITORY_TOKEN, useValue: venues }
       ]
     }).compileComponents();

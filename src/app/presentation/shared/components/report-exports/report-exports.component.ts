@@ -2,10 +2,10 @@ import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, injec
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { Subscription, finalize, timer } from 'rxjs';
+import { Observable, Subscription, finalize, timer } from 'rxjs';
 import {
-  ADMIN_BOOKING_REPOSITORY_TOKEN, AdminBookingCriteria, ReportExport, ReportExportFormat, ReportExportStatus
-} from '@application/ports/persistence/admin-booking.repository';
+  REPORT_EXPORT_REPOSITORY_TOKEN, ReportExport, ReportExportFormat, ReportExportStatus
+} from '@application/ports/persistence/report-export.repository';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { blobErrorMessage, downloadBlob } from '@shared/utils/file.utils';
@@ -20,40 +20,52 @@ const STATUS_META: Record<ReportExportStatus, { label: string; tone: string }> =
   FAILED: { label: 'Lỗi', tone: 'danger' }
 };
 
-export const EXPORT_FORMATS: readonly { value: ReportExportFormat; label: string; hint: string; icon: string }[] = [
-  { value: 'xlsx', label: 'Excel · danh sách đơn', hint: 'Mọi đơn khớp bộ lọc, mỗi đơn một dòng; lọc và tính toán tiếp được.', icon: 'file-spreadsheet' },
-  { value: 'pdf', label: 'PDF · báo cáo tổng hợp', hint: 'Tổng đơn, giá trị, đã thu, tỉ lệ không thành; theo trạng thái, cơ sở, nguồn đặt. Để in hoặc gửi.', icon: 'file-text' }
-];
+/** Một lựa chọn định dạng trong popup xuất (mỗi trang tự mô tả nội dung Excel / PDF của nó). */
+export interface ExportFormatOption {
+  value: ReportExportFormat;
+  label: string;
+  hint: string;
+  icon: string;
+}
 
 /**
- * Xuất báo cáo đơn đặt sân chạy nền: popup xác nhận phạm vi + định dạng, rồi report-service dựng file ở nền.
- * Người dùng làm việc tiếp; khi xong có thông báo ở chuông, file nằm trong "Báo cáo đã xuất" (giữ 7 ngày).
- * Trong lúc còn job đang chạy và trang đang mở, danh sách tự hỏi lại mỗi 3 giây.
+ * Xuất báo cáo chạy nền (report-service dựng bằng Jasper), dùng chung cho mọi trang có "Xuất báo cáo": popup xác
+ * nhận phạm vi + định dạng, rồi file được dựng ở nền. Người dùng làm việc tiếp; khi xong có thông báo ở chuông, file
+ * nằm trong "Báo cáo đã xuất" (giữ 7 ngày), PDF xem trước được ở tab mới. Trong lúc còn job đang chạy và trang đang
+ * mở, danh sách tự hỏi lại mỗi 3 giây. Trang chỉ truyền hàm tạo yêu cầu (`request`) và mô tả.
  */
 @Component({
-  selector: 'app-booking-exports',
-  templateUrl: './booking-exports.component.html',
-  styleUrls: ['./booking-exports.component.scss'],
+  selector: 'app-report-exports',
+  templateUrl: './report-exports.component.html',
+  styleUrls: ['./report-exports.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [DatePipe, LucideIconComponent]
 })
-export class BookingExportsComponent implements OnInit {
-  private readonly repository = inject(ADMIN_BOOKING_REPOSITORY_TOKEN);
+export class ReportExportsComponent implements OnInit {
+  private readonly repository = inject(REPORT_EXPORT_REPOSITORY_TOKEN);
   private readonly notify = inject(NotifyService);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private poll?: Subscription;
 
-  /** Bộ lọc đang áp dụng trên danh sách (xuất mọi trang của nó). */
-  readonly criteria = input.required<AdminBookingCriteria>();
-  /** Số đơn khớp bộ lọc. */
+  /** Tạo job xuất theo bộ lọc trang đang xem (mọi trang của danh sách) với định dạng người dùng chọn. */
+  readonly request = input.required<(format: ReportExportFormat) => Observable<ReportExport>>();
+  /** Loại báo cáo hiện trong "Báo cáo đã xuất" (vd ADMIN_BOOKINGS; FINANCE_REFUNDS + FINANCE_PAYOUTS). */
+  readonly types = input.required<readonly string[]>();
+  /** Tên và cách đếm từng loại khi danh sách có nhiều loại (vd FINANCE_REFUNDS → "Hoàn tiền", "khoản hoàn"). */
+  readonly kinds = input<Readonly<Record<string, { label: string; unit: string }>>>({});
+  readonly formats = input.required<readonly ExportFormatOption[]>();
+  readonly title = input('Xuất báo cáo');
+  /** Số dòng khớp bộ lọc, và cách đếm ("đơn", "khoản hoàn", "lượt chi"). */
   readonly total = input(0);
+  readonly unit = input('dòng');
   /** Mô tả phạm vi để người dùng xác nhận (vd "Hoàn tất", "Goat Arena · Sân 1", "01/10 – 12/10"). */
   readonly scope = input<readonly string[]>([]);
-  readonly labels = input<{ venueName?: string; courtName?: string }>({});
+  readonly emptyScope = input('Tất cả');
+  /** Gợi ý khi quá 10.000 dòng (vd "Hãy thu hẹp khoảng ngày hoặc chọn một cơ sở."). */
+  readonly narrowHint = input('Hãy thu hẹp bộ lọc.');
 
-  readonly formats = EXPORT_FORMATS;
   readonly maxRows = MAX_ROWS;
   readonly dialogOpen = signal(false);
   readonly format = signal<ReportExportFormat>('xlsx');
@@ -69,7 +81,7 @@ export class BookingExportsComponent implements OnInit {
   readonly tooMany = computed(() => this.total() > MAX_ROWS);
 
   ngOnInit(): void {
-    // Bấm thông báo "Báo cáo đã sẵn sàng" → /admin/bookings?exports=open (kể cả khi đang ở trang này).
+    // Bấm thông báo "Báo cáo đã sẵn sàng" → trang của báo cáo với ?exports=open (kể cả khi đang ở trang này).
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(params => { if (params.get('exports') === 'open') this.openPanel(); });
     this.refresh();
@@ -88,7 +100,7 @@ export class BookingExportsComponent implements OnInit {
     if (this.requesting() || this.tooMany() || !this.total()) return;
     this.requesting.set(true);
     this.requestError.set(null);
-    this.repository.requestExport(this.criteria(), this.format(), this.labels())
+    this.request()(this.format())
       .pipe(finalize(() => this.requesting.set(false)), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: job => {
@@ -112,7 +124,7 @@ export class BookingExportsComponent implements OnInit {
 
   refresh(): void {
     this.listLoading.set(true);
-    this.repository.listExports()
+    this.repository.list(this.types())
       .pipe(finalize(() => this.listLoading.set(false)), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: list => { this.listError.set(null); this.apply(list); },
@@ -126,7 +138,7 @@ export class BookingExportsComponent implements OnInit {
   download(job: ReportExport): void {
     if (job.status !== 'DONE' || this.downloadingId()) return;
     this.downloadingId.set(job.exportId);
-    this.repository.downloadExport(job.exportId)
+    this.repository.download(job.exportId)
       .pipe(finalize(() => this.downloadingId.set(null)), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: file => downloadBlob(file, job.fileName ?? `bao-cao.${job.format}`),
@@ -144,7 +156,7 @@ export class BookingExportsComponent implements OnInit {
     if (!tab) { this.notify.error('Trình duyệt đang chặn mở tab mới. Hãy cho phép cửa sổ bật lên rồi thử lại.'); return; }
     tab.document.title = job.fileName ?? 'Báo cáo';
     tab.document.body.textContent = 'Đang tải báo cáo...';
-    this.repository.downloadExport(job.exportId)
+    this.repository.download(job.exportId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: file => {
@@ -161,7 +173,19 @@ export class BookingExportsComponent implements OnInit {
 
   statusMeta(status: ReportExportStatus) { return STATUS_META[status]; }
 
-  formatMeta(format: ReportExportFormat) { return EXPORT_FORMATS.find(item => item.value === format) ?? EXPORT_FORMATS[0]; }
+  formatMeta(format: ReportExportFormat): ExportFormatOption {
+    return this.formats().find(item => item.value === format) ?? this.formats()[0];
+  }
+
+  /** "Hoàn tiền · Excel · danh sách" khi danh sách có nhiều loại; một loại thì chỉ tên định dạng. */
+  jobLabel(job: ReportExport): string {
+    const kind = this.kinds()[job.reportType];
+    return kind ? `${kind.label} · ${this.formatMeta(job.format).label}` : this.formatMeta(job.format).label;
+  }
+
+  jobUnit(job: ReportExport): string {
+    return this.kinds()[job.reportType]?.unit ?? this.unit();
+  }
 
   size(bytes: number | null): string {
     if (!bytes) return '';
@@ -179,7 +203,7 @@ export class BookingExportsComponent implements OnInit {
     for (const job of list) {
       const previous = before.get(job.exportId);
       if (!previous || !isActive({ status: previous })) continue;
-      if (job.status === 'DONE') this.notify.success(`${this.formatMeta(job.format).label} đã sẵn sàng để tải.`, 'Báo cáo đã xong');
+      if (job.status === 'DONE') this.notify.success(`${this.jobLabel(job)} đã sẵn sàng để tải.`, 'Báo cáo đã xong');
       if (job.status === 'FAILED') this.notify.error(job.failureReason ?? 'Không tạo được báo cáo.', 'Báo cáo bị lỗi');
     }
     this.exports.set(list);
