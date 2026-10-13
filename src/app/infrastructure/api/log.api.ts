@@ -24,6 +24,10 @@ export class LogApi {
     return this.http.get<BaseResponse<FailedLoginBurst[]>>(`${this.apiBase}/audit-service/api/v1/logs/alerts/failed-logins`);
   }
 
+  resolveFailedLogins(account: string): Observable<void> {
+    return this.http.post<void>(`${this.apiBase}/audit-service/api/v1/logs/alerts/failed-logins/resolve`, { account });
+  }
+
   getStats(from: string, to: string): Observable<BaseResponse<LogStatsResult>> {
     return this.http.get<BaseResponse<LogStatsResult>>(`${this.apiBase}/audit-service/api/v1/logs/stats`, { params: { from, to } });
   }

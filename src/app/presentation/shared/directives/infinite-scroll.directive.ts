@@ -26,7 +26,7 @@ export class InfiniteScrollDirective implements OnInit, OnDestroy {
       this.reached.emit();
       this.observer?.unobserve(this.element.nativeElement);
       requestAnimationFrame(() => this.observer?.observe(this.element.nativeElement));
-    }, { rootMargin: '400px 0px' });
+    }, { root: scrollRoot(this.element.nativeElement), rootMargin: '400px 0px' });
     this.observer.observe(this.element.nativeElement);
   }
 
@@ -34,4 +34,18 @@ export class InfiniteScrollDirective implements OnInit, OnDestroy {
     this.observer?.disconnect();
     this.observer = undefined;
   }
+}
+
+/**
+ * Khung cuộn gần nhất (overflow-y auto / scroll): danh sách nằm trong khung giới hạn chiều cao (vd "Lịch sử sự cố")
+ * thì tải thêm khi cuộn trong khung đó, và lề 400px tính theo khung chứ không theo cả trang. Không có thì là viewport.
+ */
+function scrollRoot(element: HTMLElement): Element | null {
+  for (let node = element.parentElement; node; node = node.parentElement) {
+    const overflow = getComputedStyle(node).overflowY;
+    // Chỉ khung thật sự cuộn dọc: phần tử cuộn ngang (.table-wrap) cũng có overflow-y "auto" nhưng không cuộn dọc,
+    // lấy nó làm gốc thì sentinel luôn "trong khung" và danh sách tải liên tục.
+    if ((overflow === 'auto' || overflow === 'scroll' || overflow === 'overlay') && node.scrollHeight > node.clientHeight) return node;
+  }
+  return null;
 }

@@ -14,7 +14,7 @@ describe('LogsComponent', () => {
     logId: 'l-1', userId: 'admin@gmail.com', action: 'LOGIN', description: 'Đăng nhập', ipAddress: '127.0.0.1',
     statusCode: 200, timestamp: '2026-10-13T08:00:00', errorMessage: '', ...extra
   });
-  const logService = { getLogs: vi.fn(), getStats: vi.fn(), getFailedLoginBursts: vi.fn() };
+  const logService = { getLogs: vi.fn(), getStats: vi.fn(), getFailedLoginBursts: vi.fn(), resolveFailedLogins: vi.fn(() => of(undefined)) };
   const users = { getSummaries: vi.fn(), getUsers: vi.fn() };
 
   beforeEach(async () => {
@@ -104,6 +104,10 @@ describe('LogsComponent', () => {
     fixture.componentInstance.inspectAccount('attacker@x.vn');
     expect(fixture.componentInstance.result()).toBe('error');
     expect(fixture.componentInstance.keyword()).toBe('attacker@x.vn');
+
+    fixture.componentInstance.resolveFailedLogin('attacker@x.vn');
+    expect(logService.resolveFailedLogins).toHaveBeenCalledWith('attacker@x.vn');
+    expect(fixture.componentInstance.failedLogins()).toEqual([]);
   });
 
   it('builds a safe filter: regex characters in the keyword cannot break the query', () => {

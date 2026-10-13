@@ -7,6 +7,7 @@ import { Log } from '@application/dto/log/log.dto';
 import { FailedLoginBurst, LogStatsResult } from '@application/dto/log/log-stats.dto';
 import { USER_REPOSITORY_TOKEN } from '@application/ports/persistence/user.repository';
 import { buildRsqlSearch } from '@presentation/shared/utils/api.helper';
+import { NotifyService } from '@shared/components/notify/notify.service';
 import { LogService } from '@presentation/services/log.service';
 import { UserDirectoryService } from '@presentation/services/user-directory.service';
 import { PAGE_SIZE } from '@shared/constants/page-size';
@@ -38,6 +39,9 @@ export class LogsComponent implements OnInit {
   private readonly search$ = new Subject<string>();
   readonly users = inject(UserDirectoryService);
   private readonly userRepository = inject(USER_REPOSITORY_TOKEN);
+  private readonly notify = inject(NotifyService);
+  /** Tài khoản đang gửi "Giải quyết" (khóa nút). */
+  readonly resolving = signal<string | null>(null);
   private request?: Subscription;
 
   readonly pageSize = PAGE_SIZE.table;
@@ -186,6 +190,25 @@ export class LogsComponent implements OnInit {
       next: bursts => this.failedLogins.set(bursts),
       error: () => this.failedLogins.set([])
     });
+  }
+
+  /**
+   * Admin đã xem xét (vd liên hệ chủ tài khoản, khóa tài khoản): ẩn cảnh báo. Có lần đăng nhập sai mới thì cảnh báo hiện
+   * lại và báo chuông lại. Thao tác được ghi vào nhật ký.
+   */
+  resolveFailedLogin(account: string): void {
+    if (this.resolving()) return;
+    this.resolving.set(account);
+    this.logService.resolveFailedLogins(account)
+      .pipe(finalize(() => this.resolving.set(null)), takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.failedLogins.update(list => list.filter(item => item.account !== account));
+          this.notify.success(`Đã xử lý cảnh báo của ${account}. Sẽ báo lại nếu tài khoản này đăng nhập sai tiếp.`);
+          this.load(true);
+        },
+        error: err => this.notify.error(err?.error?.message ?? 'Không ghi nhận được. Vui lòng thử lại.')
+      });
   }
 
   toggleSensitive(): void {

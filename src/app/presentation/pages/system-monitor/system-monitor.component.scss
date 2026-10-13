@@ -112,6 +112,25 @@ table.services {
   .is-active { background: var(--primary-light); color: var(--primary-strong); }
 }
 
+// Khung giới hạn chiều cao, cuộn vô hạn hai chiều bên trong (§ Scroll areas: không thanh cuộn, mờ đáy, không kéo trang).
+.scroll-box {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+
+  &::-webkit-scrollbar { display: none; }
+}
+
+.scroll-box--incidents { max-height: 320px; }
+.scroll-box--table { max-height: 440px; }
+
+// Tiêu đề bảng đứng yên khi cuộn trong khung.
+.scroll-box--table thead th { position: sticky; top: 0; z-index: 1; }
+
+.sentinel { height: 1px; list-style: none; }
+tr.sentinel td { height: 1px; padding: 0; border: 0; }
+
 .incidents { display: grid; margin: 0; padding: 4px 20px 12px; list-style: none; }
 .incidents li {
   display: grid;

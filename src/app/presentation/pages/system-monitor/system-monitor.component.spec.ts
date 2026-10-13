@@ -99,6 +99,23 @@ describe('SystemMonitorComponent', () => {
     expect(text).toContain('đã báo admin');
   });
 
+  it('shows incidents five at a time inside their box and appends the next five at the bottom', async () => {
+    // jsdom không có CSS.escape (trình duyệt có); TwoWayWindow dùng nó để tìm dòng neo khi nối thêm.
+    (globalThis as { CSS?: { escape?: (value: string) => string } }).CSS ??= { escape: (value: string) => value };
+    repository.getIncidents.mockReturnValue(of(Array.from({ length: 12 }, (_, index) => ({
+      id: 'i-' + index, service: 'venue-service', status: 'DEGRADED', startedAt: '2026-10-14T02:00:00Z',
+      endedAt: '2026-10-14T02:05:00Z', durationSeconds: 300, alerted: false
+    }))));
+    const fixture = await render();
+    const page = fixture.componentInstance;
+
+    expect(page.incidentWindow.items()).toHaveLength(5);
+    expect(page.incidentWindow.hasAfter()).toBe(true);
+    page.scroll('incident', 'next');
+    expect(page.incidentWindow.items()).toHaveLength(10);
+    expect(page.incidentWindow.hasBefore()).toBe(false);
+  });
+
   it('flags infrastructure and background job problems on their tabs', async () => {
     const fixture = await render();
     const page = fixture.componentInstance;

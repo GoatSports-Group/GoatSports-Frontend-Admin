@@ -1,4 +1,8 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, HostListener, OnInit, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy, Component, DestroyRef, ElementRef, HostListener, Injector, OnInit, computed, inject, signal, viewChild
+} from '@angular/core';
+import { InfiniteScrollDirective } from '@shared/directives/infinite-scroll.directive';
+import { TwoWayWindow } from '@shared/utils/two-way-window';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -61,7 +65,7 @@ const CAPABILITY_LABEL: Readonly<Record<string, string>> = {
   styleUrls: ['./system-monitor.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [DatePipe, LucideIconComponent, LoadingSkeletonComponent]
+  imports: [DatePipe, LucideIconComponent, LoadingSkeletonComponent, InfiniteScrollDirective]
 })
 export class SystemMonitorComponent implements OnInit {
   private readonly repository = inject(SYSTEM_MONITOR_REPOSITORY_TOKEN);
@@ -84,6 +88,31 @@ export class SystemMonitorComponent implements OnInit {
     const infra = this.infrastructure();
     return infra ? infra.checks.filter(check => check.status !== 'UP').length : 0;
   });
+  // Cuộn vô hạn hai chiều trong khung giới hạn chiều cao: sự cố 5 dòng một lần, các bảng khác 10 dòng.
+  private readonly injector = inject(Injector);
+  readonly incidentWindow = new TwoWayWindow(computed(() => this.incidents() ?? []), item => item.id, this.injector, 5, 15);
+  readonly consumerWindow = new TwoWayWindow(computed(() => this.infrastructure()?.consumers ?? []), item => item.groupId,
+    this.injector, 10, 30);
+  readonly jobWindow = new TwoWayWindow(computed(() => this.jobs() ?? []), item => item.service + ':' + (item.job ?? ''),
+    this.injector, 10, 30);
+  readonly capabilityWindow = new TwoWayWindow(computed(() => this.ai()?.capabilities ?? []), item => item.capability,
+    this.injector, 10, 30);
+  private readonly incidentBox = viewChild<ElementRef<HTMLElement>>('incidentBox');
+  private readonly consumerBox = viewChild<ElementRef<HTMLElement>>('consumerBox');
+  private readonly jobBox = viewChild<ElementRef<HTMLElement>>('jobBox');
+  private readonly capabilityBox = viewChild<ElementRef<HTMLElement>>('capabilityBox');
+
+  /** Sentinel đầu / cuối của một khung: nối thêm dòng ở trên / ở dưới, giữ dòng đang nhìn đứng yên. */
+  scroll(list: 'incident' | 'consumer' | 'job' | 'capability', direction: 'previous' | 'next'): void {
+    const target = {
+      incident: [this.incidentWindow, this.incidentBox()],
+      consumer: [this.consumerWindow, this.consumerBox()],
+      job: [this.jobWindow, this.jobBox()],
+      capability: [this.capabilityWindow, this.capabilityBox()]
+    }[list] as [TwoWayWindow<unknown>, ElementRef<HTMLElement> | undefined];
+    target[0][direction](target[1]?.nativeElement);
+  }
+
   readonly jobProblems = computed(() => (this.jobs() ?? []).filter(job => this.jobTone(job) !== 'success').length);
   readonly health = signal<SystemHealth | null>(null);
   readonly ai = signal<AiStatus | null>(null);

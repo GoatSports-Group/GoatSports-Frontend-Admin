@@ -137,9 +137,13 @@
       } @else if (!incidents()!.length) {
       <p class="empty-line"><lucide-icon name="circle-check-big" />Không có sự cố nào trong 7 ngày.</p>
       } @else {
+      <div class="scroll-box scroll-box--incidents" #incidentBox>
       <ul class="incidents">
-        @for (item of incidents(); track item.id) {
-        <li [class.is-open]="!item.endedAt">
+        @if (incidentWindow.hasBefore()) {
+        <li appInfiniteScroll (reached)="scroll('incident', 'previous')" class="sentinel" aria-hidden="true"></li>
+        }
+        @for (item of incidentWindow.items(); track item.id) {
+        <li [class.is-open]="!item.endedAt" [attr.data-window-id]="item.id">
           <span [class]="'dot dot--' + (item.status === 'DOWN' ? 'danger' : 'warning')" aria-hidden="true"></span>
           <div class="cell-title">
             <strong>{{ label(item.service) }} {{ item.status === 'DOWN' ? 'ngừng' : 'suy giảm' }}</strong>
@@ -151,7 +155,11 @@
             {{ item.endedAt ? duration(item.durationSeconds) : 'Đang diễn ra · ' + duration(item.durationSeconds) }}</span>
         </li>
         }
+        @if (incidentWindow.hasAfter()) {
+        <li appInfiniteScroll (reached)="scroll('incident', 'next')" class="sentinel" aria-hidden="true"></li>
+        }
       </ul>
+      </div>
       }
     </section>
     }
@@ -180,18 +188,24 @@
       @if (!infra.consumers.length) {
       <p class="empty-line">Không đọc được nhóm consumer nào (Kafka không phản hồi hoặc chưa có service nào kết nối).</p>
       } @else {
-      <div class="table-wrap">
+      <div class="table-wrap scroll-box scroll-box--table" #consumerBox>
         <table class="table">
           <thead><tr><th>Nhóm consumer</th><th>Topic</th><th>Trạng thái</th><th class="num">Thành viên</th><th class="num">Lag</th></tr></thead>
           <tbody>
-            @for (group of infra.consumers; track group.groupId) {
-            <tr>
+            @if (consumerWindow.hasBefore()) {
+            <tr appInfiniteScroll (reached)="scroll('consumer', 'previous')" class="sentinel" aria-hidden="true"><td [attr.colspan]="5"></td></tr>
+            }
+            @for (group of consumerWindow.items(); track group.groupId) {
+            <tr [attr.data-window-id]="group.groupId">
               <td class="mono">{{ group.groupId }}</td>
               <td><small class="muted">{{ group.topics.join(', ') || '—' }}</small></td>
               <td><span [class]="'badge badge--' + (group.state === 'Stable' ? 'success' : group.state === 'Empty' ? 'neutral' : 'warning')">{{ group.state }}</span></td>
               <td class="num">{{ group.members }}</td>
               <td class="num"><span [class]="'badge badge--' + lagTone(group.lag)">{{ group.lag.toLocaleString('vi-VN') }}</span></td>
             </tr>
+            }
+            @if (consumerWindow.hasAfter()) {
+            <tr appInfiniteScroll (reached)="scroll('consumer', 'next')" class="sentinel" aria-hidden="true"><td [attr.colspan]="5"></td></tr>
             }
           </tbody>
         </table>
@@ -209,13 +223,16 @@
     </div>
     } @else if (jobs(); as list) {
     <section class="card" aria-label="Job nền">
-      <div class="table-wrap">
+      <div class="table-wrap scroll-box scroll-box--table" #jobBox>
         <table class="table">
           <thead><tr><th>Job</th><th>Trạng thái</th><th class="num">Đang chờ</th><th class="num">Đang chạy</th><th class="num">Lỗi 24 giờ</th><th>Chờ lâu nhất</th></tr></thead>
           <tbody>
-            @for (job of list; track job.service + (job.job ?? '')) {
+            @if (jobWindow.hasBefore()) {
+            <tr appInfiniteScroll (reached)="scroll('job', 'previous')" class="sentinel" aria-hidden="true"><td [attr.colspan]="6"></td></tr>
+            }
+            @for (job of jobWindow.items(); track job.service + (job.job ?? '')) {
             @let tone = jobTone(job);
-            <tr [class]="'service service--' + tone">
+            <tr [class]="'service service--' + tone" [attr.data-window-id]="job.service + ':' + (job.job ?? '')">
               <td><div class="cell-title"><strong>{{ job.label ?? label(job.service) }}</strong><small>{{ job.service }}{{ job.job ? ' · ' + job.job : '' }}</small></div></td>
               <td><span [class]="'badge badge--' + tone">{{ jobState(job) }}</span></td>
               <td class="num">{{ job.available ? job.pending : '—' }}</td>
@@ -223,6 +240,9 @@
               <td class="num" [class.is-bad]="job.failedLast24h > 0">{{ job.available ? job.failedLast24h : '—' }}</td>
               <td>{{ job.oldestPendingAt ? (job.oldestPendingAt | date:'HH:mm dd/MM') : (job.available ? 'Không có việc chờ' : (job.error ?? '')) }}</td>
             </tr>
+            }
+            @if (jobWindow.hasAfter()) {
+            <tr appInfiniteScroll (reached)="scroll('job', 'next')" class="sentinel" aria-hidden="true"><td [attr.colspan]="6"></td></tr>
             }
           </tbody>
         </table>
@@ -262,7 +282,7 @@
     </section>
 
     <section class="card" aria-label="Tính năng AI">
-      <div class="table-wrap">
+      <div class="table-wrap scroll-box scroll-box--table" #capabilityBox>
         <table class="table capabilities">
           <thead>
             <tr>
@@ -274,9 +294,12 @@
             </tr>
           </thead>
           <tbody>
-            @for (item of status.capabilities; track item.capability) {
+            @if (capabilityWindow.hasBefore()) {
+            <tr appInfiniteScroll (reached)="scroll('capability', 'previous')" class="sentinel" aria-hidden="true"><td [attr.colspan]="5"></td></tr>
+            }
+            @for (item of capabilityWindow.items(); track item.capability) {
             @let ready = item.status === 'READY';
-            <tr [class]="'is-clickable service--' + (ready ? 'success' : 'warning')" tabindex="0"
+            <tr [class]="'is-clickable service--' + (ready ? 'success' : 'warning')" tabindex="0" [attr.data-window-id]="item.capability"
               (click)="selectedCapability.set(item)" (keydown.enter)="selectedCapability.set(item)">
               <td>
                 <div class="cell-title capability__name">
@@ -296,6 +319,9 @@
               <td class="nowrap">{{ item.activeModel?.trainedAt ? (item.activeModel!.trainedAt | date:'HH:mm dd/MM/yyyy') : '—' }}</td>
               <td class="row-action"><lucide-icon name="chevron-right" /></td>
             </tr>
+            }
+            @if (capabilityWindow.hasAfter()) {
+            <tr appInfiniteScroll (reached)="scroll('capability', 'next')" class="sentinel" aria-hidden="true"><td [attr.colspan]="5"></td></tr>
             }
           </tbody>
         </table>

@@ -23,6 +23,10 @@ export class LogRepositoryImpl implements LogRepository {
     return this.logApi.getFailedLoginBursts().pipe(map(response => response.data ?? []));
   }
 
+  resolveFailedLogins(account: string): Observable<void> {
+    return this.logApi.resolveFailedLogins(account);
+  }
+
   getStats(from: string, to: string): Observable<LogStatsResult> {
     return this.logApi.getStats(from, to).pipe(map(response => response.data));
   }

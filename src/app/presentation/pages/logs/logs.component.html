@@ -69,7 +69,11 @@
         @for (burst of failedLogins(); track burst.account) {
         <li><span class="mono">{{ burst.account }}</span> · {{ burst.attempts }} lần · lần cuối {{ burst.lastAt |
           date:'HH:mm' }}@if (burst.lastIp) { · IP {{ burst.lastIp }} }
-          <button type="button" class="btn btn--sm" (click)="inspectAccount(burst.account)">Xem</button></li>
+          <button type="button" class="btn btn--sm" (click)="inspectAccount(burst.account)">Xem</button>
+          <button type="button" class="btn btn--sm btn--primary" (click)="resolveFailedLogin(burst.account)"
+            [disabled]="resolving() === burst.account" title="Ẩn cảnh báo; có lần đăng nhập sai mới thì hiện lại">
+            <lucide-icon [name]="resolving() === burst.account ? 'loader-2' : 'check'" [class.spin]="resolving() === burst.account" />Giải quyết
+          </button></li>
         }
       </ul>
     </div>

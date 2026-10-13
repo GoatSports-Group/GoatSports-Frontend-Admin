@@ -26,4 +26,8 @@ export class LogService {
   getFailedLoginBursts(): Observable<FailedLoginBurst[]> {
     return this.logRepository.getFailedLoginBursts();
   }
+
+  resolveFailedLogins(account: string): Observable<void> {
+    return this.logRepository.resolveFailedLogins(account);
+  }
 }
