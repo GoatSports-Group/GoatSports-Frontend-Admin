@@ -96,4 +96,21 @@ describe('RolesComponent', () => {
       expect.objectContaining({ permissionIds: expect.arrayContaining(['p-1', 'p-2', 'p-3']) }));
     expect(page.permRole()).toBeNull();
   });
+
+  it('loads permissions from every page so a role whose permissions sit past the first 20 shows them ticked', () => {
+    // Server trả tối đa 20 quyền mỗi trang: quyền của vai trò nằm ở trang 2.
+    permissionService.getPermissions.mockImplementation(((filter: { page: number }) => of(filter.page === 0
+      ? { result: permissions.slice(0, 2), meta: { page: 1, pageSize: 2, pages: 2, total: 3 } }
+      : { result: permissions.slice(2), meta: { page: 2, pageSize: 2, pages: 2, total: 3 } })) as never);
+    const auditor: Role = { roleId: 'r-audit', name: 'AUDITOR', active: true, permissions: [permissions[2]] };
+    const fixture = create();
+    const page = fixture.componentInstance;
+
+    page.openPermissions(auditor);
+    fixture.detectChanges();
+
+    expect(page.allPermissions()).toHaveLength(3);
+    expect(page.isSelected('p-3')).toBe(true);
+    expect(fixture.nativeElement.querySelector('.modal__sub').textContent).toContain('Đã chọn 1 / 3 quyền');
+  });
 });

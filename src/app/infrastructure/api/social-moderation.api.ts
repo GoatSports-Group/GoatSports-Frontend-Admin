@@ -60,7 +60,8 @@ export class SocialModerationApi {
   }
 
   private pageParams(filter: ModerationPageFilter): HttpParams {
-    let params = new HttpParams().set('page', filter.page).set('size', filter.size);
+    // social-service đọc page tính từ 1; filter.page tính từ 0.
+    let params = new HttpParams().set('page', filter.page + 1).set('size', filter.size);
     for (const status of filter.status ?? []) params = params.append('status', status);
     return params;
   }

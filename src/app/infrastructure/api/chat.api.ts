@@ -37,20 +37,20 @@ export interface MessageApi {
 
 interface SpringPage<T> { content: T[]; }
 
-/** API Tin nhan cua social-service (/social-service/api/v1/social/conversations). */
+/** API Tin nhan cua social-service (/social-service/api/v1/social/conversations). `page` tinh tu 0; social-service doc tu 1. */
 @Injectable({ providedIn: 'root' })
 export class ChatApi {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/social-service/api/v1/social/conversations`;
 
   getRooms(types: readonly ChatRoomType[], page: number, size: number): Observable<ChatRoom[]> {
-    const params = new HttpParams().set('page', page).set('size', size).set('types', types.join(','));
+    const params = new HttpParams().set('page', page + 1).set('size', size).set('types', types.join(','));
     return this.http.get<BaseResponse<SpringPage<ConversationApi>>>(this.base, { params })
       .pipe(map(response => (response.data?.content ?? []).map(toRoom)));
   }
 
   getSupportInbox(page: number, size: number): Observable<ChatRoom[]> {
-    const params = new HttpParams().set('page', page).set('size', size);
+    const params = new HttpParams().set('page', page + 1).set('size', size);
     return this.http.get<BaseResponse<SpringPage<ConversationApi>>>(`${this.base}/support/inbox`, { params })
       .pipe(map(response => (response.data?.content ?? []).map(toRoom)));
   }

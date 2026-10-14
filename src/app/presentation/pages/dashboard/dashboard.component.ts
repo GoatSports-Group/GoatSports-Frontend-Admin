@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, ElementRef, HostListener, Injector, OnInit, AfterViewInit, OnDestroy, inject, signal, computed, viewChild } from '@angular/core';
 import { TwoWayWindow } from '@shared/utils/two-way-window';
+import { SERVER_MAX_PAGE_SIZE, fetchAllPages } from '@shared/utils/fetch-all-pages';
 import { InfiniteScrollDirective } from '@shared/directives/infinite-scroll.directive';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -88,12 +89,12 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit, OnDest
   }
 
   loadApplications() {
-    // ponytail: tải tối đa 1000 đơn đăng ký để vẽ bản đồ; đổi sang API đếm/tọa độ riêng nếu vượt con số này.
-    this.getAllApplicationsUseCase.execute({ page: 0, size: 1000 }).subscribe({
+    // Server trả tối đa 20 đơn mỗi trang (xin size 1000 vẫn chỉ được 20), nên tải đủ mọi trang để vẽ bản đồ.
+    fetchAllPages(page => this.getAllApplicationsUseCase.execute({ page, size: SERVER_MAX_PAGE_SIZE })).subscribe({
       next: applications => {
-        this.pendingApps.set(applications.result.filter(a => a.status === OwnerApplicationStatus.PENDING).length);
-        this.applications.set(applications.result);
-        const markers = applications.result.map((app, index) => createVenueMapMarker(app, index));
+        this.pendingApps.set(applications.filter(a => a.status === OwnerApplicationStatus.PENDING).length);
+        this.applications.set(applications);
+        const markers = applications.map((app, index) => createVenueMapMarker(app, index));
         this.mapMarkers.set(markers);
         this.dashboardMap.render(markers);
       },

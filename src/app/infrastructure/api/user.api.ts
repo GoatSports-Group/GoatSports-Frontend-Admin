@@ -16,7 +16,7 @@ export class UserApi {
   private apiBase = environment.apiUrl;
 
   getUsers(filter: PageFilter): Observable<BaseResponse<BaseListResponse<User>>> {
-    const params = buildPageParams(filter);
+    const params = buildPageParams(filter, true);
     return this.http.get<BaseResponse<BaseListResponse<User>>>(`${this.apiBase}/auth-service/api/v1/admin/users`, { params });
   }
 

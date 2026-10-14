@@ -35,7 +35,7 @@ tr.is-clickable:focus-visible { outline: 2px solid var(--primary); outline-offse
 .row-action { text-align: right; }
 .modal__sub { margin: 4px 0 0; color: var(--body); font-size: 13px; }
 .muted-line { display: flex; align-items: center; gap: 6px; margin: 0 0 12px; color: var(--body); font-size: 13px; }
-.mono { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 13px; }
+.mono { font-size: 13px; font-variant-numeric: tabular-nums; }
 
 .facts {
   display: grid;

@@ -2,19 +2,22 @@
   <header class="page-head">
     <div>
       <h1>Vai trò và quyền</h1>
-      <p>Mỗi tài khoản mang một vai trò; vai trò quyết định các API được gọi. Tạm ngưng một vai trò để tước quyền mà không mất cấu hình.</p>
+      <p>Mỗi tài khoản mang một vai trò. Tạm ngưng một vai trò để tước quyền mà không mất cấu hình.</p>
     </div>
     <div class="actions">
-      <button type="button" class="btn btn--primary" (click)="openForm()"><lucide-icon name="plus" />Tạo vai trò</button>
+      <button type="button" class="btn btn--primary" (click)="openForm()"><lucide-icon name="plus" />Tạo vai
+        trò</button>
     </div>
   </header>
 
   @if (counts(); as c) {
   <section class="kpis" aria-label="Số vai trò">
     <div class="kpi"><span>Tổng vai trò</span><strong>{{ c.total }}</strong><small>kể cả vai trò hệ thống</small></div>
-    <button type="button" class="kpi kpi--link" [class.is-active]="active() === 'true'" (click)="setActive(active() === 'true' ? '' : 'true')">
+    <button type="button" class="kpi kpi--link" [class.is-active]="active() === 'true'"
+      (click)="setActive(active() === 'true' ? '' : 'true')">
       <span>Đang hoạt động</span><strong>{{ c.active }}</strong><small>quyền đang có hiệu lực</small></button>
-    <button type="button" class="kpi kpi--link" [class.is-active]="active() === 'false'" (click)="setActive(active() === 'false' ? '' : 'false')">
+    <button type="button" class="kpi kpi--link" [class.is-active]="active() === 'false'"
+      (click)="setActive(active() === 'false' ? '' : 'false')">
       <span>Tạm ngưng</span><strong>{{ c.total - c.active }}</strong><small>quyền tạm bị tước</small></button>
   </section>
   } @else {
@@ -27,7 +30,8 @@
       <input type="search" [ngModel]="keyword()" (ngModelChange)="onKeyword($event)" name="keyword"
         placeholder="Tên hoặc mô tả vai trò..." aria-label="Tìm vai trò" />
     </label>
-    <app-select [ngModel]="active()" (ngModelChange)="setActive($event)" [options]="statusOptions" ariaLabel="Lọc theo trạng thái" />
+    <app-select [ngModel]="active()" (ngModelChange)="setActive($event)" [options]="statusOptions"
+      ariaLabel="Lọc theo trạng thái" />
     @if (hasFilters()) {
     <button type="button" class="btn btn--ghost" (click)="clearFilters()"><lucide-icon name="x" />Xóa lọc</button>
     }
@@ -37,7 +41,8 @@
   <app-loading-skeleton variant="table" [count]="6" [columns]="4" label="Đang tải vai trò" />
   } @else if (error()) {
   <div class="state state--error" role="alert">
-    <lucide-icon name="alert-circle" /><strong>Chưa tải được danh sách</strong><p>{{ error() }}</p>
+    <lucide-icon name="alert-circle" /><strong>Chưa tải được danh sách</strong>
+    <p>{{ error() }}</p>
     <button type="button" class="btn" (click)="load()"><lucide-icon name="rotate-ccw" />Thử lại</button>
   </div>
   } @else if (!items().length) {
@@ -50,7 +55,12 @@
     <div class="table-wrap">
       <table class="table">
         <thead>
-          <tr><th>Vai trò</th><th>Quyền</th><th>Trạng thái</th><th aria-label="Thao tác"></th></tr>
+          <tr>
+            <th>Vai trò</th>
+            <th>Quyền</th>
+            <th>Trạng thái</th>
+            <th aria-label="Thao tác"></th>
+          </tr>
         </thead>
         <tbody>
           @for (role of items(); track role.roleId) {
@@ -62,20 +72,26 @@
                 <small>{{ role.description || roleLabel(role.name) || 'Chưa có mô tả' }}</small>
               </div>
             </td>
-            <td class="count">{{ role.permissions?.length ?? 0 }} quyền</td>
-            <td><span [class]="'badge badge--' + (role.active ? 'success' : 'warning')">{{ role.active ? 'Đang hoạt động' : 'Tạm ngưng' }}</span></td>
+            <td class="perm-count">{{ role.permissions?.length ?? 0 }} quyền</td>
+            <td><span [class]="'badge badge--' + (role.active ? 'success' : 'warning')">{{ role.active ? 'Đang hoạt
+                động' : 'Tạm ngưng' }}</span></td>
             <td class="row-action" (click)="$event.stopPropagation()">
-              <button type="button" class="kebab" [matMenuTriggerFor]="rowMenu" [attr.aria-label]="'Thao tác với vai trò ' + role.name">
+              <button type="button" class="kebab" [matMenuTriggerFor]="rowMenu"
+                [attr.aria-label]="'Thao tác với vai trò ' + role.name">
                 <lucide-icon name="more-vertical" /></button>
               <mat-menu #rowMenu="matMenu" class="goat-action-menu" xPosition="before">
-                <button mat-menu-item type="button" (click)="openPermissions(role)"><lucide-icon name="key-round" />Phân quyền</button>
-                <button mat-menu-item type="button" (click)="openForm(role)"><lucide-icon name="pencil" />Chỉnh sửa</button>
+                <button mat-menu-item type="button" (click)="openPermissions(role)"><lucide-icon name="key-round" />Phân
+                  quyền</button>
+                <button mat-menu-item type="button" (click)="openForm(role)"><lucide-icon name="pencil" />Chỉnh
+                  sửa</button>
                 @if (role.name !== 'ADMIN') {
-                <button mat-menu-item type="button" (click)="toggleActive(role)"><lucide-icon [name]="role.active ? 'pause' : 'play'" />{{
+                <button mat-menu-item type="button" (click)="toggleActive(role)"><lucide-icon
+                    [name]="role.active ? 'pause' : 'play'" />{{
                   role.active ? 'Tạm ngưng' : 'Kích hoạt' }}</button>
                 }
                 @if (!isSystem(role)) {
-                <button mat-menu-item type="button" class="is-danger" (click)="deleteRole(role)"><lucide-icon name="trash-2" />Xóa vai trò</button>
+                <button mat-menu-item type="button" class="is-danger" (click)="deleteRole(role)"><lucide-icon
+                    name="trash-2" />Xóa vai trò</button>
                 }
               </mat-menu>
             </td>
@@ -85,32 +101,42 @@
       </table>
     </div>
   </section>
-  <app-pagination [pageIndex]="pageIndex()" [pageSize]="pageSize" [totalItems]="total()" (pageChange)="goToPage($event)" />
+  <app-pagination [pageIndex]="pageIndex()" [pageSize]="pageSize" [totalItems]="total()"
+    (pageChange)="goToPage($event)" />
   }
 
   @if (formOpen()) {
   @let role = editing();
   <div class="modal-backdrop" (click)="closeAll()">
-    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="role-form-title" (click)="$event.stopPropagation()">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="role-form-title"
+      (click)="$event.stopPropagation()">
       <header class="modal__header">
-        <div><h2 id="role-form-title">{{ role ? 'Sửa vai trò ' + role.name : 'Tạo vai trò' }}</h2>
-          <p class="modal__sub">{{ role ? 'Danh sách quyền giữ nguyên; đổi quyền ở "Phân quyền".' : 'Vai trò mới chưa có quyền nào; cấp quyền sau khi tạo.' }}</p></div>
-        <button type="button" class="icon-btn" aria-label="Đóng" (click)="closeAll()" [disabled]="saving()"><lucide-icon name="x" /></button>
+        <div>
+          <h2 id="role-form-title">{{ role ? 'Sửa vai trò ' + role.name : 'Tạo vai trò' }}</h2>
+          <p class="modal__sub">{{ role ? 'Danh sách quyền giữ nguyên; đổi quyền ở "Phân quyền".' : 'Vai trò mới chưa có
+            quyền nào; cấp quyền sau khi tạo.' }}</p>
+        </div>
+        <button type="button" class="icon-btn" aria-label="Đóng" (click)="closeAll()" [disabled]="saving()"><lucide-icon
+            name="x" /></button>
       </header>
       <form class="modal__body form" (ngSubmit)="saveForm()" id="role-form">
         <label class="field"><span class="field__label">Tên vai trò</span>
-          <input class="field__control mono" name="name" [ngModel]="form().name" (ngModelChange)="patchForm('name', $event)" maxlength="50"
-            autocomplete="off" placeholder="VD: SUPPORT_STAFF" [readonly]="role && isSystem(role)" />
-          <span class="field__hint">{{ role && isSystem(role) ? 'Vai trò hệ thống, không đổi được tên.' : 'Chữ in hoa, số và dấu gạch dưới.' }}</span></label>
+          <input class="field__control mono" name="name" [ngModel]="form().name"
+            (ngModelChange)="patchForm('name', $event)" maxlength="50" autocomplete="off"
+            placeholder="VD: SUPPORT_STAFF" [readonly]="role && isSystem(role)" />
+          <span class="field__hint">{{ role && isSystem(role) ? 'Vai trò hệ thống, không đổi được tên.' : 'Chữ in hoa,
+            số và dấu gạch dưới.' }}</span></label>
         <label class="field"><span class="field__label">Mô tả</span>
           <textarea class="field__control" name="description" rows="3" maxlength="255" [ngModel]="form().description"
-            (ngModelChange)="patchForm('description', $event)" placeholder="Vai trò này dùng để làm gì"></textarea></label>
+            (ngModelChange)="patchForm('description', $event)"
+            placeholder="Vai trò này dùng để làm gì"></textarea></label>
         @if (formError()) { <p class="field__error" role="alert">{{ formError() }}</p> }
       </form>
       <footer class="modal__footer">
         <button type="button" class="btn" (click)="closeAll()" [disabled]="saving()">Hủy</button>
         <button type="submit" form="role-form" class="btn btn--primary" [disabled]="saving()">
-          <lucide-icon [name]="saving() ? 'loader-2' : (role ? 'check' : 'plus')" [class.spin]="saving()" />{{ role ? 'Lưu thay đổi' : 'Tạo vai trò' }}</button>
+          <lucide-icon [name]="saving() ? 'loader-2' : (role ? 'check' : 'plus')" [class.spin]="saving()" />{{ role ?
+          'Lưu thay đổi' : 'Tạo vai trò' }}</button>
       </footer>
     </section>
   </div>
@@ -118,11 +144,16 @@
 
   @if (permRole(); as role) {
   <div class="modal-backdrop" (click)="closeAll()">
-    <section class="modal modal--wide perm-modal" role="dialog" aria-modal="true" aria-labelledby="perm-title" (click)="$event.stopPropagation()">
+    <section class="modal modal--wide perm-modal" role="dialog" aria-modal="true" aria-labelledby="perm-title"
+      (click)="$event.stopPropagation()">
       <header class="modal__header">
-        <div><h2 id="perm-title">Phân quyền · {{ role.name }}</h2>
-          <p class="modal__sub">Đã chọn {{ selectedCount() }} / {{ allPermissions().length }} quyền{{ role.active ? '' : ' · vai trò đang tạm ngưng' }}</p></div>
-        <button type="button" class="icon-btn" aria-label="Đóng" (click)="closeAll()" [disabled]="saving()"><lucide-icon name="x" /></button>
+        <div>
+          <h2 id="perm-title">Phân quyền · {{ role.name }}</h2>
+          <p class="modal__sub">Đã chọn {{ selectedCount() }} / {{ allPermissions().length }} quyền{{ role.active ? '' :
+            ' · vai trò đang tạm ngưng' }}</p>
+        </div>
+        <button type="button" class="icon-btn" aria-label="Đóng" (click)="closeAll()" [disabled]="saving()"><lucide-icon
+            name="x" /></button>
       </header>
       <div class="modal__body">
         @if (permLoading()) {
@@ -134,7 +165,8 @@
             placeholder="Tên quyền, đường dẫn API, module..." aria-label="Tìm quyền" />
         </label>
         @if (role.name === 'ADMIN') {
-        <p class="note note--danger"><lucide-icon name="alert-triangle" />Bỏ quyền của ADMIN có thể khóa chính bạn khỏi trang này.</p>
+        <p class="note note--danger"><lucide-icon name="alert-triangle" />Bỏ quyền của ADMIN có thể khóa chính bạn khỏi
+          trang này.</p>
         }
         <div class="modules">
           @for (group of groups(); track group.module) {
@@ -142,9 +174,10 @@
           @let open = isModuleOpen(group.module);
           <section class="module" [class.is-open]="open">
             <div class="module__head">
-              <input type="checkbox" [checked]="state === 'all'" [indeterminate]="state === 'some'" (change)="toggleGroup(group)"
-                [attr.aria-label]="'Chọn tất cả quyền nhóm ' + group.module" />
-              <button type="button" class="module__toggle" [attr.aria-expanded]="open" (click)="toggleModule(group.module)">
+              <input type="checkbox" [checked]="state === 'all'" [indeterminate]="state === 'some'"
+                (change)="toggleGroup(group)" [attr.aria-label]="'Chọn tất cả quyền nhóm ' + group.module" />
+              <button type="button" class="module__toggle" [attr.aria-expanded]="open"
+                (click)="toggleModule(group.module)">
                 <strong>{{ group.module }}</strong>
                 <small>{{ group.permissions.length }} quyền</small>
                 <lucide-icon [name]="open ? 'chevron-up' : 'chevron-down'" />
@@ -155,9 +188,11 @@
               @for (permission of group.permissions; track permission.permissionId) {
               <li>
                 <label>
-                  <input type="checkbox" [checked]="isSelected(permission.permissionId)" (change)="toggle(permission.permissionId)" />
+                  <input type="checkbox" [checked]="isSelected(permission.permissionId)"
+                    (change)="toggle(permission.permissionId)" />
                   <span><strong>{{ permission.name }}</strong>
-                    <small class="mono"><b [attr.data-method]="permission.method">{{ permission.method }}</b> {{ permission.apiPath }}</small></span>
+                    <small class="mono"><b [attr.data-method]="permission.method">{{ permission.method }}</b> {{
+                      permission.apiPath }}</small></span>
                 </label>
               </li>
               }
@@ -173,7 +208,8 @@
       </div>
       <footer class="modal__footer">
         <button type="button" class="btn" (click)="closeAll()" [disabled]="saving()">Hủy</button>
-        <button type="button" class="btn btn--primary" (click)="savePermissions()" [disabled]="saving() || permLoading() || !permChanged()">
+        <button type="button" class="btn btn--primary" (click)="savePermissions()"
+          [disabled]="saving() || permLoading() || !permChanged()">
           <lucide-icon [name]="saving() ? 'loader-2' : 'check'" [class.spin]="saving()" />Lưu quyền</button>
       </footer>
     </section>

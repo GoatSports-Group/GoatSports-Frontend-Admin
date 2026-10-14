@@ -214,7 +214,7 @@ button:disabled {
 
 .booking-code {
   color: var(--ink);
-  font-family: ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
   font-size: 15px;
   font-weight: 900;
 }
@@ -549,7 +549,7 @@ button:disabled {
 
 .detail-panel__header h2 {
   margin: 3px 0 0;
-  font-family: ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
   font-size: 20px;
 }
 

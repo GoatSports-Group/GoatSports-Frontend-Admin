@@ -179,7 +179,7 @@ tr.is-clickable:focus-visible { outline: 2px solid var(--primary); outline-offse
   dd.danger { color: var(--danger); font-weight: 500; white-space: pre-line; }
 }
 
-.mono { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 13px; }
+.mono { font-size: 13px; font-variant-numeric: tabular-nums; }
 
 .facts .copy-row {
   display: flex;

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, ElementRef, Injector, OnInit, computed, inject, signal, viewChild } from '@angular/core';
+import { SERVER_MAX_PAGE_SIZE, fetchAllPages } from '@shared/utils/fetch-all-pages';
 import { TwoWayWindow } from '@shared/utils/two-way-window';
 import { InfiniteScrollDirective } from '@shared/directives/infinite-scroll.directive';
 import { CommonModule } from '@angular/common';
@@ -126,10 +127,10 @@ export class VenueOwnerApplicationsComponent implements OnInit {
   loadApplications(showLoading = true): void {
     if (showLoading) this.loading.set(true);
     this.error.set(null);
-    // ponytail: ho so cua chinh chu san (thuc te vai ho so) nen tai mot lan 100; tim kiem tai client.
-    this.getApplications.execute({ page: 0, size: 100 }).subscribe({
+    // Ho so cua chinh chu san (thuc te vai ho so): tai du moi trang (server toi da 20 / trang), tim kiem tai client.
+    fetchAllPages(page => this.getApplications.execute({ page, size: SERVER_MAX_PAGE_SIZE })).subscribe({
       next: response => {
-        const applications = this.newestFirst(response.result ?? []);
+        const applications = this.newestFirst(response);
         this.applications.set(applications);
         this.listWindow.reset();
         this.selectedApplicationId.set(applications[0]?.ownerApplicationId ?? null);

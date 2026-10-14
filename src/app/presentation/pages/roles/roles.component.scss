@@ -9,11 +9,12 @@
 tr.is-clickable { cursor: pointer; }
 tr.is-clickable:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
 
-.role-name { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
-.count { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.role-name { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+// Không đặt tên "count": _ops có .count là bong bóng đếm (inline-grid, nền xám) và làm ô bảng lệch.
+.perm-count { white-space: nowrap; font-weight: 700; font-variant-numeric: tabular-nums; }
 .row-action { text-align: right; }
 .modal__sub { margin: 4px 0 0; color: var(--body); font-size: 13px; }
-.mono { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+.mono { font-variant-numeric: tabular-nums; }
 .muted { margin: 0; color: var(--body); font-size: 14px; }
 .form { display: grid; gap: 16px; }
 textarea.field__control { min-height: 84px; resize: vertical; }

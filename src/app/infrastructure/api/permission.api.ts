@@ -15,7 +15,7 @@ export class PermissionApi {
   private apiBase = environment.apiUrl;
 
   getPermissions(filter: PageFilter): Observable<BaseResponse<BaseListResponse<Permission>>> {
-    const params = buildPageParams(filter)
+    const params = buildPageParams(filter, true)
     return this.http.get<BaseResponse<BaseListResponse<Permission>>>(`${this.apiBase}/auth-service/api/v1/admin/permissions`, { params });
   }
 

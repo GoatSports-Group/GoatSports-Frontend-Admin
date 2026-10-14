@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, HostListener, OnInit, computed, inject, signal } from '@angular/core';
+import { SERVER_MAX_PAGE_SIZE, fetchAllPages } from '@shared/utils/fetch-all-pages';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -114,8 +115,9 @@ export class UsersComponent implements OnInit {
       .subscribe(value => { this.keyword.set(value.trim()); this.reload(); });
     this.load();
     this.loadCounts();
-    this.roleService.getRoles({ page: 0, size: 100 }).pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: page => this.roles.set(page.result ?? []), error: () => this.roles.set([]) });
+    fetchAllPages(page => this.roleService.getRoles({ page, size: SERVER_MAX_PAGE_SIZE }))
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: roles => this.roles.set(roles), error: () => this.roles.set([]) });
   }
 
   onKeyword(value: string): void { this.search$.next(value ?? ''); }

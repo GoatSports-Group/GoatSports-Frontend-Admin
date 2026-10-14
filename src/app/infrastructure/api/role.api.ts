@@ -15,7 +15,7 @@ export class RoleApi {
   private apiBase = environment.apiUrl;
 
   getRoles(filter: PageFilter): Observable<BaseResponse<BaseListResponse<Role>>> {
-    const params = buildPageParams(filter);
+    const params = buildPageParams(filter, true);
     return this.http.get<BaseResponse<BaseListResponse<Role>>>(`${this.apiBase}/auth-service/api/v1/admin/roles`, { params });
   }
 

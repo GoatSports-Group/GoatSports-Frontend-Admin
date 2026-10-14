@@ -151,14 +151,14 @@ export class OwnerApplicationApi {
   getAllApplications(filter: PageFilter): Observable<BaseResponse<BaseListResponse<OwnerApplication>>> {
     return this.http.get<BaseResponse<BaseListResponse<OwnerApplication>>>(
       `${this.apiBase}/venue-service/api/v1/admin/owner-applications`,
-      { params: buildPageParams(filter) }
+      { params: buildPageParams(filter, true) }
     );
   }
 
   getMyApplications(filter?: PageFilter): Observable<BaseResponse<BaseListResponse<OwnerApplication>>> {
     return this.http.get<BaseResponse<BaseListResponse<OwnerApplication>>>(
       `${this.apiBase}/venue-service/api/v1/owner-applications/me`,
-      { params: buildPageParams(filter || { page: 0, size: 20 }) }
+      { params: buildPageParams(filter || { page: 0, size: 20 }, true) }
     );
   }
 

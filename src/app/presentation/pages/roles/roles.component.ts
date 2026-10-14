@@ -9,6 +9,7 @@ import { RoleService } from '@presentation/services/role.service';
 import { PermissionService } from '@presentation/services/permission.service';
 import { ConfirmService } from '@presentation/services/confirm.service';
 import { buildRsqlSearch } from '@presentation/shared/utils/api.helper';
+import { SERVER_MAX_PAGE_SIZE, fetchAllPages } from '@presentation/shared/utils/fetch-all-pages';
 import { getRoleLabel } from '@shared/utils/user-display.utils';
 import { NotifyService } from '@shared/components/notify/notify.service';
 import { PAGE_SIZE } from '@shared/constants/page-size';
@@ -92,7 +93,8 @@ export class RolesComponent implements OnInit {
     return [...map.entries()].sort(([a], [b]) => a.localeCompare(b))
       .map(([module, permissions]) => ({ module, permissions: permissions.sort((a, b) => a.name.localeCompare(b.name)) }));
   });
-  readonly selectedCount = computed(() => this.selectedIds().size);
+  /** Chỉ đếm quyền còn tồn tại, để "Đã chọn x / y" không bao giờ vượt tổng. */
+  readonly selectedCount = computed(() => this.allPermissions().filter(item => this.selectedIds().has(item.permissionId)).length);
   readonly permChanged = computed(() => {
     const before = new Set((this.permRole()?.permissions ?? []).map(item => item.permissionId));
     const after = this.selectedIds();
@@ -230,11 +232,11 @@ export class RolesComponent implements OnInit {
     this.permError.set(null);
     if (this.allPermissions().length) { this.openModules.set(new Set([this.groups()[0]?.module])); return; }
     this.permLoading.set(true);
-    this.permissionService.getPermissions({ page: 0, size: 1000 })
+    fetchAllPages(page => this.permissionService.getPermissions({ page, size: SERVER_MAX_PAGE_SIZE }))
       .pipe(finalize(() => this.permLoading.set(false)), takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: page => {
-          this.allPermissions.set(page?.result ?? []);
+        next: permissions => {
+          this.allPermissions.set(permissions);
           this.openModules.set(new Set([this.groups()[0]?.module]));
         },
         error: err => this.permError.set(err?.error?.message ?? 'Không tải được danh sách quyền.')
