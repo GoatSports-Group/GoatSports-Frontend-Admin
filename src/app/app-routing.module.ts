@@ -8,7 +8,8 @@ const routes: Routes = [
     path: 'admin',
     loadChildren: () => import('@presentation/admin.module').then(m => m.AdminModule),
     canActivate: [AdminGuard],
-    data: { allowedRoles: ['ADMIN', 'VENUE_OWNER'] }
+    // Cổng vào khu quản trị: chủ sân và mọi vai trò back-office (ADMIN + vai trò tự tạo). Từng trang con kiểm quyền riêng.
+    data: { allowedRoles: ['VENUE_OWNER'], allowBackOffice: true }
   },
   {
     path: 'forbidden',

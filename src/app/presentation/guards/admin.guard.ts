@@ -37,6 +37,9 @@ export class AdminGuard implements CanActivate {
         if (allowedRoles?.includes(roleName)) {
           return true;
         }
+        if (route.data['allowBackOffice'] && isBackOfficeRole(roleName)) {
+          return true;
+        }
         // Trang nền tảng mở theo quyền: ADMIN mọi trang, vai trò tự tạo chỉ trang có quyền tương ứng.
         const item = platformRoute ? platformNavigationItem(platformRoute) : undefined;
         if (item && canOpenPlatformItem(item, roleName, user?.permissions)) {
