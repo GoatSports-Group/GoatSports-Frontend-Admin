@@ -1,172 +1,182 @@
-<div class="flex flex-col gap-6 animate-fade-in relative z-10 h-full min-h-0">
-
-  <!-- Page Header -->
-  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-5">
-    <div class="flex flex-col">
-      <h1 class="m-0 text-ink font-extrabold tracking-[-0.035em] leading-[1.15] text-[clamp(28px,3vw,40px)]">Vai trò</h1>
-      <p class="mt-1.5 max-w-[68ch] text-base text-slate-500 leading-relaxed">Khai báo, bật tắt và phân quyền cho từng nhóm vai trò.</p>
+<main class="page">
+  <header class="page-head">
+    <div>
+      <h1>Vai trò và quyền</h1>
+      <p>Mỗi tài khoản mang một vai trò; vai trò quyết định các API được gọi. Tạm ngưng một vai trò để tước quyền mà không mất cấu hình.</p>
     </div>
-
-    <button (click)="openRoleDialog()"
-      class="bg-primary hover:bg-emerald-800 text-white text-[13px] font-bold px-5 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-xs cursor-pointer">
-      <lucide-icon name="plus" class="h-4 w-4"></lucide-icon> Tạo vai trò
-    </button>
-  </div>
-
-  <!-- So lieu (GOAT-DESIGN §7 KPI tiles): nhan caption, so 28px tabular; khong keo tha. -->
-  <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-    @for (card of statCards; track card.id) {
-    <div class="flex min-w-0 items-center gap-3 rounded-2xl border border-hairline bg-surface p-5 shadow-[var(--shadow-sm)]">
-      <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary-light text-primary-strong">
-        <lucide-icon [name]="card.icon" class="h-5 w-5"></lucide-icon>
-      </span>
-      <div class="min-w-0">
-        <p class="m-0 truncate text-[13px] font-semibold text-body">{{ card.title }}</p>
-        <strong class="block text-[28px] font-black leading-tight tabular-nums text-ink">{{ card.count }}</strong>
-      </div>
+    <div class="actions">
+      <button type="button" class="btn btn--primary" (click)="openForm()"><lucide-icon name="plus" />Tạo vai trò</button>
     </div>
+  </header>
+
+  @if (counts(); as c) {
+  <section class="kpis" aria-label="Số vai trò">
+    <div class="kpi"><span>Tổng vai trò</span><strong>{{ c.total }}</strong><small>kể cả vai trò hệ thống</small></div>
+    <button type="button" class="kpi kpi--link" [class.is-active]="active() === 'true'" (click)="setActive(active() === 'true' ? '' : 'true')">
+      <span>Đang hoạt động</span><strong>{{ c.active }}</strong><small>quyền đang có hiệu lực</small></button>
+    <button type="button" class="kpi kpi--link" [class.is-active]="active() === 'false'" (click)="setActive(active() === 'false' ? '' : 'false')">
+      <span>Tạm ngưng</span><strong>{{ c.total - c.active }}</strong><small>quyền tạm bị tước</small></button>
+  </section>
+  } @else {
+  <app-loading-skeleton variant="stats" [count]="3" label="Đang tải số vai trò" />
+  }
+
+  <div class="filter-row filter-row--roles" role="search">
+    <label class="search">
+      <lucide-icon name="search" />
+      <input type="search" [ngModel]="keyword()" (ngModelChange)="onKeyword($event)" name="keyword"
+        placeholder="Tên hoặc mô tả vai trò..." aria-label="Tìm vai trò" />
+    </label>
+    <app-select [ngModel]="active()" (ngModelChange)="setActive($event)" [options]="statusOptions" ariaLabel="Lọc theo trạng thái" />
+    @if (hasFilters()) {
+    <button type="button" class="btn btn--ghost" (click)="clearFilters()"><lucide-icon name="x" />Xóa lọc</button>
     }
   </div>
 
-  <!-- Search & Filter Controls -->
-  <div class="bg-surface border border-slate-100/85 rounded-2xl p-6 shadow-xs">
-    <div class="flex flex-col md:flex-row items-center gap-4">
-      <div class="relative flex-1 w-full">
-        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-          <lucide-icon name="search" class="text-slate-400 h-5 w-5"></lucide-icon>
-        </span>
-        <input type="text" [(ngModel)]="searchQuery" (keyup.enter)="onSearch()"
-          placeholder="Tìm kiếm vai trò theo tên hoặc mô tả..."
-          class="w-full h-11 bg-slate-50/70 border-0 rounded-xl pl-11 pr-4 text-[13px] font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-slate-100/80 transition-all">
-      </div>
-      <div class="flex items-center gap-3 w-full md:w-auto">
-        <button (click)="onSearch()"
-          class="flex-1 md:flex-initial h-10 bg-primary hover:bg-emerald-800 text-white font-bold text-sm px-6 rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer">
-          <lucide-icon name="search" class="h-4 w-4"></lucide-icon> Tìm kiếm
-        </button>
-        <button (click)="resetFilters()"
-          class="flex-1 md:flex-initial h-10 bg-surface hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold text-sm px-6 rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer">
-          <lucide-icon name="rotate-ccw" class="h-4 w-4"></lucide-icon> Làm mới
-        </button>
-      </div>
-    </div>
+  @if (loading()) {
+  <app-loading-skeleton variant="table" [count]="6" [columns]="4" label="Đang tải vai trò" />
+  } @else if (error()) {
+  <div class="state state--error" role="alert">
+    <lucide-icon name="alert-circle" /><strong>Chưa tải được danh sách</strong><p>{{ error() }}</p>
+    <button type="button" class="btn" (click)="load()"><lucide-icon name="rotate-ccw" />Thử lại</button>
   </div>
-
-  <!-- Loading State -->
-  @if (loading) {
-  <app-loading-skeleton variant="table" [count]="5" [columns]="4" label="Đang tải danh sách vai trò"></app-loading-skeleton>
-  } @else {
-
-  <!-- Empty State -->
-  @if (roles.length === 0) {
-  <div
-    class="flex flex-col items-center justify-center py-20 text-center bg-surface border border-slate-100 rounded-2xl shadow-xs">
-    <lucide-icon name="shield" class="text-slate-300 h-12 w-12 mb-4 mx-auto"></lucide-icon>
-    <h3 class="text-sm font-bold text-slate-900">Không có danh sách vai trò</h3>
-    <p class="text-[13px] text-slate-500 mt-1 max-w-sm font-medium">Hãy thử điều chỉnh bộ lọc hoặc đặt lại từ khóa tìm kiếm.
-    </p>
+  } @else if (!items().length) {
+  <div class="state">
+    <lucide-icon name="shield" /><strong>Không có vai trò nào</strong>
+    <p>{{ hasFilters() ? 'Không có vai trò khớp bộ lọc.' : 'Chưa có vai trò nào.' }}</p>
   </div>
   } @else {
-
-  <!-- Roles List Table Wrapper -->
-  <div class="flex-1 min-h-0 flex flex-col bg-surface border border-slate-100 rounded-2xl shadow-xs overflow-hidden">
-    <div class="flex-1 min-h-0 overflow-auto">
-      <table class="w-full text-left border-collapse text-sm">
+  <section class="card" [class.is-paging]="paging()">
+    <div class="table-wrap">
+      <table class="table">
         <thead>
-          <tr class="border-b border-slate-100 text-[14px] font-bold tracking-wider text-emerald-400 bg-surface">
-            <th class="py-4 px-6 font-bold text-emerald-500">Tên vai trò</th>
-            <th class="py-4 px-6 font-bold text-emerald-500">Mô tả</th>
-            <th class="py-4 px-6 font-bold text-emerald-500">Quyền hạn</th>
-            <th class="py-4 px-6 font-bold text-emerald-500">Trạng thái</th>
-            <th class="py-4 px-6 font-bold text-emerald-500 text-right pr-12">Hành động</th>
-          </tr>
+          <tr><th>Vai trò</th><th>Quyền</th><th>Trạng thái</th><th aria-label="Thao tác"></th></tr>
         </thead>
-        <tbody class="divide-y divide-slate-100 font-sans">
-          @for (role of roles; track role.roleId) {
-          <tr class="hover:bg-emerald-50/50 transition-colors">
-            <!-- Name -->
-            <td class="py-4 px-6">
-              <div class="flex items-center gap-3">
-                <div
-                  class="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 shadow-xs">
-                  <lucide-icon name="shield" class="h-4.5 w-4.5"></lucide-icon>
-                </div>
-                <span class="font-bold text-slate-800 uppercase tracking-wider">{{ role.name }}</span>
+        <tbody>
+          @for (role of items(); track role.roleId) {
+          <tr class="is-clickable" tabindex="0" (click)="openPermissions(role)" (keydown.enter)="openPermissions(role)">
+            <td>
+              <div class="cell-title">
+                <strong class="role-name">{{ role.name }}
+                  @if (isSystem(role)) { <span class="badge badge--neutral">Hệ thống</span> }</strong>
+                <small>{{ role.description || roleLabel(role.name) || 'Chưa có mô tả' }}</small>
               </div>
             </td>
-            <!-- Description -->
-            <td class="py-4 px-6 text-slate-600 font-semibold max-w-[300px] truncate" [title]="role.description || ''">
-              {{ role.description || 'Không có mô tả chi tiết cho vai trò này.' }}
-            </td>
-            <!-- Permissions Count -->
-            <td class="py-4 px-6">
-              <span
-                class="px-3 py-1 bg-slate-100 text-slate-700 text-[13px] font-bold rounded-full border border-slate-150/40">
-                {{ role.permissions?.length || 0 }} quyền hạn
-              </span>
-            </td>
-            <!-- Status -->
-            <td class="py-4 px-6">
-              <span [class]="role.active 
-                      ? 'px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-100' 
-                      : 'px-3 py-1 bg-rose-50 text-rose-700 text-xs font-bold rounded-full border border-rose-100'">
-                {{ role.active ? 'Đang hoạt động' : 'Tạm ngưng' }}
-              </span>
-            </td>
-            <!-- Actions -->
-            <td class="py-4 px-6 text-right pr-12">
-              <div class="flex items-center justify-end gap-2">
-                <button (click)="openPermissionsDialog(role)"
-                  class="w-8 h-8 rounded-xl flex items-center justify-center text-slate-600 hover:text-emerald-950 hover:bg-emerald-50/70 transition-all cursor-pointer border border-transparent">
-                  <lucide-icon name="eye" class="h-4.5 w-4.5"></lucide-icon>
-                </button>
-
-                <button [matMenuTriggerFor]="roleActionMenu"
-                  class="w-8 h-8 rounded-xl flex items-center justify-center text-slate-600 hover:text-emerald-900 hover:bg-emerald-50 transition-colors cursor-pointer border border-transparent">
-                  <lucide-icon name="more-vertical" class="h-4.5 w-4.5"></lucide-icon>
-                </button>
-
-                <mat-menu #roleActionMenu="matMenu" class="custom-dark-menu">
-                  <button mat-menu-item (click)="openRoleDialog(role)">
-                    <lucide-icon name="pencil" class="h-5 w-5 mr-2"></lucide-icon>
-                    <span>Chỉnh sửa</span>
-                  </button>
-
-                  @if (role.active) {
-                  <button mat-menu-item (click)="toggleActive(role)" class="danger-item">
-                    <lucide-icon name="shield-alert" class="h-5 w-5 mr-2"></lucide-icon>
-                    <span>Tạm ngưng</span>
-                  </button>
-                  } @else {
-                  <button mat-menu-item (click)="toggleActive(role)">
-                    <lucide-icon name="shield-check" class="h-5 w-5 mr-2 text-emerald-600"></lucide-icon>
-                    <span class="text-emerald-700">Kích hoạt</span>
-                  </button>
-                  }
-
-                  <button mat-menu-item (click)="deleteRole(role)" [disabled]="role.name === 'ADMIN'"
-                    class="danger-item">
-                    <lucide-icon name="trash-2" class="h-5 w-5 mr-2"></lucide-icon>
-                    <span>Xóa</span>
-                  </button>
-                </mat-menu>
-              </div>
+            <td class="count">{{ role.permissions?.length ?? 0 }} quyền</td>
+            <td><span [class]="'badge badge--' + (role.active ? 'success' : 'warning')">{{ role.active ? 'Đang hoạt động' : 'Tạm ngưng' }}</span></td>
+            <td class="row-action" (click)="$event.stopPropagation()">
+              <button type="button" class="kebab" [matMenuTriggerFor]="rowMenu" [attr.aria-label]="'Thao tác với vai trò ' + role.name">
+                <lucide-icon name="more-vertical" /></button>
+              <mat-menu #rowMenu="matMenu" class="goat-action-menu" xPosition="before">
+                <button mat-menu-item type="button" (click)="openPermissions(role)"><lucide-icon name="key-round" />Phân quyền</button>
+                <button mat-menu-item type="button" (click)="openForm(role)"><lucide-icon name="pencil" />Chỉnh sửa</button>
+                @if (role.name !== 'ADMIN') {
+                <button mat-menu-item type="button" (click)="toggleActive(role)"><lucide-icon [name]="role.active ? 'pause' : 'play'" />{{
+                  role.active ? 'Tạm ngưng' : 'Kích hoạt' }}</button>
+                }
+                @if (!isSystem(role)) {
+                <button mat-menu-item type="button" class="is-danger" (click)="deleteRole(role)"><lucide-icon name="trash-2" />Xóa vai trò</button>
+                }
+              </mat-menu>
             </td>
           </tr>
           }
         </tbody>
       </table>
     </div>
+  </section>
+  <app-pagination [pageIndex]="pageIndex()" [pageSize]="pageSize" [totalItems]="total()" (pageChange)="goToPage($event)" />
+  }
 
-    <!-- Pagination Bottom Bar -->
-    <app-pagination class="is-embedded"
-      [pageIndex]="pageIndex"
-      [pageSize]="pageSize"
-      [totalItems]="totalItems"
-      (pageChange)="goToPage($event)">
-    </app-pagination>
+  @if (formOpen()) {
+  @let role = editing();
+  <div class="modal-backdrop" (click)="closeAll()">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="role-form-title" (click)="$event.stopPropagation()">
+      <header class="modal__header">
+        <div><h2 id="role-form-title">{{ role ? 'Sửa vai trò ' + role.name : 'Tạo vai trò' }}</h2>
+          <p class="modal__sub">{{ role ? 'Danh sách quyền giữ nguyên; đổi quyền ở "Phân quyền".' : 'Vai trò mới chưa có quyền nào; cấp quyền sau khi tạo.' }}</p></div>
+        <button type="button" class="icon-btn" aria-label="Đóng" (click)="closeAll()" [disabled]="saving()"><lucide-icon name="x" /></button>
+      </header>
+      <form class="modal__body form" (ngSubmit)="saveForm()" id="role-form">
+        <label class="field"><span class="field__label">Tên vai trò</span>
+          <input class="field__control mono" name="name" [ngModel]="form().name" (ngModelChange)="patchForm('name', $event)" maxlength="50"
+            autocomplete="off" placeholder="VD: SUPPORT_STAFF" [readonly]="role && isSystem(role)" />
+          <span class="field__hint">{{ role && isSystem(role) ? 'Vai trò hệ thống, không đổi được tên.' : 'Chữ in hoa, số và dấu gạch dưới.' }}</span></label>
+        <label class="field"><span class="field__label">Mô tả</span>
+          <textarea class="field__control" name="description" rows="3" maxlength="255" [ngModel]="form().description"
+            (ngModelChange)="patchForm('description', $event)" placeholder="Vai trò này dùng để làm gì"></textarea></label>
+        @if (formError()) { <p class="field__error" role="alert">{{ formError() }}</p> }
+      </form>
+      <footer class="modal__footer">
+        <button type="button" class="btn" (click)="closeAll()" [disabled]="saving()">Hủy</button>
+        <button type="submit" form="role-form" class="btn btn--primary" [disabled]="saving()">
+          <lucide-icon [name]="saving() ? 'loader-2' : (role ? 'check' : 'plus')" [class.spin]="saving()" />{{ role ? 'Lưu thay đổi' : 'Tạo vai trò' }}</button>
+      </footer>
+    </section>
   </div>
   }
-  }
 
-</div>
+  @if (permRole(); as role) {
+  <div class="modal-backdrop" (click)="closeAll()">
+    <section class="modal modal--wide perm-modal" role="dialog" aria-modal="true" aria-labelledby="perm-title" (click)="$event.stopPropagation()">
+      <header class="modal__header">
+        <div><h2 id="perm-title">Phân quyền · {{ role.name }}</h2>
+          <p class="modal__sub">Đã chọn {{ selectedCount() }} / {{ allPermissions().length }} quyền{{ role.active ? '' : ' · vai trò đang tạm ngưng' }}</p></div>
+        <button type="button" class="icon-btn" aria-label="Đóng" (click)="closeAll()" [disabled]="saving()"><lucide-icon name="x" /></button>
+      </header>
+      <div class="modal__body">
+        @if (permLoading()) {
+        <app-loading-skeleton variant="rows" [count]="6" label="Đang tải danh sách quyền" />
+        } @else {
+        <label class="search perm-search">
+          <lucide-icon name="search" />
+          <input type="search" [ngModel]="permSearch()" (ngModelChange)="permSearch.set($event ?? '')" name="permSearch"
+            placeholder="Tên quyền, đường dẫn API, module..." aria-label="Tìm quyền" />
+        </label>
+        @if (role.name === 'ADMIN') {
+        <p class="note note--danger"><lucide-icon name="alert-triangle" />Bỏ quyền của ADMIN có thể khóa chính bạn khỏi trang này.</p>
+        }
+        <div class="modules">
+          @for (group of groups(); track group.module) {
+          @let state = groupState(group);
+          @let open = isModuleOpen(group.module);
+          <section class="module" [class.is-open]="open">
+            <div class="module__head">
+              <input type="checkbox" [checked]="state === 'all'" [indeterminate]="state === 'some'" (change)="toggleGroup(group)"
+                [attr.aria-label]="'Chọn tất cả quyền nhóm ' + group.module" />
+              <button type="button" class="module__toggle" [attr.aria-expanded]="open" (click)="toggleModule(group.module)">
+                <strong>{{ group.module }}</strong>
+                <small>{{ group.permissions.length }} quyền</small>
+                <lucide-icon [name]="open ? 'chevron-up' : 'chevron-down'" />
+              </button>
+            </div>
+            @if (open) {
+            <ul class="module__list">
+              @for (permission of group.permissions; track permission.permissionId) {
+              <li>
+                <label>
+                  <input type="checkbox" [checked]="isSelected(permission.permissionId)" (change)="toggle(permission.permissionId)" />
+                  <span><strong>{{ permission.name }}</strong>
+                    <small class="mono"><b [attr.data-method]="permission.method">{{ permission.method }}</b> {{ permission.apiPath }}</small></span>
+                </label>
+              </li>
+              }
+            </ul>
+            }
+          </section>
+          } @empty {
+          <p class="muted">{{ permError() ? '' : 'Không có quyền khớp từ khóa.' }}</p>
+          }
+        </div>
+        }
+        @if (permError()) { <p class="field__error" role="alert">{{ permError() }}</p> }
+      </div>
+      <footer class="modal__footer">
+        <button type="button" class="btn" (click)="closeAll()" [disabled]="saving()">Hủy</button>
+        <button type="button" class="btn btn--primary" (click)="savePermissions()" [disabled]="saving() || permLoading() || !permChanged()">
+          <lucide-icon [name]="saving() ? 'loader-2' : 'check'" [class.spin]="saving()" />Lưu quyền</button>
+      </footer>
+    </section>
+  </div>
+  }
+</main>

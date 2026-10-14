@@ -1,124 +1,82 @@
-/* Cleaned and refactored stylesheet, styling migrated to Tailwind CSS classes */
-.animate-fade-in {
-  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+@use '../ops' as t;
+@include t.ops;
+
+.filter-row--roles {
+  .search { flex: 1 1 280px; max-width: 480px; }
+  app-select { flex: 0 1 200px; min-width: 170px; }
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
+tr.is-clickable { cursor: pointer; }
+tr.is-clickable:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.role-name { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+.count { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.row-action { text-align: right; }
+.modal__sub { margin: 4px 0 0; color: var(--body); font-size: 13px; }
+.mono { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+.muted { margin: 0; color: var(--body); font-size: 14px; }
+.form { display: grid; gap: 16px; }
+textarea.field__control { min-height: 84px; resize: vertical; }
+
+.perm-modal .modal__body { display: grid; gap: 12px; }
+.perm-search { max-width: none; }
+
+input[type='checkbox'] { width: 16px; height: 16px; flex: none; margin: 0; accent-color: var(--primary); cursor: pointer; }
+
+// Nhóm quyền theo module: ô chọn cả nhóm (3 trạng thái) + nút mở / thu danh sách.
+.modules { display: grid; gap: 8px; }
+
+.module {
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: var(--surface);
+
+  &.is-open { border-color: var(--border-strong); }
 }
 
-:host {
-  display: block;
-  height: calc(100vh - 96px - 20px);
+.module__head { display: flex; align-items: center; gap: 12px; padding-left: 14px; }
+
+.module__toggle {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px 14px 12px 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  strong { font-size: 14px; font-weight: 800; }
+  small { color: var(--body); font-size: 13px; }
+  lucide-icon { width: 18px; height: 18px; margin-left: auto; color: var(--body); }
 }
 
-::ng-deep {
-  .mat-mdc-paginator {
-    font-family: var(--font-sports-body) !important;
-    font-size: 13px !important;
-    color: var(--body) !important;
-  }
+.module__list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 12px;
+  margin: 0;
+  padding: 4px 14px 12px;
+  border-top: 1px solid var(--hairline);
+  list-style: none;
 
-  .custom-dark-menu,
-  .mat-mdc-menu-panel.custom-dark-menu {
-    background-color: var(--surface) !important; // White background
-    border-radius: 16px !important;
-    overflow: hidden !important;
-    box-shadow: 0 20px 25px -5px var(--hairline), 0 8px 10px -6px var(--hairline) !important;
-    border: 1px solid var(--hairline) !important; // Light gray border
+  label { display: flex; align-items: flex-start; gap: 10px; padding: 8px 6px; border-radius: 8px; cursor: pointer; }
+  label:hover { background: var(--surface-subtle); }
+  input { margin-top: 2px; }
+  span { display: grid; gap: 2px; min-width: 0; }
+  strong { color: var(--ink); font-size: 13px; font-weight: 700; overflow-wrap: anywhere; }
+  small { color: var(--body); font-size: 12px; overflow-wrap: anywhere; }
+  b { font-weight: 800; }
+  b[data-method='GET'] { color: var(--info); }
+  b[data-method='POST'] { color: var(--success); }
+  b[data-method='PUT'], b[data-method='PATCH'] { color: var(--warning); }
+  b[data-method='DELETE'] { color: var(--danger); }
+}
 
-    .mat-mdc-menu-content {
-      background-color: var(--surface) !important;
-      padding: 6px !important;
-    }
-
-    .mat-mdc-menu-item {
-      font-size: 13px !important;
-      padding: 8px 14px !important;
-      height: 38px !important;
-      min-height: 38px !important;
-      font-weight: 600 !important;
-      color: var(--ink) !important; // Slate-850 text
-      border-radius: 12px !important;
-      margin-bottom: 2px !important;
-      transition: all 0.15s ease !important;
-
-      &:hover:not([disabled]) {
-        background-color: var(--primary-light) !important; // Emerald-50 hover
-        color: var(--primary-hover) !important; // Emerald-700 text
-
-        lucide-icon {
-          color: var(--primary) !important; // Emerald-600 icon
-        }
-
-        .text-rose-500,
-        .text-rose-600 {
-          color: var(--danger) !important; // Rose-700 text
-        }
-      }
-
-      &.danger-item:not([disabled]) {
-        color: var(--danger) !important;
-
-        lucide-icon {
-          color: var(--danger) !important;
-        }
-
-        &:hover {
-          background-color: var(--danger-soft) !important;
-          color: var(--danger) !important;
-        }
-      }
-
-      &[disabled] {
-        opacity: 0.35 !important;
-        color: var(--muted) !important; // Slate-400
-        cursor: not-allowed !important;
-
-        lucide-icon {
-          color: var(--muted) !important;
-        }
-      }
-
-      .mdc-list-item__label {
-        display: flex !important;
-        align-items: center !important;
-        width: 100% !important;
-        height: 100% !important;
-      }
-
-      lucide-icon {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        flex-shrink: 0 !important;
-        color: var(--body) !important; // Slate-500 icon
-        margin-right: 8px !important;
-
-        &.text-rose-500,
-        &.text-rose-600 {
-          color: var(--danger) !important; // Rose-500 icon
-        }
-
-        &.text-emerald-500,
-        &.text-emerald-600 {
-          color: var(--primary) !important; // Emerald-500 icon
-        }
-      }
-
-      span {
-        display: inline-flex !important;
-        align-items: center !important;
-        line-height: 1 !important;
-      }
-    }
-  }
+@media (max-width: 767px) {
+  .module__list { grid-template-columns: minmax(0, 1fr); }
 }

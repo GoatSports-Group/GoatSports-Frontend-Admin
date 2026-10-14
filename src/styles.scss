@@ -319,31 +319,6 @@ input[type="checkbox"] {
   font-family: 'Be Vietnam Pro', sans-serif !important;
 }
 
-/* Custom styles for Role Assign Dialog to allow custom dropdown to overflow without scrollbars and style background */
-.custom-assign-role-dialog {
-  --mdc-dialog-container-shape: 16px !important;
-  --mat-dialog-container-shape: 16px !important;
-  border-radius: 16px !important;
-
-  &,
-  .mat-mdc-dialog-container,
-  .mat-mdc-dialog-surface,
-  .mdc-dialog__container,
-  .mdc-dialog__surface,
-  .mat-mdc-dialog-surface-content,
-  .mat-dialog-container,
-  .mat-dialog-surface {
-    background: transparent !important;
-    background-color: transparent !important;
-    --mdc-dialog-container-color: transparent !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    border-radius: 16px !important;
-    border: none !important;
-  }
-}
-
 /* Custom premium dialog styles that support overflow and glassmorphism elements */
 .custom-premium-dialog {
   --mdc-dialog-container-shape: 16px !important;
@@ -540,31 +515,6 @@ input[type="checkbox"] {
   &::-webkit-scrollbar {
     display: none !important;
   }
-}
-
-/* Custom reset for assign role dialog to remove browser defaults, padding, and grey/black borders with high specificity */
-body div.cdk-overlay-pane.custom-assign-role-dialog,
-body div.cdk-overlay-pane.custom-assign-role-dialog .mat-mdc-dialog-container,
-body div.cdk-overlay-pane.custom-assign-role-dialog .mat-mdc-dialog-surface,
-body div.cdk-overlay-pane.custom-assign-role-dialog .mdc-dialog__container,
-body div.cdk-overlay-pane.custom-assign-role-dialog .mdc-dialog__surface,
-body div.cdk-overlay-pane.custom-assign-role-dialog .mat-mdc-dialog-surface-content,
-body div.cdk-overlay-pane.custom-assign-role-dialog .mat-dialog-container,
-body div.cdk-overlay-pane.custom-assign-role-dialog .mat-dialog-surface {
-  background: transparent !important;
-  background-color: transparent !important;
-  --mdc-dialog-container-color: transparent !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-  overflow: visible !important;
-  border-radius: 0 !important;
-  border: none !important;
-}
-
-/* Force parent overlays and dialog container content to be overflow visible with high specificity */
-body div.cdk-overlay-pane.custom-assign-role-dialog,
-body div.cdk-overlay-pane.custom-assign-role-dialog .mat-mdc-dialog-content {
-  overflow: visible !important;
 }
 
 /* Owner Application submit overlay must cover the entire admin shell. */

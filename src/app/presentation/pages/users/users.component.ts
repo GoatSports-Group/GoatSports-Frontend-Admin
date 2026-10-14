@@ -1,333 +1,334 @@
-import { PAGE_SIZE } from '@shared/constants/page-size';
-import { Component, OnInit, inject, ViewChild, TemplateRef, ViewContainerRef } from '@angular/core';
-import { NotifyService } from '@shared/components/notify/notify.service';
-import { AssignRoleDialogComponent } from '@presentation/pages/users/assign-role-dialog/assign-role-dialog.component';
-import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
-import { Overlay, OverlayRef } from '@angular/cdk/overlay';
-import { TemplatePortal } from '@angular/cdk/portal';
-import { MatDialog } from '@angular/material/dialog';
-import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
+import { ChangeDetectionStrategy, Component, DestroyRef, HostListener, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { DatePipe, NgTemplateOutlet } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MatMenuModule } from '@angular/material/menu';
+import { Observable, Subject, Subscription, debounceTime, distinctUntilChanged, filter, finalize, switchMap } from 'rxjs';
 import { User } from '@application/dto/user/user.dto';
+import { Role } from '@application/dto/role/role.dto';
 import { ADMIN_STATS_REPOSITORY_TOKEN } from '@application/ports/persistence/admin-stats.repository';
 import { UserService } from '@presentation/services/user.service';
+import { RoleService } from '@presentation/services/role.service';
+import { CryptoService } from '@presentation/services/crypto.service';
+import { ConfirmService } from '@presentation/services/confirm.service';
+import { buildRsqlSearch } from '@presentation/shared/utils/api.helper';
+import { calculatePasswordStrength } from '@presentation/shared/utils/password.utils';
+import { PASSWORD_PATTERN } from '@presentation/shared/constants/password.constants';
 import { getDisplayAvatar, getGenderLabel, getRoleLabel } from '@shared/utils/user-display.utils';
+import { NotifyService } from '@shared/components/notify/notify.service';
+import { PAGE_SIZE } from '@shared/constants/page-size';
+import { DatePickerComponent } from '@shared/components/ui/date-picker/date-picker.component';
+import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/loading-skeleton.component';
+import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
+import { PaginationComponent } from '@shared/components/ui/pagination/pagination.component';
+import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
 
+type Tone = 'success' | 'warning' | 'danger' | 'neutral' | 'primary' | 'info';
+type UserStatus = 'ACTIVE' | 'PENDING' | 'BLOCKED';
+type Dialog = 'detail' | 'create' | 'password' | 'role' | null;
+
+const STATUS_META: Readonly<Record<string, { label: string; tone: Tone }>> = {
+  ACTIVE: { label: 'Đã xác thực', tone: 'success' },
+  ACTIVATED: { label: 'Đã xác thực', tone: 'success' },
+  PENDING: { label: 'Chưa xác thực', tone: 'warning' },
+  BLOCKED: { label: 'Đã khóa', tone: 'danger' }
+};
+
+const ROLE_TONE: Readonly<Record<string, Tone>> = { ADMIN: 'primary', VENUE_OWNER: 'info', PLAYER: 'neutral' };
+const EMAIL = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+/**
+ * Người dùng: tài khoản người chơi, chủ sân và quản trị viên. Lọc tự áp dụng (tìm, vai trò, trạng thái, ngày tham gia);
+ * thao tác: xem chi tiết, gán vai trò, đổi mật khẩu, xác thực / bỏ xác thực, khóa / mở khóa. Admin không sửa hồ sơ
+ * của người khác và không xuất danh sách người dùng.
+ */
 @Component({
   selector: 'app-users',
   templateUrl: './users.component.html',
   styleUrls: ['./users.component.scss'],
-  standalone: false
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [DatePipe, NgTemplateOutlet, FormsModule, MatMenuModule, DatePickerComponent, LoadingSkeletonComponent, LucideIconComponent,
+    PaginationComponent, SelectComponent]
 })
 export class UsersComponent implements OnInit {
-  readonly getDisplayAvatar = getDisplayAvatar;
-  readonly getFallbackRole = getRoleLabel;
-  readonly getFallbackGender = getGenderLabel;
-  @ViewChild('createUserTemplate') createUserTemplate!: TemplateRef<any>;
-  @ViewChild('changePasswordTemplate') changePasswordTemplate!: TemplateRef<any>;
-  private overlay = inject(Overlay);
-  private viewContainerRef = inject(ViewContainerRef);
-  private dialog = inject(MatDialog);
-  private snackBar = inject(NotifyService);
-  private userAdminService = inject(UserService);
-  private statsRepository = inject(ADMIN_STATS_REPOSITORY_TOKEN);
+  private readonly users = inject(UserService);
+  private readonly roleService = inject(RoleService);
+  private readonly stats = inject(ADMIN_STATS_REPOSITORY_TOKEN);
+  private readonly crypto = inject(CryptoService);
+  private readonly confirm = inject(ConfirmService);
+  private readonly notify = inject(NotifyService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly search$ = new Subject<string>();
+  private request?: Subscription;
 
-  private overlayRef?: OverlayRef;
-
-  users: User[] = [];
-  loading = false;
-  selectedUser: User | null = null;
-  loadingDetails = false;
-
-  // Pagination states
-  totalItems = 0;
-  pageSize = PAGE_SIZE.table;
-  pageIndex = 0;
-
-  // Custom filter models
-  filterEmail = '';
-  filterFullName = '';
-  filterFromDate = '';
-  filterToDate = '';
-
-  /** So dem that tu auth-service (/admin/stats/users, COUNT o DB); null = chua tai duoc, hien "—". */
-  statCards: Array<{ id: 'total' | 'unverified' | 'verified'; title: string; count: number | null; icon: string }> = [
-    { id: 'total', title: 'Tổng số tài khoản', count: null, icon: 'users' },
-    { id: 'unverified', title: 'Chưa xác thực', count: null, icon: 'shield-alert' },
-    { id: 'verified', title: 'Đã xác thực', count: null, icon: 'check-circle' }
+  readonly pageSize = PAGE_SIZE.table;
+  readonly avatar = getDisplayAvatar;
+  readonly roleLabel = getRoleLabel;
+  readonly genderLabel = getGenderLabel;
+  readonly genderOptions: readonly SelectOption[] = [
+    { value: 'MALE', label: 'Nam' }, { value: 'FEMALE', label: 'Nữ' }, { value: 'OTHER', label: 'Khác' }
+  ];
+  readonly statusOptions: readonly SelectOption[] = [
+    { value: '', label: 'Mọi trạng thái' }, { value: 'ACTIVE', label: 'Đã xác thực' },
+    { value: 'PENDING', label: 'Chưa xác thực' }, { value: 'BLOCKED', label: 'Đã khóa' }
   ];
 
-  isCreateDrawerOpen = false;
-  isPasswordDrawerOpen = false;
+  readonly keyword = signal('');
+  readonly role = signal('');
+  readonly status = signal('');
+  readonly fromDate = signal('');
+  readonly toDate = signal('');
+  readonly pageIndex = signal(0);
 
-  passwordEditingUser: User | null = null;
+  readonly items = signal<User[]>([]);
+  readonly total = signal(0);
+  readonly loading = signal(true);
+  readonly paging = signal(false);
+  readonly error = signal<string | null>(null);
+  readonly counts = signal<{ total: number; active: number; pending: number; blocked: number } | null>(null);
+  readonly roles = signal<Role[]>([]);
 
-  drop(event: CdkDragDrop<any[]>) {
-    moveItemInArray(this.statCards, event.previousIndex, event.currentIndex);
-  }
+  readonly roleOptions = computed<SelectOption[]>(() => [
+    { value: '', label: 'Mọi vai trò' },
+    ...this.roles().map(role => ({ value: role.name, label: getRoleLabel(role.name) || role.name }))
+  ]);
+  readonly hasFilters = computed(() => !!(this.keyword() || this.role() || this.status() || this.fromDate() || this.toDate()));
+
+  // Popup đang mở và dữ liệu của nó.
+  readonly dialog = signal<Dialog>(null);
+  readonly selected = signal<User | null>(null);
+  readonly detailLoading = signal(false);
+  readonly saving = signal(false);
+  readonly formError = signal<string | null>(null);
+  readonly draft = signal({ username: '', fullName: '', email: '', gender: 'MALE', password: '' });
+  readonly passwords = signal({ next: '', confirm: '' });
+  readonly showPassword = signal(false);
+  readonly roleChoice = signal('');
+
+  readonly draftStrength = computed(() => calculatePasswordStrength(this.draft().password));
+  readonly passwordStrength = computed(() => calculatePasswordStrength(this.passwords().next));
 
   ngOnInit(): void {
-    this.loadUsers();
-    this.loadStats();
+    this.search$.pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe(value => { this.keyword.set(value.trim()); this.reload(); });
+    this.load();
+    this.loadCounts();
+    this.roleService.getRoles({ page: 0, size: 100 }).pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: page => this.roles.set(page.result ?? []), error: () => this.roles.set([]) });
   }
 
-  loadUsers(): void {
-    this.loading = true;
+  onKeyword(value: string): void { this.search$.next(value ?? ''); }
 
-    // Build RSQL query dynamically
-    const parts: string[] = [];
-    if (this.filterEmail && this.filterEmail.trim()) {
-      parts.push(`email ~~ '*${this.filterEmail.trim().replace(/'/g, "\\'")}*'`);
-    }
-    if (this.filterFullName && this.filterFullName.trim()) {
-      parts.push(`fullName ~~ '*${this.filterFullName.trim().replace(/'/g, "\\'")}*'`);
-    }
-    if (this.filterFromDate) {
-      parts.push(`createdAt >= '${this.filterFromDate}T00:00:00'`);
-    }
-    if (this.filterToDate) {
-      parts.push(`createdAt <= '${this.filterToDate}T23:59:59'`);
-    }
-    const rsqlFilter = parts.join(' and ');
-
-    this.userAdminService.getUsers({
-      page: this.pageIndex,
-      size: this.pageSize,
-      filter: rsqlFilter
-    }).subscribe({
-      next: (response) => {
-        if (response) {
-          this.users = response.result || [];
-          this.totalItems = response.meta?.total || 0;
-        } else {
-          this.users = [];
-          this.totalItems = 0;
-        }
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('Failed to load users:', err);
-        this.loading = false;
-        this.snackBar.open('Không thể tải danh sách thành viên!', 'Đóng', {
-          duration: 4000,
-          horizontalPosition: 'end',
-          verticalPosition: 'top',
-          panelClass: ['snackbar-error']
-        });
-      }
-    });
+  setFilter(which: 'role' | 'status' | 'fromDate' | 'toDate', value: string): void {
+    ({ role: this.role, status: this.status, fromDate: this.fromDate, toDate: this.toDate })[which].set(value ?? '');
+    this.reload();
   }
 
-  /**
-   * Truoc day tai 1000 nguoi dung de dem o client va tu "dien" 15/12/3 khi rong hoac loi.
-   * Gio dem bang API thong ke: tong, ACTIVE (da xac thuc), PENDING (chua xac thuc). Loi thi hien "—".
-   */
-  loadStats(): void {
-    const today = new Date();
-    const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    this.statsRepository.getUserStats(iso, iso).subscribe({
-      next: stats => this.setStatCounts({
-        total: stats.total,
-        verified: stats.byStatus['ACTIVE'] ?? 0,
-        unverified: stats.byStatus['PENDING'] ?? 0
-      }),
-      error: () => this.setStatCounts({ total: null, verified: null, unverified: null })
-    });
+  clearFilters(): void {
+    this.keyword.set('');
+    this.role.set('');
+    this.status.set('');
+    this.fromDate.set('');
+    this.toDate.set('');
+    this.reload();
   }
 
-  private setStatCounts(counts: Record<'total' | 'verified' | 'unverified', number | null>): void {
-    this.statCards = this.statCards.map(card => ({ ...card, count: counts[card.id] }));
+  goToPage(index: number): void {
+    this.pageIndex.set(index);
+    this.load(true);
   }
 
-  onSearch(): void {
-    this.pageIndex = 0;
-    this.loadUsers();
+  reload(): void {
+    this.pageIndex.set(0);
+    this.load();
   }
 
-  resetFilters(): void {
-    this.filterEmail = '';
-    this.filterFullName = '';
-    this.filterFromDate = '';
-    this.filterToDate = '';
-    this.pageIndex = 0;
-    this.loadUsers();
-  }
-
-  goToPage(page: number): void {
-    this.pageIndex = page;
-    this.loadUsers();
-  }
-
-  onCreateUser(): void {
-    this.ensureOverlayCreated();
-    if (!this.overlayRef!.hasAttached()) {
-      const portal = new TemplatePortal(this.createUserTemplate, this.viewContainerRef);
-      this.overlayRef!.attach(portal);
-    }
-    setTimeout(() => {
-      this.isCreateDrawerOpen = true;
-    }, 15);
-  }
-
-  closeCreateDrawer(): void {
-    this.isCreateDrawerOpen = false;
-    setTimeout(() => {
-      if (!this.isCreateDrawerOpen && this.overlayRef?.hasAttached()) {
-        this.overlayRef.detach();
-      }
-    }, 300);
-  }
-
-  onUserCreated(): void {
-    this.loadUsers();
-    this.loadStats();
-  }
-
-  onUserUpdated(): void {
-    this.loadUsers();
-    this.loadStats();
-    if (this.selectedUser?.userId) {
-      this.userAdminService.getUserById(this.selectedUser.userId).subscribe(user => {
-        this.selectedUser = user;
+  load(keepList = false): void {
+    this.request?.unsubscribe();
+    this.error.set(null);
+    (keepList ? this.paging : this.loading).set(true);
+    this.request = this.users.getUsers({ page: this.pageIndex(), size: this.pageSize, filter: this.filter() || undefined })
+      .pipe(finalize(() => { this.loading.set(false); this.paging.set(false); }), takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: page => {
+          this.items.set(page?.result ?? []);
+          this.total.set(page?.meta?.total ?? 0);
+        },
+        error: err => this.error.set(err?.error?.message ?? 'Không tải được danh sách người dùng.')
       });
-    }
   }
 
-  viewUser(user: User): void {
-    if (!user.userId) return;
-    this.loadingDetails = true;
-    this.userAdminService.getUserById(user.userId).subscribe({
-      next: (detailedUser) => {
-        this.loadingDetails = false;
-        this.selectedUser = detailedUser;
-      },
-      error: (err) => {
-        this.loadingDetails = false;
-        this.selectedUser = user;
-        console.error('Failed to load detailed user:', err);
-      }
+  /** Số đếm ở DB (auth-service /admin/stats/users), không tải cả danh sách về đếm. */
+  loadCounts(): void {
+    const today = new Date().toISOString().slice(0, 10);
+    this.stats.getUserStats(today, today).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: stats => this.counts.set({
+        total: stats.total, active: stats.byStatus['ACTIVE'] ?? 0, pending: stats.byStatus['PENDING'] ?? 0,
+        blocked: stats.byStatus['BLOCKED'] ?? 0
+      }),
+      error: () => this.counts.set(null)
     });
   }
 
-  closeUserDetails(): void {
-    this.selectedUser = null;
+  statusOf(user: User) { return STATUS_META[user.status] ?? { label: user.status, tone: 'neutral' as Tone }; }
+  roleTone(user: User): Tone { return ROLE_TONE[user.role?.name] ?? 'neutral'; }
+  isVerified(user: User): boolean { return user.status === 'ACTIVE' || user.status === 'ACTIVATED'; }
+
+  // ---- Popup ----
+
+  @HostListener('document:keydown.escape')
+  closeDialog(): void {
+    if (this.saving()) return;
+    this.dialog.set(null);
+    this.formError.set(null);
   }
 
+  openDetail(user: User): void {
+    this.selected.set(user);
+    this.dialog.set('detail');
+    this.detailLoading.set(true);
+    this.users.getUserById(user.userId).pipe(finalize(() => this.detailLoading.set(false)), takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: full => this.selected.set(full), error: () => undefined });
+  }
 
+  openCreate(): void {
+    this.formError.set(null);
+    this.showPassword.set(false);
+    this.dialog.set('create');
+  }
 
-  openAssignRoleDialog(user: User): void {
-    const dialogRef = this.dialog.open(AssignRoleDialogComponent, {
-      width: '450px',
-      data: { user },
-      panelClass: 'custom-assign-role-dialog'
+  openPassword(user: User): void {
+    this.selected.set(user);
+    this.passwords.set({ next: '', confirm: '' });
+    this.showPassword.set(false);
+    this.formError.set(null);
+    this.dialog.set('password');
+  }
+
+  openRole(user: User): void {
+    this.selected.set(user);
+    this.roleChoice.set(user.role?.roleId ?? '');
+    this.formError.set(null);
+    this.dialog.set('role');
+  }
+
+  patchDraft(field: 'username' | 'fullName' | 'email' | 'gender' | 'password', value: string): void {
+    this.draft.update(draft => ({ ...draft, [field]: value ?? '' }));
+  }
+
+  patchPasswords(field: 'next' | 'confirm', value: string): void {
+    this.passwords.update(current => ({ ...current, [field]: value ?? '' }));
+  }
+
+  createUser(): void {
+    const draft = this.draft();
+    const problem = !draft.username.trim() ? 'Nhập tên đăng nhập.'
+      : !draft.fullName.trim() ? 'Nhập họ tên.'
+        : !EMAIL.test(draft.email.trim()) ? 'Email không hợp lệ.'
+          : !PASSWORD_PATTERN.test(draft.password) ? 'Mật khẩu cần ít nhất 8 ký tự, có chữ hoa, chữ thường, số và ký tự đặc biệt.'
+            : null;
+    if (problem) { this.formError.set(problem); return; }
+    this.submit(this.withEncrypted(draft.password, password => this.users.createUser({
+      username: draft.username.trim(), fullName: draft.fullName.trim(), email: draft.email.trim(), gender: draft.gender, password
+    })), `Đã tạo tài khoản ${draft.username.trim()}.`, 'Không tạo được tài khoản.', () => {
+      this.draft.set({ username: '', fullName: '', email: '', gender: 'MALE', password: '' });
+      this.loadCounts();
     });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.onUserUpdated();
-      }
-    });
   }
 
-  changePassword(user: User): void {
-    this.passwordEditingUser = user;
-    this.ensureOverlayCreated();
-    if (this.overlayRef!.hasAttached()) {
-      this.overlayRef!.detach();
-    }
-    const portal = new TemplatePortal(this.changePasswordTemplate, this.viewContainerRef);
-    this.overlayRef!.attach(portal);
-    setTimeout(() => {
-      this.isPasswordDrawerOpen = true;
-    }, 15);
+  changePassword(): void {
+    const user = this.selected();
+    const { next, confirm } = this.passwords();
+    if (!user) return;
+    const problem = !PASSWORD_PATTERN.test(next) ? 'Mật khẩu cần ít nhất 8 ký tự, có chữ hoa, chữ thường, số và ký tự đặc biệt.'
+      : next !== confirm ? 'Hai mật khẩu chưa khớp.' : null;
+    if (problem) { this.formError.set(problem); return; }
+    this.submit(this.crypto.getPublicKey().pipe(switchMap(key =>
+      this.users.updatePasswordByAdmin(user.userId, this.crypto.encrypt(next, key), this.crypto.encrypt(confirm, key)))),
+      `Đã đổi mật khẩu cho ${user.fullName || user.username}.`, 'Không đổi được mật khẩu.');
   }
 
-  closePasswordDrawer(): void {
-    this.isPasswordDrawerOpen = false;
-    setTimeout(() => {
-      if (!this.isPasswordDrawerOpen && this.overlayRef?.hasAttached()) {
-        this.overlayRef.detach();
-      }
-      this.passwordEditingUser = null;
-    }, 300);
+  assignRole(): void {
+    const user = this.selected();
+    const roleId = this.roleChoice();
+    if (!user || !roleId) return;
+    if (roleId === user.role?.roleId) { this.closeDialog(); return; }
+    const role = this.roles().find(item => item.roleId === roleId);
+    this.submit(this.users.assignRole(user.userId, roleId),
+      `${user.fullName || user.username} giờ là ${getRoleLabel(role?.name) || role?.name}.`, 'Không gán được vai trò.',
+      () => this.loadCounts());
   }
 
-
-
+  /** Khóa: không đăng nhập được, phiên hiện tại hết hiệu lực khi access token hết hạn (vài phút). */
   changeStatus(user: User, status: 'ACTIVE' | 'BLOCKED'): void {
-    if (!user.userId) return;
     const name = user.fullName || user.username;
     const blocking = status === 'BLOCKED';
-    const data: ConfirmDialogData = {
-      title: blocking ? 'Khóa tài khoản?' : 'Mở khóa tài khoản?',
+    this.confirm.ask({
+      title: blocking ? `Khóa tài khoản ${name}?` : `Mở khóa tài khoản ${name}?`,
       message: blocking
-        ? `${name} sẽ không đăng nhập được nữa và bị đăng xuất khỏi mọi thiết bị trong vài phút. Dữ liệu của tài khoản được giữ nguyên.`
-        : `${name} sẽ đăng nhập và sử dụng lại được như bình thường.`,
-      confirmText: blocking ? 'Khóa tài khoản' : 'Mở khóa',
-      cancelText: 'Hủy',
-      confirmColor: blocking ? 'warn' : 'primary'
-    };
-    this.dialog.open(ConfirmDialogComponent, { width: '450px', data, panelClass: 'custom-premium-dialog' })
-      .afterClosed().subscribe(confirmed => {
-        if (!confirmed) return;
-        this.userAdminService.changeStatus(user.userId!, status).subscribe({
-          next: () => {
-            this.snackBar.open(blocking ? `Đã khóa tài khoản ${name}.` : `Đã mở khóa tài khoản ${name}.`, 'Đóng', {
-              duration: 3000, horizontalPosition: 'end', verticalPosition: 'top', panelClass: ['snackbar-success']
-            });
-            this.onUserUpdated();
-          },
-          error: err => this.snackBar.open(err.error?.message || 'Không đổi được trạng thái tài khoản.', 'Đóng', {
-            duration: 4000, horizontalPosition: 'end', verticalPosition: 'top', panelClass: ['snackbar-error']
-          })
-        });
+        ? 'Người này không đăng nhập được nữa và bị đăng xuất khỏi mọi thiết bị trong vài phút. Dữ liệu được giữ nguyên.'
+        : 'Người này đăng nhập và sử dụng lại được như bình thường.',
+      confirmText: blocking ? 'Khóa tài khoản' : 'Mở khóa', cancelText: 'Hủy', confirmColor: blocking ? 'warn' : 'primary'
+    }).pipe(filter(Boolean), switchMap(() => this.users.changeStatus(user.userId, status)), takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => this.afterChange(blocking ? `Đã khóa tài khoản ${name}.` : `Đã mở khóa tài khoản ${name}.`),
+        error: err => this.notify.error(err?.error?.message ?? 'Không đổi được trạng thái tài khoản.')
       });
   }
 
-  toggleVerification(user: User, verified: boolean): void {
-    if (!user.userId) return;
+  toggleVerification(user: User): void {
+    const verify = !this.isVerified(user);
+    const name = user.fullName || user.username;
+    this.confirm.ask({
+      title: verify ? `Xác thực tài khoản ${name}?` : `Bỏ xác thực tài khoản ${name}?`,
+      message: verify ? 'Tài khoản được coi là đã xác minh email.' : 'Người này cần xác thực lại email trước khi dùng tiếp.',
+      confirmText: verify ? 'Xác thực' : 'Bỏ xác thực', cancelText: 'Hủy', confirmColor: verify ? 'primary' : 'warn'
+    }).pipe(filter(Boolean), switchMap(() => this.users.verifyUser(user.userId, verify)), takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => this.afterChange(verify ? `Đã xác thực ${name}.` : `Đã bỏ xác thực ${name}.`),
+        error: err => this.notify.error(err?.error?.message ?? 'Không đổi được trạng thái xác thực.')
+      });
+  }
 
-    this.userAdminService.verifyUser(user.userId, verified).subscribe({
+  private afterChange(message: string): void {
+    this.notify.success(message);
+    this.load(true);
+    this.loadCounts();
+    const open = this.selected();
+    if (this.dialog() === 'detail' && open) {
+      this.users.getUserById(open.userId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(full => this.selected.set(full));
+    }
+  }
+
+  private withEncrypted<T>(password: string, call: (encrypted: string) => Observable<T>): Observable<T> {
+    return this.crypto.getPublicKey().pipe(switchMap(key => call(this.crypto.encrypt(password, key))));
+  }
+
+  private submit(request: Observable<unknown>, success: string, failure: string, after?: () => void): void {
+    if (this.saving()) return;
+    this.saving.set(true);
+    this.formError.set(null);
+    request.pipe(finalize(() => this.saving.set(false)), takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
-        const statusMsg = verified ? 'xác thực' : 'hủy xác thực';
-        this.snackBar.open(`Đã ${statusMsg} tài khoản ${user.fullName || user.username} thành công!`, 'Đóng', {
-          duration: 3000,
-          horizontalPosition: 'end',
-          verticalPosition: 'top',
-          panelClass: ['snackbar-success']
-        });
-
-        this.onUserUpdated();
+        this.dialog.set(null);
+        this.notify.success(success);
+        this.load(true);
+        after?.();
       },
-      error: (err) => {
-        const actionMsg = verified ? 'Xác thực' : 'Hủy xác thực';
-        const msg = err.error?.message || err.error?.data || `${actionMsg} tài khoản thất bại, vui lòng thử lại!`;
-        this.snackBar.open(msg, 'Đóng', {
-          duration: 4000,
-          horizontalPosition: 'end',
-          verticalPosition: 'top',
-          panelClass: ['snackbar-error']
-        });
-      }
+      error: err => this.formError.set(err?.error?.message ?? err?.error?.data ?? failure)
     });
   }
 
-  private ensureOverlayCreated(): void {
-    if (!this.overlayRef) {
-      this.overlayRef = this.overlay.create({
-        hasBackdrop: true,
-        backdropClass: 'custom-drawer-backdrop',
-        panelClass: 'custom-drawer-panel',
-        positionStrategy: this.overlay.position().global().right('0').top('0').bottom('0'),
-        scrollStrategy: this.overlay.scrollStrategies.block()
-      });
-
-      this.overlayRef.backdropClick().subscribe(() => {
-        if (this.isCreateDrawerOpen) {
-          this.closeCreateDrawer();
-        } else if (this.isPasswordDrawerOpen) {
-          this.closePasswordDrawer();
-        }
-      });
-    }
+  /** RSQL cho auth-service (springfilter): nhóm tìm kiếm trong ngoặc, rồi vai trò, trạng thái, khoảng ngày. */
+  private filter(): string {
+    const parts: string[] = [];
+    const search = buildRsqlSearch(this.keyword(), ['fullName', 'email', 'username']);
+    if (search) parts.push(`(${search})`);
+    if (this.role()) parts.push(`role.name : '${this.role()}'`);
+    if (this.status()) parts.push(`status : '${this.status() as UserStatus}'`);
+    if (this.fromDate()) parts.push(`createdAt >= '${this.fromDate()}T00:00:00'`);
+    if (this.toDate()) parts.push(`createdAt <= '${this.toDate()}T23:59:59'`);
+    return parts.join(' and ');
   }
 }

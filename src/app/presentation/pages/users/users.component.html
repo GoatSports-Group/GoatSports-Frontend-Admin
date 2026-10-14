@@ -1,231 +1,241 @@
-<div class="max-w-full pl-4 flex flex-col gap-6 relative z-10 h-full min-h-0">
-
-  @if (loadingDetails || selectedUser) {
-    <app-user-details
-      [selectedUser]="selectedUser!"
-      [loadingDetails]="loadingDetails"
-      (close)="closeUserDetails()"
-      (assignRole)="openAssignRoleDialog($event)"
-      (changePassword)="changePassword($event)"
-      (toggleVerification)="toggleVerification($event.user, $event.verified)"
-      (changeStatus)="changeStatus($event.user, $event.status)">
-    </app-user-details>
-  } @else {
-  <!-- Page Header -->
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+<main class="page">
+  <header class="page-head">
     <div>
-      <h1 class="m-0 text-ink font-extrabold tracking-[-0.035em] leading-[1.15] text-[clamp(28px,3vw,40px)]">Người dùng</h1>
-      <p class="mt-1.5 max-w-[68ch] text-base text-slate-500 leading-relaxed">Tài khoản người chơi, chủ sân và quản trị viên: xác thực, khóa và phân vai trò.</p>
+      <h1>Người dùng</h1>
+      <p>Tài khoản người chơi, chủ sân và quản trị viên: xác thực, khóa, phân vai trò và đặt lại mật khẩu.</p>
     </div>
-    <div class="flex flex-wrap items-center gap-2">
-      <button (click)="onCreateUser()"
-        class="bg-primary hover:bg-emerald-800 text-white text-[13px] font-bold px-5 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-xs cursor-pointer">
-        <lucide-icon name="plus" class="h-4 w-4"></lucide-icon> Tạo tài khoản
-      </button>
+    <div class="actions">
+      <button type="button" class="btn btn--primary" (click)="openCreate()"><lucide-icon name="plus" />Tạo tài khoản</button>
     </div>
-  </div>
+  </header>
 
-  <!-- So lieu (GOAT-DESIGN §7 KPI tiles): nhan caption, so 28px tabular; khong keo tha. -->
-  <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-    @for (card of statCards; track card.id) {
-    <div class="flex min-w-0 items-center gap-3 rounded-2xl border border-hairline bg-surface p-5 shadow-[var(--shadow-sm)]">
-      <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary-light text-primary-strong">
-        <lucide-icon [name]="card.icon" class="h-5 w-5"></lucide-icon>
-      </span>
-      <div class="min-w-0">
-        <p class="m-0 truncate text-[13px] font-semibold text-body">{{ card.title }}</p>
-        <strong class="block text-[28px] font-black leading-tight tabular-nums text-ink">{{ card.count ?? '—' }}</strong>
-      </div>
-    </div>
+  @if (counts(); as c) {
+  <section class="kpis" aria-label="Số tài khoản">
+    <div class="kpi"><span>Tổng tài khoản</span><strong>{{ c.total.toLocaleString('vi-VN') }}</strong><small>mọi vai trò</small></div>
+    <button type="button" class="kpi kpi--link" [class.is-active]="status() === 'ACTIVE'" (click)="setFilter('status', status() === 'ACTIVE' ? '' : 'ACTIVE')">
+      <span>Đã xác thực</span><strong>{{ c.active.toLocaleString('vi-VN') }}</strong><small>dùng được đầy đủ</small></button>
+    <button type="button" class="kpi kpi--link" [class.kpi--warn]="c.pending > 0" [class.is-active]="status() === 'PENDING'"
+      (click)="setFilter('status', status() === 'PENDING' ? '' : 'PENDING')">
+      <span>Chưa xác thực</span><strong>{{ c.pending.toLocaleString('vi-VN') }}</strong><small>chưa xác minh email</small></button>
+    <button type="button" class="kpi kpi--link" [class.is-active]="status() === 'BLOCKED'" (click)="setFilter('status', status() === 'BLOCKED' ? '' : 'BLOCKED')">
+      <span>Đã khóa</span><strong>{{ c.blocked.toLocaleString('vi-VN') }}</strong><small>không đăng nhập được</small></button>
+  </section>
+  } @else {
+  <app-loading-skeleton variant="stats" [count]="4" label="Đang tải số tài khoản" />
+  }
+
+  <div class="filter-row filter-row--users" role="search">
+    <label class="search">
+      <lucide-icon name="search" />
+      <input type="search" [ngModel]="keyword()" (ngModelChange)="onKeyword($event)" name="keyword"
+        placeholder="Tên, email, tên đăng nhập..." aria-label="Tìm người dùng" />
+    </label>
+    <app-select [ngModel]="role()" (ngModelChange)="setFilter('role', $event)" [options]="roleOptions()" ariaLabel="Lọc theo vai trò" />
+    <app-select [ngModel]="status()" (ngModelChange)="setFilter('status', $event)" [options]="statusOptions" ariaLabel="Lọc theo trạng thái" />
+    <app-date-picker ariaLabel="Tham gia từ ngày" placeholder="Tham gia từ" [max]="toDate()" [ngModel]="fromDate()"
+      (ngModelChange)="setFilter('fromDate', $event)" />
+    <app-date-picker ariaLabel="Tham gia đến ngày" placeholder="Đến ngày" [min]="fromDate()" [ngModel]="toDate()"
+      (ngModelChange)="setFilter('toDate', $event)" />
+    @if (hasFilters()) {
+    <button type="button" class="btn btn--ghost" (click)="clearFilters()"><lucide-icon name="x" />Xóa lọc</button>
     }
   </div>
 
-  <!-- Search & Filter Controls -->
-  <div class="bg-surface border border-slate-100/85 rounded-2xl p-6 shadow-xs">
-    <!-- Row 1 -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-      <div class="flex flex-col gap-1.5">
-        <label class="text-sm font-bold text-emerald-800">Họ tên</label>
-        <input type="text" [(ngModel)]="filterFullName" (keyup.enter)="onSearch()" placeholder="Tìm kiếm theo họ tên"
-          class="w-full h-11 px-4 bg-slate-50/70 border-0 rounded-xl text-[13px] font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-slate-100/80 transition-all">
-      </div>
-
-      <div class="flex flex-col gap-1.5">
-        <label class="text-sm font-bold text-emerald-800">Email</label>
-        <input type="text" [(ngModel)]="filterEmail" (keyup.enter)="onSearch()" placeholder="Tìm kiếm theo email"
-          class="w-full h-11 px-4 bg-slate-50/70 border-0 rounded-xl text-[13px] font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-slate-100/80 transition-all">
-      </div>
-
-      <div class="flex flex-col gap-1.5">
-        <label class="text-sm font-bold text-emerald-800">Từ ngày</label>
-        <app-date-picker ariaLabel="Từ ngày" placeholder="dd/mm/yyyy" [(ngModel)]="filterFromDate"></app-date-picker>
-      </div>
-
-      <div class="flex flex-col gap-1.5">
-        <label class="text-sm font-bold text-emerald-800">Đến ngày</label>
-        <app-date-picker ariaLabel="Đến ngày" placeholder="dd/mm/yyyy" [(ngModel)]="filterToDate"></app-date-picker>
-      </div>
-    </div>
-
-    <!-- Row 2 -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-      <!-- Action Buttons -->
-      <div class="col-start-1 md:col-start-4 flex items-center gap-3">
-        <button (click)="onSearch()"
-          class="flex-1 h-10 bg-primary hover:bg-emerald-800 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer">
-          <lucide-icon name="search" class="h-4 w-4"></lucide-icon> Tìm kiếm
-        </button>
-        <button (click)="resetFilters()"
-          class="flex-1 h-10 bg-surface hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer">
-          <lucide-icon name="rotate-ccw" class="h-4 w-4"></lucide-icon> Làm mới
-        </button>
-      </div>
-    </div>
+  @if (loading()) {
+  <app-loading-skeleton variant="table" [count]="8" [columns]="6" label="Đang tải người dùng" />
+  } @else if (error()) {
+  <div class="state state--error" role="alert">
+    <lucide-icon name="alert-circle" /><strong>Chưa tải được danh sách</strong><p>{{ error() }}</p>
+    <button type="button" class="btn" (click)="load()"><lucide-icon name="rotate-ccw" />Thử lại</button>
   </div>
-
-  <!-- Loading State -->
-  @if (loading) {
-  <app-loading-skeleton variant="table" [count]="8" [columns]="5" label="Đang tải danh sách người dùng"></app-loading-skeleton>
-  } @else {
-
-  <!-- Empty State -->
-  @if (users.length === 0) {
-  <div
-    class="flex flex-col items-center justify-center py-20 text-center bg-surface border border-slate-100 rounded-2xl shadow-xs">
-    <lucide-icon name="users" class="text-slate-300 h-12 w-12 mb-4 mx-auto"></lucide-icon>
-    <h3 class="text-sm font-bold text-slate-900">Không có danh sách người dùng</h3>
-    <p class="text-[13px] text-slate-500 mt-1 max-w-sm font-medium">Hãy thử điều chỉnh bộ lọc hoặc đặt lại từ khóa tìm kiếm.
-    </p>
+  } @else if (!items().length) {
+  <div class="state">
+    <lucide-icon name="users" /><strong>Không có người dùng nào</strong>
+    <p>{{ hasFilters() ? 'Không có tài khoản khớp bộ lọc.' : 'Chưa có tài khoản nào.' }}</p>
   </div>
   } @else {
-
-  <!-- Users List Table Wrapper -->
-  <div class="flex-1 min-h-0 flex flex-col bg-surface border border-slate-100 rounded-2xl shadow-xl overflow-hidden">
-    <div class="flex-1 min-h-0 overflow-auto">
-      <table class="w-full text-left border-collapse text-sm">
+  <p class="result-count">{{ total().toLocaleString('vi-VN') }} tài khoản</p>
+  <section class="card" [class.is-paging]="paging()">
+    <div class="table-wrap">
+      <table class="table">
         <thead>
-          <tr class="border-b border-slate-100 text-[14px] font-bold tracking-wider text-emerald-400 bg-surface">
-            <th class="py-4 px-6 font-bold text-emerald-500">Họ tên</th>
-            <th class="py-4 px-6 font-bold text-emerald-500">Username</th>
-            <th class="py-4 px-6 font-bold text-emerald-500">Email</th>
-            <th class="py-4 px-6 font-bold text-emerald-500">Vai trò</th>
-            <th class="py-4 px-6 font-bold text-emerald-500">Trạng thái</th>
-            <th class="py-4 px-6 font-bold text-emerald-500">Ngày tham gia</th>
-            <th class="py-4 px-6 font-bold text-emerald-500 text-right pr-12">Hành động</th>
-          </tr>
+          <tr><th>Người dùng</th><th>Email</th><th>Vai trò</th><th>Trạng thái</th><th>Tham gia</th><th aria-label="Thao tác"></th></tr>
         </thead>
-        <tbody class="divide-y divide-slate-100">
-          @for (user of users; track user.userId) {
-          <tr class="hover:bg-emerald-50/50 transition-colors">
-            <!-- Name & Avatar -->
-            <td class="py-4 px-6">
-              <div class="flex items-center gap-3">
-                <img [src]="getDisplayAvatar(user)" alt="Avatar"
-                  class="w-8 h-8 rounded-full object-cover border border-slate-100 shadow-inner">
-                <span class="font-bold text-slate-800">{{ user.fullName || 'Chưa cập nhật' }}</span>
+        <tbody>
+          @for (user of items(); track user.userId) {
+          @let state = statusOf(user);
+          <tr class="is-clickable" tabindex="0" (click)="openDetail(user)" (keydown.enter)="openDetail(user)">
+            <td>
+              <div class="person">
+                <img [src]="avatar(user)" alt="" />
+                <div class="cell-title"><strong>{{ user.fullName || 'Chưa cập nhật' }}</strong><small>&#64;{{ user.username }}</small></div>
               </div>
             </td>
-            <td class="py-4 px-6 text-slate-600 font-semibold">@{{ user.username }}</td>
-            <td class="py-4 px-6 text-slate-600 font-semibold">{{ user.email }}</td>
-            <td class="py-4 px-6">
-              <span class="px-3 py-1 bg-slate-100 text-slate-700 text-[13px] font-bold rounded-full">
-                {{ getFallbackRole(user?.role?.name) || 'Chưa gán' }}
-              </span>
-            </td>
-            <td class="py-4 px-6">
-              @if (user.status === 'BLOCKED') {
-              <span class="px-3 py-1 bg-rose-100 text-rose-800 text-[13px] font-bold rounded-full border border-rose-200">Đã khóa</span>
-              } @else {
-              <span [class]="user.status === 'ACTIVE' || user.status === 'ACTIVATED' 
-                  ? 'px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-100' 
-                  : 'px-3 py-1 bg-rose-50 text-rose-700 text-xs font-bold rounded-full border border-rose-100'">
-                {{ user.status === 'ACTIVE' || user.status === 'ACTIVATED' ? 'Đã xác thực' : 'Chưa xác thực' }}
-              </span>
-              }
-            </td>
-            <td class="py-4 px-6 text-slate-600 font-semibold">
-              {{ user.createdAt ? (user.createdAt | date: 'dd/MM/yyyy HH:mm') : 'Chưa có' }}
-            </td>
-            <td class="py-4 px-6 text-right pr-12">
-              <div class="flex items-center justify-end gap-2">
-                <button (click)="viewUser(user)"
-                  class="w-8 h-8 rounded-xl flex items-center justify-center text-slate-600 hover:text-emerald-950 hover:bg-emerald-50/70 transition-all cursor-pointer border border-transparent">
-                  <lucide-icon name="eye" class="h-4.5 w-4.5"></lucide-icon>
-                </button>
-
-                <button [matMenuTriggerFor]="actionDropdownMenu"
-                  class="w-8 h-8 rounded-xl flex items-center justify-center text-slate-600 hover:text-emerald-900 hover:bg-emerald-50 transition-colors cursor-pointer border border-transparent">
-                  <lucide-icon name="more-vertical" class="h-4.5 w-4.5"></lucide-icon>
-                </button>
-
-                <mat-menu #actionDropdownMenu="matMenu" class="custom-premium-menu">
-                  <button mat-menu-item (click)="openAssignRoleDialog(user)">
-                    <lucide-icon name="user-cog" class="h-5 w-5 mr-2"></lucide-icon>
-                    <span>Gán vai trò</span>
-                  </button>
-                  <button mat-menu-item (click)="changePassword(user)">
-                    <lucide-icon name="key" class="h-5 w-5 mr-2"></lucide-icon>
-                    <span>Đổi mật khẩu</span>
-                  </button>
-                  @if (user.status === 'BLOCKED') {
-                  <button mat-menu-item (click)="changeStatus(user, 'ACTIVE')">
-                    <lucide-icon name="lock-open" class="h-5 w-5 mr-2 text-emerald-600"></lucide-icon>
-                    <span class="text-emerald-700 font-bold">Mở khóa tài khoản</span>
-                  </button>
-                  } @else if (user.role.name !== 'ADMIN') {
-                  <button mat-menu-item (click)="changeStatus(user, 'BLOCKED')" class="danger-item">
-                    <lucide-icon name="lock" class="h-5 w-5 mr-2"></lucide-icon>
-                    <span>Khóa tài khoản</span>
-                  </button>
-                  }
-                  @if (user.status === 'ACTIVE' || user.status === 'ACTIVATED') {
-                  <button mat-menu-item (click)="toggleVerification(user, false)" class="danger-item">
-                    <lucide-icon name="shield-alert" class="h-5 w-5 mr-2"></lucide-icon>
-                    <span>Bỏ xác thực</span>
-                  </button>
-                  } @else if (user.status !== 'BLOCKED') {
-                  <button mat-menu-item (click)="toggleVerification(user, true)">
-                    <lucide-icon name="shield-check" class="h-5 w-5 mr-2 text-emerald-600"></lucide-icon>
-                    <span class="text-emerald-700 font-bold">Xác thực tài khoản</span>
-                  </button>
-                  }
-                </mat-menu>
-              </div>
+            <td class="email">{{ user.email }}</td>
+            <td><span [class]="'badge badge--' + roleTone(user)">{{ roleLabel(user.role.name) || user.role.name }}</span></td>
+            <td><span [class]="'badge badge--' + state.tone">{{ state.label }}</span></td>
+            <td class="when">{{ user.createdAt | date:'dd/MM/yyyy' }}</td>
+            <td class="row-action" (click)="$event.stopPropagation()">
+              <button type="button" class="kebab" [matMenuTriggerFor]="rowMenu" [attr.aria-label]="'Thao tác với ' + user.username">
+                <lucide-icon name="more-vertical" /></button>
+              <mat-menu #rowMenu="matMenu" class="goat-action-menu" xPosition="before">
+                <ng-container *ngTemplateOutlet="actions; context: { $implicit: user }" />
+              </mat-menu>
             </td>
           </tr>
           }
         </tbody>
       </table>
     </div>
+  </section>
+  <app-pagination [pageIndex]="pageIndex()" [pageSize]="pageSize" [totalItems]="total()" (pageChange)="goToPage($event)" />
+  }
 
-    <!-- Pagination Bottom Bar -->
-    <app-pagination class="is-embedded"
-      [pageIndex]="pageIndex"
-      [pageSize]="pageSize"
-      [totalItems]="totalItems"
-      (pageChange)="goToPage($event)">
-    </app-pagination>
+  <!-- Thao tác dùng chung cho menu dòng và popup chi tiết. -->
+  <ng-template #actions let-user>
+    <button mat-menu-item type="button" (click)="openDetail(user)"><lucide-icon name="eye" />Xem chi tiết</button>
+    <button mat-menu-item type="button" (click)="openRole(user)"><lucide-icon name="user-cog" />Gán vai trò</button>
+    <button mat-menu-item type="button" (click)="openPassword(user)"><lucide-icon name="key" />Đổi mật khẩu</button>
+    @if (user.status !== 'BLOCKED') {
+    <button mat-menu-item type="button" (click)="toggleVerification(user)"><lucide-icon [name]="isVerified(user) ? 'shield-alert' : 'shield-check'" />{{
+      isVerified(user) ? 'Bỏ xác thực' : 'Xác thực tài khoản' }}</button>
+    }
+    @if (user.status === 'BLOCKED') {
+    <button mat-menu-item type="button" (click)="changeStatus(user, 'ACTIVE')"><lucide-icon name="lock-open" />Mở khóa tài khoản</button>
+    } @else if (user.role.name !== 'ADMIN') {
+    <button mat-menu-item type="button" class="is-danger" (click)="changeStatus(user, 'BLOCKED')"><lucide-icon name="lock" />Khóa tài khoản</button>
+    }
+  </ng-template>
+
+  @if (dialog()) {
+  <div class="modal-backdrop" (click)="closeDialog()">
+    <section class="modal" [class.modal--wide]="dialog() === 'detail'" role="dialog" aria-modal="true" aria-labelledby="user-dialog-title"
+      (click)="$event.stopPropagation()">
+      @switch (dialog()) {
+      @case ('detail') {
+      @let user = selected()!;
+      @let state = statusOf(user);
+      <header class="modal__header">
+        <div class="person person--lg">
+          <img [src]="avatar(user)" alt="" />
+          <div class="cell-title">
+            <h2 id="user-dialog-title">{{ user.fullName || 'Chưa cập nhật họ tên' }}</h2>
+            <small>&#64;{{ user.username }} · <span [class]="'badge badge--' + state.tone">{{ state.label }}</span>
+              <span [class]="'badge badge--' + roleTone(user)">{{ roleLabel(user.role.name) || user.role.name }}</span></small>
+          </div>
+        </div>
+        <button type="button" class="icon-btn" aria-label="Đóng" (click)="closeDialog()"><lucide-icon name="x" /></button>
+      </header>
+      <div class="modal__body">
+        @if (detailLoading()) { <p class="muted-line"><lucide-icon name="loader-2" class="spin" />Đang tải đầy đủ thông tin...</p> }
+        <dl class="facts">
+          <div><dt>Email</dt><dd>{{ user.email }}</dd></div>
+          <div><dt>Số điện thoại</dt><dd>{{ user.phone || 'Chưa cập nhật' }}</dd></div>
+          <div><dt>Giới tính</dt><dd>{{ genderLabel(user.gender) || 'Chưa cập nhật' }}</dd></div>
+          <div><dt>Quốc gia</dt><dd>{{ user.country || 'Chưa cập nhật' }}</dd></div>
+          <div><dt>Đăng nhập bằng</dt><dd>{{ user.authProviders && user.authProviders.length ? user.authProviders.join(', ') : 'Mật khẩu' }}</dd></div>
+          <div><dt>Tham gia</dt><dd>{{ user.createdAt | date:'HH:mm dd/MM/yyyy' }}</dd></div>
+          <div><dt>Cập nhật</dt><dd>{{ (user.updatedAt | date:'HH:mm dd/MM/yyyy') || '—' }}</dd></div>
+          <div class="facts__wide"><dt>Mã tài khoản</dt><dd class="mono">{{ user.userId }}</dd></div>
+        </dl>
+      </div>
+      <footer class="modal__footer">
+        <button type="button" class="btn" (click)="closeDialog()">Đóng</button>
+        <button type="button" class="btn" [matMenuTriggerFor]="detailMenu"><lucide-icon name="more-vertical" />Thao tác</button>
+        <mat-menu #detailMenu="matMenu" class="goat-action-menu" xPosition="before">
+          <ng-container *ngTemplateOutlet="actions; context: { $implicit: user }" />
+        </mat-menu>
+      </footer>
+      }
+      @case ('create') {
+      <header class="modal__header">
+        <div><h2 id="user-dialog-title">Tạo tài khoản</h2><p class="modal__sub">Tài khoản mới có vai trò Người chơi; đổi vai trò sau khi tạo.</p></div>
+        <button type="button" class="icon-btn" aria-label="Đóng" (click)="closeDialog()" [disabled]="saving()"><lucide-icon name="x" /></button>
+      </header>
+      <form class="modal__body form" (ngSubmit)="createUser()" id="create-user-form">
+        <label class="field"><span class="field__label">Họ tên</span>
+          <input class="field__control" name="fullName" [ngModel]="draft().fullName" (ngModelChange)="patchDraft('fullName', $event)" maxlength="100" autocomplete="off" /></label>
+        <div class="form__row">
+          <label class="field"><span class="field__label">Tên đăng nhập</span>
+            <input class="field__control" name="username" [ngModel]="draft().username" (ngModelChange)="patchDraft('username', $event)" maxlength="50" autocomplete="off" /></label>
+          <div class="field"><span class="field__label">Giới tính</span>
+            <app-select [ngModel]="draft().gender" (ngModelChange)="patchDraft('gender', $event)" name="gender" [options]="genderOptions" ariaLabel="Giới tính" /></div>
+        </div>
+        <label class="field"><span class="field__label">Email</span>
+          <input class="field__control" type="email" name="email" [ngModel]="draft().email" (ngModelChange)="patchDraft('email', $event)" autocomplete="off" /></label>
+        <label class="field"><span class="field__label">Mật khẩu</span>
+          <span class="password">
+            <input class="field__control" [type]="showPassword() ? 'text' : 'password'" name="password" [ngModel]="draft().password"
+              (ngModelChange)="patchDraft('password', $event)" autocomplete="new-password" />
+            <button type="button" class="icon-btn" [attr.aria-label]="showPassword() ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'"
+              (click)="showPassword.set(!showPassword())"><lucide-icon [name]="showPassword() ? 'eye-off' : 'eye'" /></button>
+          </span>
+          <span class="strength" [attr.data-level]="draftStrength()" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          <span class="field__hint">Ít nhất 8 ký tự, có chữ hoa, chữ thường, số và ký tự đặc biệt.</span></label>
+        @if (formError()) { <p class="field__error" role="alert">{{ formError() }}</p> }
+      </form>
+      <footer class="modal__footer">
+        <button type="button" class="btn" (click)="closeDialog()" [disabled]="saving()">Hủy</button>
+        <button type="submit" form="create-user-form" class="btn btn--primary" [disabled]="saving()">
+          <lucide-icon [name]="saving() ? 'loader-2' : 'plus'" [class.spin]="saving()" />Tạo tài khoản</button>
+      </footer>
+      }
+      @case ('password') {
+      @let user = selected()!;
+      <header class="modal__header">
+        <div><h2 id="user-dialog-title">Đổi mật khẩu</h2><p class="modal__sub">{{ user.fullName || user.username }} · {{ user.email }}</p></div>
+        <button type="button" class="icon-btn" aria-label="Đóng" (click)="closeDialog()" [disabled]="saving()"><lucide-icon name="x" /></button>
+      </header>
+      <form class="modal__body form" (ngSubmit)="changePassword()" id="password-form">
+        <label class="field"><span class="field__label">Mật khẩu mới</span>
+          <span class="password">
+            <input class="field__control" [type]="showPassword() ? 'text' : 'password'" name="next" [ngModel]="passwords().next"
+              (ngModelChange)="patchPasswords('next', $event)" autocomplete="new-password" />
+            <button type="button" class="icon-btn" [attr.aria-label]="showPassword() ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'"
+              (click)="showPassword.set(!showPassword())"><lucide-icon [name]="showPassword() ? 'eye-off' : 'eye'" /></button>
+          </span>
+          <span class="strength" [attr.data-level]="passwordStrength()" aria-hidden="true"><i></i><i></i><i></i><i></i></span></label>
+        <label class="field"><span class="field__label">Nhập lại mật khẩu mới</span>
+          <input class="field__control" [type]="showPassword() ? 'text' : 'password'" name="confirm" [ngModel]="passwords().confirm"
+            (ngModelChange)="patchPasswords('confirm', $event)" autocomplete="new-password" /></label>
+        <p class="field__hint">Người này dùng mật khẩu mới ở lần đăng nhập sau. Nên báo cho họ qua kênh an toàn.</p>
+        @if (formError()) { <p class="field__error" role="alert">{{ formError() }}</p> }
+      </form>
+      <footer class="modal__footer">
+        <button type="button" class="btn" (click)="closeDialog()" [disabled]="saving()">Hủy</button>
+        <button type="submit" form="password-form" class="btn btn--primary" [disabled]="saving()">
+          <lucide-icon [name]="saving() ? 'loader-2' : 'key'" [class.spin]="saving()" />Đổi mật khẩu</button>
+      </footer>
+      }
+      @case ('role') {
+      @let user = selected()!;
+      <header class="modal__header">
+        <div><h2 id="user-dialog-title">Gán vai trò</h2><p class="modal__sub">{{ user.fullName || user.username }} · {{ user.email }}</p></div>
+        <button type="button" class="icon-btn" aria-label="Đóng" (click)="closeDialog()" [disabled]="saving()"><lucide-icon name="x" /></button>
+      </header>
+      <div class="modal__body">
+        <div class="choices" role="radiogroup" aria-label="Vai trò">
+          @for (role of roles(); track role.roleId) {
+          <button type="button" role="radio" class="choice" [class.is-active]="roleChoice() === role.roleId"
+            [attr.aria-checked]="roleChoice() === role.roleId" [disabled]="!role.active" (click)="roleChoice.set(role.roleId)">
+            <lucide-icon name="shield" />
+            <span><strong>{{ roleLabel(role.name) || role.name }}
+                @if (role.roleId === user.role.roleId) { <small class="badge badge--neutral">Hiện tại</small> }
+                @if (!role.active) { <small class="badge badge--warning">Đang tạm ngưng</small> }</strong>
+              <small>{{ role.description || role.name }} · {{ role.permissions?.length ?? 0 }} quyền</small></span>
+          </button>
+          }
+        </div>
+        @if (formError()) { <p class="field__error" role="alert">{{ formError() }}</p> }
+      </div>
+      <footer class="modal__footer">
+        <button type="button" class="btn" (click)="closeDialog()" [disabled]="saving()">Hủy</button>
+        <button type="button" class="btn btn--primary" (click)="assignRole()" [disabled]="saving() || !roleChoice()">
+          <lucide-icon [name]="saving() ? 'loader-2' : 'user-cog'" [class.spin]="saving()" />Lưu vai trò</button>
+      </footer>
+      }
+      }
+    </section>
   </div>
   }
-  }
-  }
-
-  <!-- Slide-Over Drawer Dialog Template (Create New User) -->
-  <ng-template #createUserTemplate>
-    <app-create-user-drawer
-      [isCreateDrawerOpen]="isCreateDrawerOpen"
-      (close)="closeCreateDrawer()"
-      (created)="onUserCreated()">
-    </app-create-user-drawer>
-  </ng-template>
-
-  <!-- Slide-Over Drawer Dialog Template (Change Password) -->
-  <ng-template #changePasswordTemplate>
-    <app-change-password-drawer
-      [isPasswordDrawerOpen]="isPasswordDrawerOpen"
-      [passwordEditingUser]="passwordEditingUser"
-      (close)="closePasswordDrawer()"
-      (updated)="onUserUpdated()">
-    </app-change-password-drawer>
-  </ng-template>
-</div>
+</main>
