@@ -78,6 +78,11 @@
                   [class.status--rejected]="report.status === 'REJECTED'">
                   {{ statusLabel(report.status) }}
                 </span>
+                @if (report.ai; as ai) {
+                  <span [class]="'badge ai-badge badge--' + aiTone(ai)" [title]="ai.reason">
+                    <lucide-icon name="sparkles" />{{ aiLabel(ai) }}
+                  </span>
+                }
               </div>
               <span class="meta">#{{ shortId(report.reportId) }} · {{ report.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
             </header>
@@ -259,6 +264,21 @@
           @if (report?.evidence?.length) { <p class="muted-line"><lucide-icon name="paperclip" /> {{ report!.evidence.length }} tệp minh chứng</p> }
           @if (appeal) { <p class="muted-line">Quyết định bị khiếu nại: <strong>{{ actionLabel(appeal.actionType) }}</strong></p> }
         </section>
+
+        @if (report) {
+        <section class="detail__block">
+          <h3>Gợi ý của AI</h3>
+          @if (report.ai; as ai) {
+          <p class="ai-line">
+            <span [class]="'badge ai-badge badge--' + aiTone(ai)"><lucide-icon name="sparkles" />{{ aiLabel(ai) }}</span>
+            <span>{{ ai.reason }}</span>
+          </p>
+          <p class="muted-line">AI chỉ gợi ý và có thể sai. Hãy đọc nội dung bên dưới trước khi xử lý.</p>
+          } @else {
+          <p class="muted-line">Chưa có gợi ý AI cho báo cáo này.</p>
+          }
+        </section>
+        }
 
         <section class="detail__block">
           <h3>Nội dung bị báo cáo · {{ targetLabel(report ? report.targetType : appeal!.targetType) }}</h3>

@@ -82,3 +82,26 @@
 @media (max-width: 639px) {
   .review { padding: 14px 16px; }
 }
+
+// Lọc "AI nghi vi phạm": cùng kiểu pill bật/tắt với "Thao tác nhạy cảm" ở Nhật ký.
+.chip-toggle {
+  flex: none;
+  border-radius: 9999px;
+
+  &.is-active { border-color: var(--primary); background: var(--primary-light); color: var(--primary-strong); }
+}
+
+// Gợi ý AI: badge tone theo mức (1 info, 2 warning, 3 danger) + một dòng lý do dưới nội dung.
+.ai-badge { gap: 4px; font-weight: 700; lucide-icon { width: 14px; height: 14px; } }
+
+.ai-note {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  margin: 0;
+  color: var(--body);
+  font-size: 13px;
+
+  lucide-icon { flex: none; width: 14px; height: 14px; margin-top: 2px; color: var(--muted); }
+  em { color: var(--muted); font-style: normal; }
+}

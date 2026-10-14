@@ -18,6 +18,17 @@ export interface ModerationActionItem {
   actionAt: string;
 }
 
+/**
+ * Gợi ý kiểm duyệt của AI (LLM qua ai-service): nhãn, mức 0–3 và một câu lý do. Chỉ là gợi ý để xếp hàng đợi;
+ * admin luôn là người quyết định. `null` khi AI chưa đọc hoặc không đọc được.
+ */
+export interface AiVerdict {
+  label: 'NONE' | 'SPAM' | 'HARASSMENT' | 'HATE' | 'SEXUAL' | 'VIOLENCE' | 'SCAM' | 'OTHER' | string;
+  severity: number;
+  reason: string;
+  checkedAt: string;
+}
+
 export interface ContentReport {
   reportId: string;
   reporterId: string;
@@ -29,6 +40,7 @@ export interface ContentReport {
   createdAt: string;
   updatedAt: string;
   actions: ModerationActionItem[];
+  ai: AiVerdict | null;
 }
 
 export interface ContentAppeal {

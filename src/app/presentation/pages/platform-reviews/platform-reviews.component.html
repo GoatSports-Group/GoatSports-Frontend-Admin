@@ -19,6 +19,10 @@
       ariaLabel="Lọc theo trạng thái" />
     <app-select [options]="ratingOptions" [ngModel]="rating()" (ngModelChange)="setRating($event)" name="rating"
       leadingIcon="star" ariaLabel="Lọc theo số sao" />
+    <button type="button" class="btn chip-toggle" [class.is-active]="aiFlagged()" [attr.aria-pressed]="aiFlagged()"
+      (click)="toggleAiFlagged()" title="Đánh giá AI cho là vi phạm rõ ràng hoặc nghiêm trọng (mức 2–3)">
+      <lucide-icon name="sparkles" />AI nghi vi phạm
+    </button>
     @if (venueId()) {
     <span class="chip">
       <lucide-icon name="store" />{{ venueName() || 'Một cơ sở' }}
@@ -44,7 +48,7 @@
   <div class="state">
     <lucide-icon [name]="hasFilters() ? 'filter' : 'star'" />
     <strong>{{ hasFilters() ? 'Không có đánh giá khớp bộ lọc' : 'Chưa có đánh giá nào' }}</strong>
-    <p>{{ hasFilters() ? 'Thử đổi trạng thái, số sao hoặc bỏ lọc cơ sở.' : 'Đánh giá xuất hiện khi người chơi chấm điểm
+    <p>{{ hasFilters() ? 'Thử đổi trạng thái, số sao, bỏ lọc AI hoặc bỏ lọc cơ sở.' : 'Đánh giá xuất hiện khi người chơi chấm điểm
       đơn đã hoàn tất.' }}</p>
     @if (hasFilters()) { <button type="button" class="btn" (click)="clearFilters()"><lucide-icon name="x" />Xóa
       lọc</button> }
@@ -59,6 +63,9 @@
           @for (filled of stars(item.rating); track $index) { <lucide-icon name="star" [class.is-filled]="filled" /> }
         </span>
         <span class="review__status">
+          @if (item.ai; as ai) { @if (ai.severity > 0) {
+          <span [class]="'badge ai-badge badge--' + aiTone(ai)"><lucide-icon name="sparkles" />{{ aiLabel(ai) }}</span>
+          } }
           <span [class]="'badge badge--' + statusMeta[item.status].tone">{{ statusMeta[item.status].label }}</span>
           @if (item.status !== 'REMOVED') {
           <button type="button" class="kebab" [matMenuTriggerFor]="reviewMenu" [disabled]="busyId() === item.reviewId"
@@ -81,6 +88,9 @@
       </div>
       @if (item.content) { <p class="review__content">{{ item.content }}</p> }
       @else { <p class="review__content muted">Không có nội dung, chỉ chấm sao.</p> }
+      @if (item.ai; as ai) { @if (ai.severity > 0) {
+      <p class="ai-note"><lucide-icon name="sparkles" /><span>{{ ai.reason }} <em>AI chỉ gợi ý, có thể sai.</em></span></p>
+      } }
       <p class="review__meta">
         <strong>{{ item.venueName }}</strong> · {{ item.courtName }} · Đơn {{ item.bookingCode }} ·
         chơi {{ item.playDate | date:'dd/MM/yyyy' }} {{ time(item.startTime) }}–{{ time(item.endTime) }} ·

@@ -41,6 +41,7 @@ export class AdminVenueRepositoryImpl implements AdminVenueRepository {
     if (filter.status) params = params.set('status', filter.status);
     if (filter.rating) params = params.set('rating', filter.rating);
     if (filter.venueId) params = params.set('venueId', filter.venueId);
+    if (filter.aiFlagged) params = params.set('aiFlagged', true);
     return this.http.get<BaseResponse<BaseListResponse<OwnerReview>>>(`${this.baseUrl}/reviews`, { params })
       .pipe(map(response => ({
         items: response.data?.result ?? [],

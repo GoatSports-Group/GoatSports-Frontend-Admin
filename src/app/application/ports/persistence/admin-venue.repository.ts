@@ -27,6 +27,8 @@ export interface AdminReviewFilter {
   status?: OwnerReviewStatus;
   rating?: number;
   venueId?: string;
+  /** Chỉ đánh giá AI nghi vi phạm (mức từ 2). */
+  aiFlagged?: boolean;
   page: number;
   size: number;
 }

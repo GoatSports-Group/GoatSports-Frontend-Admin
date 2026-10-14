@@ -1,3 +1,5 @@
+import { AiVerdict } from '@application/dto/moderation/moderation.dto';
+
 export type OwnerReviewStatus = 'PUBLISHED' | 'HIDDEN' | 'REMOVED';
 
 export interface OwnerReview {
@@ -15,6 +17,8 @@ export interface OwnerReview {
   content: string | null;
   status: OwnerReviewStatus;
   createdAt: string;
+  /** Chỉ trang admin nhận; chủ sân luôn nhận null. */
+  ai?: AiVerdict | null;
 }
 
 export interface OwnerReviewFilter {

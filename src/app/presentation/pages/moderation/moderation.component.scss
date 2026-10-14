@@ -76,7 +76,11 @@ button:disabled { opacity: .55; cursor: not-allowed; }
 }
 .queue-card blockquote { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
 .queue-card header { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
-.title-row { display: flex; align-items: center; gap: 8px; }
+.title-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+// Gợi ý AI: badge tone theo mức (0 trung tính, 1 info, 2 warning, 3 danger) + lý do một câu.
+.ai-badge { gap: 4px; font-weight: 700; lucide-icon { width: 14px; height: 14px; } }
+.ai-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; color: var(--ink); }
 .meta { color: var(--muted); font-size: .75rem; font-weight: 700; }
 .target-pill {
   border-radius: 999px; padding: 5px 11px; font-size: .72rem; font-weight: 900;

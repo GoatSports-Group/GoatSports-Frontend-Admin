@@ -12,6 +12,7 @@ import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/co
 import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/loading-skeleton.component';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { PaginationComponent } from '@shared/components/ui/pagination/pagination.component';
+import { aiVerdictLabel, aiVerdictTone } from '@shared/utils/ai-verdict';
 import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
 import { MatMenuModule } from '@angular/material/menu';
 
@@ -66,7 +67,12 @@ export class PlatformReviewsComponent implements OnInit {
   readonly notice = signal<string | null>(null);
   readonly busyId = signal<string | null>(null);
 
-  readonly hasFilters = computed(() => !!(this.status() || this.rating() || this.venueId()));
+  /** Chỉ đánh giá AI nghi vi phạm (mức 2–3). AI chỉ gợi ý; ẩn hay gỡ vẫn do admin bấm. */
+  readonly aiFlagged = signal(false);
+  readonly aiLabel = aiVerdictLabel;
+  readonly aiTone = aiVerdictTone;
+
+  readonly hasFilters = computed(() => !!(this.status() || this.rating() || this.venueId() || this.aiFlagged()));
 
   ngOnInit(): void {
     // Mở từ trang Cơ sở: lọc sẵn theo cơ sở đó.
@@ -87,6 +93,11 @@ export class PlatformReviewsComponent implements OnInit {
     this.reload();
   }
 
+  toggleAiFlagged(): void {
+    this.aiFlagged.update(on => !on);
+    this.reload();
+  }
+
   clearVenue(): void {
     this.router.navigate([], { relativeTo: this.route, queryParams: {} });
   }
@@ -94,6 +105,7 @@ export class PlatformReviewsComponent implements OnInit {
   clearFilters(): void {
     this.status.set('');
     this.rating.set(0);
+    this.aiFlagged.set(false);
     if (this.venueId()) this.clearVenue();
     else this.reload();
   }
@@ -116,6 +128,7 @@ export class PlatformReviewsComponent implements OnInit {
       status: this.status() || undefined,
       rating: this.rating() || undefined,
       venueId: this.venueId() ?? undefined,
+      aiFlagged: this.aiFlagged() || undefined,
       page: this.pageIndex(),
       size: this.pageSize
     }).pipe(finalize(() => { this.loading.set(false); this.paging.set(false); }))

@@ -21,7 +21,8 @@ describe('ModerationComponent', () => {
     reportId: 'report-1', reporterId: 'reporter-1', targetType: 'POST', targetId: 'post-1',
     reason: 'Nội dung có lời lẽ xúc phạm người chơi khác',
     evidence: ['evidence/1.png'], status: 'PENDING',
-    createdAt: '2026-09-19T08:00:00', updatedAt: '2026-09-19T08:00:00', actions: []
+    createdAt: '2026-09-19T08:00:00', updatedAt: '2026-09-19T08:00:00', actions: [],
+    ai: { label: 'HARASSMENT', severity: 2, reason: 'Chửi người chơi khác.', checkedAt: '2026-09-19T08:01:00' }
   };
   const reportPage: ModerationPage<ContentReport> = {
     items: [pendingReport], total: 1, page: 0, pageSize: 20, pages: 1
@@ -70,6 +71,16 @@ describe('ModerationComponent', () => {
     expect(getReports.execute).toHaveBeenCalledWith({ status: [], page: 0, size: 20 });
     expect(fixture.componentInstance.reports()).toHaveLength(1);
     expect(fixture.nativeElement.textContent).toContain('lời lẽ xúc phạm');
+  });
+
+  it('shows the AI suggestion as a toned badge on the card', () => {
+    const fixture = TestBed.createComponent(ModerationComponent);
+    fixture.detectChanges();
+
+    const badge: HTMLElement = fixture.nativeElement.querySelector('.ai-badge');
+    expect(badge.textContent).toContain('AI: Xúc phạm');
+    expect(badge.classList).toContain('badge--warning');
+    expect(badge.title).toBe('Chửi người chơi khác.');
   });
 
   it('blocks submitting an action until the reason is long enough', () => {

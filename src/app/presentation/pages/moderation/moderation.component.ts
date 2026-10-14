@@ -26,6 +26,7 @@ import { UserDirectoryService } from '@presentation/services/user-directory.serv
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { PageLoadingComponent } from '@shared/components/ui/page-loading/page-loading.component';
 import { PaginationComponent } from '@shared/components/ui/pagination/pagination.component';
+import { aiVerdictLabel, aiVerdictTone } from '@shared/utils/ai-verdict';
 
 type Lane = 'REPORTS' | 'APPEALS';
 
@@ -55,6 +56,8 @@ export class ModerationComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly getTarget = inject(GetModerationTargetUseCase);
   readonly users = inject(UserDirectoryService);
+  readonly aiLabel = aiVerdictLabel;
+  readonly aiTone = aiVerdictTone;
   private targetRequest?: Subscription;
 
   readonly actionChoices: readonly ActionChoice[] = [

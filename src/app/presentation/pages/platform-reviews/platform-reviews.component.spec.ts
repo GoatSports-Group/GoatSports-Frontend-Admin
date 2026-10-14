@@ -56,4 +56,22 @@ describe('PlatformReviewsComponent', () => {
     expect(repository.moderateReview).toHaveBeenCalledWith('review-1', 'HIDDEN');
     expect(page.items()[0].status).toBe('HIDDEN');
   });
+
+  it('shows the AI suggestion and filters to reviews AI flagged', () => {
+    const flagged: OwnerReview = {
+      ...review, ai: { label: 'SCAM', severity: 3, reason: 'Dụ chuyển khoản ngoài.', checkedAt: '2026-09-21T08:01:00' }
+    };
+    repository.getReviews.mockReturnValue(of({ items: [flagged], page: 0, pageSize: 20, pages: 1, total: 1 }));
+    const fixture = TestBed.createComponent(PlatformReviewsComponent);
+    fixture.detectChanges();
+
+    fixture.componentInstance.toggleAiFlagged();
+    fixture.detectChanges();
+
+    expect(repository.getReviews).toHaveBeenLastCalledWith(expect.objectContaining({ aiFlagged: true, page: 0 }));
+    const badge: HTMLElement = fixture.nativeElement.querySelector('.ai-badge');
+    expect(badge.textContent).toContain('AI: Lừa đảo');
+    expect(badge.classList).toContain('badge--danger');
+    expect(fixture.nativeElement.textContent).toContain('Dụ chuyển khoản ngoài.');
+  });
 });
