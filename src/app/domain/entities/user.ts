@@ -14,6 +14,8 @@ export type User = {
     roleId: string;
     name: string;
   }
+  /** Quyền đang có hiệu lực (chỉ /auth/me trả). Trang admin hiện / mở theo quyền, không theo tên vai trò. */
+  permissions?: string[];
 
   createdAt: string;
   updatedAt: string;

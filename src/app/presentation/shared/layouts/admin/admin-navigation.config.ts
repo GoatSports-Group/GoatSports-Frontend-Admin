@@ -6,6 +6,10 @@ export interface AdminNavigationItem {
   readonly developing?: boolean;
   /** Hien so tu ChatInboxService (muc Tin nhan). */
   readonly badge?: 'messages';
+  /** Trang nen tang: quyen can co de thay va mo trang (vai tro tu tao). Khong co = moi tai khoan back-office. */
+  readonly permission?: string;
+  /** Chi ADMIN (backend kiem ten vai tro, vd hop thu ho tro). */
+  readonly adminOnly?: boolean;
 }
 
 export interface AdminNavigationGroup {
@@ -14,21 +18,21 @@ export interface AdminNavigationGroup {
 }
 
 export const PLATFORM_ADMIN_NAVIGATION: readonly AdminNavigationItem[] = [
-  { title: 'Tổng quan', description: 'Số liệu và tình trạng toàn hệ thống', icon: 'layout-dashboard', route: '/dashboard' },
-  { title: 'Đơn đặt sân', description: 'Quản lý lịch đặt sân và trạng thái thanh toán', icon: 'receipt', route: '/bookings' },
-  { title: 'Cơ sở', description: 'Mọi cơ sở trên nền tảng, đình chỉ cơ sở vi phạm', icon: 'store', route: '/platform-venues' },
-  { title: 'Chủ sân', description: 'Duyệt đơn và quản lý hồ sơ đối tác chủ sân', icon: 'land-plot', route: '/owner-applications' },
-  { title: 'Đánh giá', description: 'Ẩn hoặc gỡ đánh giá cơ sở vi phạm', icon: 'star', route: '/platform-reviews' },
-  { title: 'Tài chính', description: 'Tiền thu, hoàn tiền và chi trả cho chủ sân', icon: 'banknote', route: '/platform-finance' },
-  { title: 'CLB & giải đấu', description: 'Mọi câu lạc bộ và giải đấu trên nền tảng', icon: 'trophy', route: '/platform-community' },
-  { title: 'Gửi thông báo', description: 'Thông báo hệ thống tới người chơi và chủ sân', icon: 'megaphone', route: '/broadcasts' },
-  { title: 'Người dùng', description: 'Quản lý tài khoản thành viên hệ thống', icon: 'users', route: '/users' },
-  { title: 'Vai trò', description: 'Quản lý nhóm vai trò và quyền hạn', icon: 'shield', route: '/roles' },
-  { title: 'Kiểm duyệt', description: 'Xử lý báo cáo nội dung và khiếu nại của tác giả', icon: 'shield-alert', route: '/moderation' },
-  { title: 'Tin nhắn', description: 'Hộp thư hỗ trợ: trả lời và chủ động nhắn cho chủ sân', icon: 'message-circle', route: '/messages', badge: 'messages' },
+  { title: 'Tổng quan', description: 'Số liệu và tình trạng toàn hệ thống', icon: 'layout-dashboard', route: '/dashboard', permission: 'GET_PLATFORM_STATS' },
+  { title: 'Đơn đặt sân', description: 'Quản lý lịch đặt sân và trạng thái thanh toán', icon: 'receipt', route: '/bookings', permission: 'GET_ALL_BOOKINGS' },
+  { title: 'Cơ sở', description: 'Mọi cơ sở trên nền tảng, đình chỉ cơ sở vi phạm', icon: 'store', route: '/platform-venues', permission: 'GET_ALL_VENUES' },
+  { title: 'Chủ sân', description: 'Duyệt đơn và quản lý hồ sơ đối tác chủ sân', icon: 'land-plot', route: '/owner-applications', permission: 'GET_OWNER_APPLICATIONS' },
+  { title: 'Đánh giá', description: 'Ẩn hoặc gỡ đánh giá cơ sở vi phạm', icon: 'star', route: '/platform-reviews', permission: 'GET_ALL_REVIEWS' },
+  { title: 'Tài chính', description: 'Tiền thu, hoàn tiền và chi trả cho chủ sân', icon: 'banknote', route: '/platform-finance', permission: 'GET_PLATFORM_FINANCE' },
+  { title: 'CLB & giải đấu', description: 'Mọi câu lạc bộ và giải đấu trên nền tảng', icon: 'trophy', route: '/platform-community', permission: 'GET_ALL_CLUBS' },
+  { title: 'Gửi thông báo', description: 'Thông báo hệ thống tới người chơi và chủ sân', icon: 'megaphone', route: '/broadcasts', permission: 'GET_BROADCASTS' },
+  { title: 'Người dùng', description: 'Quản lý tài khoản thành viên hệ thống', icon: 'users', route: '/users', permission: 'GET_USERS' },
+  { title: 'Vai trò', description: 'Quản lý nhóm vai trò và quyền hạn', icon: 'shield', route: '/roles', permission: 'GET_ROLES' },
+  { title: 'Kiểm duyệt', description: 'Xử lý báo cáo nội dung và khiếu nại của tác giả', icon: 'shield-alert', route: '/moderation', permission: 'MODERATE_SOCIAL_CONTENT' },
+  { title: 'Tin nhắn', description: 'Hộp thư hỗ trợ: trả lời và chủ động nhắn cho chủ sân', icon: 'message-circle', route: '/messages', badge: 'messages', adminOnly: true },
   { title: 'Thông báo', description: 'Mọi thông báo của bạn', icon: 'bell', route: '/notifications' },
-  { title: 'Nhật ký', description: 'Theo dõi nhật ký hoạt động hệ thống', icon: 'activity', route: '/logs' },
-  { title: 'Giám sát', description: 'Trạng thái microservice và tính năng AI', icon: 'server', route: '/system' }
+  { title: 'Nhật ký', description: 'Theo dõi nhật ký hoạt động hệ thống', icon: 'activity', route: '/logs', permission: 'GET_LOGS' },
+  { title: 'Giám sát', description: 'Trạng thái microservice và tính năng AI', icon: 'server', route: '/system', permission: 'GET_SYSTEM_HEALTH' }
 ];
 
 export const VENUE_OWNER_NAVIGATION: readonly AdminNavigationItem[] = [
@@ -73,3 +77,22 @@ export const VENUE_OWNER_NAVIGATION_GROUPS: readonly AdminNavigationGroup[] = [
     items: VENUE_OWNER_NAVIGATION.filter(item => ['/finance', '/bank-account', '/reviews'].includes(item.route))
   }
 ];
+
+/** Vai trò làm việc ở trang quản trị nền tảng: ADMIN và mọi vai trò admin tự tạo (không phải người chơi, không phải chủ sân). */
+export function isBackOfficeRole(roleName: string | null | undefined): boolean {
+  const role = (roleName ?? '').toUpperCase();
+  return !!role && role !== 'PLAYER' && role !== 'VENUE_OWNER';
+}
+
+/** ADMIN mở mọi trang; vai trò tự tạo mở trang có quyền tương ứng (backend vẫn kiểm từng API). */
+export function canOpenPlatformItem(
+  item: AdminNavigationItem, roleName: string | null | undefined, permissions: readonly string[] | null | undefined
+): boolean {
+  if ((roleName ?? '').toUpperCase() === 'ADMIN') return true;
+  if (!isBackOfficeRole(roleName) || item.adminOnly) return false;
+  return !item.permission || (permissions ?? []).includes(item.permission);
+}
+
+export function platformNavigationItem(route: string): AdminNavigationItem | undefined {
+  return PLATFORM_ADMIN_NAVIGATION.find(item => item.route === route);
+}

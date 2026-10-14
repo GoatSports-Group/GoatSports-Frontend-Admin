@@ -23,10 +23,12 @@ import { environment } from "@environments/environment"
 import { formatRelativeTime } from '@shared/utils/date-trend.utils';
 import { getFallbackAvatar } from '@shared/utils/user-display.utils';
 import {
-  AdminNavigationItem,
   AdminNavigationGroup,
+  AdminNavigationItem,
   PLATFORM_ADMIN_NAVIGATION,
   PLATFORM_ADMIN_NAVIGATION_GROUPS,
+  canOpenPlatformItem,
+  isBackOfficeRole,
   VENUE_OWNER_NAVIGATION_GROUPS,
   VENUE_OWNER_NAVIGATION
 } from './admin-navigation.config';
@@ -66,15 +68,23 @@ export class AdminComponent implements OnInit {
   isSearchOpen = signal(false);
   selectedSearchIndex = signal(0);
   userRole = signal('');
+  readonly userPermissions = signal<readonly string[]>([]);
   currentUrl = signal(this.router.url.split('?')[0]);
-  isPlatformAdmin = computed(() => this.userRole() === 'ADMIN');
+  /** ADMIN và vai trò admin tự tạo dùng menu nền tảng; menu chỉ hiện trang mà vai trò có quyền. */
+  isPlatformAdmin = computed(() => isBackOfficeRole(this.userRole()));
+  private readonly canOpen = (item: AdminNavigationItem) =>
+    canOpenPlatformItem(item, this.userRole(), this.userPermissions());
 
   readonly visibleNavigationItems = computed(() =>
-    this.isPlatformAdmin() ? PLATFORM_ADMIN_NAVIGATION : VENUE_OWNER_NAVIGATION
+    this.isPlatformAdmin() ? PLATFORM_ADMIN_NAVIGATION.filter(this.canOpen) : VENUE_OWNER_NAVIGATION
   );
 
   readonly visibleNavigationGroups = computed<readonly AdminNavigationGroup[]>(() =>
-    this.isPlatformAdmin() ? PLATFORM_ADMIN_NAVIGATION_GROUPS : VENUE_OWNER_NAVIGATION_GROUPS
+    this.isPlatformAdmin()
+      ? PLATFORM_ADMIN_NAVIGATION_GROUPS
+        .map(group => ({ ...group, items: group.items.filter(this.canOpen) }))
+        .filter(group => group.items.length > 0)
+      : VENUE_OWNER_NAVIGATION_GROUPS
   );
 
   readonly currentNavigationItem = computed(() => {
@@ -168,6 +178,7 @@ export class AdminComponent implements OnInit {
     this.chatInbox.start(this.destroyRef);
     this.userProfile = this.authService.currentUser;
     this.userRole.set(this.userProfile?.role?.name?.toUpperCase() ?? '');
+    this.userPermissions.set(this.userProfile?.permissions ?? []);
     if (window.innerWidth < 1024) {
       this.sidebarCollapsed.set(true);
     }

@@ -38,7 +38,8 @@ export class DashboardOverviewComponent implements OnInit, AfterViewInit, OnDest
 
   userRole = signal<string>('ADMIN');
   isVenueOwner = computed(() => this.userRole() === 'VENUE_OWNER');
-  isAdmin = computed(() => this.userRole() === 'ADMIN');
+  /** ADMIN và vai trò admin tự tạo (guard đã kiểm quyền GET_PLATFORM_STATS) xem Tổng quan nền tảng. */
+  isAdmin = computed(() => !this.isVenueOwner());
 
   /** null = đang tải (khối "Cần xử lý" hiện skeleton thay vì báo 0). */
   pendingApps = signal<number | null>(null);
