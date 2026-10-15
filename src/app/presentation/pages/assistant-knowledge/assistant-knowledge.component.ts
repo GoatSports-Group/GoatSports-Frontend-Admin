@@ -30,6 +30,7 @@ export const REASON_LABEL: Record<KnowledgeGapReason, string> = {
 export const DRAFT_BASIS: Record<DraftBasis, { label: string; tone: string; icon: string }> = {
   SYSTEM: { label: 'Từ tài liệu hệ thống', tone: 'success', icon: 'book-open' },
   EXTERNAL: { label: 'Từ Wikipedia · cần kiểm tra', tone: 'warning', icon: 'globe' },
+  MODEL: { label: 'Hiểu biết của AI · chưa có nguồn, kiểm kỹ', tone: 'danger', icon: 'circle-help' },
   NONE: { label: 'AI không soạn', tone: 'neutral', icon: 'ban' }
 };
 

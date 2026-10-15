@@ -31,8 +31,11 @@ export interface KnowledgeGap {
   autoLearned: boolean;
 }
 
-/** SYSTEM: chỉ từ tài liệu GoatSports (được tự nạp); EXTERNAL: cần nguồn ngoài (chờ duyệt); NONE: không nên viết cứng. */
-export type DraftBasis = 'SYSTEM' | 'EXTERNAL' | 'NONE';
+/**
+ * SYSTEM: chỉ từ tài liệu GoatSports (được tự nạp); EXTERNAL: từ Wikipedia (chờ duyệt); MODEL: hiểu biết chung của AI,
+ * chưa có nguồn (chờ duyệt, kiểm kỹ); NONE: không nên viết cứng (dữ liệu thật, chính sách chưa có, lạc đề).
+ */
+export type DraftBasis = 'SYSTEM' | 'EXTERNAL' | 'MODEL' | 'NONE';
 
 export interface KnowledgeGapPage {
   items: KnowledgeGap[];
