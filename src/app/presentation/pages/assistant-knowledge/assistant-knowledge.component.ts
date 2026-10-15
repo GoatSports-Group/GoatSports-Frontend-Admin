@@ -6,6 +6,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { Subscription, finalize } from 'rxjs';
 import {
   AssistantFaq,
+  DraftBasis,
   KnowledgeGap,
   KnowledgeGapReason,
   KnowledgeGapStatus
@@ -24,6 +25,12 @@ export const REASON_LABEL: Record<KnowledgeGapReason, string> = {
   refused: 'Trợ lý nói chưa có thông tin',
   llm_unavailable: 'LLM không dùng được',
   not_helpful: 'Người dùng báo chưa hữu ích'
+};
+
+export const DRAFT_BASIS: Record<DraftBasis, { label: string; tone: string; icon: string }> = {
+  SYSTEM: { label: 'Từ tài liệu hệ thống', tone: 'success', icon: 'book-open' },
+  EXTERNAL: { label: 'Từ Wikipedia · cần kiểm tra', tone: 'warning', icon: 'globe' },
+  NONE: { label: 'AI không soạn', tone: 'neutral', icon: 'ban' }
 };
 
 const QUESTION_MAX = 500;
@@ -51,6 +58,8 @@ export class AssistantKnowledgeComponent implements OnInit {
 
   readonly pageSize = PAGE_SIZE.table;
   readonly reasonLabel = REASON_LABEL;
+  readonly draftBasis = DRAFT_BASIS;
+  readonly draftingId = signal<string | null>(null);
   readonly questionMax = QUESTION_MAX;
   readonly answerMax = ANSWER_MAX;
 
@@ -132,7 +141,8 @@ export class AssistantKnowledgeComponent implements OnInit {
   openAnswer(gap: KnowledgeGap): void {
     this.answering.set(gap);
     this.question.set(gap.question);
-    this.answer.set('');
+    // Có nháp của AI thì điền sẵn để admin chỉ cần kiểm và sửa.
+    this.answer.set(gap.draftAnswer ?? '');
     this.formError.set(null);
   }
 
@@ -157,6 +167,24 @@ export class AssistantKnowledgeComponent implements OnInit {
             : { text: 'Đã lưu, nhưng khi hỏi lại trợ lý chưa tìm thấy câu trả lời. Thử viết câu hỏi giống cách người dùng hỏi hơn (ở tab Đã trả lời: gỡ rồi trả lời lại).', tone: 'warning' });
         },
         error: err => this.formError.set(this.message(err, 'Không lưu được câu trả lời. Vui lòng thử lại.'))
+      });
+  }
+
+  redraft(gap: KnowledgeGap): void {
+    this.draftingId.set(gap.gapId);
+    this.repository.draftGap(gap.gapId)
+      .pipe(finalize(() => this.draftingId.set(null)), takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: drafted => {
+          if (drafted.status !== 'OPEN') {
+            // Nháp chỉ dựa trên tài liệu hệ thống: trợ lý đã tự học, câu rời hàng chờ.
+            this.removeFromQueue(gap.gapId);
+            this.notice.set({ text: 'Trợ lý đã tự học câu này từ tài liệu hệ thống (xem ở tab Đã trả lời).', tone: 'success' });
+            return;
+          }
+          this.gaps.update(list => list.map(item => item.gapId === gap.gapId ? drafted : item));
+        },
+        error: err => this.error.set(this.message(err, 'Chưa soạn được câu trả lời. Vui lòng thử lại sau.'))
       });
   }
 

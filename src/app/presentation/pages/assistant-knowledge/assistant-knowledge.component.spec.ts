@@ -13,15 +13,19 @@ describe('AssistantKnowledgeComponent', () => {
     gapId: 'g-1', question: 'Sân nào rẻ nhất?', samples: ['Sân nào rẻ nhất?', 'sân rẻ nhất ở đâu'], count: 7,
     reasons: { refused: 5, not_helpful: 2 }, badAnswers: ['Mình chưa có thông tin.'],
     firstAskedAt: '2026-10-10T09:00:00Z', lastAskedAt: '2026-10-16T08:00:00Z', status: 'OPEN',
-    answer: null, resolvedBy: null, resolvedAt: null
+    answer: null, resolvedBy: null, resolvedAt: null,
+    draftAnswer: null, draftBasis: null, draftNote: null, draftSources: [], draftedAt: null, autoLearned: false
   };
-  const repository = { getGaps: vi.fn(), answerGap: vi.fn(), dismissGap: vi.fn(), getFaqs: vi.fn(), deleteFaq: vi.fn() };
+  const repository = {
+    getGaps: vi.fn(), answerGap: vi.fn(), dismissGap: vi.fn(), draftGap: vi.fn(), getFaqs: vi.fn(), deleteFaq: vi.fn()
+  };
   const dialog = { open: vi.fn() };
 
   beforeEach(async () => {
     repository.getGaps.mockReset().mockReturnValue(of({ items: [gap], total: 1 }));
     repository.answerGap.mockReset().mockReturnValue(of({ gap: { ...gap, status: 'ANSWERED' }, answerable: true }));
     repository.dismissGap.mockReset().mockReturnValue(of({ ...gap, status: 'DISMISSED' }));
+    repository.draftGap.mockReset();
     repository.getFaqs.mockReset().mockReturnValue(of([]));
     repository.deleteFaq.mockReset().mockReturnValue(of(undefined));
     dialog.open.mockReset().mockReturnValue({ afterClosed: () => of(true) });
@@ -89,7 +93,7 @@ describe('AssistantKnowledgeComponent', () => {
 
   it('removing an answer asks first and sends the question back to the queue', () => {
     repository.getFaqs.mockReturnValue(of([{ documentId: 'd-1', question: 'Sân nào rẻ nhất?', answer: 'Sai', updatedAt: '2026-10-16T08:00:00Z',
-      resolvedBy: 'admin@goat.test', gapId: 'g-1', askedCount: 7 }]));
+      resolvedBy: 'admin@goat.test', gapId: 'g-1', askedCount: 7, autoLearned: false }]));
     const fixture = TestBed.createComponent(AssistantKnowledgeComponent);
     fixture.detectChanges();
     const page = fixture.componentInstance;
@@ -101,5 +105,32 @@ describe('AssistantKnowledgeComponent', () => {
     expect(repository.deleteFaq).toHaveBeenCalledWith('d-1');
     expect(page.faqs()).toEqual([]);
     expect(page.openCount()).toBe(2);
+  });
+
+  it('shows the AI draft with its basis and prefills the answer for review', () => {
+    const external = { ...gap, draftAnswer: 'Theo Wikipedia, việt vị là…', draftBasis: 'EXTERNAL' as const,
+      draftSources: ['Luật việt vị (bóng đá) — https://vi.wikipedia.org/wiki/x'], draftedAt: '2026-10-16T08:00:00Z' };
+    repository.getGaps.mockReturnValue(of({ items: [external], total: 1 }));
+    const fixture = TestBed.createComponent(AssistantKnowledgeComponent);
+    fixture.detectChanges();
+    const text = fixture.nativeElement.textContent as string;
+
+    expect(text).toContain('Từ Wikipedia · cần kiểm tra');
+    expect(text).toContain('Duyệt & sửa');
+    fixture.componentInstance.openAnswer(external);
+    expect(fixture.componentInstance.answer()).toBe('Theo Wikipedia, việt vị là…');
+  });
+
+  it('a redraft that the assistant learned on its own leaves the queue', () => {
+    repository.draftGap.mockReturnValue(of({ ...gap, status: 'ANSWERED', autoLearned: true }));
+    const fixture = TestBed.createComponent(AssistantKnowledgeComponent);
+    fixture.detectChanges();
+    const page = fixture.componentInstance;
+
+    page.redraft(gap);
+
+    expect(repository.draftGap).toHaveBeenCalledWith('g-1');
+    expect(page.gaps()).toEqual([]);
+    expect(page.notice()?.text).toContain('tự học');
   });
 });

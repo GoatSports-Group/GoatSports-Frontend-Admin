@@ -2,8 +2,8 @@
   <header class="page-head">
     <div>
       <h1>Trợ lý AI</h1>
-      <p>Câu hỏi trợ lý GOAT AI chưa trả lời được, hỏi nhiều nhất trước. Trả lời một lần, trợ lý dùng ngay cho những
-        lần hỏi sau.</p>
+      <p>Câu hỏi trợ lý GOAT AI chưa trả lời được, hỏi nhiều nhất trước. Trợ lý tự soạn nháp: câu chỉ dựa trên tài
+        liệu hệ thống thì tự học, câu cần nguồn ngoài (Wikipedia) chờ bạn duyệt.</p>
     </div>
   </header>
 
@@ -46,6 +46,7 @@
     <li class="card gap">
       <div class="gap__head">
         <strong class="gap__question">{{ faq.question }}</strong>
+        @if (faq.autoLearned) { <span class="badge badge--primary"><lucide-icon name="sparkles" />Tự học</span> }
         <button type="button" class="btn btn--ghost btn--danger-ghost" [disabled]="busyId() === faq.documentId"
           (click)="removeFaq(faq)"><lucide-icon [name]="busyId() === faq.documentId ? 'loader-2' : 'trash-2'"
             [class.spin]="busyId() === faq.documentId" />Gỡ</button>
@@ -84,6 +85,20 @@
       @if (otherSamples(gap).length) {
       <p class="gap__samples"><span>Cách hỏi khác:</span> {{ otherSamples(gap).join(' · ') }}</p>
       }
+      @if (gap.draftBasis; as basis) {
+      <section class="draft" [class.draft--none]="basis === 'NONE'" aria-label="Bản nháp của trợ lý">
+        <p class="draft__head"><span [class]="'badge badge--' + draftBasis[basis].tone"><lucide-icon
+              [name]="draftBasis[basis].icon" />{{ draftBasis[basis].label }}</span>
+          @if (gap.draftedAt) { <small>soạn {{ gap.draftedAt | date:'HH:mm dd/MM' }}</small> }</p>
+        @if (gap.draftAnswer) { <p class="draft__text">{{ gap.draftAnswer }}</p> }
+        @if (gap.draftNote) { <p class="draft__note">{{ gap.draftNote }}</p> }
+        @if (gap.draftSources.length) {
+        <ul class="draft__sources" aria-label="Nguồn của bản nháp">
+          @for (source of gap.draftSources; track source) { <li>{{ source }}</li> }
+        </ul>
+        }
+      </section>
+      }
       @if (gap.badAnswers.length) {
       <details class="gap__bad">
         <summary>Câu trả lời bị báo chưa hữu ích ({{ gap.badAnswers.length }})</summary>
@@ -99,8 +114,12 @@
             title="Câu lạc đề, hoặc cần dữ liệu / tính năng mới chứ không phải một câu trả lời cố định"
             (click)="dismiss(gap)"><lucide-icon [name]="busyId() === gap.gapId ? 'loader-2' : 'ban'"
               [class.spin]="busyId() === gap.gapId" />Bỏ qua</button>
+          <button type="button" class="btn btn--ghost" [disabled]="draftingId() === gap.gapId" (click)="redraft(gap)"
+            title="Trợ lý soạn từ tài liệu hệ thống, thiếu thì tra Wikipedia"><lucide-icon
+              [name]="draftingId() === gap.gapId ? 'loader-2' : 'sparkles'" [class.spin]="draftingId() === gap.gapId" />{{
+            gap.draftedAt ? 'AI soạn lại' : 'AI soạn' }}</button>
           <button type="button" class="btn btn--primary" (click)="openAnswer(gap)"><lucide-icon
-              name="pencil" />Trả lời</button>
+              name="pencil" />{{ gap.draftAnswer ? 'Duyệt & sửa' : 'Trả lời' }}</button>
         </div>
         }
       </div>

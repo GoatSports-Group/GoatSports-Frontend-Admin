@@ -20,7 +20,19 @@ export interface KnowledgeGap {
   answer: string | null;
   resolvedBy: string | null;
   resolvedAt: string | null;
+  /** Câu trả lời trợ lý tự soạn (null khi chưa soạn hoặc câu cần dữ liệu thật / lạc đề). */
+  draftAnswer: string | null;
+  draftBasis: DraftBasis | null;
+  /** Vì sao không soạn được (khi NONE), hoặc ghi chú của AI. */
+  draftNote: string | null;
+  /** Đoạn tài liệu / bài Wikipedia nháp dựa vào. */
+  draftSources: string[];
+  draftedAt: string | null;
+  autoLearned: boolean;
 }
+
+/** SYSTEM: chỉ từ tài liệu GoatSports (được tự nạp); EXTERNAL: cần nguồn ngoài (chờ duyệt); NONE: không nên viết cứng. */
+export type DraftBasis = 'SYSTEM' | 'EXTERNAL' | 'NONE';
 
 export interface KnowledgeGapPage {
   items: KnowledgeGap[];
@@ -42,4 +54,6 @@ export interface AssistantFaq {
   resolvedBy: string | null;
   gapId: string | null;
   askedCount: number;
+  /** Trợ lý tự học (tự nạp bản nháp dựa trên tài liệu hệ thống), không phải admin trả lời. */
+  autoLearned: boolean;
 }

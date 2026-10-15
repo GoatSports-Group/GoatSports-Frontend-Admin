@@ -28,6 +28,7 @@
 .gap__question { color: var(--ink); font-size: 16px; font-weight: 800; line-height: 1.45; overflow-wrap: anywhere; }
 
 .gap__head .badge { flex: none; }
+.gap__head .badge lucide-icon, .draft__head .badge lucide-icon { width: 14px; height: 14px; }
 
 .gap__reasons { display: flex; flex-wrap: wrap; gap: 6px; }
 
@@ -58,6 +59,23 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 6;
 }
+
+// Bản nháp của trợ lý: khối phụ trong thẻ, chữ thường; nháp không dùng được (NONE) chỉ là ghi chú nhạt.
+.draft {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  background: var(--surface-subtle);
+}
+
+.draft__head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; }
+.draft__head small { color: var(--body); font-size: 12px; }
+.draft__text { margin: 0; color: var(--ink); font-size: 14px; line-height: 1.6; white-space: pre-line; overflow-wrap: anywhere; }
+.draft__note { margin: 0; color: var(--body); font-size: 13px; line-height: 1.5; }
+.draft__sources { display: grid; gap: 2px; margin: 0; padding-left: 18px; color: var(--body); font-size: 12px; overflow-wrap: anywhere; }
+.draft--none { background: transparent; }
 
 .gap__bad {
   color: var(--body);

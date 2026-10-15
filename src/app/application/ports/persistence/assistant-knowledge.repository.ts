@@ -14,6 +14,8 @@ export interface AssistantKnowledgeRepository {
   getGaps(status: KnowledgeGapStatus, page: number, size: number): Observable<KnowledgeGapPage>;
   answerGap(gapId: string, question: string, answer: string): Observable<KnowledgeGapAnswerResult>;
   dismissGap(gapId: string): Observable<KnowledgeGap>;
+  /** Nhờ trợ lý soạn (lại) câu trả lời; 503 khi LLM không dùng được. */
+  draftGap(gapId: string): Observable<KnowledgeGap>;
   getFaqs(): Observable<AssistantFaq[]>;
   deleteFaq(documentId: string): Observable<void>;
 }

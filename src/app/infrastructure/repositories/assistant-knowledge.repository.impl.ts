@@ -30,6 +30,10 @@ export class AssistantKnowledgeRepositoryImpl implements AssistantKnowledgeRepos
     return this.http.post<KnowledgeGap>(`${this.baseUrl}/gaps/${gapId}/dismiss`, {});
   }
 
+  draftGap(gapId: string): Observable<KnowledgeGap> {
+    return this.http.post<KnowledgeGap>(`${this.baseUrl}/gaps/${gapId}/draft`, {});
+  }
+
   getFaqs(): Observable<AssistantFaq[]> {
     return this.http.get<AssistantFaq[]>(`${this.baseUrl}/faqs`);
   }
