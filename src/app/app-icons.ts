@@ -2,6 +2,8 @@
 // không làm hỏng spec của trang đó (trước đây mỗi spec tự liệt kê icon và cứ thế lệch dần).
 import {
   LucideLandmark,
+  LucideBot,
+  LucideBookOpen,
   LucideMaximize2,
   LucideMinus,
   LucideCircleHelp,
@@ -305,6 +307,8 @@ export const APP_ICONS = [
   LucideMinus,
   LucideMaximize2,
   LucideLandmark,
+  LucideBot,
+  LucideBookOpen,
   LucideTicket,
   LucideServer,
   LucideMegaphone,

@@ -1,0 +1,153 @@
+<main class="page">
+  <header class="page-head">
+    <div>
+      <h1>Trợ lý AI</h1>
+      <p>Câu hỏi trợ lý GOAT AI chưa trả lời được, hỏi nhiều nhất trước. Trả lời một lần, trợ lý dùng ngay cho những
+        lần hỏi sau.</p>
+    </div>
+  </header>
+
+  @if (notice(); as note) {
+  <div class="notice" [class.notice--warning]="note.tone === 'warning'" role="status">
+    <lucide-icon [name]="note.tone === 'warning' ? 'triangle-alert' : 'circle-check-big'" /><span>{{ note.text }}</span>
+    <button type="button" class="icon-btn" aria-label="Ẩn thông báo" (click)="notice.set(null)"><lucide-icon
+        name="x" /></button>
+  </div>
+  }
+
+  <nav class="tabs" role="tablist" aria-label="Kiến thức của trợ lý">
+    <button type="button" class="tab" role="tab" [class.is-active]="tab() === 'OPEN'" [attr.aria-selected]="tab() === 'OPEN'"
+      (click)="selectTab('OPEN')"><lucide-icon name="inbox" />Chờ trả lời
+      @if (openCount() !== null) { <span class="count">{{ openCount() }}</span> }</button>
+    <button type="button" class="tab" role="tab" [class.is-active]="tab() === 'FAQ'" [attr.aria-selected]="tab() === 'FAQ'"
+      (click)="selectTab('FAQ')"><lucide-icon name="book-open" />Đã trả lời</button>
+    <button type="button" class="tab" role="tab" [class.is-active]="tab() === 'DISMISSED'"
+      [attr.aria-selected]="tab() === 'DISMISSED'" (click)="selectTab('DISMISSED')"><lucide-icon name="ban" />Đã bỏ
+      qua</button>
+  </nav>
+
+  @if (error() && (gaps().length || faqs().length)) { <p class="field__error" role="alert">{{ error() }}</p> }
+
+  @if (loading()) {
+  <app-loading-skeleton variant="rows" [count]="4" label="Đang tải" />
+  } @else if (error() && !(tab() === 'FAQ' ? faqs().length : gaps().length)) {
+  <div class="state state--error" role="alert">
+    <lucide-icon name="alert-circle" /><strong>Chưa tải được dữ liệu</strong>
+    <p>{{ error() }}</p>
+    <button type="button" class="btn" (click)="load()"><lucide-icon name="rotate-ccw" />Thử lại</button>
+  </div>
+  } @else if (tab() === 'FAQ') {
+  @if (!faqs().length) {
+  <div class="state"><lucide-icon name="book-open" /><strong>Chưa có câu trả lời bổ sung nào</strong>
+    <p>Câu bạn trả lời ở tab Chờ trả lời sẽ hiện ở đây.</p></div>
+  } @else {
+  <ul class="gaps">
+    @for (faq of faqs(); track faq.documentId) {
+    <li class="card gap">
+      <div class="gap__head">
+        <strong class="gap__question">{{ faq.question }}</strong>
+        <button type="button" class="btn btn--ghost btn--danger-ghost" [disabled]="busyId() === faq.documentId"
+          (click)="removeFaq(faq)"><lucide-icon [name]="busyId() === faq.documentId ? 'loader-2' : 'trash-2'"
+            [class.spin]="busyId() === faq.documentId" />Gỡ</button>
+      </div>
+      @if (faq.answer) { <p class="gap__answer">{{ faq.answer }}</p> }
+      <p class="gap__meta">
+        {{ faq.resolvedBy || 'Quản trị viên' }} · {{ faq.updatedAt | date:'HH:mm dd/MM/yyyy' }}
+        @if (faq.askedCount) { · từng được hỏi {{ faq.askedCount }} lần }
+      </p>
+    </li>
+    }
+  </ul>
+  }
+  } @else if (!gaps().length) {
+  <div class="state">
+    <lucide-icon [name]="tab() === 'OPEN' ? 'circle-check-big' : 'ban'" />
+    <strong>{{ tab() === 'OPEN' ? 'Trợ lý đang trả lời được mọi câu đã gặp' : 'Chưa bỏ qua câu nào' }}</strong>
+    <p>{{ tab() === 'OPEN'
+      ? 'Câu trợ lý chưa trả lời được, hoặc người dùng báo chưa hữu ích, sẽ hiện ở đây.'
+      : 'Câu lạc đề hoặc cần tính năng mới mà bạn bỏ qua sẽ hiện ở đây.' }}</p>
+  </div>
+  } @else {
+  <p class="result-count">{{ total() }} câu hỏi</p>
+  <ul class="gaps" [class.is-paging]="paging()">
+    @for (gap of gaps(); track gap.gapId) {
+    <li class="card gap">
+      <div class="gap__head">
+        <strong class="gap__question">{{ gap.question }}</strong>
+        <span class="badge badge--info">Hỏi {{ gap.count }} lần</span>
+      </div>
+      <div class="gap__reasons">
+        @for (reason of reasons(gap); track reason.label) {
+        <span class="chip-tag">{{ reason.label }}@if (reason.count > 1) { · {{ reason.count }} }</span>
+        }
+      </div>
+      @if (otherSamples(gap).length) {
+      <p class="gap__samples"><span>Cách hỏi khác:</span> {{ otherSamples(gap).join(' · ') }}</p>
+      }
+      @if (gap.badAnswers.length) {
+      <details class="gap__bad">
+        <summary>Câu trả lời bị báo chưa hữu ích ({{ gap.badAnswers.length }})</summary>
+        @for (bad of gap.badAnswers; track $index) { <blockquote>{{ bad }}</blockquote> }
+      </details>
+      }
+      <div class="gap__foot">
+        <p class="gap__meta">Lần đầu {{ gap.firstAskedAt | date:'dd/MM/yyyy' }} · gần nhất
+          {{ gap.lastAskedAt | date:'HH:mm dd/MM/yyyy' }}</p>
+        @if (tab() === 'OPEN') {
+        <div class="gap__actions">
+          <button type="button" class="btn btn--ghost" [disabled]="busyId() === gap.gapId"
+            title="Câu lạc đề, hoặc cần dữ liệu / tính năng mới chứ không phải một câu trả lời cố định"
+            (click)="dismiss(gap)"><lucide-icon [name]="busyId() === gap.gapId ? 'loader-2' : 'ban'"
+              [class.spin]="busyId() === gap.gapId" />Bỏ qua</button>
+          <button type="button" class="btn btn--primary" (click)="openAnswer(gap)"><lucide-icon
+              name="pencil" />Trả lời</button>
+        </div>
+        }
+      </div>
+    </li>
+    }
+  </ul>
+  @if (total() > 0) {
+  <app-pagination [pageIndex]="pageIndex()" [pageSize]="pageSize" [totalItems]="total()"
+    (pageChange)="goToPage($event)" />
+  }
+  }
+
+  @if (answering(); as gap) {
+  <div class="modal-backdrop" (click)="closeAnswer()">
+    <section class="modal modal--wide" role="dialog" aria-modal="true" aria-labelledby="answer-title"
+      (click)="$event.stopPropagation()">
+      <header class="modal__header">
+        <div>
+          <h2 id="answer-title">Trả lời cho trợ lý</h2>
+          <p>Được hỏi {{ gap.count }} lần. Câu trả lời thành tài liệu trợ lý trích dẫn, có hiệu lực ngay.</p>
+        </div>
+        <button type="button" class="icon-btn" aria-label="Đóng" (click)="closeAnswer()" [disabled]="saving()"><lucide-icon
+            name="x" /></button>
+      </header>
+      <div class="modal__body answer-form">
+        <label class="field">
+          <span class="field__label">Câu hỏi</span>
+          <input class="field__control" type="text" [maxlength]="questionMax" [ngModel]="question()"
+            (ngModelChange)="question.set($event)" name="question" aria-describedby="question-hint" />
+          <p id="question-hint" class="field__hint">Viết gọn, giống cách người dùng hỏi. Các cách hỏi khác được lưu kèm.</p>
+        </label>
+        <label class="field">
+          <span class="field__label">Câu trả lời</span>
+          <textarea class="field__control" rows="8" [maxlength]="answerMax" [ngModel]="answer()"
+            (ngModelChange)="answer.set($event)" name="answer" aria-describedby="answer-hint"
+            placeholder="Đúng với cách hệ thống đang chạy, có số liệu và chỗ bấm cụ thể."></textarea>
+          <p id="answer-hint" class="field__hint">{{ answer().trim().length }}/{{ answerMax }} ký tự. Câu cần dữ liệu thật
+            (giờ trống, giá hôm nay…) thì đừng trả lời cố định ở đây: bấm Bỏ qua và báo đội phát triển.</p>
+        </label>
+        @if (formError()) { <p class="field__error" role="alert">{{ formError() }}</p> }
+      </div>
+      <footer class="modal__footer">
+        <button type="button" class="btn" (click)="closeAnswer()" [disabled]="saving()">Hủy</button>
+        <button type="button" class="btn btn--primary" [disabled]="!canSave()" (click)="saveAnswer()"><lucide-icon
+            [name]="saving() ? 'loader-2' : 'check'" [class.spin]="saving()" />Lưu vào kiến thức</button>
+      </footer>
+    </section>
+  </div>
+  }
+</main>

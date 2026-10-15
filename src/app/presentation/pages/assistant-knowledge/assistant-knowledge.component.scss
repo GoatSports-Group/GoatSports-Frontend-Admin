@@ -1,0 +1,91 @@
+@use '../ops' as t;
+@include t.ops;
+
+.notice--warning { background: var(--warning-soft); color: var(--warning); }
+
+.result-count { margin: 0; color: var(--body); font-size: 14px; font-weight: 600; }
+
+.is-paging { opacity: .55; pointer-events: none; }
+
+// Một câu hỏi một thẻ, cả hàng: câu hỏi và câu trả lời thường dài.
+.gaps {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 20px;
+}
+
+.gap__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+
+.gap__question { color: var(--ink); font-size: 16px; font-weight: 800; line-height: 1.45; overflow-wrap: anywhere; }
+
+.gap__head .badge { flex: none; }
+
+.gap__reasons { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.chip-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 9999px;
+  background: var(--surface-strong);
+  color: var(--body);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.gap__samples { margin: 0; color: var(--body); font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.gap__samples span { color: var(--ink); font-weight: 700; }
+
+.gap__answer {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.6;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+}
+
+.gap__bad {
+  color: var(--body);
+  font-size: 14px;
+
+  summary { width: fit-content; color: var(--warning); font-weight: 700; cursor: pointer; }
+
+  blockquote {
+    margin: 8px 0 0;
+    padding: 8px 12px;
+    border-left: 3px solid var(--warning);
+    border-radius: 0 8px 8px 0;
+    background: var(--surface-subtle);
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+  }
+}
+
+.gap__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+
+.gap__meta { margin: 0; color: var(--body); font-size: 13px; line-height: 1.5; }
+
+.gap__actions { display: flex; gap: 8px; }
+
+.answer-form { display: grid; gap: 16px; }
+
+@media (max-width: 639px) {
+  .gap { padding: 14px 16px; }
+  .gap__actions { width: 100%; }
+  .gap__actions .btn { flex: 1; }
+}

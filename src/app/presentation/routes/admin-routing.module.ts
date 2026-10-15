@@ -12,6 +12,7 @@ import { PlatformReviewsComponent } from '@presentation/pages/platform-reviews/p
 import { PlatformFinanceComponent } from '@presentation/pages/platform-finance/platform-finance.component';
 import { PlatformCommunityComponent } from '@presentation/pages/platform-community/platform-community.component';
 import { BroadcastsComponent } from '@presentation/pages/broadcasts/broadcasts.component';
+import { AssistantKnowledgeComponent } from '@presentation/pages/assistant-knowledge/assistant-knowledge.component';
 import { SystemMonitorComponent } from '@presentation/pages/system-monitor/system-monitor.component';
 import { AdminGuard } from '@presentation/guards/admin.guard';
 import { VenueOwnerApplicationsComponent } from '@presentation/pages/venue-owner-applications/venue-owner-applications.component';
@@ -46,6 +47,7 @@ const routes: Routes = [
       { path: 'platform-finance', component: PlatformFinanceComponent, canActivate: [AdminGuard], data: { platformRoute: '/platform-finance' } },
       { path: 'platform-community', component: PlatformCommunityComponent, canActivate: [AdminGuard], data: { platformRoute: '/platform-community' } },
       { path: 'broadcasts', component: BroadcastsComponent, canActivate: [AdminGuard], data: { platformRoute: '/broadcasts' } },
+      { path: 'assistant-knowledge', component: AssistantKnowledgeComponent, canActivate: [AdminGuard], data: { platformRoute: '/assistant-knowledge' } },
       { path: 'system', component: SystemMonitorComponent, canActivate: [AdminGuard], data: { platformRoute: '/system' } },
       { path: 'owner-applications', component: OwnerApplicationsComponent, canActivate: [AdminGuard], data: { platformRoute: '/owner-applications' } },
       { path: 'applications', component: VenueOwnerApplicationsComponent, canActivate: [AdminGuard], data: { allowedRoles: ['VENUE_OWNER'] } },

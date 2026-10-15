@@ -24,6 +24,8 @@ import { ADMIN_BOOKING_REPOSITORY_TOKEN } from '@application/ports/persistence/a
 import { ADMIN_STATS_REPOSITORY_TOKEN } from '@application/ports/persistence/admin-stats.repository';
 import { ADMIN_VENUE_REPOSITORY_TOKEN } from '@application/ports/persistence/admin-venue.repository';
 import { AdminVenueRepositoryImpl } from '@infrastructure/repositories/admin-venue.repository.impl';
+import { ASSISTANT_KNOWLEDGE_REPOSITORY_TOKEN } from '@application/ports/persistence/assistant-knowledge.repository';
+import { AssistantKnowledgeRepositoryImpl } from '@infrastructure/repositories/assistant-knowledge.repository.impl';
 import { SYSTEM_MONITOR_REPOSITORY_TOKEN } from '@application/ports/persistence/system-monitor.repository';
 import { SystemMonitorRepositoryImpl } from '@infrastructure/repositories/system-monitor.repository.impl';
 import { BROADCAST_REPOSITORY_TOKEN } from '@application/ports/persistence/broadcast.repository';
@@ -111,6 +113,7 @@ import { APP_ICONS } from './app-icons';
     { provide: ADMIN_BOOKING_REPOSITORY_TOKEN, useClass: AdminBookingRepositoryImpl },
     { provide: ADMIN_STATS_REPOSITORY_TOKEN, useClass: AdminStatsRepositoryImpl },
     { provide: ADMIN_VENUE_REPOSITORY_TOKEN, useClass: AdminVenueRepositoryImpl },
+    { provide: ASSISTANT_KNOWLEDGE_REPOSITORY_TOKEN, useClass: AssistantKnowledgeRepositoryImpl },
     { provide: SYSTEM_MONITOR_REPOSITORY_TOKEN, useClass: SystemMonitorRepositoryImpl },
     { provide: BROADCAST_REPOSITORY_TOKEN, useClass: BroadcastRepositoryImpl },
     { provide: ADMIN_FINANCE_REPOSITORY_TOKEN, useClass: AdminFinanceRepositoryImpl },
