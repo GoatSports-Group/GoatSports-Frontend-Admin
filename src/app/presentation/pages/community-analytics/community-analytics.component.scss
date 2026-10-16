@@ -235,8 +235,9 @@
 
 // ---- Hai cột: môn | chủ đề; bài nổi bật | thành viên + tìm người. ----
 .split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
-.split--wide { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); align-items: start; }
-.stack { display: grid; min-width: 0; gap: 20px; }
+// Hai cột cao bằng nhau: thẻ trái giãn theo cột phải, thẻ "Thành viên" giãn phần dư để đáy thẳng hàng.
+.split--wide { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+.stack { display: grid; min-width: 0; grid-template-rows: 1fr auto; gap: 20px; }
 
 .bars {
   display: grid;
@@ -363,20 +364,21 @@ li:first-child .ranking__pos { background: var(--primary-light); color: var(--pr
   span:last-child { margin-left: 4px; }
 }
 
+// Thang theo màu primary: pha primary với nền (OKLab) cho 3 bậc đầu, rồi primary, rồi primary-strong.
+// Sáng: nền trắng → xanh đậm; tối: primary-strong sáng hơn primary nên thang tự đi từ sát nền lên nổi.
+// Đã qua dataviz validate_palette --ordinal ở cả hai chế độ (đơn sắc, độ sáng đơn điệu, mỗi bậc cách ≥ 0.06,
+// bậc nhạt nhất ≥ 2:1 so với nền): sáng #95beaa #6da68b #449070 #007a55 #004d38, tối #265c46 #2c7f5e #31a176 #34c48f #7be0b4.
 .heat-0 { background: var(--surface-strong); }
-.heat-1 { background: #cde2fb; }
-.heat-2 { background: #86b6ef; }
-.heat-3 { background: #3987e5; }
-.heat-4 { background: #1c5cab; }
-.heat-5 { background: #0d366b; }
+.heat-1 { background: color-mix(in oklab, var(--primary) 48%, var(--surface)); }
+.heat-2 { background: color-mix(in oklab, var(--primary) 66%, var(--surface)); }
+.heat-3 { background: color-mix(in oklab, var(--primary) 83%, var(--surface)); }
+.heat-4 { background: var(--primary); }
+.heat-5 { background: var(--primary-strong); }
 
-// Nền tối: đảo chiều thang (ít = tối, sát nền; nhiều = sáng, nổi lên).
 :host-context([data-theme='dark']) {
-  .heat-1 { background: #0d366b; }
-  .heat-2 { background: #1c5cab; }
-  .heat-3 { background: #3987e5; }
-  .heat-4 { background: #86b6ef; }
-  .heat-5 { background: #cde2fb; }
+  .heat-1 { background: color-mix(in oklab, var(--primary) 42%, var(--surface)); }
+  .heat-2 { background: color-mix(in oklab, var(--primary) 62%, var(--surface)); }
+  .heat-3 { background: color-mix(in oklab, var(--primary) 81%, var(--surface)); }
 }
 
 // ---- Bài nổi bật ----
