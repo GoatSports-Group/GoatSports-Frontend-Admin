@@ -1,0 +1,148 @@
+<main class="page">
+  <header class="page-head">
+    <div>
+      <h1>Hộp thư khiếu nại</h1>
+      <p>Thư của tài khoản bị khóa, gửi từ màn đăng nhập sau khi nhập đúng mật khẩu. Trả lời ở đây sẽ gửi email tới
+        người dùng; bản sao thư cũng tới hộp thư hỗ trợ.</p>
+    </div>
+  </header>
+
+  @if (notice(); as note) {
+  <div class="notice" [class.notice--warning]="note.tone === 'warning'" role="status">
+    <lucide-icon [name]="note.tone === 'warning' ? 'triangle-alert' : 'circle-check-big'" /><span>{{ note.text }}</span>
+    <button type="button" class="icon-btn" aria-label="Ẩn thông báo" (click)="notice.set(null)"><lucide-icon name="x" /></button>
+  </div>
+  }
+
+  <nav class="tabs" role="tablist" aria-label="Lọc thư">
+    <button type="button" class="tab" role="tab" [class.is-active]="tab() === 'NEW'" [attr.aria-selected]="tab() === 'NEW'"
+      (click)="selectTab('NEW')"><lucide-icon name="inbox" />Chưa đọc
+      @if (unread()) { <span class="count count--alert">{{ unread()! > 99 ? '99+' : unread() }}</span> }</button>
+    <button type="button" class="tab" role="tab" [class.is-active]="tab() === 'ALL'" [attr.aria-selected]="tab() === 'ALL'"
+      (click)="selectTab('ALL')"><lucide-icon name="mail" />Tất cả</button>
+    <button type="button" class="tab" role="tab" [class.is-active]="tab() === 'RESOLVED'"
+      [attr.aria-selected]="tab() === 'RESOLVED'" (click)="selectTab('RESOLVED')"><lucide-icon name="circle-check-big" />Đã xử lý</button>
+  </nav>
+
+  <section class="mailbox card" [class.mailbox--reading]="selected()">
+    <!-- Danh sách thư -->
+    <div class="mailbox__list" aria-label="Danh sách thư">
+      @if (loading() && !appeals().length) {
+      <app-loading-skeleton variant="rows" [count]="5" [flush]="true" label="Đang tải thư" />
+      } @else if (error()) {
+      <div class="state state--error" role="alert">
+        <lucide-icon name="alert-circle" /><strong>Chưa tải được hộp thư</strong>
+        <p>{{ error() }}</p>
+        <button type="button" class="btn" (click)="load()"><lucide-icon name="rotate-ccw" />Thử lại</button>
+      </div>
+      } @else if (!appeals().length) {
+      <div class="state">
+        <lucide-icon name="inbox" /><strong>{{ tab() === 'NEW' ? 'Không có thư chưa đọc' : 'Chưa có thư nào' }}</strong>
+        <p>Thư khiếu nại của tài khoản bị khóa sẽ hiện ở đây.</p>
+      </div>
+      } @else {
+      <ul class="mail-rows" [class.is-paging]="loading()">
+        @for (appeal of appeals(); track appeal.appealId) {
+        <li>
+          <button type="button" class="mail-row" [class.is-unread]="appeal.status === 'NEW'"
+            [class.is-active]="selectedId() === appeal.appealId" [attr.aria-current]="selectedId() === appeal.appealId"
+            (click)="open(appeal)">
+            <span class="mail-row__avatar" aria-hidden="true">{{ initial(appeal) }}</span>
+            <span class="mail-row__body">
+              <span class="mail-row__top">
+                <strong class="mail-row__from">{{ appeal.fullName || appeal.email }}</strong>
+                <time class="mail-row__time" [attr.datetime]="appeal.createdAt">{{ appeal.createdAt | date:'dd/MM HH:mm' }}</time>
+              </span>
+              <span class="mail-row__subject">{{ appeal.subject }}</span>
+              <span class="mail-row__excerpt">{{ excerpt(appeal.message) }}</span>
+            </span>
+            @if (appeal.status === 'NEW') { <span class="mail-row__dot" aria-label="Chưa đọc"></span> }
+          </button>
+        </li>
+        }
+      </ul>
+      @if (total() > pageSize) {
+      <app-pagination [pageIndex]="page()" [pageSize]="pageSize" [totalItems]="total()" itemLabel="thư"
+        (pageChange)="goToPage($event)" />
+      }
+      }
+    </div>
+
+    <!-- Đọc thư -->
+    <article class="mailbox__reader" aria-live="polite">
+      @if (selected(); as appeal) {
+      <header class="reader__head">
+        <button type="button" class="btn btn--ghost btn--sm reader__back" (click)="closeReader()">
+          <lucide-icon name="arrow-left" />Hộp thư
+        </button>
+        <h2>{{ appeal.subject }}</h2>
+        <div class="reader__meta">
+          <span class="mail-row__avatar" aria-hidden="true">{{ initial(appeal) }}</span>
+          <div>
+            <strong>{{ appeal.fullName || appeal.email }}</strong>
+            <span class="muted">&lt;{{ appeal.email }}&gt;</span>
+            <small class="muted">{{ appeal.createdAt | date:'HH:mm, dd/MM/yyyy' }}</small>
+          </div>
+          <div class="reader__badges">
+            <span [class]="'badge badge--' + statusLabel[appeal.status].tone">{{ statusLabel[appeal.status].label }}</span>
+            @if (appeal.accountStatus === 'BLOCKED') { <span class="badge badge--danger"><lucide-icon name="lock" />Đang bị khóa</span> }
+            @else if (appeal.accountStatus === 'ACTIVE') { <span class="badge badge--success"><lucide-icon name="lock-open" />Đã mở khóa</span> }
+          </div>
+        </div>
+      </header>
+
+      @if (opening()) {
+      <app-loading-skeleton variant="text" [count]="3" [flush]="true" label="Đang mở thư" />
+      } @else {
+      <div class="reader__body">{{ appeal.message }}</div>
+
+      @if (appeal.reply) {
+      <section class="reader__reply" aria-label="Phản hồi đã gửi">
+        <div class="reader__reply-head">
+          <lucide-icon name="send" />
+          <strong>Đã phản hồi</strong>
+          <small class="muted">{{ appeal.repliedAt | date:'HH:mm, dd/MM/yyyy' }}
+            @if (directory.name(appeal.repliedBy)) { · {{ directory.name(appeal.repliedBy) }} }</small>
+        </div>
+        <p>{{ appeal.reply }}</p>
+      </section>
+      }
+
+      <div class="reader__actions">
+        @if (appeal.accountStatus === 'BLOCKED') {
+        <button type="button" class="btn btn--primary" [disabled]="busy()" (click)="unblock()">
+          <lucide-icon name="lock-open" />Mở khóa tài khoản
+        </button>
+        }
+        @if (appeal.status !== 'RESOLVED') {
+        <button type="button" class="btn" [disabled]="busy()" (click)="markResolved()">
+          <lucide-icon name="circle-check-big" />Đánh dấu đã xử lý
+        </button>
+        }
+      </div>
+
+      <form class="composer" (ngSubmit)="sendReply()">
+        <label class="field__label" for="appeal-reply">Trả lời {{ appeal.email }}</label>
+        <textarea id="appeal-reply" name="reply" rows="5" [maxlength]="replyMax" [ngModel]="reply"
+          (ngModelChange)="setReply($event)" placeholder="Nội dung phản hồi gửi tới email người dùng…"></textarea>
+        <div class="composer__foot">
+          <label class="composer__check">
+            <input type="checkbox" name="resolve" [(ngModel)]="resolveAfterReply" />
+            Đánh dấu đã xử lý sau khi gửi
+          </label>
+          <span class="muted">{{ replyLength() }}/{{ replyMax }}</span>
+          <button type="submit" class="btn btn--primary" [disabled]="busy() || !replyLength()">
+            <lucide-icon name="send" />{{ busy() ? 'Đang gửi…' : 'Gửi phản hồi' }}
+          </button>
+        </div>
+      </form>
+      }
+      } @else {
+      <div class="state reader__empty">
+        <lucide-icon name="mail" /><strong>Chọn một thư để đọc</strong>
+        <p>Mở khóa tài khoản, trả lời qua email hoặc đánh dấu đã xử lý ngay trong thư.</p>
+      </div>
+      }
+    </article>
+  </section>
+</main>

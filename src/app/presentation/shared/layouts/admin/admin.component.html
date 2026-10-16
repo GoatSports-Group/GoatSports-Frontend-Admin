@@ -132,6 +132,9 @@
               [title]="item.title" [attr.aria-label]="item.title">
               <lucide-icon [name]="item.icon" />
               <span class="sidebar-text">{{ item.title }}</span>
+              @if (item.badge === 'appeals' && appealUnread() > 0) {
+                <span class="sidebar-badge" [attr.aria-label]="appealUnread() + ' thư khiếu nại chưa đọc'">{{ appealUnread() > 99 ? '99+' : appealUnread() }}</span>
+              }
               @if (item.badge === 'messages' && chatInbox.badge() > 0) {
                 <span class="sidebar-badge" [attr.aria-label]="chatInbox.badge() + ' cuộc trò chuyện cần xem'">{{ chatInbox.badge() > 99 ? '99+' : chatInbox.badge() }}</span>
               }

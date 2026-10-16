@@ -4,8 +4,8 @@ export interface AdminNavigationItem {
   readonly icon: string;
   readonly route: string;
   readonly developing?: boolean;
-  /** Hien so tu ChatInboxService (muc Tin nhan). */
-  readonly badge?: 'messages';
+  /** Hien so: 'messages' tu ChatInboxService (muc Tin nhan), 'appeals' = thu khieu nai chua doc. */
+  readonly badge?: 'messages' | 'appeals';
   /** Trang nen tang: quyen can co de thay va mo trang (vai tro tu tao). Khong co = moi tai khoan back-office. */
   readonly permission?: string;
   /** Chi ADMIN (backend kiem ten vai tro, vd hop thu ho tro). */
@@ -28,6 +28,7 @@ export const PLATFORM_ADMIN_NAVIGATION: readonly AdminNavigationItem[] = [
   { title: 'CLB & giải đấu', description: 'Mọi câu lạc bộ và giải đấu trên nền tảng', icon: 'trophy', route: '/platform-community', permission: 'GET_ALL_CLUBS' },
   { title: 'Gửi thông báo', description: 'Thông báo hệ thống tới người chơi và chủ sân', icon: 'megaphone', route: '/broadcasts', permission: 'GET_BROADCASTS' },
   { title: 'Người dùng', description: 'Quản lý tài khoản thành viên hệ thống', icon: 'users', route: '/users', permission: 'GET_USERS' },
+  { title: 'Khiếu nại tài khoản', description: 'Thư của tài khoản bị khóa: đọc, trả lời qua email, mở khóa', icon: 'inbox', route: '/account-appeals', badge: 'appeals', permission: 'GET_USERS' },
   { title: 'Vai trò', description: 'Quản lý nhóm vai trò và quyền hạn', icon: 'shield', route: '/roles', permission: 'GET_ROLES' },
   { title: 'Kiểm duyệt', description: 'Xử lý báo cáo nội dung và khiếu nại của tác giả', icon: 'shield-alert', route: '/moderation', permission: 'MODERATE_SOCIAL_CONTENT' },
   { title: 'Tin nhắn', description: 'Hộp thư hỗ trợ: trả lời và chủ động nhắn cho chủ sân', icon: 'message-circle', route: '/messages', badge: 'messages', adminOnly: true },
@@ -60,7 +61,7 @@ export const PLATFORM_ADMIN_NAVIGATION_GROUPS: readonly AdminNavigationGroup[] =
   { label: 'Sân và đặt sân', items: platformItems(['/bookings', '/platform-venues', '/owner-applications', '/platform-reviews']) },
   { label: 'Tài chính', items: platformItems(['/platform-finance']) },
   { label: 'Cộng đồng', items: platformItems(['/community-analytics', '/platform-community', '/moderation', '/messages', '/broadcasts']) },
-  { label: 'Hệ thống', items: platformItems(['/users', '/roles', '/logs', '/system', '/assistant-knowledge']) }
+  { label: 'Hệ thống', items: platformItems(['/users', '/account-appeals', '/roles', '/logs', '/system', '/assistant-knowledge']) }
 ];
 
 export const VENUE_OWNER_NAVIGATION_GROUPS: readonly AdminNavigationGroup[] = [

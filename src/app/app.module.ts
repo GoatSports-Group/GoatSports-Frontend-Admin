@@ -25,6 +25,8 @@ import { ADMIN_STATS_REPOSITORY_TOKEN } from '@application/ports/persistence/adm
 import { ADMIN_VENUE_REPOSITORY_TOKEN } from '@application/ports/persistence/admin-venue.repository';
 import { AdminVenueRepositoryImpl } from '@infrastructure/repositories/admin-venue.repository.impl';
 import { ASSISTANT_KNOWLEDGE_REPOSITORY_TOKEN } from '@application/ports/persistence/assistant-knowledge.repository';
+import { ACCOUNT_APPEAL_REPOSITORY_TOKEN } from '@application/ports/persistence/account-appeal.repository';
+import { AccountAppealRepositoryImpl } from '@infrastructure/repositories/account-appeal.repository.impl';
 import { AssistantKnowledgeRepositoryImpl } from '@infrastructure/repositories/assistant-knowledge.repository.impl';
 import { SYSTEM_MONITOR_REPOSITORY_TOKEN } from '@application/ports/persistence/system-monitor.repository';
 import { SystemMonitorRepositoryImpl } from '@infrastructure/repositories/system-monitor.repository.impl';
@@ -114,6 +116,7 @@ import { APP_ICONS } from './app-icons';
     { provide: ADMIN_STATS_REPOSITORY_TOKEN, useClass: AdminStatsRepositoryImpl },
     { provide: ADMIN_VENUE_REPOSITORY_TOKEN, useClass: AdminVenueRepositoryImpl },
     { provide: ASSISTANT_KNOWLEDGE_REPOSITORY_TOKEN, useClass: AssistantKnowledgeRepositoryImpl },
+    { provide: ACCOUNT_APPEAL_REPOSITORY_TOKEN, useClass: AccountAppealRepositoryImpl },
     { provide: SYSTEM_MONITOR_REPOSITORY_TOKEN, useClass: SystemMonitorRepositoryImpl },
     { provide: BROADCAST_REPOSITORY_TOKEN, useClass: BroadcastRepositoryImpl },
     { provide: ADMIN_FINANCE_REPOSITORY_TOKEN, useClass: AdminFinanceRepositoryImpl },

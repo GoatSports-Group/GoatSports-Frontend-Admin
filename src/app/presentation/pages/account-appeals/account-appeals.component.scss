@@ -1,0 +1,241 @@
+@use '../ops' as t;
+@include t.ops;
+
+.count--alert { background: var(--danger); color: #fff; }
+
+// ---- Hộp thư kiểu email: danh sách 360px | khung đọc; điện thoại chỉ hiện một bên. ----
+.mailbox {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  min-height: 560px;
+  overflow: hidden;
+  padding: 0;
+}
+
+.mailbox__list {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  border-right: 1px solid var(--hairline);
+  background: var(--surface);
+}
+
+.mail-rows {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.is-paging { opacity: .55; pointer-events: none; }
+
+.mail-row {
+  position: relative;
+  display: grid;
+  width: 100%;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px 18px 14px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--hairline);
+  border-left: 3px solid transparent;
+  background: transparent;
+  color: var(--body);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--transition-smooth);
+
+  &:hover { background: var(--surface-subtle); }
+  &:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+  &.is-active { border-left-color: var(--primary); background: var(--primary-light); }
+}
+
+.mail-row__avatar {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  place-items: center;
+  border-radius: 9999px;
+  background: var(--primary-light);
+  color: var(--primary-strong);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.mail-row__body { display: grid; min-width: 0; gap: 2px; }
+.mail-row__top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+
+.mail-row__from {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mail-row__time { flex: none; font-size: 12px; font-variant-numeric: tabular-nums; }
+
+.mail-row__subject,
+.mail-row__excerpt {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mail-row__subject { color: var(--ink); }
+
+// Thư chưa đọc: đậm như email, chấm xanh bên phải.
+.mail-row.is-unread {
+  .mail-row__from, .mail-row__subject { font-weight: 800; }
+  .mail-row__time { color: var(--primary); font-weight: 800; }
+}
+
+.mail-row__dot {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--primary);
+  transform: translateY(-50%);
+}
+
+// ---- Khung đọc ----
+.mailbox__reader {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px 26px;
+  overflow-y: auto;
+}
+
+.reader__back { display: none; align-self: flex-start; }
+
+.reader__head {
+  display: grid;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--hairline);
+
+  h2 { margin: 0; color: var(--ink); font-size: 20px; font-weight: 800; overflow-wrap: anywhere; }
+}
+
+.reader__meta {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+
+  > div:nth-child(2) { display: grid; min-width: 0; gap: 1px; }
+  strong { color: var(--ink); font-size: 14px; font-weight: 800; }
+  .muted { overflow: hidden; font-size: 13px; text-overflow: ellipsis; }
+  small { font-size: 12px; }
+}
+
+.reader__badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+
+  .badge { display: inline-flex; align-items: center; gap: 4px; }
+  .badge lucide-icon { width: 12px; height: 12px; }
+}
+
+.reader__body {
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.reader__reply {
+  padding: 14px 16px;
+  border-left: 3px solid var(--primary);
+  border-radius: 0 12px 12px 0;
+  background: var(--surface-subtle);
+
+  p { margin: 8px 0 0; color: var(--ink); font-size: 14px; line-height: 1.6; white-space: pre-line; }
+}
+
+.reader__reply-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+
+  lucide-icon { width: 14px; height: 14px; color: var(--primary); }
+  strong { color: var(--ink); font-size: 13px; font-weight: 800; }
+  small { font-size: 12px; }
+}
+
+.reader__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.composer {
+  display: grid;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--hairline);
+
+  textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+    font-size: 14px;
+    line-height: 1.55;
+    resize: vertical;
+
+    &:focus { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+  }
+}
+
+.composer__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 14px;
+
+  .muted { font-size: 12px; font-variant-numeric: tabular-nums; }
+}
+
+.composer__check {
+  display: inline-flex;
+  margin-right: auto;
+  align-items: center;
+  gap: 8px;
+  color: var(--body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reader__empty { margin: auto; }
+
+@media (max-width: 900px) {
+  .mailbox { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  .mailbox__list { border-right: 0; }
+  .mailbox__reader { display: none; padding: 16px; }
+  .mailbox--reading {
+    .mailbox__list { display: none; }
+    .mailbox__reader { display: flex; }
+  }
+  .reader__back { display: inline-flex; }
+  .reader__meta { grid-template-columns: 36px minmax(0, 1fr); }
+  .reader__badges { grid-column: 1 / -1; justify-content: flex-start; }
+}

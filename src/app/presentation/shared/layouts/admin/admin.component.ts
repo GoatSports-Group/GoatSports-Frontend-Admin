@@ -10,6 +10,7 @@ import { AuthService } from '@presentation/services/auth.service';
 import { NotificationService } from '@presentation/services/notification.service';
 import { notificationRoute } from '@shared/utils/notification-view';
 import { ChatInboxService } from '@presentation/services/chat-inbox.service';
+import { ACCOUNT_APPEAL_REPOSITORY_TOKEN } from '@application/ports/persistence/account-appeal.repository';
 import { GetCurrentUserUseCase } from '@application/usecase/auth/get-current-user.usecase';
 import { User } from '@application/dto/user/user.dto';
 import { Notification, NotificationStatus, NotificationType } from '@application/dto/notification/notification.dto';
@@ -55,6 +56,9 @@ export class AdminComponent implements OnInit {
   public authService = inject(AuthService);
   public notificationService = inject(NotificationService);
   readonly chatInbox = inject(ChatInboxService);
+  private readonly appealRepository = inject(ACCOUNT_APPEAL_REPOSITORY_TOKEN);
+  /** Thư khiếu nại chưa đọc (badge mục "Khiếu nại tài khoản"); chỉ hỏi khi người dùng mở được trang đó. */
+  readonly appealUnread = signal(0);
   private router = inject(Router);
   private getCurrentUser = inject(GetCurrentUserUseCase);
   private destroyRef = inject(DestroyRef);
@@ -191,6 +195,15 @@ export class AdminComponent implements OnInit {
       this.openActiveGroup();
       if (window.innerWidth < 1024) this.sidebarCollapsed.set(true);
     });
+
+    const appeals = PLATFORM_ADMIN_NAVIGATION.find(item => item.route === '/account-appeals');
+    if (appeals && canOpenPlatformItem(appeals, this.userRole(), this.userPermissions())) {
+      interval(60000).pipe(
+        startWith(0),
+        switchMap(() => this.appealRepository.unreadCount().pipe(catchError(() => of(this.appealUnread())))),
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe(count => this.appealUnread.set(count));
+    }
 
     interval(10000)
       .pipe(
