@@ -23,7 +23,8 @@ test('chuông: chấm chưa đọc, đánh dấu một tin đã đọc, không c
 
   await panel.getByRole('button', { name: 'Đánh dấu đã đọc', exact: true }).click();
   await expect(panel.locator('.notification-item.is-unread')).toHaveCount(0);
-  expect(reads).toHaveLength(1);
+  // PUT đi bất đồng bộ sau cú bấm: chờ tới khi gửi, không kiểm ngay (máy bận thì hụt).
+  await expect.poll(() => reads.length).toBe(1);
 
   await panel.getByRole('link', { name: 'Xem tất cả thông báo' }).click();
   await expect(page).toHaveURL(/\/admin\/notifications$/);
@@ -53,4 +54,15 @@ test('trang Thông báo: tab Tất cả / Chưa đọc kèm số, lọc chưa đ
   await expect(confirm).toBeVisible();
   await confirm.getByRole('button', { name: 'Xóa', exact: true }).click();
   await expect(page.getByText('Đã xóa thông báo.')).toBeVisible();
+});
+
+test('chuông và tab "Chưa đọc": trên 99 thì hiện 99+', async ({ page }) => {
+  await mockAdminApi(page, 'ADMIN');
+  await page.route(url => url.pathname.endsWith('/notifications/unread-count'),
+    route => route.fulfill({ json: { statusCode: 200, data: 150 } }));
+  await page.goto('/admin/notifications');
+
+  await expect(page.locator('.notification-count')).toHaveText('99+');
+  await expect(page.locator('.notification-count')).toHaveAttribute('aria-label', '150 thông báo chưa đọc');
+  await expect(page.getByRole('tab', { name: /Chưa đọc\s*99\+/ })).toBeVisible();
 });

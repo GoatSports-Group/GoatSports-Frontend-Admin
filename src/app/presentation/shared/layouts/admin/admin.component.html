@@ -26,8 +26,9 @@
         <button type="button" class="shell-icon-button notification-trigger" (click)="toggleNotifDropdown($event)"
           aria-label="Mở thông báo" [attr.aria-expanded]="isNotifOpen" aria-controls="notification-panel">
           <lucide-icon name="bell" />
-          @if ((notificationService.unreadCount$ | async)! > 0) {
-            <span class="notification-count">{{ notificationService.unreadCount$ | async }}</span>
+          @let unread = (notificationService.unreadCount$ | async) ?? 0;
+          @if (unread > 0) {
+            <span class="notification-count" [attr.aria-label]="unread + ' thông báo chưa đọc'">{{ unread > 99 ? '99+' : unread }}</span>
           }
         </button>
 

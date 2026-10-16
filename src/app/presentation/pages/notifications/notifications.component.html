@@ -18,7 +18,7 @@
     <button type="button" role="tab" class="tab" [class.is-active]="filter() === 'ALL'" [attr.aria-selected]="filter() === 'ALL'"
       (click)="setFilter('ALL')">Tất cả<span class="count">{{ allCount() ?? '—' }}</span></button>
     <button type="button" role="tab" class="tab" [class.is-active]="filter() === 'UNREAD'" [attr.aria-selected]="filter() === 'UNREAD'"
-      (click)="setFilter('UNREAD')">Chưa đọc<span class="count" [class.count--alert]="unreadCount() > 0">{{ unreadCount() }}</span></button>
+      (click)="setFilter('UNREAD')">Chưa đọc<span class="count" [class.count--alert]="unreadCount() > 0">{{ unreadCount() > 99 ? '99+' : unreadCount() }}</span></button>
   </nav>
 
   <section aria-live="polite">
