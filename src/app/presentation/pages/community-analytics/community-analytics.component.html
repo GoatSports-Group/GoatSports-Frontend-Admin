@@ -1,0 +1,224 @@
+<section class="community" aria-labelledby="community-title">
+  <header class="head">
+    <div>
+      <h1 id="community-title">Hoạt động cộng đồng</h1>
+      <p>Bài viết, tương tác và người dùng tích cực trên bảng tin, so với {{ range() }} ngày liền trước</p>
+    </div>
+    <div class="segmented" role="group" aria-label="Kỳ thống kê">
+      @for (value of ranges; track value) {
+      <button type="button" [class.is-active]="range() === value" [attr.aria-pressed]="range() === value" (click)="setRange(value)">{{ value }} ngày</button>
+      }
+    </div>
+  </header>
+
+  @if (error()) {
+  <div class="card failed">
+    <lucide-icon name="alert-circle" />
+    <div><strong>Không tải được số liệu cộng đồng</strong><small>Dịch vụ mạng xã hội chưa phản hồi.</small></div>
+    <button type="button" class="retry" (click)="load()"><lucide-icon name="refresh-cw" />Thử lại</button>
+  </div>
+  } @else if (loading() && !data()) {
+  <div class="kpis">
+    @for (i of [0, 1, 2, 3]; track i) { <app-loading-skeleton variant="block" height="132px" label="Đang tải chỉ số" /> }
+  </div>
+  <app-loading-skeleton variant="block" height="320px" label="Đang tải biểu đồ" />
+  } @else if (data(); as d) {
+
+  <section class="kpis" [class.is-stale]="loading()" [attr.aria-label]="'Chỉ số chính trong ' + range() + ' ngày'">
+    @for (kpi of kpis(); track kpi.key; let i = $index) {
+    <article class="kpi" [style.--i]="i">
+      <span class="kpi__label">{{ kpi.label }}</span>
+      <strong class="kpi__value">{{ kpi.value }}</strong>
+      @if (kpi.delta; as delta) {
+      <span [class]="'delta delta--' + delta.tone"><lucide-icon [name]="delta.icon" />{{ delta.text }}</span>
+      } @else {
+      <span class="delta">Chưa có kỳ trước để so</span>
+      }
+      @if (kpi.spark.length > 1) {
+      <svg class="spark" viewBox="0 0 100 32" preserveAspectRatio="none" aria-hidden="true"><path [attr.d]="sparkPath(kpi.spark)" /></svg>
+      }
+      <small class="kpi__hint">{{ kpi.hint }}</small>
+    </article>
+    }
+  </section>
+
+  <section class="card" aria-labelledby="trend-title">
+    <header class="card__head">
+      <div>
+        <h2 id="trend-title">{{ metricInfo().label }} theo ngày</h2>
+        <p>
+          @if (metric() === 'activeUsers') { Mỗi ngày đếm riêng; tổng kỳ là <strong>{{ count(d.totals.activeUsers) }}</strong> người khác nhau }
+          @else { <strong>{{ count(chart().total) }}</strong> {{ metricInfo().unit }} trong {{ range() }} ngày }
+        </p>
+      </div>
+      <div class="segmented segmented--sm" role="group" aria-label="Chỉ số của biểu đồ">
+        @for (item of metrics; track item.key) {
+        <button type="button" [class.is-active]="metric() === item.key" [attr.aria-pressed]="metric() === item.key" (click)="setMetric(item.key)">{{ item.label }}</button>
+        }
+      </div>
+    </header>
+    <div class="trend" (mouseleave)="hovered.set(null)">
+      <div class="trend__axis" aria-hidden="true"><span>{{ count(chart().max) }}</span><span>{{ count(Math.round(chart().max / 2)) }}</span><span>0</span></div>
+      <div class="trend__plot">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <path class="trend__area" [attr.d]="chart().area" />
+          <path class="trend__line" [attr.d]="chart().line" />
+        </svg>
+        @if (hovered() !== null && chart().points[hovered()!]; as point) {
+        <span class="trend__cross" [style.left.%]="point.x" aria-hidden="true"></span>
+        <span class="trend__dot" [style.left.%]="point.x" [style.top.%]="point.y" aria-hidden="true"></span>
+        @if (chart().days[hovered()!]; as day) {
+        <div class="tooltip" [class.tooltip--left]="point.x > 70" [class.tooltip--right]="point.x < 30" [style.left.%]="point.x" role="status">
+          <strong>{{ dayLabel(day.date) }}</strong>
+          <span>{{ count(day.activeUsers) }} người hoạt động</span>
+          <span>{{ count(day.posts) }} bài · {{ count(day.shares) }} chia sẻ</span>
+          <span>{{ count(day.likes) }} thích · {{ count(day.comments) }} bình luận</span>
+        </div>
+        }
+        }
+        <div class="trend__hits">
+          @for (day of chart().days; track day.date; let i = $index) {
+          <button type="button" (mouseenter)="hovered.set(i)" (focus)="hovered.set(i)" (blur)="hovered.set(null)"
+            [attr.aria-label]="dayLabel(day.date) + ': ' + dayValue(day, metric()) + ' ' + metricInfo().unit"></button>
+          }
+        </div>
+      </div>
+      @if (chart().days.length) {
+      <div class="trend__dates" aria-hidden="true"><span>{{ dayLabel(chart().days[0].date) }}</span><span>{{ dayLabel(chart().days[chart().days.length - 1].date) }}</span></div>
+      }
+    </div>
+    <div class="sr-only">
+      <table>
+        <caption>Hoạt động cộng đồng theo ngày</caption>
+        <thead><tr><th scope="col">Ngày</th><th scope="col">Người hoạt động</th><th scope="col">Bài viết</th><th scope="col">Bình luận</th><th scope="col">Lượt thích</th><th scope="col">Chia sẻ</th></tr></thead>
+        <tbody>
+          @for (day of d.byDay; track day.date) { <tr><td>{{ day.date | date:'dd/MM/yyyy' }}</td><td>{{ day.activeUsers }}</td><td>{{ day.posts }}</td><td>{{ day.comments }}</td><td>{{ day.likes }}</td><td>{{ day.shares }}</td></tr> }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="split">
+    <section class="card" aria-labelledby="sport-title">
+      <header class="card__head"><div><h2 id="sport-title">Môn thể thao sôi nổi nhất</h2><p>Xếp theo lượt thích, bình luận, chia sẻ trong kỳ</p></div></header>
+      @if (!sports().length) {
+      <p class="muted-line">Chưa có bài viết nào gắn môn trong kỳ.</p>
+      } @else {
+      <ul class="bars">
+        @for (row of sports(); track row.sport) {
+        <li>
+          <span class="bars__name">{{ row.label }}<small>{{ count(row.posts) }} bài mới</small></span>
+          <i><b [style.width.%]="row.width"></b></i>
+          <strong>{{ count(row.interactions) }}</strong>
+        </li>
+        }
+      </ul>
+      }
+    </section>
+
+    <section class="card" aria-labelledby="tag-title">
+      <header class="card__head"><div><h2 id="tag-title">Chủ đề nổi bật</h2><p>Hashtag dùng nhiều nhất, so với kỳ trước</p></div></header>
+      @if (!d.trendingTags.length) {
+      <p class="muted-line">Chưa có bài nào gắn hashtag trong kỳ.</p>
+      } @else {
+      <ol class="ranking">
+        @for (tag of d.trendingTags; track tag.tag; let i = $index) {
+        <li>
+          <span class="ranking__pos">{{ i + 1 }}</span>
+          <span class="ranking__name"><strong>#{{ tag.tag }}</strong><small>{{ count(tag.posts) }} bài · {{ count(tag.authors) }} người viết</small></span>
+          @if (tagChange(tag.posts, tag.previousPosts); as change) {
+          <span class="trendmark" [class.is-down]="change.tone === 'bad'"><lucide-icon [name]="change.icon" />{{ shortChange(change) }}</span>
+          } @else {
+          <span class="trendmark trendmark--new">Mới</span>
+          }
+        </li>
+        }
+      </ol>
+      }
+    </section>
+  </div>
+
+  <section class="card" aria-labelledby="heat-title">
+    <header class="card__head">
+      <div>
+        <h2 id="heat-title">Giờ cộng đồng hoạt động</h2>
+        <p>Bài viết, bình luận và lượt thích theo thứ và giờ trong kỳ
+          @if (heat().peak; as peak) { · cao điểm <strong>{{ slotLabel(peak) }}</strong> }
+        </p>
+      </div>
+      <p class="heat__readout" role="status">{{ hoveredCell() ? cellLabel(hoveredCell()!) : 'Rê chuột vào ô để xem số' }}</p>
+    </header>
+    <div class="heat" (mouseleave)="hoveredCell.set(null)">
+      <div class="heat__grid">
+        <span></span>
+        @for (hour of hours; track hour) { <span class="heat__hour" aria-hidden="true">{{ hourTick(hour) }}</span> }
+        @for (row of heat().grid; track $index; let day = $index) {
+        <span class="heat__day">{{ weekdays[day] }}</span>
+        @for (cell of row; track cell.hour) {
+        <button type="button" [class]="'heat__cell heat-' + cell.level" [attr.aria-label]="cellLabel(cell)"
+          (mouseenter)="hoveredCell.set(cell)" (focus)="hoveredCell.set(cell)" (blur)="hoveredCell.set(null)"></button>
+        }
+        }
+      </div>
+      <div class="heat__legend" aria-hidden="true">
+        <span>Ít</span>
+        <i class="heat-0"></i>
+        @for (step of heatSteps; track step) { <i [class]="'heat-' + step"></i> }
+        <span>Nhiều (tối đa {{ count(heat().max) }})</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="split split--wide">
+    <section class="card" aria-labelledby="posts-title">
+      <header class="card__head"><div><h2 id="posts-title">Bài viết nổi bật</h2><p>Điểm = thích + 2 × bình luận + 3 × chia sẻ trong kỳ</p></div></header>
+      @if (!d.topPosts.length) {
+      <p class="muted-line">Chưa có bài nào được tương tác trong kỳ.</p>
+      } @else {
+      <ol class="posts">
+        @for (post of d.topPosts; track post.postId) {
+        <li>
+          <p class="posts__text">{{ post.excerpt || '(Bài chỉ có ảnh)' }}</p>
+          <div class="posts__meta">
+            <span>{{ users.name(post.authorId) || 'Đang tải…' }} · {{ sportLabel(post.sport) }} · {{ post.publishedAt | date:'dd/MM' }}</span>
+            <span class="posts__counts">
+              <span><lucide-icon name="heart" />{{ count(post.likes) }}</span>
+              <span><lucide-icon name="message-circle" />{{ count(post.comments) }}</span>
+              <span><lucide-icon name="repeat-2" />{{ count(post.shares) }}</span>
+            </span>
+          </div>
+        </li>
+        }
+      </ol>
+      }
+    </section>
+
+    <div class="stack">
+      <section class="card" aria-labelledby="members-title">
+        <header class="card__head"><div><h2 id="members-title">Thành viên năng nổ</h2><p>Đăng bài, bình luận và thích nhiều nhất</p></div></header>
+        @if (!d.topMembers.length) {
+        <p class="muted-line">Chưa có hoạt động trong kỳ.</p>
+        } @else {
+        <ol class="ranking">
+          @for (member of d.topMembers; track member.userId; let i = $index) {
+          <li>
+            <span class="ranking__pos">{{ i + 1 }}</span>
+            <span class="ranking__name"><strong>{{ users.name(member.userId) || 'Đang tải…' }}</strong>
+              <small>{{ count(member.posts) }} bài · {{ count(member.comments) }} bình luận · {{ count(member.reactions) }} thích</small></span>
+          </li>
+          }
+        </ol>
+        }
+      </section>
+
+      <section class="card calls" aria-labelledby="calls-title">
+        <header class="card__head"><div><h2 id="calls-title">Tìm người chơi</h2><p>Tin tìm đồng đội đăng trong kỳ</p></div></header>
+        <dl>
+          <div><dt>Tin đã đăng</dt><dd>{{ count(d.totals.playerCalls) }}</dd></div>
+          <div><dt>Đã đủ người</dt><dd>{{ count(d.totals.playerCallsFilled) }}@if (playerCallRate() !== null) { <small>{{ playerCallRate() }}%</small> }</dd></div>
+        </dl>
+      </section>
+    </div>
+  </div>
+  }
+</section>

@@ -11,6 +11,7 @@ import { PlatformVenuesComponent } from '@presentation/pages/platform-venues/pla
 import { PlatformReviewsComponent } from '@presentation/pages/platform-reviews/platform-reviews.component';
 import { PlatformFinanceComponent } from '@presentation/pages/platform-finance/platform-finance.component';
 import { PlatformCommunityComponent } from '@presentation/pages/platform-community/platform-community.component';
+import { CommunityAnalyticsComponent } from '@presentation/pages/community-analytics/community-analytics.component';
 import { BroadcastsComponent } from '@presentation/pages/broadcasts/broadcasts.component';
 import { AssistantKnowledgeComponent } from '@presentation/pages/assistant-knowledge/assistant-knowledge.component';
 import { SystemMonitorComponent } from '@presentation/pages/system-monitor/system-monitor.component';
@@ -46,6 +47,7 @@ const routes: Routes = [
       { path: 'platform-reviews', component: PlatformReviewsComponent, canActivate: [AdminGuard], data: { platformRoute: '/platform-reviews' } },
       { path: 'platform-finance', component: PlatformFinanceComponent, canActivate: [AdminGuard], data: { platformRoute: '/platform-finance' } },
       { path: 'platform-community', component: PlatformCommunityComponent, canActivate: [AdminGuard], data: { platformRoute: '/platform-community' } },
+      { path: 'community-analytics', component: CommunityAnalyticsComponent, canActivate: [AdminGuard], data: { platformRoute: '/community-analytics' } },
       { path: 'broadcasts', component: BroadcastsComponent, canActivate: [AdminGuard], data: { platformRoute: '/broadcasts' } },
       { path: 'assistant-knowledge', component: AssistantKnowledgeComponent, canActivate: [AdminGuard], data: { platformRoute: '/assistant-knowledge' } },
       { path: 'system', component: SystemMonitorComponent, canActivate: [AdminGuard], data: { platformRoute: '/system' } },

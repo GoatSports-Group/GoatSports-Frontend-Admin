@@ -24,6 +24,7 @@ export const PLATFORM_ADMIN_NAVIGATION: readonly AdminNavigationItem[] = [
   { title: 'Chủ sân', description: 'Duyệt đơn và quản lý hồ sơ đối tác chủ sân', icon: 'land-plot', route: '/owner-applications', permission: 'GET_OWNER_APPLICATIONS' },
   { title: 'Đánh giá', description: 'Ẩn hoặc gỡ đánh giá cơ sở vi phạm', icon: 'star', route: '/platform-reviews', permission: 'GET_ALL_REVIEWS' },
   { title: 'Tài chính', description: 'Tiền thu, hoàn tiền và chi trả cho chủ sân', icon: 'banknote', route: '/platform-finance', permission: 'GET_PLATFORM_FINANCE' },
+  { title: 'Hoạt động', description: 'Bài viết, tương tác, người dùng tích cực, môn và chủ đề nổi bật', icon: 'chart-line', route: '/community-analytics', permission: 'GET_PLATFORM_STATS' },
   { title: 'CLB & giải đấu', description: 'Mọi câu lạc bộ và giải đấu trên nền tảng', icon: 'trophy', route: '/platform-community', permission: 'GET_ALL_CLUBS' },
   { title: 'Gửi thông báo', description: 'Thông báo hệ thống tới người chơi và chủ sân', icon: 'megaphone', route: '/broadcasts', permission: 'GET_BROADCASTS' },
   { title: 'Người dùng', description: 'Quản lý tài khoản thành viên hệ thống', icon: 'users', route: '/users', permission: 'GET_USERS' },
@@ -58,7 +59,7 @@ export const PLATFORM_ADMIN_NAVIGATION_GROUPS: readonly AdminNavigationGroup[] =
   { label: 'Tổng quan', items: platformItems(['/dashboard']) },
   { label: 'Sân và đặt sân', items: platformItems(['/bookings', '/platform-venues', '/owner-applications', '/platform-reviews']) },
   { label: 'Tài chính', items: platformItems(['/platform-finance']) },
-  { label: 'Cộng đồng', items: platformItems(['/platform-community', '/moderation', '/messages', '/broadcasts']) },
+  { label: 'Cộng đồng', items: platformItems(['/community-analytics', '/platform-community', '/moderation', '/messages', '/broadcasts']) },
   { label: 'Hệ thống', items: platformItems(['/users', '/roles', '/logs', '/system', '/assistant-knowledge']) }
 ];
 

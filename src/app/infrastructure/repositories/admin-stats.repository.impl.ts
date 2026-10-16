@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { BaseResponse } from '@application/dto/base/base-response';
-import { CommunityStats, PlatformBookingStats, PlatformUserStats } from '@application/dto/admin-stats/admin-stats.dto';
+import { CommunityStats, PlatformBookingStats, PlatformUserStats, SocialActivityStats } from '@application/dto/admin-stats/admin-stats.dto';
 import { AdminStatsRepository } from '@application/ports/persistence/admin-stats.repository';
 import { environment } from '@environments/environment';
 
@@ -24,5 +24,10 @@ export class AdminStatsRepositoryImpl implements AdminStatsRepository {
   getCommunityStats(): Observable<CommunityStats> {
     return this.http.get<BaseResponse<CommunityStats>>(`${this.api}/club-service/api/v1/admin/stats/community`)
       .pipe(map(response => response.data));
+  }
+
+  getSocialStats(fromDate: string, toDate: string): Observable<SocialActivityStats> {
+    return this.http.get<BaseResponse<SocialActivityStats>>(`${this.api}/social-service/api/v1/admin/stats/social`,
+      { params: new HttpParams().set('fromDate', fromDate).set('toDate', toDate) }).pipe(map(response => response.data));
   }
 }
