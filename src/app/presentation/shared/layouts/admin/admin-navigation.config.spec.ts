@@ -14,7 +14,8 @@ describe('platform page access', () => {
       .map(entry => entry.route);
 
     // Thông báo không cần quyền; Tin nhắn chỉ ADMIN vì backend kiểm tên vai trò.
-    expect(open).toEqual(['/users', '/moderation', '/notifications']);
+    // Khiếu nại tài khoản đọc theo GET_USERS (backend AccountAppealAdminController cũng kiểm GET_USERS).
+    expect(open).toEqual(['/users', '/account-appeals', '/moderation', '/notifications']);
     expect(canOpenPlatformItem(item('/messages'), 'SUPPORT_STAFF', ['GET_USERS'])).toBe(false);
   });
 

@@ -86,7 +86,9 @@ test.describe('quản trị viên', () => {
       total: 1
     })));
     await page.goto('/admin/platform-venues');
-    await page.getByRole('link', { name: 'Nhắn chủ sân của GOAT Arena Thủ Đức' }).click();
+    // Từ 12/10 thao tác của mỗi cơ sở nằm trong menu "⋮".
+    await page.getByRole('button', { name: 'Thao tác với GOAT Arena Thủ Đức' }).click();
+    await page.getByRole('menuitem', { name: 'Nhắn chủ sân' }).click();
 
     await expect(page).toHaveURL(new RegExp(`/admin/messages\\?room=${SUPPORT_ROOM}`));
     expect(owners).toContain(OWNER_ID);
