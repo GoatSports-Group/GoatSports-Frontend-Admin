@@ -33,7 +33,7 @@ export const SERVICE_LABEL: Readonly<Record<string, { name: string; role: string
   'notification-service': { name: 'Thông báo', role: 'Thông báo realtime và hệ thống' },
   'report-service': { name: 'Báo cáo', role: 'Xuất PDF/Excel, báo cáo định kỳ' },
   'storage-service': { name: 'Lưu trữ tệp', role: 'Ảnh, hồ sơ, tài liệu' },
-  'workflow-service': { name: 'Quy trình duyệt', role: 'Duyệt hồ sơ chủ sân' },
+  'workflow-service': { name: 'Quy trình nghiệp vụ', role: 'Hủy sân & hoàn tiền (Camunda)' },
   'audit-service': { name: 'Nhật ký', role: 'Nhật ký kiểm toán, giám sát' },
   'ai-service': { name: 'AI', role: 'Ghép trận, gợi ý, dự báo, xác minh' }
 };

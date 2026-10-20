@@ -2,7 +2,7 @@
   <header class="page-head">
     <div>
       <h1>Hộp thư khiếu nại</h1>
-      <p>Thư của tài khoản bị khóa, gửi từ màn đăng nhập sau khi nhập đúng mật khẩu. Trả lời ở đây sẽ gửi email tới
+      <p>Thư của tài khoản bị khóa. Trả lời ở đây sẽ gửi email tới
         người dùng; bản sao thư cũng tới hộp thư hỗ trợ.</p>
     </div>
   </header>
@@ -10,18 +10,20 @@
   @if (notice(); as note) {
   <div class="notice" [class.notice--warning]="note.tone === 'warning'" role="status">
     <lucide-icon [name]="note.tone === 'warning' ? 'triangle-alert' : 'circle-check-big'" /><span>{{ note.text }}</span>
-    <button type="button" class="icon-btn" aria-label="Ẩn thông báo" (click)="notice.set(null)"><lucide-icon name="x" /></button>
+    <button type="button" class="icon-btn" aria-label="Ẩn thông báo" (click)="notice.set(null)"><lucide-icon
+        name="x" /></button>
   </div>
   }
 
   <nav class="tabs" role="tablist" aria-label="Lọc thư">
-    <button type="button" class="tab" role="tab" [class.is-active]="tab() === 'NEW'" [attr.aria-selected]="tab() === 'NEW'"
-      (click)="selectTab('NEW')"><lucide-icon name="inbox" />Chưa đọc
+    <button type="button" class="tab" role="tab" [class.is-active]="tab() === 'NEW'"
+      [attr.aria-selected]="tab() === 'NEW'" (click)="selectTab('NEW')"><lucide-icon name="inbox" />Chưa đọc
       @if (unread()) { <span class="count count--alert">{{ unread()! > 99 ? '99+' : unread() }}</span> }</button>
-    <button type="button" class="tab" role="tab" [class.is-active]="tab() === 'ALL'" [attr.aria-selected]="tab() === 'ALL'"
-      (click)="selectTab('ALL')"><lucide-icon name="mail" />Tất cả</button>
+    <button type="button" class="tab" role="tab" [class.is-active]="tab() === 'ALL'"
+      [attr.aria-selected]="tab() === 'ALL'" (click)="selectTab('ALL')"><lucide-icon name="mail" />Tất cả</button>
     <button type="button" class="tab" role="tab" [class.is-active]="tab() === 'RESOLVED'"
-      [attr.aria-selected]="tab() === 'RESOLVED'" (click)="selectTab('RESOLVED')"><lucide-icon name="circle-check-big" />Đã xử lý</button>
+      [attr.aria-selected]="tab() === 'RESOLVED'" (click)="selectTab('RESOLVED')"><lucide-icon
+        name="circle-check-big" />Đã xử lý</button>
   </nav>
 
   <section class="mailbox card" [class.mailbox--reading]="selected()">
@@ -51,7 +53,8 @@
             <span class="mail-row__body">
               <span class="mail-row__top">
                 <strong class="mail-row__from">{{ appeal.fullName || appeal.email }}</strong>
-                <time class="mail-row__time" [attr.datetime]="appeal.createdAt">{{ appeal.createdAt | date:'dd/MM HH:mm' }}</time>
+                <time class="mail-row__time" [attr.datetime]="appeal.createdAt">{{ appeal.createdAt | date:'dd/MM HH:mm'
+                  }}</time>
               </span>
               <span class="mail-row__subject">{{ appeal.subject }}</span>
               <span class="mail-row__excerpt">{{ excerpt(appeal.message) }}</span>
@@ -84,9 +87,12 @@
             <small class="muted">{{ appeal.createdAt | date:'HH:mm, dd/MM/yyyy' }}</small>
           </div>
           <div class="reader__badges">
-            <span [class]="'badge badge--' + statusLabel[appeal.status].tone">{{ statusLabel[appeal.status].label }}</span>
-            @if (appeal.accountStatus === 'BLOCKED') { <span class="badge badge--danger"><lucide-icon name="lock" />Đang bị khóa</span> }
-            @else if (appeal.accountStatus === 'ACTIVE') { <span class="badge badge--success"><lucide-icon name="lock-open" />Đã mở khóa</span> }
+            <span [class]="'badge badge--' + statusLabel[appeal.status].tone">{{ statusLabel[appeal.status].label
+              }}</span>
+            @if (appeal.accountStatus === 'BLOCKED') { <span class="badge badge--danger"><lucide-icon name="lock" />Đang
+              bị khóa</span> }
+            @else if (appeal.accountStatus === 'ACTIVE') { <span class="badge badge--success"><lucide-icon
+                name="lock-open" />Đã mở khóa</span> }
           </div>
         </div>
       </header>

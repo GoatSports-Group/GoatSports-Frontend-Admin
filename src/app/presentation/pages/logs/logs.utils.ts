@@ -34,7 +34,7 @@ export const ACTION_LABEL: Readonly<Record<string, string>> = {
 export const SOURCE_LABEL: Readonly<Record<string, string>> = {
   'auth-service': 'Tài khoản', 'venue-service': 'Sân & đặt sân', 'payment-service': 'Thanh toán',
   'club-service': 'CLB & giải đấu', 'social-service': 'Cộng đồng', 'notification-service': 'Thông báo',
-  'report-service': 'Báo cáo', 'storage-service': 'Lưu trữ tệp', 'workflow-service': 'Quy trình duyệt',
+  'report-service': 'Báo cáo', 'storage-service': 'Lưu trữ tệp', 'workflow-service': 'Quy trình nghiệp vụ',
   // Bản ghi trước khi ghi tên service nguồn.
   'api-gateway': 'Thao tác qua API (bản ghi cũ)'
 };
