@@ -25,14 +25,16 @@ import { PaginationComponent } from '@shared/components/ui/pagination/pagination
 import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
 
 type Tone = 'success' | 'warning' | 'danger' | 'neutral' | 'primary' | 'info';
-type UserStatus = 'ACTIVE' | 'PENDING' | 'BLOCKED';
+type UserStatus = 'ACTIVE' | 'PENDING' | 'BLOCKED' | 'PENDING_DELETION' | 'DELETED';
 type Dialog = 'detail' | 'create' | 'password' | 'role' | null;
 
 const STATUS_META: Readonly<Record<string, { label: string; tone: Tone }>> = {
   ACTIVE: { label: 'Đã xác thực', tone: 'success' },
   ACTIVATED: { label: 'Đã xác thực', tone: 'success' },
   PENDING: { label: 'Chưa xác thực', tone: 'warning' },
-  BLOCKED: { label: 'Đã khóa', tone: 'danger' }
+  BLOCKED: { label: 'Đã khóa', tone: 'danger' },
+  PENDING_DELETION: { label: 'Chờ xóa', tone: 'warning' },
+  DELETED: { label: 'Đã xóa', tone: 'neutral' }
 };
 
 const ROLE_TONE: Readonly<Record<string, Tone>> = { ADMIN: 'primary', VENUE_OWNER: 'info', PLAYER: 'neutral' };
@@ -72,7 +74,8 @@ export class UsersComponent implements OnInit {
   ];
   readonly statusOptions: readonly SelectOption[] = [
     { value: '', label: 'Mọi trạng thái' }, { value: 'ACTIVE', label: 'Đã xác thực' },
-    { value: 'PENDING', label: 'Chưa xác thực' }, { value: 'BLOCKED', label: 'Đã khóa' }
+    { value: 'PENDING', label: 'Chưa xác thực' }, { value: 'BLOCKED', label: 'Đã khóa' },
+    { value: 'PENDING_DELETION', label: 'Chờ xóa' }, { value: 'DELETED', label: 'Đã xóa' }
   ];
 
   readonly keyword = signal('');
@@ -176,6 +179,8 @@ export class UsersComponent implements OnInit {
   statusOf(user: User) { return STATUS_META[user.status] ?? { label: user.status, tone: 'neutral' as Tone }; }
   roleTone(user: User): Tone { return ROLE_TONE[user.role?.name] ?? 'neutral'; }
   isVerified(user: User): boolean { return user.status === 'ACTIVE' || user.status === 'ACTIVATED'; }
+  /** Người dùng tự yêu cầu xóa (chờ 30 ngày) hoặc đã bị ẩn danh hóa: admin chỉ xem, không đổi gì. */
+  isDeleting(user: User): boolean { return user.status === 'PENDING_DELETION' || user.status === 'DELETED'; }
 
   // ---- Popup ----
 

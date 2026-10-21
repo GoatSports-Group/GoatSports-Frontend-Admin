@@ -94,6 +94,7 @@
   <!-- Thao tác dùng chung cho menu dòng và popup chi tiết. -->
   <ng-template #actions let-user>
     <button mat-menu-item type="button" (click)="openDetail(user)"><lucide-icon name="eye" />Xem chi tiết</button>
+    @if (!isDeleting(user)) {
     <button mat-menu-item type="button" (click)="openRole(user)"><lucide-icon name="user-cog" />Gán vai trò</button>
     <button mat-menu-item type="button" (click)="openPassword(user)"><lucide-icon name="key" />Đổi mật khẩu</button>
     @if (user.status !== 'BLOCKED') {
@@ -104,6 +105,7 @@
     <button mat-menu-item type="button" (click)="changeStatus(user, 'ACTIVE')"><lucide-icon name="lock-open" />Mở khóa tài khoản</button>
     } @else if (user.role.name !== 'ADMIN') {
     <button mat-menu-item type="button" class="is-danger" (click)="changeStatus(user, 'BLOCKED')"><lucide-icon name="lock" />Khóa tài khoản</button>
+    }
     }
   </ng-template>
 
