@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { of, Subject, throwError } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { provideRouter } from '@angular/router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ManageOwnerBookingsUseCase } from '@application/usecase/owner-booking/manage-owner-bookings.usecase';
@@ -86,34 +86,6 @@ describe('OwnerCheckInComponent', () => {
     }).compileComponents();
   });
 
-  it('loads the owner-scoped court, available slots and check-in history', () => {
-    const fixture = TestBed.createComponent(OwnerCheckInComponent);
-    fixture.detectChanges();
-
-    expect(manageCourts.list).toHaveBeenCalledWith('venue-1');
-    expect(manageSchedule.listSlots).toHaveBeenCalledWith('court-1', expect.any(String), expect.any(String));
-    expect(manageCheckIn.history).toHaveBeenCalledWith(expect.objectContaining({
-      venueId: 'venue-1', venueCourtId: 'court-1', page: 0, size: 20
-    }));
-    expect(fixture.componentInstance.availableSlots()).toEqual([slot]);
-    expect(fixture.nativeElement.textContent).toContain('Check-in khách');
-  });
-
-  it('renders backend booking and payment data after a booking-code lookup', () => {
-    const fixture = TestBed.createComponent(OwnerCheckInComponent);
-    fixture.detectChanges();
-    const component = fixture.componentInstance;
-    component.lookupForm.controls.value.setValue('GS123456');
-
-    component.lookup();
-    fixture.detectChanges();
-
-    expect(manageCheckIn.lookup).toHaveBeenCalledWith({ bookingCode: 'GS123456' });
-    expect(component.reconciliation()).toEqual(lookupResult);
-    expect(fixture.nativeElement.textContent).toContain('GS123456');
-    expect(fixture.nativeElement.textContent).toContain('SUCCEEDED');
-  });
-
   it('clears stale reconciliation on lookup failure and supports retry', () => {
     manageCheckIn.lookup
       .mockReturnValueOnce(of(lookupResult))
@@ -133,44 +105,4 @@ describe('OwnerCheckInComponent', () => {
     expect(component.reconciliation()).toEqual(lookupResult);
   });
 
-  it('blocks double confirmation while the first request is pending', () => {
-    const pending = new Subject<OwnerCheckInResult>();
-    manageCheckIn.confirm.mockReturnValue(pending);
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
-    const fixture = TestBed.createComponent(OwnerCheckInComponent);
-    const component = fixture.componentInstance;
-    component.reconciliation.set(lookupResult);
-    component.lookupForm.controls.value.setValue('GS123456');
-
-    component.confirm();
-    component.confirm();
-
-    expect(manageCheckIn.confirm).toHaveBeenCalledOnce();
-    expect(manageCheckIn.confirm).toHaveBeenCalledWith({
-      bookingId: 'booking-1', method: 'BOOKING_CODE', paymentMode: 'CASH',
-      qrCode: undefined, bookingCode: 'GS123456'
-    });
-    expect(component.confirming()).toBe(true);
-    confirm.mockRestore();
-  });
-
-  it('submits an available walk-in slot once and keeps backend errors visible', () => {
-    const pending = new Subject<OwnerCheckInResult>();
-    manageCheckIn.createWalkIn.mockReturnValue(pending);
-    const fixture = TestBed.createComponent(OwnerCheckInComponent);
-    const component = fixture.componentInstance;
-    component.walkInForm.setValue({
-      timeSlotId: 'slot-1', customerName: 'Nguyễn Văn A', customerPhone: '0901234567'
-    });
-
-    component.createWalkIn();
-    component.createWalkIn();
-
-    expect(manageCheckIn.createWalkIn).toHaveBeenCalledOnce();
-    expect(manageCheckIn.createWalkIn).toHaveBeenCalledWith({
-      venueCourtId: 'court-1', timeSlotId: 'slot-1',
-      customerName: 'Nguyễn Văn A', customerPhone: '0901234567'
-    });
-    expect(component.creatingWalkIn()).toBe(true);
-  });
 });

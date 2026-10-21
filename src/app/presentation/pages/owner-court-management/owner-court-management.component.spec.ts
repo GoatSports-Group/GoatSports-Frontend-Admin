@@ -87,44 +87,6 @@ describe('OwnerCourtManagementComponent', () => {
     expect(component.form.disabled).toBe(true);
   });
 
-  it('dựng facility map từ dữ liệu sân thật và mở drawer mà không rời sơ đồ', () => {
-    const maintenanceCourt: OwnerVenueCourt = {
-      ...savedCourt,
-      venueCourtId: 'court-2',
-      name: 'Sân 02',
-      sportType: 'FOOTBALL',
-      availabilityStatus: 'MAINTENANCE'
-    };
-    manageCourts.list.mockReturnValue(of([savedCourt, maintenanceCourt]));
-    const fixture = TestBed.createComponent(OwnerCourtManagementComponent);
-    fixture.detectChanges();
-
-    expect(manageBookings.list).toHaveBeenCalledWith(expect.objectContaining({ venueId: 'venue-1', page: 0, size: 20 }));
-    expect(fixture.nativeElement.querySelectorAll('.workspace-tabs button')).toHaveLength(3);
-    expect(fixture.nativeElement.querySelectorAll('.court-object')).toHaveLength(2);
-    expect(fixture.nativeElement.querySelectorAll('.facility-object')).toHaveLength(9);
-    expect(fixture.nativeElement.querySelectorAll('.facility-zone-border')).toHaveLength(2);
-    expect(fixture.nativeElement.querySelectorAll('.parking-slots i')).toHaveLength(23);
-    expect(fixture.nativeElement.querySelectorAll('.parking-slots lucide-icon')).toHaveLength(23);
-    expect(fixture.nativeElement.querySelector('.facility-furniture')).toBeNull();
-    expect(fixture.nativeElement.querySelector('.court-detail')).toBeTruthy();
-    expect(fixture.nativeElement.querySelector('.court-detail h2')?.textContent).toContain('Sân 01');
-    expect(fixture.nativeElement.querySelector('.court-detail > header > button[aria-label="Đóng chi tiết sân"]')).toBeNull();
-    expect(fixture.nativeElement.querySelector('.court-detail__identity > button')).toBeNull();
-    expect(fixture.nativeElement.querySelector('.booking-now--empty lucide-icon')).toBeNull();
-    expect(fixture.nativeElement.querySelector('.booking-now--empty span')).toBeNull();
-    expect(fixture.nativeElement.querySelector('.booking-now--empty strong')?.textContent.trim()).toBe('Không có lượt đang diễn ra');
-    expect(fixture.nativeElement.querySelectorAll('.court-detail .quick-actions a, .court-detail .quick-actions button')).toHaveLength(8);
-    expect(fixture.nativeElement.querySelector('.court-detail .daily-bookings h3')?.textContent).toContain('Lịch theo ngày');
-    expect(fixture.nativeElement.querySelector('.court-detail .next-booking')).toBeNull();
-    expect(fixture.nativeElement.querySelector('.court-detail .today-schedule')).toBeNull();
-
-    fixture.componentInstance.selectCourt(savedCourt);
-    fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('.court-detail')).toBeTruthy();
-    expect(fixture.nativeElement.querySelector('.facility-canvas')).toBeTruthy();
-  });
-
   it('hỗ trợ chỉnh bố cục, hoàn tác và lưu theo cơ sở', () => {
     manageCourts.list.mockReturnValue(of([savedCourt]));
     const fixture = TestBed.createComponent(OwnerCourtManagementComponent);

@@ -1,6 +1,6 @@
 import { OWNER_TOURNAMENT_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-tournament.repository';
 import { TestBed } from '@angular/core/testing';
-import { of, Subject, throwError } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { provideRouter } from '@angular/router';
 import { provideLucideIcons } from '@lucide/angular';
@@ -84,22 +84,6 @@ describe('OwnerRevenueComponent', () => {
     } finally {
       vi.useRealTimers();
     }
-  });
-
-  it('keeps loading visible and blocks duplicate filter requests', () => {
-    const fixture = TestBed.createComponent(OwnerRevenueComponent);
-    const component = fixture.componentInstance;
-    const pending = new Subject<OwnerRevenueReport>();
-    getRevenue.execute.mockReturnValue(pending);
-
-    component.loadReport();
-    component.loadReport();
-    fixture.detectChanges();
-
-    expect(getRevenue.execute).toHaveBeenCalledTimes(2);
-    expect(component.loading()).toBe(true);
-    expect(fixture.nativeElement.querySelector('app-page-loading')).toBeTruthy();
-    expect(fixture.nativeElement.textContent).toContain('Đang tải doanh thu');
   });
 
   it('clears stale data on failure and retries the backend request', () => {

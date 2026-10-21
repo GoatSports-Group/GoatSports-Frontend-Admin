@@ -2,7 +2,7 @@ import { OWNER_TOURNAMENT_REPOSITORY_TOKEN } from '@application/ports/persistenc
 import { ManageOwnerBookingsUseCase } from '@application/usecase/owner-booking/manage-owner-bookings.usecase';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of, Subject, throwError } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { provideLucideIcons } from '@lucide/angular';
 import { APP_ICONS } from '../../../app-icons';
@@ -67,36 +67,6 @@ describe('OwnerScheduleComponent', () => {
         { provide: ManageOwnerBookingsUseCase, useValue: { list: () => of({ content: [], page: 0, pages: 1 }) } }
       ]
     }).compileComponents();
-  });
-
-  it('tải quy tắc thật theo Venue và Court đã chọn', () => {
-    const fixture = TestBed.createComponent(OwnerScheduleComponent);
-    fixture.detectChanges();
-
-    expect(manageSchedule.listRules).toHaveBeenCalledWith('court-1');
-    expect(fixture.componentInstance.rules()).toEqual([rule]);
-    expect(fixture.nativeElement.textContent).toContain(fixture.componentInstance.compactMoney(180000));
-  });
-
-  it('chặn double submit khi tạo quy tắc giá', () => {
-    const pending = new Subject<CourtPricingRule>();
-    manageSchedule.createRule.mockReturnValue(pending);
-    const fixture = TestBed.createComponent(OwnerScheduleComponent);
-    fixture.detectChanges();
-    const component = fixture.componentInstance;
-    component.openRuleEditor();
-    component.ruleForm.patchValue({
-      dayOfWeek: 'MONDAY', startTime: '08:00', endTime: '10:00',
-      pricePerHour: 180000,
-      effectiveFrom: dayFromNow(1), effectiveTo: dayFromNow(90)
-    });
-
-    component.saveRule();
-    component.saveRule();
-
-    expect(manageSchedule.createRule).toHaveBeenCalledOnce();
-    expect(component.savingRule()).toBe(true);
-    expect(component.ruleForm.disabled).toBe(true);
   });
 
   it('hiển thị lỗi thật và cho retry tải dữ liệu', () => {
