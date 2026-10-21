@@ -59,13 +59,17 @@ export class StompWebSocketService implements WebSocketService {
   private apiBase = environment.apiUrl;
   private subscriptionId = 'sub-admin-notifications';
   private destination: string | null = null;
+  private sessionDestination: string | null = null;
+  private readonly sessionSubscriptionId = 'sub-user-session';
 
   private notificationSubject = new Subject<Notification>();
   public notifications$: Observable<Notification> = this.notificationSubject.asObservable();
+  private sessionRevokedSubject = new Subject<string>();
+  public sessionRevoked$: Observable<string> = this.sessionRevokedSubject.asObservable();
 
   constructor() { }
 
-  public connect(destination: string): void {
+  public connect(destination: string, sessionDestination?: string): void {
     if (!destination) return;
     if ((this.socket || this.isConnected) && this.destination === destination) {
       return;
@@ -73,6 +77,7 @@ export class StompWebSocketService implements WebSocketService {
 
     this.disconnect();
     this.destination = destination;
+    this.sessionDestination = sessionDestination ?? null;
     this.subscriptionId = `sub-notifications-${this.destination.replace(/[^a-zA-Z0-9]/g, '-')}`;
     this.reconnectEnabled = true;
     this.openSocket();
@@ -135,6 +140,7 @@ export class StompWebSocketService implements WebSocketService {
     }
     this.isConnected = false;
     this.destination = null;
+    this.sessionDestination = null;
   }
 
   private sendConnectFrame(): void {
@@ -158,6 +164,12 @@ export class StompWebSocketService implements WebSocketService {
 
     this.socket.send(subscribeFrame.toString());
     console.log(`STOMP SUBSCRIBE sent for ${this.destination}`);
+    if (this.sessionDestination) {
+      this.socket.send(new StompFrame('SUBSCRIBE', {
+        id: this.sessionSubscriptionId,
+        destination: this.sessionDestination
+      }, '').toString());
+    }
   }
 
   private sendUnsubscribeFrame(): void {
@@ -169,6 +181,9 @@ export class StompWebSocketService implements WebSocketService {
 
     try {
       this.socket.send(unsubscribeFrame.toString());
+      if (this.sessionDestination) {
+        this.socket.send(new StompFrame('UNSUBSCRIBE', { id: this.sessionSubscriptionId }, '').toString());
+      }
       console.log('STOMP UNSUBSCRIBE sent');
     } catch (e) {
       console.error('Error sending unsubscribe frame:', e);
@@ -198,6 +213,13 @@ export class StompWebSocketService implements WebSocketService {
               this.notificationSubject.next(notification);
             } catch (jsonErr) {
               console.error('Failed to parse STOMP message body as JSON:', jsonErr);
+            }
+          } else if (this.sessionDestination && frame.headers['destination'] === this.sessionDestination) {
+            try {
+              const event: { type?: string; reason?: string } = JSON.parse(frame.body);
+              if (event.type === 'SESSION_REVOKED' && event.reason) this.sessionRevokedSubject.next(event.reason);
+            } catch (jsonErr) {
+              console.error('Failed to parse STOMP session event:', jsonErr);
             }
           }
           break;

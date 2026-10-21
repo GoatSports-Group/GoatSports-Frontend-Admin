@@ -73,7 +73,7 @@ export class NotificationService {
         this.clearState();
         this.resetPagination();
         this.loadInitialData();
-        this.connectWebSocket(this.notificationDestination(user.role?.name, user.userId));
+        this.connectWebSocket(this.notificationDestination(user.role?.name, user.userId), user.userId);
       } else {
         this.disconnectWebSocket();
         this.clearState();
@@ -90,7 +90,7 @@ export class NotificationService {
   // WEBSOCKET
   // ══════════════════════════════════════════════════════════════════════════════
 
-  private connectWebSocket(destination: string): void {
+  private connectWebSocket(destination: string, userId: string): void {
     this.wsSubscription?.unsubscribe();
     this.wsSubscription = this.wsService.notifications$.subscribe({
       next: (notification) => {
@@ -98,7 +98,11 @@ export class NotificationService {
       },
       error: (err) => console.error('[NotificationService] WebSocket error:', err),
     });
-    this.wsService.connect(destination);
+    // Chủ sân bị khóa / vừa yêu cầu xóa tài khoản: đăng xuất ngay cả khi tab đang ngồi yên.
+    this.wsSubscription.add(this.wsService.sessionRevoked$.subscribe(() => {
+      this.ngZone.run(() => this.authService.performLogout());
+    }));
+    this.wsService.connect(destination, `/topic/user/session/${userId}`);
   }
 
   private disconnectWebSocket(): void {

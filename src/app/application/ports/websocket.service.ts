@@ -4,7 +4,10 @@ import { Notification } from '@domain/entities/notification';
 
 export interface WebSocketService {
   notifications$: Observable<Notification>;
-  connect(destination: string): void;
+  /** Phiên vừa bị thu hồi ở máy chủ (chủ sân bị khóa / yêu cầu xóa tài khoản): mã lý do. */
+  sessionRevoked$: Observable<string>;
+  /** {@code sessionDestination}: topic phiên riêng của người dùng, nghe kèm topic thông báo. */
+  connect(destination: string, sessionDestination?: string): void;
   disconnect(): void;
 }
 
