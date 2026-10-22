@@ -66,6 +66,8 @@ export class StompWebSocketService implements WebSocketService {
   public notifications$: Observable<Notification> = this.notificationSubject.asObservable();
   private sessionRevokedSubject = new Subject<string>();
   public sessionRevoked$: Observable<string> = this.sessionRevokedSubject.asObservable();
+  private notificationsConnectedSubject = new Subject<void>();
+  public notificationsConnected$: Observable<void> = this.notificationsConnectedSubject.asObservable();
 
   constructor() { }
 
@@ -204,6 +206,7 @@ export class StompWebSocketService implements WebSocketService {
           console.log('STOMP CONNECTED successfully.');
           this.isConnected = true;
           this.sendSubscribeFrame();
+          this.notificationsConnectedSubject.next();
           break;
         case 'MESSAGE':
           if (frame.headers['destination'] === this.destination) {

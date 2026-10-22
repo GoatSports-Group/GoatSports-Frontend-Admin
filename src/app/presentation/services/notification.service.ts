@@ -11,6 +11,7 @@ import {
 } from 'rxjs';
 import { Notification, NotificationStatus } from '@application/dto/notification/notification.dto';
 import { GetNotificationsUseCase } from '@application/usecase/notification/get-notifications.usecase';
+import { GetNotificationsSinceUseCase } from '@application/usecase/notification/get-notifications-since.usecase';
 import { CountUnreadNotificationsUseCase } from '@application/usecase/notification/count-unread-notifications.usecase';
 import { MarkNotificationReadUseCase } from '@application/usecase/notification/mark-notification-read.usecase';
 import { MarkAllNotificationsReadUseCase } from '@application/usecase/notification/mark-all-notifications-read.usecase';
@@ -27,6 +28,7 @@ import { PageFilter } from '@application/dto/page.filter';
 export class NotificationService {
   // ─── Use Cases ───────────────────────────────────────────────────────────────
   private getNotificationsUseCase = inject(GetNotificationsUseCase);
+  private getNotificationsSinceUseCase = inject(GetNotificationsSinceUseCase);
   private countUnreadUseCase      = inject(CountUnreadNotificationsUseCase);
   private markReadUseCase         = inject(MarkNotificationReadUseCase);
   private markAllReadUseCase      = inject(MarkAllNotificationsReadUseCase);
@@ -48,6 +50,9 @@ export class NotificationService {
   private currentPage = 1;
   private readonly pageSize = 10;
   private hasMorePages = true;
+  /** Trang đầu đã tải xong: trước đó chưa có mốc để lấy bù, mà lần tải đầu cũng đã gồm mọi thứ. */
+  private firstPageLoaded = false;
+  private activeUserId: string | null = null;
 
   // ─── Public Streams ───────────────────────────────────────────────────────────
   public notifications$: Observable<Notification[]> = this.notificationsSubject.asObservable();
@@ -99,10 +104,38 @@ export class NotificationService {
       error: (err) => console.error('[NotificationService] WebSocket error:', err),
     });
     // Chủ sân bị khóa / vừa yêu cầu xóa tài khoản: đăng xuất ngay cả khi tab đang ngồi yên.
+    this.wsSubscription.add(this.wsService.notificationsConnected$.subscribe(() => {
+      this.ngZone.run(() => this.catchUp());
+    }));
     this.wsSubscription.add(this.wsService.sessionRevoked$.subscribe(() => {
       this.ngZone.run(() => this.authService.performLogout());
     }));
+    this.activeUserId = userId;
     this.wsService.connect(destination, `/topic/user/session/${userId}`);
+  }
+
+  /** Lấy bù thông báo đẩy trong lúc WebSocket mất kết nối (máy ngủ, đổi mạng, server khởi động lại). */
+  private catchUp(): void {
+    if (!this.firstPageLoaded || !this.activeUserId) return;
+    const newest = this.notificationsSubject.value[0];
+    this.catchUpFrom(newest?.createdAt ?? '1970-01-01T00:00:00', undefined, this.activeUserId);
+  }
+
+  private catchUpFrom(after: string, afterId: string | undefined, userId: string): void {
+    this.getNotificationsSinceUseCase.execute(after, afterId).subscribe({
+      next: page => {
+        if (userId !== this.activeUserId) return;
+        page.items.forEach(notification => this.handleRealTimeNotification(notification, false));
+        const last = page.items[page.items.length - 1];
+        if (page.hasMore && last) {
+          this.catchUpFrom(last.createdAt, last.notificationId, userId);
+          return;
+        }
+        // Lần gọi đầu lùi vài giây nên có thể gặp lại bản đã đếm ngoài trang đang giữ: lấy số đúng từ server.
+        this.fetchUnreadCount().subscribe();
+      },
+      error: () => undefined
+    });
   }
 
   private disconnectWebSocket(): void {
@@ -111,7 +144,7 @@ export class NotificationService {
     this.wsService.disconnect();
   }
 
-  private handleRealTimeNotification(notification: Notification): void {
+  private handleRealTimeNotification(notification: Notification, toast = true): void {
     const current = this.notificationsSubject.value;
 
     // Deduplicate: ignore if already in list
@@ -121,6 +154,7 @@ export class NotificationService {
     this.notificationsSubject.next([notification, ...current]);
     this.unreadCountSubject.next(this.unreadCountSubject.value + 1);
 
+    if (!toast) return;
     this.snackBar.open(`${notification.title}: ${notification.content}`, 'Đóng', {
       duration: 6000,
       horizontalPosition: 'end',
@@ -153,6 +187,7 @@ export class NotificationService {
         if (filter.page === 1) {
           // First page: replace list
           this.notificationsSubject.next(notifications);
+          this.firstPageLoaded = true;
         } else {
           // Append pages, avoid duplicates
           const existing = this.notificationsSubject.value;
@@ -316,6 +351,8 @@ export class NotificationService {
   }
 
   private clearState(): void {
+    this.firstPageLoaded = false;
+    this.activeUserId = null;
     this.notificationsSubject.next([]);
     this.unreadCountSubject.next(0);
     this.resetPagination();

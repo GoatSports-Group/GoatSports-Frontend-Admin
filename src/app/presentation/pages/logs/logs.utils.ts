@@ -25,6 +25,14 @@ export const ACTION_LABEL: Readonly<Record<string, string>> = {
   REMIND_REFUND: 'Nhắc khoản hoàn tiền', RETRY_FAILED_REFUNDS: 'Chi lại khoản hoàn lỗi',
   GET_PRESIGNED: 'Xin link tải lên tệp', CONFIRM_FILE: 'Xác nhận tệp', MOVE_FILE: 'Chuyển tệp',
   DOWNLOAD_FILE: 'Tải tệp', DELETE_FILE: 'Xóa tệp', DELETE_FILE_BY_URL: 'Xóa tệp',
+  CREATE_CLUB: 'Tạo câu lạc bộ', UPDATE_CLUB: 'Cập nhật câu lạc bộ', DISBAND_CLUB: 'Giải tán câu lạc bộ',
+  TRANSFER_CLUB_OWNERSHIP: 'Chuyển quyền sở hữu CLB', RESPOND_CLUB_JOIN_REQUEST: 'Duyệt yêu cầu vào CLB',
+  CHANGE_CLUB_MEMBER_ROLE: 'Đổi vai trò thành viên CLB', REMOVE_CLUB_MEMBER: 'Xóa thành viên CLB',
+  UNBAN_CLUB_MEMBER: 'Gỡ cấm thành viên CLB', DELETE_CLUB_ACTIVITY: 'Xóa hoạt động CLB', DELETE_CLUB_PHOTO: 'Xóa ảnh CLB',
+  CREATE_TOURNAMENT: 'Tạo giải đấu', UPDATE_TOURNAMENT: 'Cập nhật giải đấu', CHANGE_TOURNAMENT_STATUS: 'Đổi trạng thái giải',
+  REGISTER_TOURNAMENT: 'Đăng ký giải đấu', CANCEL_TOURNAMENT_REGISTRATION: 'Hủy đăng ký giải',
+  GENERATE_TOURNAMENT_FIXTURES: 'Tạo lịch thi đấu', RECORD_TOURNAMENT_RESULT: 'Ghi / sửa tỷ số trận',
+  RESERVE_TOURNAMENT_COURT: 'Giữ sân cho giải', RELEASE_TOURNAMENT_COURT: 'Trả sân của giải',
   'payment.succeeded.v1': 'Thanh toán thành công', 'payment.cancelled.v1': 'Thanh toán bị hủy',
   'payment.expired.v1': 'Thanh toán hết hạn', 'refund.processing.v1': 'Đang chi hoàn tiền',
   'refund.succeeded.v1': 'Hoàn tiền thành công', 'refund.awaiting-bank-account.v1': 'Hoàn tiền chờ tài khoản ngân hàng'
@@ -41,13 +49,17 @@ export const SOURCE_LABEL: Readonly<Record<string, string>> = {
 
 export type LogResult = '' | 'ok' | 'error';
 
-/** "Thao tác nhạy cảm": đổi quyền / trạng thái tài khoản, đình chỉ cơ sở, tiền, gửi hàng loạt, kiểm duyệt, xuất dữ liệu. */
+/**
+ * "Thao tác nhạy cảm": đổi quyền / trạng thái tài khoản, đình chỉ cơ sở, tiền, gửi hàng loạt, kiểm duyệt, xuất dữ liệu,
+ * sửa tỷ số / trạng thái giải, giải tán hoặc chuyển chủ CLB.
+ */
 export const SENSITIVE_ACTIONS: readonly string[] = [
   'ADMIN_CHANGE_USER_STATUS', 'ADMIN_ASSIGN_ROLE', 'ASSIGN_ROLE', 'ADMIN_TOGGLE_VERIFY', 'ADMIN_RESET_PASSWORD',
   'ADMIN_CREATE_USER', 'CREATE_ROLE', 'UPDATE_ROLE', 'DELETE_ROLE', 'ACTIVATE_ROLE', 'DEACTIVE_ROLE',
   'ADMIN_SUSPEND_VENUE', 'ADMIN_REINSTATE_VENUE', 'RETRY_FAILED_REFUNDS', 'REMIND_REFUND', 'SEND_BROADCAST',
   'MODERATE_SOCIAL_CONTENT', 'MODERATE_REVIEW', 'REVIEW_CONTENT_APPEAL', 'EXPORT_ALL_BOOKINGS', 'EXPORT_PLATFORM_FINANCE',
-  'refund.processing.v1', 'refund.succeeded.v1'
+  'refund.processing.v1', 'refund.succeeded.v1',
+  'RECORD_TOURNAMENT_RESULT', 'CHANGE_TOURNAMENT_STATUS', 'DISBAND_CLUB', 'TRANSFER_CLUB_OWNERSHIP'
 ];
 
 export interface LogQuery {
