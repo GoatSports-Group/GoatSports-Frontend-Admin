@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, ElementRef, Injector, OnInit, computed, inject, signal, viewChild } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { SERVER_MAX_PAGE_SIZE, fetchAllPages } from '@shared/utils/fetch-all-pages';
 import { TwoWayWindow } from '@shared/utils/two-way-window';
 import { InfiniteScrollDirective } from '@shared/directives/infinite-scroll.directive';
@@ -34,11 +35,14 @@ import { VenueOwnerApplicationFormComponent } from './venue-owner-application-fo
 export class VenueOwnerApplicationsComponent implements OnInit {
   private readonly getApplications = inject(GetMyOwnerApplicationsUseCase);
   private readonly notify = inject(NotifyService);
+  private readonly route = inject(ActivatedRoute);
 
   readonly getAddress = formatOwnerApplicationAddress;
   readonly getBusinessTypeLabel = getBusinessTypeLabel;
   readonly getStatusLabel = getOwnerApplicationStatusLabel;
   readonly activeView = signal<'history' | 'form'>('history');
+  /** `?claim={externalVenueId}` từ lời mời nhận quản lý sân: mở thẳng form, điền sẵn từ sân đó. */
+  readonly claimVenueId = signal<string | null>(this.route.snapshot.queryParamMap.get('claim'));
   readonly applications = signal<OwnerApplication[]>([]);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
@@ -90,6 +94,7 @@ export class VenueOwnerApplicationsComponent implements OnInit {
   }
 
   handleSubmitted(): void {
+    this.claimVenueId.set(null);
     this.openHistory();
     this.loadApplications();
   }
@@ -135,6 +140,7 @@ export class VenueOwnerApplicationsComponent implements OnInit {
         this.listWindow.reset();
         this.selectedApplicationId.set(applications[0]?.ownerApplicationId ?? null);
         this.loading.set(false);
+        if (this.claimVenueId() && this.activeView() === 'history') this.openForm();
       },
       error: () => {
         this.error.set('Không thể tải danh sách đơn đăng ký.');

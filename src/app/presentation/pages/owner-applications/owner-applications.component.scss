@@ -141,3 +141,56 @@
     }
   }
 }
+
+/* Khối "Nhận quản lý sân có sẵn" (cold start giai đoạn 3): sân ngoài hồ sơ nhận, khoảng cách và cảnh báo. */
+.claim-review {
+  display: grid;
+  gap: 12px;
+  padding: 18px 20px;
+  border: 1px solid var(--primary-light);
+  border-radius: 16px;
+  background: var(--surface);
+
+  > header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    color: var(--primary);
+
+    h3 { margin: 0; color: var(--primary); font-size: 14px; font-weight: 900; }
+    p { margin: 4px 0 0; color: var(--body); font-size: 13px; line-height: 1.5; }
+  }
+}
+
+.claim-review__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 20px;
+  margin: 0;
+
+  > div { display: grid; gap: 2px; }
+  dt { color: var(--body); font-size: 12px; font-weight: 700; }
+  dd { margin: 0; color: var(--ink); font-size: 13px; }
+
+  @media (max-width: 720px) { grid-template-columns: 1fr; }
+}
+
+.claim-review__note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--surface-subtle);
+  color: var(--body);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+
+  lucide-icon { flex: none; margin-top: 1px; }
+}
+
+.claim-review__note--success { background: var(--success-soft); color: var(--success); }
+.claim-review__note--warning { background: var(--warning-soft); color: var(--warning); }
+.claim-review__note--danger { background: var(--danger-soft); color: var(--danger); }

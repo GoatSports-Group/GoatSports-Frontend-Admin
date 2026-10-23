@@ -20,7 +20,8 @@
     </header>
 
     @if (activeView() === 'form') {
-    <app-venue-owner-application-form (submitted)="handleSubmitted()" (cancelled)="openHistory()" />
+    <app-venue-owner-application-form [claimVenueId]="claimVenueId()" (submitted)="handleSubmitted()"
+      (cancelled)="openHistory()" />
     } @else if (loading()) {
     <app-page-loading title="Đang tải hồ sơ đăng ký"
       description="GoatSports đang đồng bộ lịch sử và trạng thái xét duyệt của bạn." />

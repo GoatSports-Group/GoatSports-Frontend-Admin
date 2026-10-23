@@ -57,6 +57,23 @@
       }
     </header>
 
+    @if (claimVenue(); as venue) {
+    <div class="claim-banner" role="status">
+      <app-lucide-icon name="store" [size]="20" aria-hidden="true" />
+      <div>
+        <strong>Bạn đang nhận quản lý sân {{ venue.name }}</strong>
+        <span>@if (venue.wantCount) { {{ venue.wantCount }} người chơi đang chờ đặt sân này online. }Hồ sơ đã điền sẵn tên,
+          địa chỉ và vị trí của sân; sửa lại nếu chưa đúng. Duyệt xong, sân chuyển thành cơ sở của bạn; khi bạn mở đặt
+          online, người chơi đang chờ được báo.</span>
+      </div>
+      <button type="button" class="claim-banner__drop" [disabled]="submitting() || verifying()" (click)="dropClaim()">Không phải sân này</button>
+    </div>
+    } @else if (claimError()) {
+    <p class="claim-banner claim-banner--warning" role="alert">
+      <app-lucide-icon name="triangle-alert" [size]="18" aria-hidden="true" />{{ claimError() }}
+    </p>
+    }
+
     <form (ngSubmit)="currentStep() < 4 ? nextStep() : submit()" novalidate>
       <div class="owner-form-panel__body" [class.owner-form-panel__body--documents]="currentStep() === 1">
         @if (currentStep() === 1) {

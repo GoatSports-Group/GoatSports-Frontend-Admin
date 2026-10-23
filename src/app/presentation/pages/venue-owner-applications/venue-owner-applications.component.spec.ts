@@ -5,7 +5,10 @@ import { provideLucideIcons } from '@lucide/angular';
 import { APP_ICONS } from '../../../app-icons';
 import { BusinessType, OwnerApplication, OwnerApplicationStatus } from '@application/dto/owner-application/owner-application.dto';
 import { GetMyOwnerApplicationsUseCase } from '@application/usecase/owner-application/get-my-owner-applications.usecase';
+import { SearchAddressSuggestionsUseCase } from '@application/usecase/owner-application/search-address-suggestions.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { OWNER_APPLICATION_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-application.repository';
 import { VenueOwnerApplicationsComponent } from './venue-owner-applications.component';
 
 describe('VenueOwnerApplicationsComponent', () => {
@@ -42,10 +45,25 @@ describe('VenueOwnerApplicationsComponent', () => {
       imports: [VenueOwnerApplicationsComponent],
       providers: [
         provideLucideIcons(...APP_ICONS),
+        provideRouter([]),
         { provide: GetMyOwnerApplicationsUseCase, useValue: getApplications },
-        { provide: NotifyService, useValue: notify }
+        { provide: NotifyService, useValue: notify },
+        { provide: OWNER_APPLICATION_REPOSITORY_TOKEN, useValue: { getClaimableVenue: vi.fn(() => of(null)) } }
       ]
     }).compileComponents();
+  });
+
+  it('opens the application form straight away for an owner coming from a claim invite', () => {
+    TestBed.overrideProvider(ActivatedRoute, {
+      useValue: { snapshot: { queryParamMap: convertToParamMap({ claim: 'ext-1' }) } }
+    });
+    // Form hồ sơ hiện ra ngay nên cần cả gợi ý địa chỉ.
+    TestBed.overrideProvider(SearchAddressSuggestionsUseCase, { useValue: { execute: vi.fn(() => of([])) } });
+    const fixture = TestBed.createComponent(VenueOwnerApplicationsComponent);
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.claimVenueId()).toBe('ext-1');
+    expect(fixture.componentInstance.activeView()).toBe('form');
   });
 
   it('renders newest application first in a master-detail workspace', () => {

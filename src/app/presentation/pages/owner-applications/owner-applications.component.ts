@@ -1,4 +1,5 @@
 import { PAGE_SIZE } from '@shared/constants/page-size';
+import { ExternalVenueClaimReview, OWNER_APPLICATION_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-application.repository';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -57,6 +58,7 @@ export class OwnerApplicationsComponent implements OnInit {
   private snackBar = inject(NotifyService);
   private changeDetectorRef = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
+  private applicationRepository = inject(OWNER_APPLICATION_REPOSITORY_TOKEN);
   private searchChanges = new Subject<void>();
   private listSubscription?: Subscription;
   private detailSubscription?: Subscription;
@@ -80,6 +82,8 @@ export class OwnerApplicationsComponent implements OnInit {
   set filteredApplications(value: OwnerApplication[]) { this.applications.set(value); }
   get hasMoreOnServer(): boolean { return this.applications().length < this.totalItems; }
   selectedApplication: OwnerApplication | null = null;
+  /** Khối "Nhận quản lý sân có sẵn" của hồ sơ đang xem; null với hồ sơ tạo cơ sở mới thường. */
+  claimReview: ExternalVenueClaimReview | null = null;
 
   loadingList = false;
   loadingDetail = false;
@@ -184,6 +188,7 @@ export class OwnerApplicationsComponent implements OnInit {
   selectApplication(app: OwnerApplication) {
     this.detailSubscription?.unsubscribe();
     this.selectedApplication = app;
+    this.claimReview = null;
     this.loadingDetail = false;
     this.changeDetectorRef.markForCheck();
 
@@ -208,12 +213,29 @@ export class OwnerApplicationsComponent implements OnInit {
       next: (fullDetails) => {
         if (this.selectedApplication?.ownerApplicationId === selectedId) {
           this.selectedApplication = fullDetails;
+          if (fullDetails.claimedExternalVenueId) this.loadClaimReview(selectedId);
         }
       },
       error: (err) => {
         console.error('Failed to load application details', err);
       }
     });
+  }
+
+  private loadClaimReview(applicationId: string): void {
+    this.applicationRepository.getExternalVenueClaim(applicationId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: review => {
+        if (this.selectedApplication?.ownerApplicationId !== applicationId) return;
+        this.claimReview = review;
+        this.changeDetectorRef.markForCheck();
+      },
+      error: error => console.warn('Failed to load external venue claim:', error)
+    });
+  }
+
+  /** Khoảng cách dễ đọc: "40 m" / "1,2 km". */
+  claimDistanceLabel(meters: number): string {
+    return meters < 1000 ? `${meters} m` : `${(meters / 1000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} km`;
   }
 
   approve(app: OwnerApplication) {

@@ -158,6 +158,51 @@
           </div>
           }
 
+          @if (claimReview; as claim) {
+          <article class="claim-review" aria-labelledby="claim-review-title">
+            <header>
+              <lucide-icon name="store" class="h-5 w-5"></lucide-icon>
+              <div>
+                <h3 id="claim-review-title">Nhận quản lý sân có sẵn</h3>
+                <p>Hồ sơ này nhận một sân ngoài hệ thống (từ lời mời). Duyệt xong, sân chuyển thành cơ sở của chủ sân;
+                  người chơi đang chờ được báo khi chủ sân mở đặt online.</p>
+              </div>
+            </header>
+            <dl class="claim-review__facts">
+              <div><dt>Sân</dt><dd><strong>{{ claim.venue.name }}</strong> · {{ claim.region }}</dd></div>
+              <div><dt>Địa chỉ gốc</dt><dd>{{ claim.venue.address || 'Chưa có' }}</dd></div>
+              <div><dt>Số điện thoại gốc</dt><dd>{{ claim.venue.phone || 'Chưa có' }}</dd></div>
+              <div><dt>Nhu cầu</dt><dd>{{ claim.wantCount }} người muốn đặt online · {{ claim.matchCount }} kèo đã chơi</dd></div>
+            </dl>
+            @if (claim.venue.claimedVenueId && claim.venue.claimedVenueId === selectedApplication.venueId) {
+            <p class="claim-review__note claim-review__note--success"><lucide-icon name="circle-check"
+                class="h-4 w-4"></lucide-icon>Đã chuyển thành cơ sở của chủ sân; người chơi đang chờ sẽ được báo khi chủ sân mở đặt online.</p>
+            } @else if (claim.venue.claimedVenueId) {
+            <p class="claim-review__note claim-review__note--danger"><lucide-icon name="alert-triangle"
+                class="h-4 w-4"></lucide-icon>Sân này đã thuộc một cơ sở khác: duyệt sẽ bị từ chối.</p>
+            }
+            @if (claim.distanceMeters === null) {
+            <p class="claim-review__note claim-review__note--warning"><lucide-icon name="alert-triangle"
+                class="h-4 w-4"></lucide-icon>Hồ sơ chưa có toạ độ nên chưa so được với vị trí sân.</p>
+            } @else if (claim.farAway) {
+            <p class="claim-review__note claim-review__note--danger"><lucide-icon name="alert-triangle"
+                class="h-4 w-4"></lucide-icon>Vị trí trong hồ sơ cách sân {{ claimDistanceLabel(claim.distanceMeters) }}.
+              Kiểm tra lại có đúng sân này không.</p>
+            } @else {
+            <p class="claim-review__note claim-review__note--success"><lucide-icon name="circle-check"
+                class="h-4 w-4"></lucide-icon>Cùng vị trí với sân (cách {{ claimDistanceLabel(claim.distanceMeters) }}).</p>
+            }
+            @if (claim.otherPendingClaims) {
+            <p class="claim-review__note claim-review__note--warning"><lucide-icon name="users"
+                class="h-4 w-4"></lucide-icon>Có {{ claim.otherPendingClaims }} hồ sơ khác cũng đang nhận sân này.</p>
+            }
+            @if (claim.venue.phone) {
+            <p class="claim-review__note"><lucide-icon name="phone" class="h-4 w-4"></lucide-icon>Gọi số gốc của sân
+              ({{ claim.venue.phone }}) để xác nhận người nộp đúng là chủ sân trước khi duyệt.</p>
+            }
+          </article>
+          }
+
           <div class="grid grid-cols-1 gap-5 xl:grid-cols-2">
             <article class="rounded-2xl border border-slate-200/80 bg-surface p-5 shadow-sm shadow-slate-200/40">
               <div class="mb-4 flex items-center gap-3 border-b border-slate-100 pb-3">

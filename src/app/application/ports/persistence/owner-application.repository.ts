@@ -15,6 +15,38 @@ export interface OwnerApplicationRepository {
   analyzeFaceReadiness(frame: string): Observable<OwnerFaceReadiness>;
   verifyIdentity(files: OwnerApplicationFiles, livenessFrames: string[]): Observable<PreparedOwnerIdentity>;
   submit(form: Record<string, unknown>, preparedIdentity: PreparedOwnerIdentity): Observable<void>;
+  /** Sân ngoài hệ thống chủ sân đang nhận quản lý (đến từ lời mời), để điền sẵn hồ sơ. */
+  getClaimableVenue(externalVenueId: string): Observable<ClaimableVenue>;
+  /** Khối "Nhận quản lý sân có sẵn" khi admin duyệt; null với hồ sơ tạo cơ sở mới thường. */
+  getExternalVenueClaim(applicationId: string): Observable<ExternalVenueClaimReview | null>;
+}
+
+/** Sân ngoài hệ thống (OpenStreetMap / người chơi gợi ý) mà hồ sơ nhận quản lý. */
+export interface ClaimableVenue {
+  externalVenueId: string;
+  name: string;
+  sportTypes: string[];
+  latitude: number;
+  longitude: number;
+  address: string | null;
+  phone: string | null;
+  /** Đã có chủ khác nhận thì không nộp được. */
+  claimedVenueId: string | null;
+  wantCount: number;
+  matchCount: number;
+}
+
+export interface ExternalVenueClaimReview {
+  venue: Omit<ClaimableVenue, 'wantCount' | 'matchCount'>;
+  region: string;
+  /** Vị trí trong hồ sơ cách sân bao xa; null khi hồ sơ không có toạ độ. */
+  distanceMeters: number | null;
+  /** Xa hơn 300 m: cảnh báo, không chặn duyệt. */
+  farAway: boolean;
+  wantCount: number;
+  matchCount: number;
+  /** Hồ sơ khác đang chờ duyệt cũng nhận sân này. */
+  otherPendingClaims: number;
 }
 
 export interface OwnerFaceReadiness {

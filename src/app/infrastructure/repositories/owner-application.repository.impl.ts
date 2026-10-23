@@ -14,6 +14,8 @@ import {
   timer
 } from 'rxjs';
 import {
+  ClaimableVenue,
+  ExternalVenueClaimReview,
   OwnerApplicationFiles,
   OwnerApplicationRepository,
   OwnerFaceReadiness,
@@ -183,6 +185,23 @@ export class OwnerApplicationRepositoryImpl implements OwnerApplicationRepositor
 
   markViewed(id: string): Observable<void> {
     return this.ownerApplicationApi.markViewed(id).pipe(map(() => undefined));
+  }
+
+  getClaimableVenue(externalVenueId: string): Observable<ClaimableVenue> {
+    return forkJoin({
+      venue: this.ownerApplicationApi.getExternalVenue(externalVenueId),
+      demand: this.ownerApplicationApi.getExternalVenueDemand(externalVenueId)
+    }).pipe(map(({ venue, demand }) => ({
+      ...(venue.data as unknown as Omit<ClaimableVenue, 'wantCount' | 'matchCount'>),
+      wantCount: demand.data?.wantCount ?? 0,
+      matchCount: demand.data?.matchCount ?? 0
+    })));
+  }
+
+  getExternalVenueClaim(applicationId: string): Observable<ExternalVenueClaimReview | null> {
+    return this.ownerApplicationApi.getExternalVenueClaim(applicationId).pipe(
+      map(response => (response?.data as ExternalVenueClaimReview | undefined) ?? null)
+    );
   }
 
   approve(id: string): Observable<void> {

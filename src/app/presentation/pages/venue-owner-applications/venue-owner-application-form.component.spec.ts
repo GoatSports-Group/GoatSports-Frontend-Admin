@@ -8,6 +8,7 @@ import { SubmitOwnerApplicationUseCase } from '@application/usecase/owner-applic
 import { AnalyzeOwnerFaceReadinessUseCase } from '@application/usecase/owner-application/analyze-owner-face-readiness.usecase';
 import { VerifyOwnerIdentityUseCase } from '@application/usecase/owner-application/verify-owner-identity.usecase';
 import { NotifyService } from '@shared/components/notify/notify.service';
+import { OWNER_APPLICATION_REPOSITORY_TOKEN } from '@application/ports/persistence/owner-application.repository';
 import { VenueOwnerApplicationFormComponent } from './venue-owner-application-form.component';
 
 describe('VenueOwnerApplicationFormComponent', () => {
@@ -16,6 +17,12 @@ describe('VenueOwnerApplicationFormComponent', () => {
   const verifyIdentity = { execute: vi.fn() };
   const searchAddress = { execute: vi.fn(), resolve: vi.fn() };
   const notify = { warning: vi.fn(), success: vi.fn(), error: vi.fn() };
+  const repository = { getClaimableVenue: vi.fn() };
+  const claimable = {
+    externalVenueId: 'ext-1', name: 'Liber Pickleball', sportTypes: ['PICKLEBALL'], latitude: 10.8324,
+    longitude: 106.6972, address: '12 Hiệp Bình', phone: '0909 123 456', claimedVenueId: null, wantCount: 37,
+    matchCount: 2
+  };
 
   beforeEach(async () => {
     Object.defineProperty(window, 'scrollTo', { value: vi.fn(), configurable: true });
@@ -36,9 +43,41 @@ describe('VenueOwnerApplicationFormComponent', () => {
         { provide: AnalyzeOwnerFaceReadinessUseCase, useValue: analyzeFaceReadiness },
         { provide: VerifyOwnerIdentityUseCase, useValue: verifyIdentity },
         { provide: SearchAddressSuggestionsUseCase, useValue: searchAddress },
-        { provide: NotifyService, useValue: notify }
+        { provide: NotifyService, useValue: notify },
+        { provide: OWNER_APPLICATION_REPOSITORY_TOKEN, useValue: repository }
       ]
     }).compileComponents();
+  });
+
+  it('prefills the application from the invited venue and can drop the claim', () => {
+    repository.getClaimableVenue.mockReturnValue(of(claimable));
+    const fixture = TestBed.createComponent(VenueOwnerApplicationFormComponent);
+    fixture.componentRef.setInput('claimVenueId', 'ext-1');
+    fixture.detectChanges();
+    const form = fixture.componentInstance;
+
+    expect(repository.getClaimableVenue).toHaveBeenCalledWith('ext-1');
+    expect(fixture.nativeElement.textContent).toContain('Bạn đang nhận quản lý sân Liber Pickleball');
+    expect(fixture.nativeElement.textContent).toContain('37 người chơi đang chờ');
+    expect(form.form.businessName).toBe('Liber Pickleball');
+    expect(form.form.address).toBe('12 Hiệp Bình');
+    expect([form.form.latitude, form.form.longitude]).toEqual([10.8324, 106.6972]);
+
+    form.dropClaim();
+    fixture.detectChanges();
+    expect(form.claimVenue()).toBeNull();
+    expect(form.form.businessName).toBe('Liber Pickleball');
+  });
+
+  it('refuses to claim a venue that already has an owner', () => {
+    repository.getClaimableVenue.mockReturnValue(of({ ...claimable, claimedVenueId: 'venue-9' }));
+    const fixture = TestBed.createComponent(VenueOwnerApplicationFormComponent);
+    fixture.componentRef.setInput('claimVenueId', 'ext-1');
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.claimVenue()).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('đã có chủ quản lý');
+    expect(fixture.componentInstance.form.businessName).toBe('');
   });
 
   it('renders the guided vertical step navigation and legal document fields', () => {

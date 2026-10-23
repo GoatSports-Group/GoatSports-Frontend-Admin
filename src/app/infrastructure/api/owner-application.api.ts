@@ -162,6 +162,26 @@ export class OwnerApplicationApi {
     );
   }
 
+  /** Sân ngoài và nhu cầu đang chờ: API công khai của venue-service (chủ sân chưa có quyền admin). */
+  getExternalVenue(externalVenueId: string): Observable<BaseResponse<Record<string, unknown>>> {
+    return this.http.get<BaseResponse<Record<string, unknown>>>(
+      `${this.apiBase}/venue-service/api/v1/venues/external/${externalVenueId}`
+    );
+  }
+
+  getExternalVenueDemand(externalVenueId: string): Observable<BaseResponse<{ wantCount: number; matchCount: number }>> {
+    return this.http.get<BaseResponse<{ wantCount: number; matchCount: number }>>(
+      `${this.apiBase}/venue-service/api/v1/venues/external/${externalVenueId}/demand`
+    );
+  }
+
+  /** 204 (không có body) khi hồ sơ không nhận sân ngoài nào. */
+  getExternalVenueClaim(applicationId: string): Observable<BaseResponse<unknown> | null> {
+    return this.http.get<BaseResponse<unknown> | null>(
+      `${this.apiBase}/venue-service/api/v1/admin/owner-applications/${applicationId}/external-venue-claim`
+    );
+  }
+
   getApplicationDetail(id: string): Observable<BaseResponse<OwnerApplication>> {
     return this.http.get<BaseResponse<OwnerApplication>>(
       `${this.apiBase}/venue-service/api/v1/admin/owner-applications/${id}`

@@ -10,8 +10,10 @@ import {
   HostListener,
   OnDestroy,
   ViewChild,
+  OnInit,
   ViewContainerRef,
   inject,
+  input,
   output,
   signal
 } from '@angular/core';
@@ -20,6 +22,8 @@ import { FormsModule } from '@angular/forms';
 import { AddressSuggestion } from '@application/dto/owner-application/address-suggestion.dto';
 import { BusinessType } from '@application/dto/owner-application/owner-application.dto';
 import {
+  ClaimableVenue,
+  OWNER_APPLICATION_REPOSITORY_TOKEN,
   OwnerApplicationFiles,
   OwnerFaceReadiness,
   PreparedOwnerIdentity
@@ -69,7 +73,7 @@ type ApplicationForm = {
   styleUrl: './venue-owner-application-form.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class VenueOwnerApplicationFormComponent implements OnDestroy {
+export class VenueOwnerApplicationFormComponent implements OnInit, OnDestroy {
   readonly businessTypeOptions: readonly SelectOption[] = [
     { value: 'INDIVIDUAL', label: 'Cá nhân' }, { value: 'COMPANY', label: 'Doanh nghiệp' }
   ];
@@ -81,6 +85,7 @@ export class VenueOwnerApplicationFormComponent implements OnDestroy {
   private readonly overlay = inject(Overlay);
   private readonly viewContainerRef = inject(ViewContainerRef);
   private readonly searchAddressSuggestions = inject(SearchAddressSuggestionsUseCase);
+  private readonly applicationRepository = inject(OWNER_APPLICATION_REPOSITORY_TOKEN);
   private readonly addressInput = new Subject<string>();
   private submissionOverlayRef: OverlayRef | null = null;
   private selectedAddressValue = '';
@@ -94,6 +99,13 @@ export class VenueOwnerApplicationFormComponent implements OnDestroy {
 
   @ViewChild('cameraVideo') cameraVideo?: ElementRef<HTMLVideoElement>;
 
+  /**
+   * Chủ sân đến từ lời mời "nhận quản lý sân" (`/admin/applications?claim={id}`): hồ sơ điền sẵn từ sân ngoài và gửi kèm
+   * `claimedExternalVenueId`. Duyệt xong, sân ngoài chuyển thành cơ sở của họ và người chơi đang chờ được báo.
+   */
+  readonly claimVenueId = input<string | null>(null);
+  readonly claimVenue = signal<ClaimableVenue | null>(null);
+  readonly claimError = signal('');
   readonly submitted = output<void>();
   readonly cancelled = output<void>();
   readonly currentStep = signal(1);
@@ -148,6 +160,34 @@ export class VenueOwnerApplicationFormComponent implements OnDestroy {
   readonly fileKeys: FileKey[] = ['idCardFront', 'idCardBack', 'businessLicense', 'venueImage'];
 
   form: ApplicationForm = this.emptyForm();
+
+  ngOnInit(): void {
+    const venueId = this.claimVenueId();
+    if (!venueId) return;
+    this.applicationRepository.getClaimableVenue(venueId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: venue => {
+        if (venue.claimedVenueId) {
+          this.claimError.set(`${venue.name} đã có chủ quản lý trên GOAT Sports. Bạn vẫn có thể đăng ký một cơ sở khác.`);
+          return;
+        }
+        this.claimVenue.set(venue);
+        this.form = {
+          ...this.form,
+          businessName: this.form.businessName || venue.name,
+          phone: this.form.phone || (venue.phone ?? ''),
+          address: this.form.address || (venue.address ?? ''),
+          latitude: this.form.latitude ?? venue.latitude,
+          longitude: this.form.longitude ?? venue.longitude
+        };
+      },
+      error: () => this.claimError.set('Không tải được sân bạn được mời nhận quản lý. Bạn vẫn có thể đăng ký cơ sở mới.')
+    });
+  }
+
+  /** Bỏ nhận sân có sẵn: hồ sơ thành đăng ký cơ sở mới thường (giữ nguyên thông tin đã điền). */
+  dropClaim(): void {
+    this.claimVenue.set(null);
+  }
   files: Record<FileKey, File | null> = this.emptyFiles();
 
   constructor() {
@@ -324,7 +364,11 @@ export class VenueOwnerApplicationFormComponent implements OnDestroy {
       key,
       typeof value === 'string' ? value.trim() : value
     ]));
-    const submissionForm = { ...normalizedForm, province: normalizedForm['city'] };
+    const submissionForm = {
+      ...normalizedForm,
+      province: normalizedForm['city'],
+      claimedExternalVenueId: this.claimVenue()?.externalVenueId ?? null
+    };
 
     defer(() => this.submitApplication.execute(submissionForm, preparedIdentity)).pipe(
       takeUntilDestroyed(this.destroyRef),
@@ -335,6 +379,7 @@ export class VenueOwnerApplicationFormComponent implements OnDestroy {
     ).subscribe({
       next: () => {
         this.resetForm();
+        this.claimVenue.set(null);
         this.notify.success('Đã nộp đơn đăng ký chủ sân thành công.');
         this.submitted.emit();
       },

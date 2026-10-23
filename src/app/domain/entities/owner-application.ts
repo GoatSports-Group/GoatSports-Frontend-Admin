@@ -21,6 +21,8 @@ export interface OwnerApplicationDocument {
 export interface OwnerApplication {
   ownerApplicationId: string;
   venueId?: string;
+  /** Hồ sơ nhận quản lý một sân ngoài hệ thống có sẵn (đến từ lời mời); trống với hồ sơ tạo cơ sở mới. */
+  claimedExternalVenueId?: string | null;
   userId: string;
   fullName: string;
   phone: string;
