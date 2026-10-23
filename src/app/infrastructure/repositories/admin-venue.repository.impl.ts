@@ -6,7 +6,7 @@ import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue
 import { OwnerReview, OwnerReviewPage, OwnerReviewStatus } from '@application/dto/owner-review/owner-review.dto';
 import {
   AdminReviewFilter, AdminVenueFilter, AdminVenuePage, AdminVenueRepository, ExternalVenueImportRequest,
-  ExternalVenueImportStatus, ExternalVenueRegionSummary
+  ExternalVenueImportStatus, ExternalVenueRegionSummary, PlaceSearchResult
 } from '@application/ports/persistence/admin-venue.repository';
 import { environment } from '@environments/environment';
 
@@ -72,5 +72,11 @@ export class AdminVenueRepositoryImpl implements AdminVenueRepository {
     // 204 (chưa nhập lần nào) không có body.
     return this.http.get<BaseResponse<ExternalVenueImportStatus> | null>(`${this.baseUrl}/external-venues/import-status`)
       .pipe(map(response => response?.data ?? null));
+  }
+
+  searchPlaces(query: string): Observable<PlaceSearchResult[]> {
+    return this.http.get<BaseResponse<PlaceSearchResult[]>>(
+      `${environment.apiUrl}/venue-service/api/v1/venues/geocoding/search`, { params: { query } }
+    ).pipe(map(response => response.data ?? []));
   }
 }

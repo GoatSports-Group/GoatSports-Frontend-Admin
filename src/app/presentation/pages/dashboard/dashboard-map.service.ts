@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { loadLeaflet } from '@shared/utils/leaflet-loader';
 import { VenueMapMarker } from './dashboard.models';
 import { HCM_CENTER, buildVenueTooltipContent, getVenueMarkerColor } from './dashboard.utils';
 
@@ -12,12 +13,7 @@ export class DashboardMapService {
 
   init(elementId: string): void {
     this.elementId = elementId;
-    if ((window as any).L) {
-      this.createMap();
-      return;
-    }
-
-    this.loadLeafletAssets();
+    void loadLeaflet().then(() => this.createMap());
   }
 
   render(markers: VenueMapMarker[]): void {
@@ -58,28 +54,6 @@ export class DashboardMapService {
     this.map = null;
     this.markersGroup = null;
     this.pendingMarkers = [];
-  }
-
-  private loadLeafletAssets(): void {
-    if (!document.getElementById('leaflet-dashboard-styles')) {
-      const link = document.createElement('link');
-      link.id = 'leaflet-dashboard-styles';
-      link.rel = 'stylesheet';
-      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-      document.head.appendChild(link);
-    }
-
-    const existingScript = document.getElementById('leaflet-dashboard-script') as HTMLScriptElement | null;
-    if (existingScript) {
-      existingScript.addEventListener('load', () => this.createMap(), { once: true });
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.id = 'leaflet-dashboard-script';
-    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-    script.addEventListener('load', () => this.createMap(), { once: true });
-    document.body.appendChild(script);
   }
 
   private createMap(): void {

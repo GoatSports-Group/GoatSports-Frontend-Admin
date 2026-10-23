@@ -1,13 +1,19 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import {
+  AfterViewInit, ChangeDetectionStrategy, Component, DestroyRef, ElementRef, OnInit, computed, inject, signal, viewChild
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { EMPTY, Subscription, expand, finalize, switchMap, timer } from 'rxjs';
+import { EMPTY, Subject, Subscription, catchError, debounceTime, distinctUntilChanged, expand, finalize, of, switchMap, timer } from 'rxjs';
 import {
-  ADMIN_VENUE_REPOSITORY_TOKEN, ExternalVenueImportRequest, ExternalVenueImportStatus, ExternalVenueRegionSummary
+  ADMIN_VENUE_REPOSITORY_TOKEN, ExternalVenueImportRequest, ExternalVenueImportStatus, ExternalVenueRegionSummary,
+  PlaceSearchResult
 } from '@application/ports/persistence/admin-venue.repository';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
+import { loadLeaflet } from '@shared/utils/leaflet-loader';
+
+type Area = Omit<ExternalVenueImportRequest, 'region'>;
 
 /** Khung của các thành phố lớn (venue-service nhận tối đa 3 độ mỗi chiều, hỏi Overpass từng ô 0,25 độ). */
 const PRESETS: readonly ExternalVenueImportRequest[] = [
@@ -20,10 +26,12 @@ const PRESETS: readonly ExternalVenueImportRequest[] = [
 const MAX_SPAN_DEGREES = 3;
 const TILE_DEGREES = 0.25;
 const POLL_MS = 4000;
+const VIETNAM_CENTER: [number, number] = [16.0, 106.5];
 
 /**
- * Tab "Sân ngoài hệ thống" của Cơ sở: nhập sân thực tế từ OpenStreetMap theo thành phố có sẵn hoặc một khung tự nhập,
- * để người chơi vẫn tìm được sân khi khu vực đó chưa có cơ sở đối tác. Nhập lại thì cập nhật, không tạo trùng.
+ * Tab "Sân ngoài hệ thống" của Cơ sở: nhập sân thực tế từ OpenStreetMap theo thành phố có sẵn hoặc một vùng chọn trên
+ * bản đồ, để người chơi vẫn tìm được sân khi khu vực đó chưa có cơ sở đối tác. Nhập lại thì cập nhật, không tạo trùng.
+ * Vùng chọn: tìm tên tỉnh / thành / quận (lấy khung bao của địa danh) hoặc kéo bản đồ rồi "Dùng khung đang xem".
  * Trong lúc một đợt chạy, trang hỏi trạng thái mỗi 4 giây và tự tải lại số sân khi xong.
  */
 @Component({
@@ -34,10 +42,14 @@ const POLL_MS = 4000;
   standalone: true,
   imports: [DatePipe, DecimalPipe, FormsModule, LucideIconComponent]
 })
-export class ExternalVenueImportComponent implements OnInit {
+export class ExternalVenueImportComponent implements OnInit, AfterViewInit {
   private readonly repository = inject(ADMIN_VENUE_REPOSITORY_TOKEN);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly mapElement = viewChild<ElementRef<HTMLElement>>('areaMap');
+  private readonly placeQuery$ = new Subject<string>();
   private polling?: Subscription;
+  private map: any;
+  private areaLayer: any;
 
   readonly presets = PRESETS;
   readonly summaries = signal<ExternalVenueRegionSummary[]>([]);
@@ -45,35 +57,63 @@ export class ExternalVenueImportComponent implements OnInit {
   readonly starting = signal<string | null>(null);
   readonly error = signal<string | null>(null);
 
-  readonly custom = signal<{ region: string; south: number | null; west: number | null; north: number | null; east: number | null }>(
-    { region: '', south: null, west: null, north: null, east: null });
+  readonly regionName = signal('');
+  readonly area = signal<Area | null>(null);
+  readonly placeQuery = signal('');
+  readonly places = signal<PlaceSearchResult[]>([]);
+  readonly searchingPlaces = signal(false);
 
   readonly running = computed(() => this.status()?.state === 'RUNNING');
   readonly busy = computed(() => this.running() || this.starting() !== null);
   /** Khu vực đã nhập bằng khung tự nhập (không nằm trong danh sách có sẵn). */
   readonly otherRegions = computed(() =>
     this.summaries().filter(summary => !PRESETS.some(preset => preset.region === summary.region)));
-  readonly boundsError = computed(() => {
-    const { south, west, north, east } = this.custom();
-    if ([south, west, north, east].some(value => value === null || !Number.isFinite(value))) return 'Nhập đủ bốn toạ độ.';
-    if (south! >= north! || west! >= east!) return 'Nam phải nhỏ hơn Bắc và Tây nhỏ hơn Đông.';
-    if (south! < -90 || north! > 90 || west! < -180 || east! > 180) return 'Toạ độ nằm ngoài bản đồ.';
-    if (north! - south! > MAX_SPAN_DEGREES || east! - west! > MAX_SPAN_DEGREES) {
-      return `Mỗi chiều tối đa ${MAX_SPAN_DEGREES} độ. Tỉnh lớn hơn thì chia thành vài đợt.`;
+  readonly areaError = computed(() => {
+    const area = this.area();
+    if (!area) return 'Tìm tên khu vực hoặc kéo bản đồ tới khu vực rồi bấm "Dùng khung đang xem".';
+    if (area.north - area.south > MAX_SPAN_DEGREES || area.east - area.west > MAX_SPAN_DEGREES) {
+      return `Vùng đã chọn rộng hơn ${MAX_SPAN_DEGREES} độ. Phóng to bản đồ rồi chọn từng phần.`;
     }
     return null;
   });
-  readonly customError = computed(() => this.custom().region.trim() ? this.boundsError() : 'Nhập tên khu vực.');
+  readonly customError = computed(() => this.areaError() ?? (this.regionName().trim() ? null : 'Đặt tên cho khu vực.'));
   /** Số ô venue-service sẽ hỏi Overpass, để admin ước lượng thời gian. */
-  readonly customTiles = computed(() => {
-    if (this.boundsError()) return 0;
-    const { south, west, north, east } = this.custom();
-    return Math.ceil((north! - south!) / TILE_DEGREES) * Math.ceil((east! - west!) / TILE_DEGREES);
+  readonly areaTiles = computed(() => {
+    const area = this.area();
+    if (!area || this.areaError()) return 0;
+    return Math.ceil((area.north - area.south) / TILE_DEGREES) * Math.ceil((area.east - area.west) / TILE_DEGREES);
   });
 
   ngOnInit(): void {
     this.refresh();
     this.watchStatus();
+    this.placeQuery$.pipe(
+      debounceTime(400),
+      distinctUntilChanged(),
+      switchMap(query => {
+        if (query.length < 3) return of([]);
+        this.searchingPlaces.set(true);
+        return this.repository.searchPlaces(query).pipe(
+          catchError(() => of([])),
+          finalize(() => this.searchingPlaces.set(false))
+        );
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(places => this.places.set(places));
+  }
+
+  ngAfterViewInit(): void {
+    void loadLeaflet().then(L => {
+      const element = this.mapElement()?.nativeElement;
+      if (!element || this.map) return;
+      this.map = L.map(element, { zoomControl: true }).setView(VIETNAM_CENTER, 6);
+      L.tileLayer('https://tile.openstreetmap.de/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(this.map);
+      this.drawArea();
+    });
+    this.destroyRef.onDestroy(() => this.map?.remove());
   }
 
   refresh(): void {
@@ -91,17 +131,52 @@ export class ExternalVenueImportComponent implements OnInit {
     return status.totalTiles ? Math.round(status.doneTiles / status.totalTiles * 100) : 0;
   }
 
-  setCustom(field: 'region' | 'south' | 'west' | 'north' | 'east', value: string | number | null): void {
-    this.custom.update(current => ({
-      ...current,
-      [field]: field === 'region' ? String(value ?? '') : (value === null || value === '' ? null : Number(value))
-    }));
+  searchPlace(query: string): void {
+    this.placeQuery.set(query);
+    this.placeQuery$.next(query.trim());
+  }
+
+  /** Chọn một địa danh: lấy khung bao của nó (tỉnh, quận...), không có thì khung ~10 km quanh điểm. */
+  choosePlace(place: PlaceSearchResult): void {
+    const area = place.bounds ?? {
+      south: place.latitude - 0.05, west: place.longitude - 0.05,
+      north: place.latitude + 0.05, east: place.longitude + 0.05
+    };
+    this.regionName.set(place.title);
+    this.places.set([]);
+    this.chooseArea(area, true);
+  }
+
+  /** Vùng nhập là đúng phần bản đồ đang hiện. */
+  useMapView(): void {
+    if (!this.map) return;
+    const view = this.map.getBounds();
+    this.chooseArea({ south: view.getSouth(), west: view.getWest(), north: view.getNorth(), east: view.getEast() }, false);
+  }
+
+  chooseArea(area: Area, fit: boolean): void {
+    const round = (value: number) => Math.round(value * 10_000) / 10_000;
+    this.area.set({ south: round(area.south), west: round(area.west), north: round(area.north), east: round(area.east) });
+    this.drawArea();
+    if (fit && this.map) this.map.fitBounds([[area.south, area.west], [area.north, area.east]], { padding: [24, 24] });
   }
 
   importCustom(): void {
-    if (this.customError()) return;
-    const { region, south, west, north, east } = this.custom();
-    this.startImport({ region: region.trim(), south: south!, west: west!, north: north!, east: east! });
+    const area = this.area();
+    if (this.customError() || !area) return;
+    this.startImport({ region: this.regionName().trim(), ...area });
+  }
+
+  private drawArea(): void {
+    const L = (window as any).L;
+    const area = this.area();
+    if (!this.map || !L) return;
+    this.areaLayer?.remove();
+    this.areaLayer = area
+      ? L.rectangle([[area.south, area.west], [area.north, area.east]], {
+        color: this.areaError() ? '#b42318' : '#047857', weight: 2, fillOpacity: 0.08
+      }).addTo(this.map)
+      : null;
   }
 
   startImport(request: ExternalVenueImportRequest): void {

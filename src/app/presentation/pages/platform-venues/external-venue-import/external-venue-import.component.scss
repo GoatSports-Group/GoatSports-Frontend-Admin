@@ -79,26 +79,93 @@
 
 .card__head a { color: var(--primary); font-weight: 700; }
 
-.external-import__form {
+.area-picker {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px 16px;
+  gap: 14px;
   padding: 16px 20px 20px;
+}
 
-  .field--wide { grid-column: 1 / -1; }
+.area-picker__search {
+  position: relative;
+}
 
-  @media (max-width: 720px) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+.area-picker__searching {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--body);
+  font-size: 13px;
+}
+
+.area-picker__results {
+  position: absolute;
+  z-index: 1000; // trên các lớp Leaflet (pane 400, control 800)
+  top: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  max-height: 280px;
+  margin: 0;
+  padding: 4px;
+  overflow-y: auto;
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 12px 32px rgb(15 23 42 / 14%);
+  list-style: none;
+
+  button {
+    display: flex;
+    width: 100%;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover, &:focus-visible { background: var(--surface-subtle); }
+
+    lucide-icon { flex: none; margin-top: 2px; color: var(--primary); }
+    span { display: grid; gap: 2px; min-width: 0; }
+    strong { font-size: 14px; }
+    small { color: var(--body); font-size: 13px; }
   }
 }
 
-.external-import__submit {
+.area-picker__map {
+  height: 380px;
+  overflow: hidden;
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: var(--surface-subtle);
+
+  @media (max-width: 720px) { height: 300px; }
+}
+
+.area-picker__footer {
+  display: grid;
+  grid-template-columns: minmax(220px, 320px) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 12px 16px;
+
+  .field__hint { align-self: center; }
+
+  @media (max-width: 960px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.area-picker__actions {
   display: flex;
-  grid-column: 1 / -1;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
   flex-wrap: wrap;
+  gap: 8px;
 }
 
 .external-import__source {

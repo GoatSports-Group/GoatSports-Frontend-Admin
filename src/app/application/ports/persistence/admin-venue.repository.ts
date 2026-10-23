@@ -49,6 +49,15 @@ export interface ExternalVenueImportRequest {
   east: number;
 }
 
+/** Kết quả tìm địa danh (Nominatim qua venue-service); `bounds` là khung bao của tỉnh / quận nếu có. */
+export interface PlaceSearchResult {
+  latitude: number;
+  longitude: number;
+  title: string;
+  address: string;
+  bounds: Omit<ExternalVenueImportRequest, 'region'> | null;
+}
+
 /** Đợt nhập gần nhất. venue-service hỏi Overpass từng ô 0,25°; ô quá tải bị bỏ qua (PARTIAL), nhập lại để bổ sung. */
 export interface ExternalVenueImportStatus {
   region: string;
@@ -73,6 +82,8 @@ export interface AdminVenueRepository {
   importExternalVenues(request: ExternalVenueImportRequest): Observable<void>;
   /** null khi chưa nhập lần nào từ lúc venue-service khởi động. */
   getExternalVenueImportStatus(): Observable<ExternalVenueImportStatus | null>;
+  /** Tìm tỉnh, thành, quận ở Việt Nam để chọn vùng nhập trên bản đồ. */
+  searchPlaces(query: string): Observable<PlaceSearchResult[]>;
 }
 
 export const ADMIN_VENUE_REPOSITORY_TOKEN = new InjectionToken<AdminVenueRepository>('ADMIN_VENUE_REPOSITORY_TOKEN');

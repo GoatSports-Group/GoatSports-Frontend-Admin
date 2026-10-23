@@ -75,48 +75,61 @@
     <header class="card__head">
       <div>
         <h2 id="external-custom-title">Khu vực khác</h2>
-        <p>Nhập bất kỳ tỉnh nào bằng khung toạ độ. Mở <a href="https://www.openstreetmap.org/export" target="_blank"
-            rel="noopener">openstreetmap.org/export</a>, chọn "Chọn thủ công vùng khác", kéo khung quanh khu vực rồi chép
-          bốn số vào đây. Mỗi chiều tối đa 3 độ.</p>
+        <p>Tìm tên tỉnh, thành phố hoặc quận để lấy đúng ranh giới của nó, hoặc kéo và phóng bản đồ tới khu vực cần nhập
+          rồi bấm "Dùng khung đang xem". Vùng đã chọn hiện bằng khung xanh.</p>
       </div>
     </header>
-    <form class="external-import__form" (ngSubmit)="importCustom()">
-      <label class="field field--wide">
-        <span class="field__label">Tên khu vực</span>
-        <input class="field__control" type="text" name="region" maxlength="100" placeholder="Ví dụ: Lâm Đồng"
-          [ngModel]="custom().region" (ngModelChange)="setCustom('region', $event)" />
-      </label>
-      <label class="field">
-        <span class="field__label">Bắc (vĩ độ trên)</span>
-        <input class="field__control" type="number" name="north" step="0.0001" placeholder="12.20"
-          [ngModel]="custom().north" (ngModelChange)="setCustom('north', $event)" />
-      </label>
-      <label class="field">
-        <span class="field__label">Nam (vĩ độ dưới)</span>
-        <input class="field__control" type="number" name="south" step="0.0001" placeholder="11.20"
-          [ngModel]="custom().south" (ngModelChange)="setCustom('south', $event)" />
-      </label>
-      <label class="field">
-        <span class="field__label">Tây (kinh độ trái)</span>
-        <input class="field__control" type="number" name="west" step="0.0001" placeholder="107.80"
-          [ngModel]="custom().west" (ngModelChange)="setCustom('west', $event)" />
-      </label>
-      <label class="field">
-        <span class="field__label">Đông (kinh độ phải)</span>
-        <input class="field__control" type="number" name="east" step="0.0001" placeholder="108.90"
-          [ngModel]="custom().east" (ngModelChange)="setCustom('east', $event)" />
-      </label>
-      <div class="external-import__submit">
-        <p class="field__hint">
-          @if (customTiles()) { Sẽ hỏi {{ customTiles() }} ô 0,25°, mỗi ô vài giây tới một phút. }
-          @else { {{ customError() }} }
-        </p>
-        <button type="submit" class="btn btn--primary" [disabled]="busy() || customError() !== null">
-          <lucide-icon [name]="starting() === custom().region.trim() ? 'loader-2' : 'map-pin'"
-            [class.spin]="starting() === custom().region.trim()" />Nhập khu vực này
-        </button>
+    <div class="area-picker">
+      <div class="area-picker__search">
+        <label class="field">
+          <span class="field__label">Tìm khu vực</span>
+          <input class="field__control" type="search" name="place" autocomplete="off"
+            placeholder="Ví dụ: Lâm Đồng, Thủ Đức, Nha Trang" [ngModel]="placeQuery()"
+            (ngModelChange)="searchPlace($event)" aria-controls="place-results" />
+        </label>
+        @if (searchingPlaces()) { <span class="area-picker__searching"><lucide-icon name="loader-2" class="spin" />Đang
+          tìm…</span> }
+        @if (places().length) {
+        <ul id="place-results" class="area-picker__results" role="listbox" aria-label="Kết quả tìm khu vực">
+          @for (place of places(); track place.address) {
+          <li role="option" [attr.aria-selected]="false">
+            <button type="button" (click)="choosePlace(place)">
+              <lucide-icon name="map-pin" />
+              <span><strong>{{ place.title }}</strong><small>{{ place.address }}</small></span>
+            </button>
+          </li>
+          }
+        </ul>
+        }
       </div>
-    </form>
+
+      <div class="area-picker__map" #areaMap role="region" aria-label="Bản đồ chọn khu vực"></div>
+
+      <div class="area-picker__footer">
+        <label class="field">
+          <span class="field__label">Tên khu vực</span>
+          <input class="field__control" type="text" name="region" maxlength="100" placeholder="Ví dụ: Lâm Đồng"
+            [ngModel]="regionName()" (ngModelChange)="regionName.set($event)" />
+        </label>
+        <p class="field__hint" [class.field__error]="area() && areaError()">
+          @if (area(); as a) {
+          Vùng {{ a.north - a.south | number:'1.2-2' }}° × {{ a.east - a.west | number:'1.2-2' }}°.
+          @if (areaTiles()) { Sẽ hỏi {{ areaTiles() }} ô 0,25°, mỗi ô vài giây tới một phút. }
+          }
+          @if (customError(); as message) { {{ message }} }
+        </p>
+        <div class="area-picker__actions">
+          <button type="button" class="btn btn--ghost" (click)="useMapView()">
+            <lucide-icon name="maximize-2" />Dùng khung đang xem
+          </button>
+          <button type="button" class="btn btn--primary" [disabled]="busy() || customError() !== null"
+            (click)="importCustom()">
+            <lucide-icon [name]="starting() === regionName().trim() ? 'loader-2' : 'map-pin'"
+              [class.spin]="starting() === regionName().trim()" />Nhập khu vực này
+          </button>
+        </div>
+      </div>
+    </div>
   </section>
 
   <small class="external-import__source">Dữ liệu © OpenStreetMap contributors (ODbL).</small>

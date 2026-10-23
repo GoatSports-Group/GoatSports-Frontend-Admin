@@ -59,24 +59,33 @@ describe('ExternalVenueImportComponent', () => {
     fixture.destroy();
   });
 
-  it('imports a custom area only when its box is valid and at most 3 degrees wide', () => {
+  it('imports a province picked by name using its own boundary box', () => {
     repository.getExternalVenueSummary.mockReturnValue(of([]));
     const page = create().componentInstance;
+    expect(page.customError()).toContain('Tìm tên khu vực');
 
-    page.setCustom('region', 'Lâm Đồng');
-    page.setCustom('south', 11.2);
-    page.setCustom('west', 107.8);
-    page.setCustom('north', 12.2);
-    page.setCustom('east', 111.9);
-    expect(page.customError()).toContain('tối đa 3 độ');
-    page.importCustom();
-    expect(repository.importExternalVenues).not.toHaveBeenCalled();
+    page.choosePlace({
+      latitude: 11.94, longitude: 108.44, title: 'Tỉnh Lâm Đồng', address: 'Tỉnh Lâm Đồng, Việt Nam',
+      bounds: { south: 10.98, west: 107.28, north: 12.84, east: 108.98 }
+    });
 
-    page.setCustom('east', 108.9);
+    expect(page.regionName()).toBe('Tỉnh Lâm Đồng');
     expect(page.customError()).toBeNull();
-    expect(page.customTiles()).toBe(4 * 5);
+    expect(page.areaTiles()).toBe(8 * 7);
     page.importCustom();
     expect(repository.importExternalVenues).toHaveBeenCalledWith(
-      { region: 'Lâm Đồng', south: 11.2, west: 107.8, north: 12.2, east: 108.9 });
+      { region: 'Tỉnh Lâm Đồng', south: 10.98, west: 107.28, north: 12.84, east: 108.98 });
+  });
+
+  it('refuses an area wider than 3 degrees', () => {
+    repository.getExternalVenueSummary.mockReturnValue(of([]));
+    const page = create().componentInstance;
+    page.regionName.set('Miền Trung');
+
+    page.chooseArea({ south: 12, west: 106, north: 16.5, east: 109 }, false);
+    expect(page.customError()).toContain('rộng hơn 3 độ');
+    page.importCustom();
+
+    expect(repository.importExternalVenues).not.toHaveBeenCalled();
   });
 });
