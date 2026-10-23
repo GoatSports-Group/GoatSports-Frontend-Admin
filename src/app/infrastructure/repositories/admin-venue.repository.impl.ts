@@ -6,7 +6,8 @@ import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue
 import { OwnerReview, OwnerReviewPage, OwnerReviewStatus } from '@application/dto/owner-review/owner-review.dto';
 import {
   AdminListPage, AdminReviewFilter, AdminVenueFilter, AdminVenuePage, AdminVenueRepository, ExternalVenue,
-  ExternalVenueImportRequest, ExternalVenueImportStatus, ExternalVenuePage, ExternalVenueRegionSummary,
+  ExternalVenueImportRequest, ExternalVenueImportStatus, ExternalVenueInviteRecord, ExternalVenuePage,
+  ExternalVenueRegionSummary,
   ExternalVenueSuggestion, PlaceSearchResult, PotentialVenue
 } from '@application/ports/persistence/admin-venue.repository';
 import { environment } from '@environments/environment';
@@ -111,6 +112,12 @@ export class AdminVenueRepositoryImpl implements AdminVenueRepository {
 
   getPotentialVenues(page: number, size: number): Observable<AdminListPage<PotentialVenue>> {
     return this.listPage<PotentialVenue>(`${this.baseUrl}/external-venues/potential`, page, size);
+  }
+
+  recordExternalVenueInvite(externalVenueId: string): Observable<ExternalVenueInviteRecord> {
+    return this.http.post<BaseResponse<ExternalVenueInviteRecord>>(
+      `${this.baseUrl}/external-venues/${externalVenueId}/invites`, null
+    ).pipe(map(response => response.data));
   }
 
   private listPage<T>(url: string, page: number, size: number): Observable<AdminListPage<T>> {

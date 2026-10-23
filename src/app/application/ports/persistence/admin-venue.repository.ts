@@ -97,6 +97,14 @@ export interface PotentialVenue {
   region: string;
   wantCount: number;
   matchCount: number;
+  /** Admin đã gửi lời mời sân tham gia bao nhiêu lần, lần gần nhất lúc nào. */
+  inviteCount: number;
+  lastInvitedAt: string | null;
+}
+
+export interface ExternalVenueInviteRecord {
+  inviteCount: number;
+  lastInvitedAt: string;
 }
 
 export interface AdminListPage<T> {
@@ -147,6 +155,8 @@ export interface AdminVenueRepository {
   approveExternalVenueSuggestion(suggestionId: string): Observable<ExternalVenue>;
   rejectExternalVenueSuggestion(suggestionId: string, reason: string | null): Observable<void>;
   getPotentialVenues(page: number, size: number): Observable<AdminListPage<PotentialVenue>>;
+  /** Admin vừa sao chép / gửi lời mời (hệ thống không tự nhắn): ghi lại để biết sân nào đã mời. */
+  recordExternalVenueInvite(externalVenueId: string): Observable<ExternalVenueInviteRecord>;
   /** Tìm tỉnh, thành, quận ở Việt Nam để chọn vùng nhập trên bản đồ. */
   searchPlaces(query: string): Observable<PlaceSearchResult[]>;
 }

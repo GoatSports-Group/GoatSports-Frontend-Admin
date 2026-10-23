@@ -25,6 +25,7 @@
           <th>Liên hệ</th>
           <th class="num">Muốn đặt online</th>
           <th class="num">Kèo đã chơi</th>
+          <th>Lời mời</th>
           <th></th>
         </tr>
       </thead>
@@ -41,9 +42,19 @@
           </td>
           <td class="num"><strong>{{ item.wantCount }}</strong></td>
           <td class="num">{{ item.matchCount }}</td>
+          <td>
+            @if (item.inviteCount) {
+            <span class="badge badge--success">Đã mời {{ item.inviteCount }} lần</span>
+            <small class="potential__invited">{{ item.lastInvitedAt | date:'HH:mm dd/MM/yyyy' }}</small>
+            } @else { <span class="badge badge--neutral">Chưa mời</span> }
+          </td>
           <td class="row-action">
-            <button type="button" class="btn btn--ghost btn--sm" (click)="showOnMap(item)"
-              [attr.aria-label]="'Xem ' + item.venue.name + ' trên bản đồ'"><lucide-icon name="map-pin" />Bản đồ</button>
+            <div class="potential__actions">
+              <button type="button" class="btn btn--sm" [class.btn--primary]="!item.inviteCount"
+                (click)="openInvite(item)"><lucide-icon name="send" />Mời</button>
+              <button type="button" class="btn btn--ghost btn--sm" (click)="showOnMap(item)"
+                [attr.aria-label]="'Xem ' + item.venue.name + ' trên bản đồ'"><lucide-icon name="map-pin" />Bản đồ</button>
+            </div>
           </td>
         </tr>
         }
@@ -56,6 +67,43 @@
   }
   }
 </div>
+
+@if (inviting(); as item) {
+<div class="modal-backdrop" (click)="closeInvite()">
+  <section class="modal modal--wide" role="dialog" aria-modal="true" aria-labelledby="invite-title"
+    (click)="$event.stopPropagation()">
+    <header class="modal__header">
+      <div>
+        <h2 id="invite-title">Mời {{ item.venue.name }} tham gia</h2>
+        <p>{{ item.venue.phone || 'Sân chưa có số điện thoại' }}@if (item.inviteCount) { · đã mời {{ item.inviteCount }}
+          lần, gần nhất {{ item.lastInvitedAt | date:'HH:mm dd/MM/yyyy' }} }</p>
+      </div>
+      <button type="button" class="icon-btn" aria-label="Đóng" (click)="closeInvite()"><lucide-icon name="x" /></button>
+    </header>
+    <div class="modal__body">
+      <label class="field">
+        <span class="field__label">Lời mời</span>
+        <textarea class="field__control potential__message" rows="8" name="inviteMessage" [ngModel]="inviteMessage()"
+          (ngModelChange)="inviteMessage.set($event)"></textarea>
+        <p class="field__hint">Bạn tự gửi lời mời; hệ thống không tự nhắn tin cho sân. Giữ câu cuối để sân có thể từ
+          chối nhận tin (Nghị định 91/2020). Link dẫn tới trang giới thiệu dành cho chủ sân.</p>
+      </label>
+      @if (inviteNotice()) { <p class="note note--success" role="status"><lucide-icon name="circle-check-big" />{{
+        inviteNotice() }}</p> }
+    </div>
+    <footer class="modal__footer">
+      @if (item.venue.phone) {
+      <a class="btn" [href]="'tel:' + item.venue.phone"><lucide-icon name="phone" />Gọi sân</a>
+      }
+      @if (zaloUrl(item)) {
+      <button type="button" class="btn" (click)="openZalo()"><lucide-icon name="message-circle" />Nhắn Zalo</button>
+      }
+      <button type="button" class="btn btn--primary" (click)="copyInvite()"><lucide-icon name="copy" />Sao chép lời
+        mời</button>
+    </footer>
+  </section>
+</div>
+}
 
 @if (locating(); as location) {
 <app-venue-location-modal [location]="location" (closed)="locating.set(null)" />

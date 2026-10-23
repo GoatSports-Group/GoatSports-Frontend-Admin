@@ -15,6 +15,24 @@
   line-height: 1.5;
 }
 
+.potential__actions {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.potential__invited {
+  display: block;
+  margin-top: 2px;
+  color: var(--body);
+  font-size: 12px;
+}
+
+.potential__message {
+  min-height: 180px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
 .potential__phone {
   color: var(--primary);
   font-weight: 700;
