@@ -5,8 +5,9 @@ import { BaseListResponse, BaseResponse } from '@application/dto/base/base-respo
 import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { OwnerReview, OwnerReviewPage, OwnerReviewStatus } from '@application/dto/owner-review/owner-review.dto';
 import {
-  AdminReviewFilter, AdminVenueFilter, AdminVenuePage, AdminVenueRepository, ExternalVenue, ExternalVenueImportRequest,
-  ExternalVenueImportStatus, ExternalVenuePage, ExternalVenueRegionSummary, PlaceSearchResult
+  AdminListPage, AdminReviewFilter, AdminVenueFilter, AdminVenuePage, AdminVenueRepository, ExternalVenue,
+  ExternalVenueImportRequest, ExternalVenueImportStatus, ExternalVenuePage, ExternalVenueRegionSummary,
+  ExternalVenueSuggestion, PlaceSearchResult, PotentialVenue
 } from '@application/ports/persistence/admin-venue.repository';
 import { environment } from '@environments/environment';
 
@@ -82,6 +83,43 @@ export class AdminVenueRepositoryImpl implements AdminVenueRepository {
         total: response.data?.meta.total ?? 0,
         pages: response.data?.meta.pages ?? 0
       })));
+  }
+
+  deleteExternalRegion(region: string): Observable<number> {
+    return this.http.delete<BaseResponse<{ deleted: number }>>(`${this.baseUrl}/external-venues`, { params: { region } })
+      .pipe(map(response => response.data?.deleted ?? 0));
+  }
+
+  getExternalVenueSuggestions(page: number, size: number): Observable<AdminListPage<ExternalVenueSuggestion>> {
+    return this.listPage<ExternalVenueSuggestion>(`${this.baseUrl}/external-venues/suggestions`, page, size);
+  }
+
+  getExternalVenueSuggestionCount(): Observable<number> {
+    return this.http.get<BaseResponse<{ pending: number }>>(`${this.baseUrl}/external-venues/suggestions/count`)
+      .pipe(map(response => response.data?.pending ?? 0));
+  }
+
+  approveExternalVenueSuggestion(suggestionId: string): Observable<ExternalVenue> {
+    return this.http.post<BaseResponse<ExternalVenue>>(
+      `${this.baseUrl}/external-venues/suggestions/${suggestionId}/approve`, null
+    ).pipe(map(response => response.data));
+  }
+
+  rejectExternalVenueSuggestion(suggestionId: string, reason: string | null): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/external-venues/suggestions/${suggestionId}/reject`, { reason });
+  }
+
+  getPotentialVenues(page: number, size: number): Observable<AdminListPage<PotentialVenue>> {
+    return this.listPage<PotentialVenue>(`${this.baseUrl}/external-venues/potential`, page, size);
+  }
+
+  private listPage<T>(url: string, page: number, size: number): Observable<AdminListPage<T>> {
+    const params = new HttpParams().set('page', page).set('size', size);
+    return this.http.get<BaseResponse<BaseListResponse<T>>>(url, { params }).pipe(map(response => ({
+      items: response.data?.result ?? [],
+      total: response.data?.meta.total ?? 0,
+      pages: response.data?.meta.pages ?? 0
+    })));
   }
 
   searchPlaces(query: string): Observable<PlaceSearchResult[]> {

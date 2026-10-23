@@ -1,0 +1,58 @@
+<div class="potential">
+  <p class="potential__lead">Sân ngoài hệ thống người chơi muốn đặt online hoặc đã chơi qua ghép trận. Gọi điện mời sân
+    tham gia, kèm con số này để thuyết phục chủ sân.</p>
+
+  @if (loading()) {
+  <app-loading-skeleton variant="table" [count]="5" [columns]="5" label="Đang tải sân tiềm năng" />
+  } @else if (error()) {
+  <div class="state state--error" role="alert">
+    <lucide-icon name="alert-circle" /><strong>Chưa tải được sân tiềm năng</strong>
+    <p>{{ error() }}</p>
+    <button type="button" class="btn" (click)="load()"><lucide-icon name="rotate-ccw" />Thử lại</button>
+  </div>
+  } @else if (!items().length) {
+  <div class="state">
+    <lucide-icon name="heart" /><strong>Chưa có sân tiềm năng</strong>
+    <p>Sân hiện ở đây khi người chơi bấm "Muốn đặt online" trên bản đồ, hoặc có kèo ghép trận hoàn tất ở sân.</p>
+  </div>
+  } @else {
+  <p class="result-count">{{ total() }} sân tiềm năng</p>
+  <section class="card table-wrap" [class.is-paging]="paging()">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Sân</th>
+          <th>Liên hệ</th>
+          <th class="num">Muốn đặt online</th>
+          <th class="num">Kèo đã chơi</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of items(); track item.venue.externalVenueId) {
+        <tr>
+          <td>
+            <div class="cell-title"><strong>{{ item.venue.name }}</strong><small>{{ sportsOf(item) }} · {{
+                item.venue.address || item.region }}</small></div>
+          </td>
+          <td>
+            @if (item.venue.phone) { <a class="potential__phone" [href]="'tel:' + item.venue.phone">{{ item.venue.phone }}</a> }
+            @else { <span class="muted">Chưa có số</span> }
+          </td>
+          <td class="num"><strong>{{ item.wantCount }}</strong></td>
+          <td class="num">{{ item.matchCount }}</td>
+          <td class="row-action">
+            <a class="btn btn--ghost btn--sm" [href]="mapUrl(item)" target="_blank" rel="noopener"
+              [attr.aria-label]="'Xem ' + item.venue.name + ' trên bản đồ'"><lucide-icon name="map-pin" />Bản đồ</a>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </section>
+  @if (total() > pageSize) {
+  <app-pagination [pageIndex]="pageIndex()" [pageSize]="pageSize" [totalItems]="total()" itemLabel="sân"
+    (pageChange)="goToPage($event)" />
+  }
+  }
+</div>

@@ -100,6 +100,13 @@
 
 .region-row__chevron { flex: none; color: var(--body); }
 
+.region-row__delete {
+  flex: none;
+  color: var(--body);
+
+  &:not(:disabled):hover { color: var(--danger); }
+}
+
 .list-sentinel { height: 1px; }
 
 .region-venues { gap: 12px; }

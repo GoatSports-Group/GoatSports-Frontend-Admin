@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { MatDialog } from '@angular/material/dialog';
 import { of } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { provideLucideIcons } from '@lucide/angular';
@@ -9,8 +10,9 @@ import { ExternalVenueImportComponent } from './external-venue-import.component'
 describe('ExternalVenueImportComponent', () => {
   const repository = {
     getExternalVenueSummary: vi.fn(), importExternalVenues: vi.fn(), getExternalVenueImportStatus: vi.fn(),
-    getExternalVenuesByRegion: vi.fn(), searchPlaces: vi.fn()
+    getExternalVenuesByRegion: vi.fn(), searchPlaces: vi.fn(), deleteExternalRegion: vi.fn()
   };
+  const dialog = { open: vi.fn() };
   const venue = (id: string) => ({
     externalVenueId: id, name: `Sân ${id}`, sportTypes: ['BADMINTON'], latitude: 10.8, longitude: 106.7,
     address: null, phone: '0909 000 000', website: null, openingHours: null, source: 'OSM'
@@ -19,7 +21,11 @@ describe('ExternalVenueImportComponent', () => {
   function create() {
     TestBed.configureTestingModule({
       imports: [ExternalVenueImportComponent],
-      providers: [provideLucideIcons(...APP_ICONS), { provide: ADMIN_VENUE_REPOSITORY_TOKEN, useValue: repository }]
+      providers: [
+        provideLucideIcons(...APP_ICONS),
+        { provide: ADMIN_VENUE_REPOSITORY_TOKEN, useValue: repository },
+        { provide: MatDialog, useValue: dialog }
+      ]
     });
     const fixture = TestBed.createComponent(ExternalVenueImportComponent);
     fixture.detectChanges();
@@ -103,6 +109,24 @@ describe('ExternalVenueImportComponent', () => {
     // Sân trùng giữa hai trang chỉ hiện một lần; hết trang thì thôi tải.
     expect(page.venues().map(item => item.externalVenueId)).toEqual(['a', 'b', 'c']);
     expect(page.venuesHasMore()).toBe(false);
+  });
+
+  it('deletes an imported area with its venues only after the admin confirms', () => {
+    repository.getExternalVenueSummary.mockReturnValue(of([
+      { region: 'Phường Nha Trang', venueCount: 4, lastImportedAt: '2026-10-23T19:17:00' }
+    ]));
+    repository.deleteExternalRegion.mockReturnValue(of(4));
+    const page = create().componentInstance;
+    const row = page.regionRows().find(item => item.region === 'Phường Nha Trang')!;
+
+    dialog.open.mockReturnValueOnce({ afterClosed: () => of(false) });
+    page.deleteRegion(row);
+    expect(repository.deleteExternalRegion).not.toHaveBeenCalled();
+
+    dialog.open.mockReturnValueOnce({ afterClosed: () => of(true) });
+    page.deleteRegion(row);
+    expect(repository.deleteExternalRegion).toHaveBeenCalledWith('Phường Nha Trang');
+    expect(page.notice()).toContain('4 sân');
   });
 
   it('refuses an area wider than 3 degrees', () => {

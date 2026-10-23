@@ -18,7 +18,10 @@ describe('PlatformVenuesComponent', () => {
   };
   const repository = {
     getVenues: vi.fn(), suspend: vi.fn(), reinstate: vi.fn(),
-    getExternalVenueSummary: vi.fn(() => of([])), getExternalVenueImportStatus: vi.fn(() => of(null))
+    getExternalVenueSummary: vi.fn(() => of([])), getExternalVenueImportStatus: vi.fn(() => of(null)),
+    getExternalVenueSuggestionCount: vi.fn(() => of(3)),
+    getExternalVenueSuggestions: vi.fn(() => of({ items: [], total: 0, pages: 0 })),
+    getPotentialVenues: vi.fn(() => of({ items: [], total: 0, pages: 0 }))
   };
   const auth = { currentUser: { role: { name: 'ADMIN' }, permissions: [] } as unknown };
   const dialog = { open: vi.fn() };
@@ -101,6 +104,15 @@ describe('PlatformVenuesComponent', () => {
 
     expect(root.querySelector('app-external-venue-import')).not.toBeNull();
     expect(root.querySelector('table')).toBeNull();
+    // Huy hiệu số gợi ý chờ duyệt trên tab "Gợi ý sân".
+    expect(root.querySelector('.tabs .count')?.textContent?.trim()).toBe('3');
+
+    fixture.componentInstance.selectTab('suggestions');
+    fixture.detectChanges();
+    expect(root.querySelector('app-external-venue-suggestions')).not.toBeNull();
+    fixture.componentInstance.selectTab('potential');
+    fixture.detectChanges();
+    expect(root.querySelector('app-external-venue-potential')).not.toBeNull();
   });
 
   it('hides the external tab from staff without the venue management permission', () => {

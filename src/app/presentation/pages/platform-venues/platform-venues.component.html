@@ -14,11 +14,23 @@
     <button type="button" class="tab" role="tab" [class.is-active]="tab() === 'external'"
       [attr.aria-selected]="tab() === 'external'" (click)="selectTab('external')"><lucide-icon name="map-pin" />Sân
       ngoài hệ thống</button>
+    <button type="button" class="tab" role="tab" [class.is-active]="tab() === 'suggestions'"
+      [attr.aria-selected]="tab() === 'suggestions'" (click)="selectTab('suggestions')"><lucide-icon name="inbox" />Gợi
+      ý sân
+      @if (pendingSuggestions()) { <span class="count count--alert">{{ pendingSuggestions() > 99 ? '99+' :
+        pendingSuggestions() }}</span> }</button>
+    <button type="button" class="tab" role="tab" [class.is-active]="tab() === 'potential'"
+      [attr.aria-selected]="tab() === 'potential'" (click)="selectTab('potential')"><lucide-icon
+        name="trending-up" />Sân tiềm năng</button>
   </nav>
   }
 
   @if (tab() === 'external') {
   <app-external-venue-import />
+  } @else if (tab() === 'suggestions') {
+  <app-external-venue-suggestions (pendingChange)="pendingSuggestions.set($event)" />
+  } @else if (tab() === 'potential') {
+  <app-external-venue-potential />
   } @else {
   @if (notice()) {
   <div class="notice" role="status">

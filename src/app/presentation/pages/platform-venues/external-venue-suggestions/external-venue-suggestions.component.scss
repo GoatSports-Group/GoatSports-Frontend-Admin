@@ -1,0 +1,74 @@
+@use '../../ops' as t;
+@include t.ops;
+
+.suggestions {
+  display: grid;
+  gap: 16px;
+
+  > .note, > .notice, > .result-count { margin: 0; }
+}
+
+.suggestions__lead {
+  margin: 0;
+  color: var(--body);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.suggestions__list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.suggestion {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+
+  @media (max-width: 720px) {
+    flex-direction: column;
+  }
+}
+
+.suggestion__body {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+
+  strong { color: var(--ink); font-size: 16px; font-weight: 800; }
+  .muted { font-size: 13px; }
+}
+
+.suggestion__facts {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 0;
+
+  > div {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    gap: 8px;
+    color: var(--body);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  dt, dd { margin: 0; }
+  dt { color: var(--primary); }
+  a { color: var(--primary); font-weight: 700; }
+}
+
+.suggestion__nearby {
+  margin: 8px 0 0;
+}
+
+.suggestion__actions {
+  display: flex;
+  flex: none;
+  gap: 8px;
+}

@@ -1,0 +1,103 @@
+<div class="suggestions">
+  <p class="suggestions__lead">Sân thực tế người chơi gợi ý vì bản đồ còn thiếu. Duyệt thì sân hiện trên bản đồ tìm sân
+    (ghim xám, khu vực "Người chơi gợi ý") và người gợi ý nhận thông báo.</p>
+
+  @if (notice()) {
+  <div class="notice" role="status">
+    <lucide-icon name="circle-check-big" /><span>{{ notice() }}</span>
+    <button type="button" class="icon-btn" aria-label="Ẩn thông báo" (click)="notice.set(null)"><lucide-icon
+        name="x" /></button>
+  </div>
+  }
+
+  @if (loading() && !items().length) {
+  <app-loading-skeleton variant="rows" [count]="4" label="Đang tải gợi ý sân" />
+  } @else if (error() && !items().length) {
+  <div class="state state--error" role="alert">
+    <lucide-icon name="alert-circle" /><strong>Chưa tải được gợi ý sân</strong>
+    <p>{{ error() }}</p>
+    <button type="button" class="btn" (click)="load()"><lucide-icon name="rotate-ccw" />Thử lại</button>
+  </div>
+  } @else if (!items().length) {
+  <div class="state">
+    <lucide-icon name="inbox" /><strong>Không có gợi ý nào chờ duyệt</strong>
+    <p>Người chơi gợi ý sân từ bản đồ tìm sân ("Gợi ý thêm sân").</p>
+  </div>
+  } @else {
+  @if (error()) { <p class="note note--danger" role="alert"><lucide-icon name="circle-alert" />{{ error() }}</p> }
+  <p class="result-count">{{ total() }} gợi ý chờ duyệt</p>
+  <ul class="suggestions__list">
+    @for (suggestion of items(); track suggestion.suggestionId) {
+    <li class="card suggestion">
+      <div class="suggestion__body">
+        <strong>{{ suggestion.name }}</strong>
+        <span class="muted">{{ sportsOf(suggestion) }} · gửi lúc {{ suggestion.createdAt | date:'HH:mm dd/MM/yyyy' }}</span>
+        <dl class="suggestion__facts">
+          <div><dt><lucide-icon name="map-pin" /></dt><dd>{{ suggestion.address || 'Chưa có địa chỉ' }} · <a
+                [href]="mapUrl(suggestion)" target="_blank" rel="noopener">Xem trên bản đồ</a></dd></div>
+          @if (suggestion.phone) {
+          <div><dt><lucide-icon name="phone" /></dt><dd><a [href]="'tel:' + suggestion.phone">{{ suggestion.phone }}</a></dd>
+          </div>
+          }
+          @if (suggestion.note) {
+          <div><dt><lucide-icon name="message-circle" /></dt><dd>“{{ suggestion.note }}”</dd></div>
+          }
+        </dl>
+        @if (suggestion.nearby.length) {
+        <p class="note note--warning suggestion__nearby">
+          <lucide-icon name="triangle-alert" />
+          <span>Có thể trùng:
+            @for (near of suggestion.nearby; track $index) {
+            <b>{{ near.name }}</b> ({{ near.distanceMeters }} m){{ $last ? '' : ', ' }}
+            }
+          </span>
+        </p>
+        }
+      </div>
+      <div class="suggestion__actions">
+        <button type="button" class="btn" [disabled]="busyId() !== null" (click)="openReject(suggestion)">
+          <lucide-icon name="x" />Từ chối
+        </button>
+        <button type="button" class="btn btn--primary" [disabled]="busyId() !== null" (click)="approve(suggestion)">
+          <lucide-icon [name]="busyId() === suggestion.suggestionId ? 'loader-2' : 'check'"
+            [class.spin]="busyId() === suggestion.suggestionId" />Duyệt
+        </button>
+      </div>
+    </li>
+    }
+  </ul>
+  @if (total() > pageSize) {
+  <app-pagination [pageIndex]="pageIndex()" [pageSize]="pageSize" [totalItems]="total()" itemLabel="gợi ý"
+    (pageChange)="goToPage($event)" />
+  }
+  }
+</div>
+
+@if (rejecting(); as suggestion) {
+<div class="modal-backdrop" (click)="closeReject()">
+  <section class="modal" role="dialog" aria-modal="true" aria-labelledby="reject-suggestion-title"
+    (click)="$event.stopPropagation()">
+    <header class="modal__header">
+      <div>
+        <h2 id="reject-suggestion-title">Từ chối gợi ý</h2>
+        <p>{{ suggestion.name }}</p>
+      </div>
+      <button type="button" class="icon-btn" aria-label="Đóng" (click)="closeReject()"><lucide-icon name="x" /></button>
+    </header>
+    <div class="modal__body">
+      <label class="field">
+        <span class="field__label">Lý do (không bắt buộc)</span>
+        <textarea class="field__control" rows="3" maxlength="500" name="reason" [ngModel]="rejectReason()"
+          (ngModelChange)="rejectReason.set($event)" placeholder="Ví dụ: Trùng với sân đã có trên bản đồ"></textarea>
+        <p class="field__hint">Người gợi ý sẽ đọc lý do này trong thông báo.</p>
+      </label>
+    </div>
+    <footer class="modal__footer">
+      <button type="button" class="btn" (click)="closeReject()" [disabled]="busyId() !== null">Hủy</button>
+      <button type="button" class="btn btn--danger" (click)="confirmReject()" [disabled]="busyId() !== null">
+        <lucide-icon [name]="busyId() ? 'loader-2' : 'x'" [class.spin]="busyId() !== null" />Từ chối gợi ý
+      </button>
+    </footer>
+  </section>
+</div>
+}

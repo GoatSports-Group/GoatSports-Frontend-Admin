@@ -69,6 +69,42 @@ export interface ExternalVenuePage {
   pages: number;
 }
 
+/** Sân đã có trong 150 m quanh vị trí gợi ý: `partner` là cơ sở đối tác. */
+export interface NearbyVenue {
+  name: string;
+  distanceMeters: number;
+  partner: boolean;
+}
+
+/** Sân người chơi gợi ý, chờ admin duyệt. */
+export interface ExternalVenueSuggestion {
+  suggestionId: string;
+  suggestedBy: string;
+  name: string;
+  sportTypes: string[];
+  latitude: number;
+  longitude: number;
+  address: string | null;
+  phone: string | null;
+  note: string | null;
+  createdAt: string;
+  nearby: NearbyVenue[];
+}
+
+/** Sân tiềm năng: nhiều người muốn đặt online, nhiều kèo đã chơi. Danh sách để mời làm đối tác. */
+export interface PotentialVenue {
+  venue: ExternalVenue;
+  region: string;
+  wantCount: number;
+  matchCount: number;
+}
+
+export interface AdminListPage<T> {
+  items: T[];
+  total: number;
+  pages: number;
+}
+
 /** Kết quả tìm địa danh (Nominatim qua venue-service); `bounds` là khung bao của tỉnh / quận nếu có. */
 export interface PlaceSearchResult {
   latitude: number;
@@ -104,6 +140,13 @@ export interface AdminVenueRepository {
   getExternalVenueImportStatus(): Observable<ExternalVenueImportStatus | null>;
   /** Sân đã nhập của một khu vực, theo tên; `page` tính từ 0. */
   getExternalVenuesByRegion(region: string, page: number, size: number): Observable<ExternalVenuePage>;
+  /** Xóa khu vực cùng mọi sân của nó; trả số sân đã xóa. */
+  deleteExternalRegion(region: string): Observable<number>;
+  getExternalVenueSuggestions(page: number, size: number): Observable<AdminListPage<ExternalVenueSuggestion>>;
+  getExternalVenueSuggestionCount(): Observable<number>;
+  approveExternalVenueSuggestion(suggestionId: string): Observable<ExternalVenue>;
+  rejectExternalVenueSuggestion(suggestionId: string, reason: string | null): Observable<void>;
+  getPotentialVenues(page: number, size: number): Observable<AdminListPage<PotentialVenue>>;
   /** Tìm tỉnh, thành, quận ở Việt Nam để chọn vùng nhập trên bản đồ. */
   searchPlaces(query: string): Observable<PlaceSearchResult[]>;
 }

@@ -5,12 +5,14 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
+import { MatDialog } from '@angular/material/dialog';
 import { EMPTY, Subject, Subscription, catchError, debounceTime, distinctUntilChanged, expand, finalize, of, switchMap, timer } from 'rxjs';
 import {
   ADMIN_VENUE_REPOSITORY_TOKEN, ExternalVenue, ExternalVenueImportRequest, ExternalVenueImportStatus,
   ExternalVenueRegionSummary, PlaceSearchResult
 } from '@application/ports/persistence/admin-venue.repository';
 import { SPORT_LABEL } from '@presentation/pages/community-analytics/community-analytics.utils';
+import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/loading-skeleton.component';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { PAGE_SIZE } from '@shared/constants/page-size';
@@ -56,6 +58,7 @@ const VIETNAM_CENTER: [number, number] = [16.0, 106.5];
 export class ExternalVenueImportComponent implements OnInit, AfterViewInit {
   private readonly repository = inject(ADMIN_VENUE_REPOSITORY_TOKEN);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly dialog = inject(MatDialog);
   private readonly mapElement = viewChild<ElementRef<HTMLElement>>('areaMap');
   private readonly placeQuery$ = new Subject<string>();
   private polling?: Subscription;
@@ -69,6 +72,8 @@ export class ExternalVenueImportComponent implements OnInit, AfterViewInit {
   readonly status = signal<ExternalVenueImportStatus | null>(null);
   readonly starting = signal<string | null>(null);
   readonly error = signal<string | null>(null);
+  readonly notice = signal<string | null>(null);
+  readonly deleting = signal<string | null>(null);
 
   readonly regionName = signal('');
   readonly area = signal<Area | null>(null);
@@ -145,6 +150,36 @@ export class ExternalVenueImportComponent implements OnInit, AfterViewInit {
 
   summaryOf(region: string): ExternalVenueRegionSummary | undefined {
     return this.summaries().find(summary => summary.region === region);
+  }
+
+  /** Xóa khu vực cùng mọi sân của nó, sau khi admin xác nhận. Thành phố dựng sẵn thì quay về "Chưa nhập". */
+  deleteRegion(row: RegionRow): void {
+    if (!row.summary || this.deleting()) return;
+    const data: ConfirmDialogData = {
+      title: `Xóa khu vực ${row.region}?`,
+      message: `${row.summary.venueCount} sân của khu vực này sẽ biến mất khỏi bản đồ, cùng lượt "muốn đặt online" và `
+        + 'số kèo đã ghi ở các sân đó. Kèo và bài "Tìm người chơi" đã gắn sân vẫn giữ tên sân.',
+      confirmText: 'Xóa khu vực',
+      cancelText: 'Hủy',
+      confirmColor: 'warn'
+    };
+    this.dialog.open(ConfirmDialogComponent, { width: '450px', data, panelClass: 'custom-premium-dialog' })
+      .afterClosed().subscribe(confirmed => {
+        if (!confirmed) return;
+        this.deleting.set(row.region);
+        this.error.set(null);
+        this.repository.deleteExternalRegion(row.region).pipe(
+          finalize(() => this.deleting.set(null)),
+          takeUntilDestroyed(this.destroyRef)
+        ).subscribe({
+          next: deleted => {
+            this.notice.set(`Đã xóa khu vực ${row.region} và ${deleted} sân.`);
+            if (this.viewing()?.region === row.region) this.closeRegion();
+            this.refresh();
+          },
+          error: (failure: HttpErrorResponse) => this.error.set(failure.error?.message || 'Chưa xóa được khu vực này.')
+        });
+      });
   }
 
   showMoreRegions(): void {

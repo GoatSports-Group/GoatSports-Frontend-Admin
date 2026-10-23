@@ -28,6 +28,7 @@
   }
   }
   @if (error()) { <p class="note note--danger" role="alert"><lucide-icon name="circle-alert" />{{ error() }}</p> }
+  @if (notice()) { <p class="note note--success" role="status"><lucide-icon name="circle-check-big" />{{ notice() }}</p> }
 
   <section class="card" aria-labelledby="external-presets-title">
     <header class="card__head">
@@ -60,7 +61,13 @@
           {{ row.summary ? 'Nhập lại' : 'Nhập' }}
         </button>
         }
-        @if (row.summary) { <lucide-icon name="chevron-right" class="region-row__chevron" /> }
+        @if (row.summary) {
+        <button type="button" class="icon-btn region-row__delete" [disabled]="busy() || deleting() !== null"
+          [attr.aria-label]="'Xóa khu vực ' + row.region" (click)="deleteRegion(row)">
+          <lucide-icon [name]="deleting() === row.region ? 'loader-2' : 'trash-2'" [class.spin]="deleting() === row.region" />
+        </button>
+        <lucide-icon name="chevron-right" class="region-row__chevron" />
+        }
       </li>
       }
       @if (shownRegions() < regionRows().length) {

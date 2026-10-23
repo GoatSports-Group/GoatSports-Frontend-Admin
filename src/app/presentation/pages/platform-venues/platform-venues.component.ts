@@ -16,6 +16,8 @@ import { PaginationComponent } from '@shared/components/ui/pagination/pagination
 import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
 import { AuthService } from '@presentation/services/auth.service';
 import { ExternalVenueImportComponent } from './external-venue-import/external-venue-import.component';
+import { ExternalVenuePotentialComponent } from './external-venue-potential/external-venue-potential.component';
+import { ExternalVenueSuggestionsComponent } from './external-venue-suggestions/external-venue-suggestions.component';
 
 const STATUS_OPTIONS: readonly SelectOption[] = [
   { value: '', label: 'Tất cả trạng thái' },
@@ -24,12 +26,14 @@ const STATUS_OPTIONS: readonly SelectOption[] = [
   { value: 'SUSPENDED', label: 'Bị đình chỉ' }
 ];
 
-export type PlatformVenuesTab = 'partners' | 'external';
+export type PlatformVenuesTab = 'partners' | 'external' | 'suggestions' | 'potential';
+const EXTERNAL_TABS: readonly PlatformVenuesTab[] = ['external', 'suggestions', 'potential'];
 
 /**
  * Mọi cơ sở trên nền tảng. Admin đình chỉ cơ sở vi phạm (ẩn khỏi tìm kiếm, chặn đơn mới, chủ sân không tự mở lại)
- * và gỡ đình chỉ. Sửa thông tin cơ sở vẫn là việc của chủ sân. Tab "Sân ngoài hệ thống" (`?tab=external`) nhập sân
- * OpenStreetMap; chỉ hiện với ADMIN hoặc nhân viên có quyền SUSPEND_VENUE.
+ * và gỡ đình chỉ. Sửa thông tin cơ sở vẫn là việc của chủ sân. Các tab sân ngoài hệ thống (`?tab=external` nhập sân
+ * OpenStreetMap, `suggestions` duyệt sân người chơi gợi ý, `potential` sân nên mời làm đối tác) chỉ hiện với ADMIN
+ * hoặc nhân viên có quyền SUSPEND_VENUE.
  */
 @Component({
   selector: 'app-platform-venues',
@@ -38,7 +42,7 @@ export type PlatformVenuesTab = 'partners' | 'external';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [DatePipe, FormsModule, RouterLink, MatMenuModule, LucideIconComponent, LoadingSkeletonComponent, PaginationComponent,
-    SelectComponent, ExternalVenueImportComponent]
+    SelectComponent, ExternalVenueImportComponent, ExternalVenueSuggestionsComponent, ExternalVenuePotentialComponent]
 })
 export class PlatformVenuesComponent implements OnInit {
   private readonly repository = inject(ADMIN_VENUE_REPOSITORY_TOKEN);
@@ -80,10 +84,17 @@ export class PlatformVenuesComponent implements OnInit {
 
   readonly canImportExternal = this.canImport();
   readonly tab = signal<PlatformVenuesTab>('partners');
+  /** Số sân người chơi gợi ý còn chờ duyệt, hiện trên tab. */
+  readonly pendingSuggestions = signal(0);
 
   ngOnInit(): void {
     const params = this.route.snapshot.queryParamMap;
-    if (params.get('tab') === 'external' && this.canImportExternal) this.tab.set('external');
+    const requestedTab = params.get('tab') as PlatformVenuesTab | null;
+    if (requestedTab && EXTERNAL_TABS.includes(requestedTab) && this.canImportExternal) this.tab.set(requestedTab);
+    if (this.canImportExternal) {
+      this.repository.getExternalVenueSuggestionCount().pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({ next: count => this.pendingSuggestions.set(count), error: () => undefined });
+    }
     const ownerId = params.get('ownerId');
     if (ownerId) this.owner.set({ id: ownerId, name: params.get('ownerName') || 'chủ sân' });
     this.search$.pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
@@ -97,7 +108,7 @@ export class PlatformVenuesComponent implements OnInit {
     if (tab === this.tab()) return;
     this.tab.set(tab);
     void this.router.navigate([], {
-      relativeTo: this.route, queryParams: { tab: tab === 'external' ? 'external' : null },
+      relativeTo: this.route, queryParams: { tab: tab === 'partners' ? null : tab },
       queryParamsHandling: 'merge', replaceUrl: true
     });
   }

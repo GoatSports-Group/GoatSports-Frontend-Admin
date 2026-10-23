@@ -1,0 +1,21 @@
+@use '../../ops' as t;
+@include t.ops;
+
+.potential {
+  display: grid;
+  gap: 16px;
+
+  > .result-count { margin: 0; }
+}
+
+.potential__lead {
+  margin: 0;
+  color: var(--body);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.potential__phone {
+  color: var(--primary);
+  font-weight: 700;
+}
