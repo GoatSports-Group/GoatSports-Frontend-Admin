@@ -5,7 +5,8 @@ import { BaseListResponse, BaseResponse } from '@application/dto/base/base-respo
 import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { OwnerReview, OwnerReviewPage, OwnerReviewStatus } from '@application/dto/owner-review/owner-review.dto';
 import {
-  AdminReviewFilter, AdminVenueFilter, AdminVenuePage, AdminVenueRepository
+  AdminReviewFilter, AdminVenueFilter, AdminVenuePage, AdminVenueRepository, ExternalVenueImportRequest,
+  ExternalVenueRegionSummary
 } from '@application/ports/persistence/admin-venue.repository';
 import { environment } from '@environments/environment';
 
@@ -56,5 +57,14 @@ export class AdminVenueRepositoryImpl implements AdminVenueRepository {
     return this.http.patch<BaseResponse<Pick<OwnerReview, 'reviewId' | 'status'>>>(
       `${this.baseUrl}/reviews/${reviewId}/status`, { status }
     ).pipe(map(response => response.data));
+  }
+
+  getExternalVenueSummary(): Observable<ExternalVenueRegionSummary[]> {
+    return this.http.get<BaseResponse<ExternalVenueRegionSummary[]>>(`${this.baseUrl}/external-venues/summary`)
+      .pipe(map(response => response.data ?? []));
+  }
+
+  importExternalVenues(request: ExternalVenueImportRequest): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/external-venues/import`, request);
   }
 }

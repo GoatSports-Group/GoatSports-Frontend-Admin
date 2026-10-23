@@ -15,7 +15,7 @@ describe('PlatformVenuesComponent', () => {
     phone: '0909123456', email: 'arena@goat.test', averageRating: 4.5, totalReviews: 12,
     imageUrls: [], amenities: [], courts: []
   };
-  const repository = { getVenues: vi.fn(), suspend: vi.fn(), reinstate: vi.fn() };
+  const repository = { getVenues: vi.fn(), suspend: vi.fn(), reinstate: vi.fn(), getExternalVenueSummary: vi.fn(() => of([])) };
   const dialog = { open: vi.fn() };
 
   beforeEach(async () => {

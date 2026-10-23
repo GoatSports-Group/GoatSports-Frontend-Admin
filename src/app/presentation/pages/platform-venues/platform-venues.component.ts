@@ -14,6 +14,7 @@ import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/lo
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { PaginationComponent } from '@shared/components/ui/pagination/pagination.component';
 import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
+import { ExternalVenueImportComponent } from './external-venue-import/external-venue-import.component';
 
 const STATUS_OPTIONS: readonly SelectOption[] = [
   { value: '', label: 'Tất cả trạng thái' },
@@ -33,7 +34,7 @@ const STATUS_OPTIONS: readonly SelectOption[] = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [DatePipe, FormsModule, RouterLink, MatMenuModule, LucideIconComponent, LoadingSkeletonComponent, PaginationComponent,
-    SelectComponent]
+    SelectComponent, ExternalVenueImportComponent]
 })
 export class PlatformVenuesComponent implements OnInit {
   private readonly repository = inject(ADMIN_VENUE_REPOSITORY_TOKEN);

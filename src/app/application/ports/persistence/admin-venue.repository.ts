@@ -33,6 +33,22 @@ export interface AdminReviewFilter {
   size: number;
 }
 
+/** Một khu vực đã nhập sân ngoài hệ thống (OpenStreetMap). */
+export interface ExternalVenueRegionSummary {
+  region: string;
+  venueCount: number;
+  lastImportedAt: string;
+}
+
+/** Khung nam - tây - bắc - đông của khu vực cần nhập (tối đa khoảng một thành phố). */
+export interface ExternalVenueImportRequest {
+  region: string;
+  south: number;
+  west: number;
+  north: number;
+  east: number;
+}
+
 /** Quản trị cơ sở và kiểm duyệt đánh giá (venue-service, phía admin). */
 export interface AdminVenueRepository {
   getVenues(filter: AdminVenueFilter): Observable<AdminVenuePage>;
@@ -40,6 +56,9 @@ export interface AdminVenueRepository {
   reinstate(venueId: string): Observable<OwnerVenueOverview>;
   getReviews(filter: AdminReviewFilter): Observable<OwnerReviewPage>;
   moderateReview(reviewId: string, status: OwnerReviewStatus): Observable<Pick<OwnerReview, 'reviewId' | 'status'>>;
+  getExternalVenueSummary(): Observable<ExternalVenueRegionSummary[]>;
+  /** Chạy nền ở venue-service; xem kết quả bằng getExternalVenueSummary vài phút sau. */
+  importExternalVenues(request: ExternalVenueImportRequest): Observable<void>;
 }
 
 export const ADMIN_VENUE_REPOSITORY_TOKEN = new InjectionToken<AdminVenueRepository>('ADMIN_VENUE_REPOSITORY_TOKEN');
