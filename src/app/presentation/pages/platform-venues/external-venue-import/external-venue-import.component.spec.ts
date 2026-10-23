@@ -8,8 +8,13 @@ import { ExternalVenueImportComponent } from './external-venue-import.component'
 
 describe('ExternalVenueImportComponent', () => {
   const repository = {
-    getExternalVenueSummary: vi.fn(), importExternalVenues: vi.fn(), getExternalVenueImportStatus: vi.fn()
+    getExternalVenueSummary: vi.fn(), importExternalVenues: vi.fn(), getExternalVenueImportStatus: vi.fn(),
+    getExternalVenuesByRegion: vi.fn(), searchPlaces: vi.fn()
   };
+  const venue = (id: string) => ({
+    externalVenueId: id, name: `Sân ${id}`, sportTypes: ['BADMINTON'], latitude: 10.8, longitude: 106.7,
+    address: null, phone: '0909 000 000', website: null, openingHours: null, source: 'OSM'
+  });
 
   function create() {
     TestBed.configureTestingModule({
@@ -71,10 +76,33 @@ describe('ExternalVenueImportComponent', () => {
 
     expect(page.regionName()).toBe('Tỉnh Lâm Đồng');
     expect(page.customError()).toBeNull();
-    expect(page.areaTiles()).toBe(8 * 7);
     page.importCustom();
     expect(repository.importExternalVenues).toHaveBeenCalledWith(
       { region: 'Tỉnh Lâm Đồng', south: 10.98, west: 107.28, north: 12.84, east: 108.98 });
+  });
+
+  it('opens the venues of an imported area and loads the next page on scroll', () => {
+    repository.getExternalVenueSummary.mockReturnValue(of([
+      { region: 'TP. Hồ Chí Minh', venueCount: 3, lastImportedAt: '2026-10-23T09:00:00' }
+    ]));
+    repository.getExternalVenuesByRegion
+      .mockReturnValueOnce(of({ items: [venue('a'), venue('b')], total: 3, pages: 2 }))
+      .mockReturnValueOnce(of({ items: [venue('b'), venue('c')], total: 3, pages: 2 }));
+    const fixture = create();
+    const page = fixture.componentInstance;
+
+    page.openRegion(page.regionRows()[1]);
+    expect(page.viewing()).toBeNull();
+    page.openRegion(page.regionRows()[0]);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Sân ở TP. Hồ Chí Minh');
+    expect(page.venuesHasMore()).toBe(true);
+
+    page.loadMoreVenues();
+    expect(repository.getExternalVenuesByRegion).toHaveBeenLastCalledWith('TP. Hồ Chí Minh', 1, 20);
+    // Sân trùng giữa hai trang chỉ hiện một lần; hết trang thì thôi tải.
+    expect(page.venues().map(item => item.externalVenueId)).toEqual(['a', 'b', 'c']);
+    expect(page.venuesHasMore()).toBe(false);
   });
 
   it('refuses an area wider than 3 degrees', () => {

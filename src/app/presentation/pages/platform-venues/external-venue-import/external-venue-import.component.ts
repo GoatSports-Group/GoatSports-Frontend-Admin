@@ -7,13 +7,24 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { EMPTY, Subject, Subscription, catchError, debounceTime, distinctUntilChanged, expand, finalize, of, switchMap, timer } from 'rxjs';
 import {
-  ADMIN_VENUE_REPOSITORY_TOKEN, ExternalVenueImportRequest, ExternalVenueImportStatus, ExternalVenueRegionSummary,
-  PlaceSearchResult
+  ADMIN_VENUE_REPOSITORY_TOKEN, ExternalVenue, ExternalVenueImportRequest, ExternalVenueImportStatus,
+  ExternalVenueRegionSummary, PlaceSearchResult
 } from '@application/ports/persistence/admin-venue.repository';
+import { SPORT_LABEL } from '@presentation/pages/community-analytics/community-analytics.utils';
+import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/loading-skeleton.component';
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
+import { PAGE_SIZE } from '@shared/constants/page-size';
+import { InfiniteScrollDirective, LIST_CHUNK } from '@shared/directives/infinite-scroll.directive';
 import { loadLeaflet } from '@shared/utils/leaflet-loader';
 
 type Area = Omit<ExternalVenueImportRequest, 'region'>;
+
+/** Một dòng khu vực: thành phố có sẵn (có nút Nhập) hoặc khu vực đã nhập tay. */
+export interface RegionRow {
+  region: string;
+  preset: ExternalVenueImportRequest | null;
+  summary: ExternalVenueRegionSummary | undefined;
+}
 
 /** Khung của các thành phố lớn (venue-service nhận tối đa 3 độ mỗi chiều, hỏi Overpass từng ô 0,25 độ). */
 const PRESETS: readonly ExternalVenueImportRequest[] = [
@@ -24,8 +35,8 @@ const PRESETS: readonly ExternalVenueImportRequest[] = [
   { region: 'Cần Thơ', south: 9.9, west: 105.55, north: 10.3, east: 105.9 }
 ];
 const MAX_SPAN_DEGREES = 3;
-const TILE_DEGREES = 0.25;
 const POLL_MS = 4000;
+const VENUE_PAGE_SIZE = PAGE_SIZE.streamLight;
 const VIETNAM_CENTER: [number, number] = [16.0, 106.5];
 
 /**
@@ -40,7 +51,7 @@ const VIETNAM_CENTER: [number, number] = [16.0, 106.5];
   styleUrls: ['./external-venue-import.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [DatePipe, DecimalPipe, FormsModule, LucideIconComponent]
+  imports: [DatePipe, DecimalPipe, FormsModule, LucideIconComponent, LoadingSkeletonComponent, InfiniteScrollDirective]
 })
 export class ExternalVenueImportComponent implements OnInit, AfterViewInit {
   private readonly repository = inject(ADMIN_VENUE_REPOSITORY_TOKEN);
@@ -50,6 +61,8 @@ export class ExternalVenueImportComponent implements OnInit, AfterViewInit {
   private polling?: Subscription;
   private map: any;
   private areaLayer: any;
+  private venuesRequest?: Subscription;
+  private venuesPage = -1;
 
   readonly presets = PRESETS;
   readonly summaries = signal<ExternalVenueRegionSummary[]>([]);
@@ -63,11 +76,24 @@ export class ExternalVenueImportComponent implements OnInit, AfterViewInit {
   readonly places = signal<PlaceSearchResult[]>([]);
   readonly searchingPlaces = signal(false);
 
+  /** Danh sách khu vực render dần từng `LIST_CHUNK` dòng trong khung cuộn. */
+  readonly shownRegions = signal(LIST_CHUNK);
+  readonly viewing = signal<RegionRow | null>(null);
+  readonly venues = signal<ExternalVenue[]>([]);
+  readonly venuesTotal = signal(0);
+  readonly venuesLoading = signal(false);
+  readonly venuesHasMore = signal(false);
+  readonly venuesError = signal<string | null>(null);
+
   readonly running = computed(() => this.status()?.state === 'RUNNING');
   readonly busy = computed(() => this.running() || this.starting() !== null);
   /** Khu vực đã nhập bằng khung tự nhập (không nằm trong danh sách có sẵn). */
   readonly otherRegions = computed(() =>
     this.summaries().filter(summary => !PRESETS.some(preset => preset.region === summary.region)));
+  readonly regionRows = computed<RegionRow[]>(() => [
+    ...PRESETS.map(preset => ({ region: preset.region, preset, summary: this.summaryOf(preset.region) })),
+    ...this.otherRegions().map(summary => ({ region: summary.region, preset: null, summary }))
+  ]);
   readonly areaError = computed(() => {
     const area = this.area();
     if (!area) return 'Tìm tên khu vực hoặc kéo bản đồ tới khu vực rồi bấm "Dùng khung đang xem".';
@@ -77,12 +103,6 @@ export class ExternalVenueImportComponent implements OnInit, AfterViewInit {
     return null;
   });
   readonly customError = computed(() => this.areaError() ?? (this.regionName().trim() ? null : 'Đặt tên cho khu vực.'));
-  /** Số ô venue-service sẽ hỏi Overpass, để admin ước lượng thời gian. */
-  readonly areaTiles = computed(() => {
-    const area = this.area();
-    if (!area || this.areaError()) return 0;
-    return Math.ceil((area.north - area.south) / TILE_DEGREES) * Math.ceil((area.east - area.west) / TILE_DEGREES);
-  });
 
   ngOnInit(): void {
     this.refresh();
@@ -127,6 +147,36 @@ export class ExternalVenueImportComponent implements OnInit, AfterViewInit {
     return this.summaries().find(summary => summary.region === region);
   }
 
+  showMoreRegions(): void {
+    this.shownRegions.update(shown => shown + LIST_CHUNK);
+  }
+
+  /** Mở danh sách sân đã nhập của khu vực (chỉ khi đã nhập). */
+  openRegion(row: RegionRow): void {
+    if (!row.summary) return;
+    this.venuesRequest?.unsubscribe();
+    this.viewing.set(row);
+    this.venues.set([]);
+    this.venuesTotal.set(row.summary.venueCount);
+    this.venuesPage = -1;
+    this.venuesError.set(null);
+    this.loadVenues();
+  }
+
+  closeRegion(): void {
+    this.venuesRequest?.unsubscribe();
+    this.viewing.set(null);
+  }
+
+  loadMoreVenues(): void {
+    if (this.venuesLoading() || !this.venuesHasMore()) return;
+    this.loadVenues();
+  }
+
+  sportsOf(venue: ExternalVenue): string {
+    return venue.sportTypes.map(sport => SPORT_LABEL[sport] ?? sport).join(' · ');
+  }
+
   progressPercent(status: ExternalVenueImportStatus): number {
     return status.totalTiles ? Math.round(status.doneTiles / status.totalTiles * 100) : 0;
   }
@@ -165,6 +215,29 @@ export class ExternalVenueImportComponent implements OnInit, AfterViewInit {
     const area = this.area();
     if (this.customError() || !area) return;
     this.startImport({ region: this.regionName().trim(), ...area });
+  }
+
+  private loadVenues(): void {
+    const row = this.viewing();
+    if (!row) return;
+    const page = this.venuesPage + 1;
+    this.venuesLoading.set(true);
+    this.venuesRequest = this.repository.getExternalVenuesByRegion(row.region, page, VENUE_PAGE_SIZE).pipe(
+      finalize(() => this.venuesLoading.set(false)),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: result => {
+        this.venuesPage = page;
+        const known = new Set(this.venues().map(venue => venue.externalVenueId));
+        this.venues.update(list => [...list, ...result.items.filter(venue => !known.has(venue.externalVenueId))]);
+        this.venuesTotal.set(result.total);
+        this.venuesHasMore.set(page + 1 < result.pages);
+      },
+      error: () => {
+        this.venuesHasMore.set(false);
+        this.venuesError.set('Chưa tải được danh sách sân.');
+      }
+    });
   }
 
   private drawArea(): void {

@@ -50,13 +50,23 @@
   }
 }
 
-.external-import__list {
+// Khung cuộn giới hạn chiều cao (GOAT-DESIGN §6 Infinite scroll › Bounded boxes): không thanh cuộn, mờ dần ở đáy.
+.external-import__list,
+.region-venues__list {
   display: grid;
+  grid-auto-rows: max-content;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+}
+
+.external-import__list {
+  max-height: 400px;
   margin: 0;
-  padding: 4px 20px;
+  padding: 4px 20px 20px;
   list-style: none;
 
-  li {
+  > li:not(.list-sentinel) {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -67,13 +77,59 @@
 
     &:last-child { border-bottom: 0; }
 
-    div {
-      display: grid;
-      gap: 2px;
-    }
+    strong { color: var(--ink); font-size: 15px; }
+    span { font-size: 13px; }
+  }
+}
+
+.region-row {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 2px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:disabled { cursor: default; }
+  &:not(:disabled):hover strong { color: var(--primary); }
+}
+
+.region-row__chevron { flex: none; color: var(--body); }
+
+.list-sentinel { height: 1px; }
+
+.region-venues { gap: 12px; }
+
+.region-venues__list {
+  max-height: 56dvh;
+  margin: 0;
+  padding: 0 0 12px;
+  list-style: none;
+
+  > li:not(.list-sentinel) {
+    display: grid;
+    gap: 3px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--hairline);
 
     strong { color: var(--ink); font-size: 15px; }
     span { font-size: 13px; }
+
+    small {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 4px 12px;
+      color: var(--body);
+      font-size: 13px;
+
+      span { display: inline-flex; align-items: center; gap: 4px; }
+      lucide-icon { width: 14px; height: 14px; }
+    }
   }
 }
 
@@ -168,7 +224,3 @@
   gap: 8px;
 }
 
-.external-import__source {
-  color: var(--body);
-  font-size: 12px;
-}

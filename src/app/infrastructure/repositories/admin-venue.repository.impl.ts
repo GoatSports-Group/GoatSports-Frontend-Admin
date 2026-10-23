@@ -5,8 +5,8 @@ import { BaseListResponse, BaseResponse } from '@application/dto/base/base-respo
 import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { OwnerReview, OwnerReviewPage, OwnerReviewStatus } from '@application/dto/owner-review/owner-review.dto';
 import {
-  AdminReviewFilter, AdminVenueFilter, AdminVenuePage, AdminVenueRepository, ExternalVenueImportRequest,
-  ExternalVenueImportStatus, ExternalVenueRegionSummary, PlaceSearchResult
+  AdminReviewFilter, AdminVenueFilter, AdminVenuePage, AdminVenueRepository, ExternalVenue, ExternalVenueImportRequest,
+  ExternalVenueImportStatus, ExternalVenuePage, ExternalVenueRegionSummary, PlaceSearchResult
 } from '@application/ports/persistence/admin-venue.repository';
 import { environment } from '@environments/environment';
 
@@ -72,6 +72,16 @@ export class AdminVenueRepositoryImpl implements AdminVenueRepository {
     // 204 (chưa nhập lần nào) không có body.
     return this.http.get<BaseResponse<ExternalVenueImportStatus> | null>(`${this.baseUrl}/external-venues/import-status`)
       .pipe(map(response => response?.data ?? null));
+  }
+
+  getExternalVenuesByRegion(region: string, page: number, size: number): Observable<ExternalVenuePage> {
+    const params = new HttpParams().set('region', region).set('page', page).set('size', size);
+    return this.http.get<BaseResponse<BaseListResponse<ExternalVenue>>>(`${this.baseUrl}/external-venues`, { params })
+      .pipe(map(response => ({
+        items: response.data?.result ?? [],
+        total: response.data?.meta.total ?? 0,
+        pages: response.data?.meta.pages ?? 0
+      })));
   }
 
   searchPlaces(query: string): Observable<PlaceSearchResult[]> {

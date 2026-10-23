@@ -49,6 +49,26 @@ export interface ExternalVenueImportRequest {
   east: number;
 }
 
+/** Một sân đã nhập từ OpenStreetMap. */
+export interface ExternalVenue {
+  externalVenueId: string;
+  name: string;
+  sportTypes: string[];
+  latitude: number;
+  longitude: number;
+  address: string | null;
+  phone: string | null;
+  website: string | null;
+  openingHours: string | null;
+  source: string;
+}
+
+export interface ExternalVenuePage {
+  items: ExternalVenue[];
+  total: number;
+  pages: number;
+}
+
 /** Kết quả tìm địa danh (Nominatim qua venue-service); `bounds` là khung bao của tỉnh / quận nếu có. */
 export interface PlaceSearchResult {
   latitude: number;
@@ -82,6 +102,8 @@ export interface AdminVenueRepository {
   importExternalVenues(request: ExternalVenueImportRequest): Observable<void>;
   /** null khi chưa nhập lần nào từ lúc venue-service khởi động. */
   getExternalVenueImportStatus(): Observable<ExternalVenueImportStatus | null>;
+  /** Sân đã nhập của một khu vực, theo tên; `page` tính từ 0. */
+  getExternalVenuesByRegion(region: string, page: number, size: number): Observable<ExternalVenuePage>;
   /** Tìm tỉnh, thành, quận ở Việt Nam để chọn vùng nhập trên bản đồ. */
   searchPlaces(query: string): Observable<PlaceSearchResult[]>;
 }
