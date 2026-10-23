@@ -42,8 +42,8 @@
           <td class="num"><strong>{{ item.wantCount }}</strong></td>
           <td class="num">{{ item.matchCount }}</td>
           <td class="row-action">
-            <a class="btn btn--ghost btn--sm" [href]="mapUrl(item)" target="_blank" rel="noopener"
-              [attr.aria-label]="'Xem ' + item.venue.name + ' trên bản đồ'"><lucide-icon name="map-pin" />Bản đồ</a>
+            <button type="button" class="btn btn--ghost btn--sm" (click)="showOnMap(item)"
+              [attr.aria-label]="'Xem ' + item.venue.name + ' trên bản đồ'"><lucide-icon name="map-pin" />Bản đồ</button>
           </td>
         </tr>
         }
@@ -56,3 +56,7 @@
   }
   }
 </div>
+
+@if (locating(); as location) {
+<app-venue-location-modal [location]="location" (closed)="locating.set(null)" />
+}

@@ -33,5 +33,13 @@ describe('ExternalVenuePotentialComponent', () => {
     expect(text).toContain('37');
     expect(text).toContain('Chưa có số');
     expect(text).toContain('TP. Hồ Chí Minh');
+
+    // "Bản đồ" mở popup ngay trên trang, kèm link Google Maps theo toạ độ (sân này không có địa chỉ).
+    (fixture.nativeElement.querySelector('.row-action button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    const modal = fixture.nativeElement.querySelector('app-venue-location-modal') as HTMLElement;
+    expect(modal.textContent).toContain('Sân Quần vợt Thi Sách');
+    expect(modal.querySelector<HTMLAnchorElement>('a.btn--primary')?.href)
+      .toBe('https://www.google.com/maps/search/?api=1&query=10.78,106.7');
   });
 });

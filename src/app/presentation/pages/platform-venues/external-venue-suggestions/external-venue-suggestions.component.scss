@@ -72,3 +72,15 @@
   flex: none;
   gap: 8px;
 }
+
+.suggestion__map-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover { text-decoration: underline; }
+}

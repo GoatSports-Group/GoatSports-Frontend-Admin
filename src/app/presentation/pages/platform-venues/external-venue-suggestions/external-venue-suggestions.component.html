@@ -33,8 +33,9 @@
         <strong>{{ suggestion.name }}</strong>
         <span class="muted">{{ sportsOf(suggestion) }} · gửi lúc {{ suggestion.createdAt | date:'HH:mm dd/MM/yyyy' }}</span>
         <dl class="suggestion__facts">
-          <div><dt><lucide-icon name="map-pin" /></dt><dd>{{ suggestion.address || 'Chưa có địa chỉ' }} · <a
-                [href]="mapUrl(suggestion)" target="_blank" rel="noopener">Xem trên bản đồ</a></dd></div>
+          <div><dt><lucide-icon name="map-pin" /></dt><dd>{{ suggestion.address || 'Chưa có địa chỉ' }} · <button
+                type="button" class="suggestion__map-link" (click)="showOnMap(suggestion)">Xem trên bản đồ</button></dd>
+          </div>
           @if (suggestion.phone) {
           <div><dt><lucide-icon name="phone" /></dt><dd><a [href]="'tel:' + suggestion.phone">{{ suggestion.phone }}</a></dd>
           </div>
@@ -72,6 +73,10 @@
   }
   }
 </div>
+
+@if (locating(); as location) {
+<app-venue-location-modal [location]="location" (closed)="locating.set(null)" />
+}
 
 @if (rejecting(); as suggestion) {
 <div class="modal-backdrop" (click)="closeReject()">

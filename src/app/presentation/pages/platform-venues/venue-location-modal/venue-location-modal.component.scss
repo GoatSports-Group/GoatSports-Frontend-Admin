@@ -1,0 +1,19 @@
+@use '../../ops' as t;
+@include t.ops;
+
+.venue-location { gap: 10px; }
+
+.venue-location__map {
+  height: min(56dvh, 460px);
+  overflow: hidden;
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: var(--surface-subtle);
+}
+
+.venue-location__coords {
+  margin: 0;
+  color: var(--body);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}

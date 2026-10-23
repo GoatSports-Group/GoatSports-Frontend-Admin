@@ -1,0 +1,21 @@
+<div class="modal-backdrop" (click)="closed.emit()">
+  <section class="modal modal--wide" role="dialog" aria-modal="true" aria-labelledby="venue-location-title"
+    (click)="$event.stopPropagation()">
+    <header class="modal__header">
+      <div>
+        <h2 id="venue-location-title">{{ location().name }}</h2>
+        <p>{{ location().address || 'Chưa có địa chỉ' }}</p>
+      </div>
+      <button type="button" class="icon-btn" aria-label="Đóng" (click)="closed.emit()"><lucide-icon name="x" /></button>
+    </header>
+    <div class="modal__body venue-location">
+      <div #locationMap class="venue-location__map" role="region" [attr.aria-label]="'Bản đồ ' + location().name"></div>
+      <p class="venue-location__coords">Toạ độ {{ location().latitude }}, {{ location().longitude }}</p>
+    </div>
+    <footer class="modal__footer">
+      <a class="btn" [href]="directionsUrl()" target="_blank" rel="noopener"><lucide-icon name="navigation" />Chỉ đường</a>
+      <a class="btn btn--primary" [href]="googleMapsUrl()" target="_blank" rel="noopener"><lucide-icon
+          name="external-link" />Mở trên Google Maps</a>
+    </footer>
+  </section>
+</div>

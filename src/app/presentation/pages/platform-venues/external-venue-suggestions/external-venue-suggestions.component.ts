@@ -12,6 +12,7 @@ import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/lo
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { PaginationComponent } from '@shared/components/ui/pagination/pagination.component';
 import { PAGE_SIZE } from '@shared/constants/page-size';
+import { VenueLocation, VenueLocationModalComponent } from '../venue-location-modal/venue-location-modal.component';
 
 /**
  * Tab "Gợi ý sân" của Cơ sở: sân người chơi gợi ý thêm, cũ nhất trước. Duyệt thì sân lên bản đồ (khu vực "Người chơi
@@ -23,7 +24,8 @@ import { PAGE_SIZE } from '@shared/constants/page-size';
   styleUrls: ['./external-venue-suggestions.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [DatePipe, FormsModule, LucideIconComponent, LoadingSkeletonComponent, PaginationComponent]
+  imports: [DatePipe, FormsModule, LucideIconComponent, LoadingSkeletonComponent, PaginationComponent,
+    VenueLocationModalComponent]
 })
 export class ExternalVenueSuggestionsComponent implements OnInit {
   private readonly repository = inject(ADMIN_VENUE_REPOSITORY_TOKEN);
@@ -42,6 +44,8 @@ export class ExternalVenueSuggestionsComponent implements OnInit {
   readonly busyId = signal<string | null>(null);
   readonly rejecting = signal<ExternalVenueSuggestion | null>(null);
   readonly rejectReason = signal('');
+  /** Gợi ý đang xem trên popup bản đồ. */
+  readonly locating = signal<VenueLocation | null>(null);
 
   ngOnInit(): void {
     this.load();
@@ -72,9 +76,9 @@ export class ExternalVenueSuggestionsComponent implements OnInit {
     return suggestion.sportTypes.map(sport => SPORT_LABEL[sport] ?? sport).join(' · ');
   }
 
-  mapUrl(suggestion: ExternalVenueSuggestion): string {
-    const { latitude, longitude } = suggestion;
-    return `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=18/${latitude}/${longitude}`;
+  showOnMap(suggestion: ExternalVenueSuggestion): void {
+    const { name, address, latitude, longitude } = suggestion;
+    this.locating.set({ name, address, latitude, longitude });
   }
 
   approve(suggestion: ExternalVenueSuggestion): void {
