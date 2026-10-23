@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, injec
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { Subject, Subscription, debounceTime, distinctUntilChanged, finalize } from 'rxjs';
@@ -14,6 +14,7 @@ import { LoadingSkeletonComponent } from '@shared/components/loading-skeleton/lo
 import { LucideIconComponent } from '@shared/components/ui/lucide-icon/lucide-icon.component';
 import { PaginationComponent } from '@shared/components/ui/pagination/pagination.component';
 import { SelectComponent, SelectOption } from '@shared/components/ui/select/select.component';
+import { AuthService } from '@presentation/services/auth.service';
 import { ExternalVenueImportComponent } from './external-venue-import/external-venue-import.component';
 
 const STATUS_OPTIONS: readonly SelectOption[] = [
@@ -23,9 +24,12 @@ const STATUS_OPTIONS: readonly SelectOption[] = [
   { value: 'SUSPENDED', label: 'Bị đình chỉ' }
 ];
 
+export type PlatformVenuesTab = 'partners' | 'external';
+
 /**
  * Mọi cơ sở trên nền tảng. Admin đình chỉ cơ sở vi phạm (ẩn khỏi tìm kiếm, chặn đơn mới, chủ sân không tự mở lại)
- * và gỡ đình chỉ. Sửa thông tin cơ sở vẫn là việc của chủ sân.
+ * và gỡ đình chỉ. Sửa thông tin cơ sở vẫn là việc của chủ sân. Tab "Sân ngoài hệ thống" (`?tab=external`) nhập sân
+ * OpenStreetMap; chỉ hiện với ADMIN hoặc nhân viên có quyền SUSPEND_VENUE.
  */
 @Component({
   selector: 'app-platform-venues',
@@ -41,6 +45,8 @@ export class PlatformVenuesComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
   private readonly search$ = new Subject<string>();
   private request?: Subscription;
 
@@ -72,8 +78,12 @@ export class PlatformVenuesComponent implements OnInit {
 
   readonly hasFilters = computed(() => !!(this.status() || this.keyword() || this.owner()));
 
+  readonly canImportExternal = this.canImport();
+  readonly tab = signal<PlatformVenuesTab>('partners');
+
   ngOnInit(): void {
     const params = this.route.snapshot.queryParamMap;
+    if (params.get('tab') === 'external' && this.canImportExternal) this.tab.set('external');
     const ownerId = params.get('ownerId');
     if (ownerId) this.owner.set({ id: ownerId, name: params.get('ownerName') || 'chủ sân' });
     this.search$.pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
@@ -82,6 +92,20 @@ export class PlatformVenuesComponent implements OnInit {
   }
 
   onKeyword(value: string): void { this.search$.next(value); }
+
+  selectTab(tab: PlatformVenuesTab): void {
+    if (tab === this.tab()) return;
+    this.tab.set(tab);
+    void this.router.navigate([], {
+      relativeTo: this.route, queryParams: { tab: tab === 'external' ? 'external' : null },
+      queryParamsHandling: 'merge', replaceUrl: true
+    });
+  }
+
+  private canImport(): boolean {
+    const user = this.authService.currentUser;
+    return (user?.role?.name ?? '').toUpperCase() === 'ADMIN' || (user?.permissions ?? []).includes('SUSPEND_VENUE');
+  }
 
   setStatus(value: AdminVenueStatus | ''): void {
     this.status.set(value);

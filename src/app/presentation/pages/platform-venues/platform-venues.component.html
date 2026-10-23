@@ -6,6 +6,20 @@
     </div>
   </header>
 
+  @if (canImportExternal) {
+  <nav class="tabs" role="tablist" aria-label="Loại sân">
+    <button type="button" class="tab" role="tab" [class.is-active]="tab() === 'partners'"
+      [attr.aria-selected]="tab() === 'partners'" (click)="selectTab('partners')"><lucide-icon name="store" />Cơ sở
+      đối tác</button>
+    <button type="button" class="tab" role="tab" [class.is-active]="tab() === 'external'"
+      [attr.aria-selected]="tab() === 'external'" (click)="selectTab('external')"><lucide-icon name="map-pin" />Sân
+      ngoài hệ thống</button>
+  </nav>
+  }
+
+  @if (tab() === 'external') {
+  <app-external-venue-import />
+  } @else {
   @if (notice()) {
   <div class="notice" role="status">
     <lucide-icon name="circle-check-big" /><span>{{ notice() }}</span>
@@ -116,6 +130,7 @@
     (pageChange)="goToPage($event)" />
   }
   }
+  }
 
   @if (viewingReason(); as venue) {
   <div class="modal-backdrop" (click)="viewingReason.set(null)">
@@ -180,5 +195,4 @@
   </div>
   }
 
-  <app-external-venue-import />
 </main>

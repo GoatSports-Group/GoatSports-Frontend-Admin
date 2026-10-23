@@ -7,6 +7,7 @@ import { provideLucideIcons } from '@lucide/angular';
 import { APP_ICONS } from '../../../app-icons';
 import { OwnerVenueOverview } from '@application/dto/venue-owner-dashboard/venue-owner-dashboard.dto';
 import { ADMIN_VENUE_REPOSITORY_TOKEN } from '@application/ports/persistence/admin-venue.repository';
+import { AuthService } from '@presentation/services/auth.service';
 import { PlatformVenuesComponent } from './platform-venues.component';
 
 describe('PlatformVenuesComponent', () => {
@@ -15,7 +16,11 @@ describe('PlatformVenuesComponent', () => {
     phone: '0909123456', email: 'arena@goat.test', averageRating: 4.5, totalReviews: 12,
     imageUrls: [], amenities: [], courts: []
   };
-  const repository = { getVenues: vi.fn(), suspend: vi.fn(), reinstate: vi.fn(), getExternalVenueSummary: vi.fn(() => of([])) };
+  const repository = {
+    getVenues: vi.fn(), suspend: vi.fn(), reinstate: vi.fn(),
+    getExternalVenueSummary: vi.fn(() => of([])), getExternalVenueImportStatus: vi.fn(() => of(null))
+  };
+  const auth = { currentUser: { role: { name: 'ADMIN' }, permissions: [] } as unknown };
   const dialog = { open: vi.fn() };
 
   beforeEach(async () => {
@@ -31,7 +36,8 @@ describe('PlatformVenuesComponent', () => {
         provideRouter([]),
         provideLucideIcons(...APP_ICONS),
         { provide: ADMIN_VENUE_REPOSITORY_TOKEN, useValue: repository },
-        { provide: MatDialog, useValue: dialog }
+        { provide: MatDialog, useValue: dialog },
+        { provide: AuthService, useValue: auth }
       ]
     }).compileComponents();
   });
@@ -82,5 +88,27 @@ describe('PlatformVenuesComponent', () => {
     expect(repository.reinstate).toHaveBeenCalledWith('venue-1');
     expect(page.items()).toHaveLength(0);
     expect(page.total()).toBe(0);
+  });
+
+  it('keeps external venues behind their own tab', () => {
+    const fixture = TestBed.createComponent(PlatformVenuesComponent);
+    fixture.detectChanges();
+    const root: HTMLElement = fixture.nativeElement;
+    expect(root.querySelector('app-external-venue-import')).toBeNull();
+
+    fixture.componentInstance.selectTab('external');
+    fixture.detectChanges();
+
+    expect(root.querySelector('app-external-venue-import')).not.toBeNull();
+    expect(root.querySelector('table')).toBeNull();
+  });
+
+  it('hides the external tab from staff without the venue management permission', () => {
+    auth.currentUser = { role: { name: 'STAFF' }, permissions: ['GET_ALL_VENUES'] };
+    const fixture = TestBed.createComponent(PlatformVenuesComponent);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.tabs')).toBeNull();
+    auth.currentUser = { role: { name: 'ADMIN' }, permissions: [] };
   });
 });

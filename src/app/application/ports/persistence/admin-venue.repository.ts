@@ -40,13 +40,25 @@ export interface ExternalVenueRegionSummary {
   lastImportedAt: string;
 }
 
-/** Khung nam - tây - bắc - đông của khu vực cần nhập (tối đa khoảng một thành phố). */
+/** Khung nam - tây - bắc - đông của khu vực cần nhập (tối đa 3 độ mỗi chiều, cỡ một tỉnh). */
 export interface ExternalVenueImportRequest {
   region: string;
   south: number;
   west: number;
   north: number;
   east: number;
+}
+
+/** Đợt nhập gần nhất. venue-service hỏi Overpass từng ô 0,25°; ô quá tải bị bỏ qua (PARTIAL), nhập lại để bổ sung. */
+export interface ExternalVenueImportStatus {
+  region: string;
+  state: 'RUNNING' | 'SUCCEEDED' | 'PARTIAL' | 'FAILED';
+  doneTiles: number;
+  totalTiles: number;
+  failedTiles: number;
+  savedCount: number;
+  startedAt: string;
+  finishedAt: string | null;
 }
 
 /** Quản trị cơ sở và kiểm duyệt đánh giá (venue-service, phía admin). */
@@ -57,8 +69,10 @@ export interface AdminVenueRepository {
   getReviews(filter: AdminReviewFilter): Observable<OwnerReviewPage>;
   moderateReview(reviewId: string, status: OwnerReviewStatus): Observable<Pick<OwnerReview, 'reviewId' | 'status'>>;
   getExternalVenueSummary(): Observable<ExternalVenueRegionSummary[]>;
-  /** Chạy nền ở venue-service; xem kết quả bằng getExternalVenueSummary vài phút sau. */
+  /** Chạy nền ở venue-service; theo dõi bằng getExternalVenueImportStatus. */
   importExternalVenues(request: ExternalVenueImportRequest): Observable<void>;
+  /** null khi chưa nhập lần nào từ lúc venue-service khởi động. */
+  getExternalVenueImportStatus(): Observable<ExternalVenueImportStatus | null>;
 }
 
 export const ADMIN_VENUE_REPOSITORY_TOKEN = new InjectionToken<AdminVenueRepository>('ADMIN_VENUE_REPOSITORY_TOKEN');

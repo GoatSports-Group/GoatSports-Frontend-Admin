@@ -2,16 +2,56 @@
 @include t.ops;
 
 .external-import {
-  margin-top: 24px;
+  display: grid;
+  gap: 16px;
 
-  .note {
-    margin: 12px 20px 0;
+  > .note { margin: 0; }
+}
+
+.external-import__lead {
+  margin: 0;
+  color: var(--body);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.import-progress {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--primary-light);
+  border-radius: 12px;
+  background: var(--surface);
+
+  p {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    color: var(--ink);
+    font-size: 14px;
+  }
+
+  small { color: var(--body); font-size: 13px; }
+}
+
+.import-progress__bar {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--primary-light);
+
+  span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--primary);
+    transition: width .4s ease;
   }
 }
 
 .external-import__list {
   display: grid;
-  gap: 0;
   margin: 0;
   padding: 4px 20px;
   list-style: none;
@@ -21,6 +61,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    min-height: 64px;
     padding: 12px 0;
     border-bottom: 1px solid var(--hairline);
 
@@ -36,9 +77,31 @@
   }
 }
 
+.card__head a { color: var(--primary); font-weight: 700; }
+
+.external-import__form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px 16px;
+  padding: 16px 20px 20px;
+
+  .field--wide { grid-column: 1 / -1; }
+
+  @media (max-width: 720px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.external-import__submit {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .external-import__source {
-  display: block;
-  padding: 0 20px 14px;
   color: var(--body);
   font-size: 12px;
 }

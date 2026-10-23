@@ -1,38 +1,123 @@
-@if (allowed()) {
-<section class="card external-import" aria-labelledby="external-import-title">
-  <header class="card__head">
-    <div>
-      <h2 id="external-import-title">Sân ngoài hệ thống</h2>
-      <p>Sân thực tế từ OpenStreetMap, hiện trên bản đồ tìm sân (ghim xám) để người chơi vẫn rủ nhau được khi chưa có
-        cơ sở đối tác. Nhập lại thì cập nhật, không tạo trùng.</p>
-    </div>
-    <button type="button" class="btn btn--ghost btn--sm" (click)="refresh()">
-      <lucide-icon name="refresh-cw" /> Tải lại
-    </button>
-  </header>
+<div class="external-import">
+  <p class="external-import__lead">Sân thực tế từ OpenStreetMap, hiện trên bản đồ tìm sân (ghim xám) để người chơi vẫn rủ
+    nhau được khi khu vực chưa có cơ sở đối tác. Nhập lại thì cập nhật, không tạo trùng.</p>
 
-  @if (notice()) { <p class="note note--success" role="status"><lucide-icon name="circle-check-big" />{{ notice() }}</p> }
+  @if (status(); as s) {
+  @switch (s.state) {
+  @case ('RUNNING') {
+  <div class="import-progress" role="status">
+    <p><lucide-icon name="loader-2" class="spin" />Đang nhập <strong>{{ s.region }}</strong> · ô {{ s.doneTiles }}/{{
+      s.totalTiles }} · {{ s.savedCount | number }} sân</p>
+    <div class="import-progress__bar" aria-hidden="true"><span [style.width.%]="progressPercent(s)"></span></div>
+    <small>Chạy nền, có thể rời trang. Mỗi ô mất vài giây tới một phút tuỳ máy chủ OpenStreetMap.</small>
+  </div>
+  }
+  @case ('SUCCEEDED') {
+  <p class="note note--success" role="status"><lucide-icon name="circle-check-big" />Đã nhập {{ s.savedCount | number }}
+    sân cho {{ s.region }}@if (s.finishedAt) { lúc {{ s.finishedAt | date:'HH:mm dd/MM' }} }.</p>
+  }
+  @case ('PARTIAL') {
+  <p class="note note--warning" role="status"><lucide-icon name="triangle-alert" />Đã nhập {{ s.savedCount | number }}
+    sân cho {{ s.region }}, nhưng {{ s.failedTiles }}/{{ s.totalTiles }} ô bị máy chủ OpenStreetMap từ chối vì quá
+    tải. Bấm "Nhập lại" sau ít phút để bổ sung.</p>
+  }
+  @case ('FAILED') {
+  <p class="note note--danger" role="alert"><lucide-icon name="circle-alert" />Chưa nhập được {{ s.region }}: máy chủ
+    OpenStreetMap đang quá tải. Thử lại sau ít phút.</p>
+  }
+  }
+  }
   @if (error()) { <p class="note note--danger" role="alert"><lucide-icon name="circle-alert" />{{ error() }}</p> }
 
-  <ul class="external-import__list">
-    @for (preset of presets; track preset.region) {
-    <li>
+  <section class="card" aria-labelledby="external-presets-title">
+    <header class="card__head">
       <div>
-        <strong>{{ preset.region }}</strong>
-        @if (summaryOf(preset.region); as summary) {
-        <span class="muted">{{ summary.venueCount }} sân · nhập lúc {{ summary.lastImportedAt | date:'HH:mm dd/MM/yyyy' }}</span>
-        } @else {
-        <span class="muted">Chưa nhập</span>
-        }
+        <h2 id="external-presets-title">Khu vực đã có sẵn</h2>
+        <p>Thành phố lớn, khung toạ độ dựng sẵn.</p>
       </div>
-      <button type="button" class="btn btn--sm" [class.btn--primary]="!summaryOf(preset.region)"
-        [class.btn--ghost]="summaryOf(preset.region)" [disabled]="starting() !== null" (click)="startImport(preset)">
-        <lucide-icon [name]="starting() === preset.region ? 'loader-2' : 'map-pin'" [class.spin]="starting() === preset.region" />
-        {{ summaryOf(preset.region) ? 'Nhập lại' : 'Nhập' }}
+      <button type="button" class="btn btn--ghost btn--sm" (click)="refresh()">
+        <lucide-icon name="refresh-cw" /> Tải lại
       </button>
-    </li>
-    }
-  </ul>
+    </header>
+    <ul class="external-import__list">
+      @for (preset of presets; track preset.region) {
+      <li>
+        <div>
+          <strong>{{ preset.region }}</strong>
+          @if (summaryOf(preset.region); as summary) {
+          <span class="muted">{{ summary.venueCount | number }} sân · nhập lúc {{ summary.lastImportedAt | date:'HH:mm dd/MM/yyyy'
+            }}</span>
+          } @else {
+          <span class="muted">Chưa nhập</span>
+          }
+        </div>
+        <button type="button" class="btn btn--sm" [class.btn--primary]="!summaryOf(preset.region)"
+          [class.btn--ghost]="summaryOf(preset.region)" [disabled]="busy()" (click)="startImport(preset)">
+          <lucide-icon [name]="starting() === preset.region ? 'loader-2' : 'map-pin'"
+            [class.spin]="starting() === preset.region" />
+          {{ summaryOf(preset.region) ? 'Nhập lại' : 'Nhập' }}
+        </button>
+      </li>
+      }
+      @for (other of otherRegions(); track other.region) {
+      <li>
+        <div>
+          <strong>{{ other.region }}</strong>
+          <span class="muted">Khu vực tự nhập · {{ other.venueCount | number }} sân · nhập lúc {{ other.lastImportedAt |
+            date:'HH:mm dd/MM/yyyy' }}</span>
+        </div>
+      </li>
+      }
+    </ul>
+  </section>
+
+  <section class="card" aria-labelledby="external-custom-title">
+    <header class="card__head">
+      <div>
+        <h2 id="external-custom-title">Khu vực khác</h2>
+        <p>Nhập bất kỳ tỉnh nào bằng khung toạ độ. Mở <a href="https://www.openstreetmap.org/export" target="_blank"
+            rel="noopener">openstreetmap.org/export</a>, chọn "Chọn thủ công vùng khác", kéo khung quanh khu vực rồi chép
+          bốn số vào đây. Mỗi chiều tối đa 3 độ.</p>
+      </div>
+    </header>
+    <form class="external-import__form" (ngSubmit)="importCustom()">
+      <label class="field field--wide">
+        <span class="field__label">Tên khu vực</span>
+        <input class="field__control" type="text" name="region" maxlength="100" placeholder="Ví dụ: Lâm Đồng"
+          [ngModel]="custom().region" (ngModelChange)="setCustom('region', $event)" />
+      </label>
+      <label class="field">
+        <span class="field__label">Bắc (vĩ độ trên)</span>
+        <input class="field__control" type="number" name="north" step="0.0001" placeholder="12.20"
+          [ngModel]="custom().north" (ngModelChange)="setCustom('north', $event)" />
+      </label>
+      <label class="field">
+        <span class="field__label">Nam (vĩ độ dưới)</span>
+        <input class="field__control" type="number" name="south" step="0.0001" placeholder="11.20"
+          [ngModel]="custom().south" (ngModelChange)="setCustom('south', $event)" />
+      </label>
+      <label class="field">
+        <span class="field__label">Tây (kinh độ trái)</span>
+        <input class="field__control" type="number" name="west" step="0.0001" placeholder="107.80"
+          [ngModel]="custom().west" (ngModelChange)="setCustom('west', $event)" />
+      </label>
+      <label class="field">
+        <span class="field__label">Đông (kinh độ phải)</span>
+        <input class="field__control" type="number" name="east" step="0.0001" placeholder="108.90"
+          [ngModel]="custom().east" (ngModelChange)="setCustom('east', $event)" />
+      </label>
+      <div class="external-import__submit">
+        <p class="field__hint">
+          @if (customTiles()) { Sẽ hỏi {{ customTiles() }} ô 0,25°, mỗi ô vài giây tới một phút. }
+          @else { {{ customError() }} }
+        </p>
+        <button type="submit" class="btn btn--primary" [disabled]="busy() || customError() !== null">
+          <lucide-icon [name]="starting() === custom().region.trim() ? 'loader-2' : 'map-pin'"
+            [class.spin]="starting() === custom().region.trim()" />Nhập khu vực này
+        </button>
+      </div>
+    </form>
+  </section>
+
   <small class="external-import__source">Dữ liệu © OpenStreetMap contributors (ODbL).</small>
-</section>
-}
+</div>
