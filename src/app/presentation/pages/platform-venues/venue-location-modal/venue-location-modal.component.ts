@@ -13,8 +13,8 @@ export interface VenueLocation {
 }
 
 /**
- * Popup bản đồ (không mở tab mới) cho tab Sân tiềm năng và Gợi ý sân: ghim sân trên nền OSM, kèm link Google Maps
- * theo toạ độ. Dùng toạ độ chứ không dùng địa chỉ, vì nhiều sân OSM không có địa chỉ, còn toạ độ thì sân nào cũng có.
+ * Popup bản đồ (không mở tab mới) cho tab Sân tiềm năng và Gợi ý sân: ghim sân trên nền OSM, kèm "Chỉ đường" Google
+ * Maps theo toạ độ. Dùng toạ độ chứ không dùng địa chỉ, vì nhiều sân OSM không có địa chỉ, còn toạ độ thì sân nào cũng có.
  */
 @Component({
   selector: 'app-venue-location-modal',
@@ -30,11 +30,6 @@ export class VenueLocationModalComponent implements AfterViewInit, OnDestroy {
 
   private readonly mapElement = viewChild<ElementRef<HTMLElement>>('locationMap');
   private map: any;
-
-  googleMapsUrl(): string {
-    const { latitude, longitude } = this.location();
-    return `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
-  }
 
   directionsUrl(): string {
     const { latitude, longitude } = this.location();
