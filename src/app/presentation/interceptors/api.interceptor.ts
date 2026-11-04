@@ -29,6 +29,11 @@ export class ApiInterceptor implements HttpInterceptor {
     return next.handle(credentialRequest).pipe(
       catchError((error: HttpErrorResponse) => {
         if (!this.isAuthenticationFailure(error)) return throwError(() => error);
+        // Gateway: tài khoản vừa đăng nhập ở nơi khác; refresh token của phiên này đã bị thay nên không làm mới được.
+        if (error.error?.error === 'SESSION_REPLACED') {
+          this.injector.get(AuthService).performLogout();
+          return throwError(() => error);
+        }
         return this.refreshAndRetry(credentialRequest, next);
       })
     );

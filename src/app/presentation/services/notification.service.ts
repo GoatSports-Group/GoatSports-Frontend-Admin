@@ -107,7 +107,13 @@ export class NotificationService {
     this.wsSubscription.add(this.wsService.notificationsConnected$.subscribe(() => {
       this.ngZone.run(() => this.catchUp());
     }));
-    this.wsSubscription.add(this.wsService.sessionRevoked$.subscribe(() => {
+    this.wsSubscription.add(this.wsService.sessionRevoked$.subscribe(reason => {
+      // Đăng nhập ở nơi khác: tab cùng trình duyệt dùng chung cookie mới thì /me vẫn thành công và ở lại;
+      // phiên cũ nhận 401 SESSION_REPLACED từ gateway và interceptor đăng xuất.
+      if (reason === 'SESSION_REPLACED') {
+        this.authService.getCurrentUser().subscribe({ error: () => undefined });
+        return;
+      }
       this.ngZone.run(() => this.authService.performLogout());
     }));
     this.activeUserId = userId;
