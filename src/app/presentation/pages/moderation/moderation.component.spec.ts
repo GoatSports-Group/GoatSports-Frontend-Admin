@@ -14,6 +14,7 @@ import { ActOnReportUseCase } from '@application/usecase/moderation/act-on-repor
 import { GetAppealQueueUseCase } from '@application/usecase/moderation/get-appeal-queue.usecase';
 import { GetReportQueueUseCase } from '@application/usecase/moderation/get-report-queue.usecase';
 import { ReviewAppealUseCase } from '@application/usecase/moderation/review-appeal.usecase';
+import { GetStorageFileUrlUseCase } from '@application/usecase/storage/get-storage-file-url.usecase';
 import { ModerationComponent } from './moderation.component';
 
 describe('ModerationComponent', () => {
@@ -43,6 +44,7 @@ describe('ModerationComponent', () => {
   const reviewAppeal = { execute: vi.fn() };
   const getTarget = { execute: vi.fn() };
   const userRepository = { getSummaries: vi.fn() };
+  const getFileUrl = { execute: vi.fn((key: string) => of(`https://r2.test/${key}`)) };
 
   beforeEach(async () => {
     getReports.execute.mockReset().mockReturnValue(of(reportPage));
@@ -59,7 +61,8 @@ describe('ModerationComponent', () => {
         { provide: GetAppealQueueUseCase, useValue: getAppeals },
         { provide: ReviewAppealUseCase, useValue: reviewAppeal },
         { provide: GetModerationTargetUseCase, useValue: getTarget },
-        { provide: USER_REPOSITORY_TOKEN, useValue: userRepository }
+        { provide: USER_REPOSITORY_TOKEN, useValue: userRepository },
+        { provide: GetStorageFileUrlUseCase, useValue: getFileUrl }
       ]
     }).compileComponents();
   });
@@ -152,6 +155,59 @@ describe('ModerationComponent', () => {
 
     fixture.componentInstance.handleFromDetail();
     expect(fixture.componentInstance.openReportId()).toBe(pendingReport.reportId);
+  });
+
+  it('shows a post without text: its images, the shown-off match and the shared original', () => {
+    userRepository.getSummaries.mockImplementation((ids: string[]) =>
+      of(ids.map(userId => ({ userId, fullName: `Người ${userId}`, email: `${userId}@goat.test` }))));
+    getTarget.execute.mockReturnValue(of({
+      targetType: 'POST', targetId: 'post-1', found: true, authorId: 'author-1', content: null, status: 'PUBLISHED',
+      attachmentCount: 1, postId: null, createdAt: null, sport: 'BADMINTON',
+      attachments: [{ storageKey: 'social-posts/a.jpg', type: 'IMAGE', fileName: null }],
+      highlight: { kind: 'MATCH', title: 'Giao hữu tối thứ Ba', headline: 'Thắng 2-0', subtitle: null, result: 'WIN',
+        sides: [{ name: 'Đội Đạt', score: 2, winner: true }, { name: 'Đội Đức', score: 0, winner: false }],
+        stats: [], clubName: null },
+      playerCall: null,
+      shared: { targetType: 'POST', targetId: 'post-0', found: true, authorId: 'author-0', content: 'Bài gốc về giải đấu',
+        status: 'PUBLISHED', attachmentCount: 0, postId: null, createdAt: null, attachments: [] }
+    }));
+    const fixture = TestBed.createComponent(ModerationComponent);
+    fixture.detectChanges();
+
+    fixture.componentInstance.openReportDetail(pendingReport);
+    fixture.detectChanges();
+
+    const dialog = fixture.nativeElement.querySelector('.modal--detail') as HTMLElement;
+    expect(dialog.textContent).not.toContain('Không có nội dung chữ');
+    expect((dialog.querySelector('.target__image img') as HTMLImageElement).src).toBe('https://r2.test/social-posts/a.jpg');
+    expect(dialog.textContent).toContain('Khoe trận đấu: Giao hữu tối thứ Ba');
+    expect(dialog.textContent).toContain('Đội Đạt 2 – Đội Đức 0');
+    expect(dialog.textContent).toContain('Bài gốc về giải đấu');
+    expect(dialog.textContent).toContain('Cầu lông');
+  });
+
+  it('changes the status of a handled report: offers only other statuses and preselects restore', () => {
+    const resolved: ContentReport = { ...pendingReport, status: 'RESOLVED', actions: [] };
+    getReports.execute.mockReturnValue(of({ ...reportPage, items: [resolved] }));
+    getTarget.execute.mockReturnValue(of({
+      targetType: 'POST', targetId: 'post-1', found: true, authorId: 'author-1', content: 'Spam', status: 'HIDDEN',
+      attachmentCount: 0, postId: null, createdAt: null
+    }));
+    const fixture = TestBed.createComponent(ModerationComponent);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+
+    expect(fixture.nativeElement.querySelector('.queue-card footer')?.textContent).toContain('Đổi trạng thái');
+    component.toggleReport('report-1');
+
+    expect(component.changingStatus()).toBe(true);
+    expect(component.dialogChoices().map(choice => choice.value)).toEqual(['REMOVE_CONTENT', 'RESTORE_CONTENT']);
+    expect(component.draftAction()).toBe('RESTORE_CONTENT');
+    component.draftReason.set('Tác giả đã sửa bài, không còn vi phạm');
+    component.submitAction('report-1');
+    expect(actOnReport.execute).toHaveBeenCalledWith({
+      reportId: 'report-1', actionType: 'RESTORE_CONTENT', reason: 'Tác giả đã sửa bài, không còn vi phạm'
+    });
   });
 
   it('surfaces the backend message when the queue cannot be loaded', () => {

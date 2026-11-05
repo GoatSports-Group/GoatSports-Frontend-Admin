@@ -109,10 +109,16 @@
               </ul>
             }
 
-            @if (report.status === 'PENDING' || report.status === 'REVIEWING') {
+            @if (isOpen(report)) {
               <footer>
                 <button type="button" class="secondary" (click)="$event.stopPropagation(); toggleReport(report.reportId)">
                   <lucide-icon name="gavel" /> Xử lý
+                </button>
+              </footer>
+            } @else if (canChangeStatus(report)) {
+              <footer>
+                <button type="button" class="secondary" (click)="$event.stopPropagation(); toggleReport(report.reportId)">
+                  <lucide-icon name="repeat-2" /> Đổi trạng thái
                 </button>
               </footer>
             }
@@ -170,7 +176,7 @@
       (click)="$event.stopPropagation()">
       <header class="modal__header">
         <div>
-          <h2 id="report-dialog-title">Xử lý báo cáo #{{ shortId(report.reportId) }}</h2>
+          <h2 id="report-dialog-title">{{ changingStatus() ? 'Đổi trạng thái nội dung' : 'Xử lý báo cáo' }} #{{ shortId(report.reportId) }}</h2>
           <p class="dialog-sub">{{ targetLabel(report.targetType) }} · báo cáo lúc {{ report.createdAt | date:'HH:mm dd/MM/yyyy' }}</p>
         </div>
         <button type="button" class="icon-btn" aria-label="Đóng" (click)="closeDialog()" [disabled]="submitting()"><lucide-icon
@@ -178,9 +184,22 @@
       </header>
       <div class="modal__body action-form">
         <blockquote>{{ report.reason }}</blockquote>
-        <label>Hành động
+        @if (changingStatus()) {
+          @if (targetLoading()) {
+            <p class="muted-line"><lucide-icon name="loader-2" class="spin" /> Đang đọc trạng thái hiện tại...</p>
+          } @else if (targetError()) {
+            <p class="form-error" role="alert">{{ targetError() }}</p>
+          } @else if (target(); as t) {
+            @if (t.found) {
+              <p class="muted-line">Hiện tại: <strong>{{ contentStatus(t.status) }}</strong></p>
+            } @else {
+              <p class="form-error" role="alert">Nội dung không còn trên hệ thống, không đổi được trạng thái.</p>
+            }
+          }
+        }
+        <label>{{ changingStatus() ? 'Trạng thái mới' : 'Hành động' }}
           <app-select [ngModel]="draftAction()" (ngModelChange)="selectAction($event)" [disabled]="submitting()"
-            [options]="actionChoices" ariaLabel="Cách xử lý"></app-select>
+            [options]="dialogChoices()" ariaLabel="Cách xử lý"></app-select>
         </label>
         <p class="hint">{{ activeHint() }}</p>
         <label>Lý do xử lý
@@ -194,7 +213,7 @@
       </div>
       <footer class="modal__footer">
         <button type="button" class="ghost" [disabled]="submitting()" (click)="closeDialog()">Hủy</button>
-        <button type="button" class="primary" [disabled]="submitting() || reasonTooShort()"
+        <button type="button" class="primary" [disabled]="submitting() || !canSubmit()"
           (click)="submitAction(report.reportId)">
           @if (submitting()) { <lucide-icon name="loader-2" class="spin" /> Đang gửi }
           @else { <lucide-icon name="check" /> Xác nhận }
@@ -293,11 +312,20 @@
             <div class="target">
               <p class="person"><strong>{{ t.targetType === 'USER' ? 'Tài khoản' : 'Tác giả' }}: {{ who(t.authorId) }}</strong>
                 <span>{{ users.email(t.authorId) || 'Chưa có email' }}</span></p>
-              @if (t.content) { <p class="target__content">{{ t.content }}</p> }
-              @else if (t.targetType !== 'USER') { <p class="muted-line">Không có nội dung chữ.</p> }
+              <ng-container [ngTemplateOutlet]="targetBody" [ngTemplateOutletContext]="{ $implicit: t }" />
+              @if (t.shared; as original) {
+                <div class="target__shared">
+                  <p class="muted-line"><lucide-icon name="repeat-2" /> Chia sẻ lại bài của <strong>{{ who(original.authorId) }}</strong></p>
+                  @if (original.found) {
+                    <ng-container [ngTemplateOutlet]="targetBody" [ngTemplateOutletContext]="{ $implicit: original }" />
+                  } @else {
+                    <p class="muted-line">Bài gốc không còn trên hệ thống.</p>
+                  }
+                </div>
+              }
               <p class="muted-line">
                 @if (t.status) { {{ contentStatus(t.status) }} }
-                @if (t.attachmentCount) { · {{ t.attachmentCount }} tệp đính kèm }
+                @if (t.sport) { · {{ sportLabel(t.sport) }} }
                 @if (t.createdAt) { · đăng {{ t.createdAt | date:'HH:mm dd/MM/yyyy' }} }
               </p>
             </div>
@@ -322,11 +350,56 @@
       </div>
       <footer class="modal__footer">
         <button type="button" class="ghost" (click)="closeDetail()">Đóng</button>
-        @if ((report && (report.status === 'PENDING' || report.status === 'REVIEWING')) || appeal?.status === 'PENDING') {
+        @if ((report && isOpen(report)) || appeal?.status === 'PENDING') {
         <button type="button" class="primary" (click)="handleFromDetail()"><lucide-icon name="gavel" /> Xử lý</button>
+        } @else if (report && canChangeStatus(report)) {
+        <button type="button" class="primary" (click)="changeStatusFromDetail()"><lucide-icon name="repeat-2" /> Đổi trạng thái</button>
         }
       </footer>
     </section>
   </div>
   }
 </main>
+
+<!-- Phần thân nội dung bị báo cáo: chữ, ảnh / tệp, khoe trận, kèo. Dùng cho bài chính và bài gốc được chia sẻ. -->
+<ng-template #targetBody let-t>
+  @if (t.content) { <p class="target__content">{{ t.content }}</p> }
+  @else if (t.targetType !== 'USER' && !hasRichContent(t)) { <p class="muted-line">Không có nội dung chữ.</p> }
+
+  @if (t.attachments?.length) {
+    <div class="target__media">
+      @for (item of t.attachments; track item.storageKey) {
+        @if (item.type === 'IMAGE' && mediaUrl(item.storageKey)) {
+          <a class="target__image" [href]="mediaUrl(item.storageKey)" target="_blank" rel="noopener" aria-label="Mở ảnh đính kèm">
+            <img [src]="mediaUrl(item.storageKey)" alt="Ảnh đính kèm" loading="lazy" />
+          </a>
+        } @else {
+          <a class="target__file" [attr.href]="mediaUrl(item.storageKey) || null" target="_blank" rel="noopener">
+            <lucide-icon [name]="item.type === 'IMAGE' ? 'image' : 'paperclip'" />
+            <span>{{ item.fileName || fileName(item.storageKey) }}</span>
+          </a>
+        }
+      }
+    </div>
+  }
+
+  @if (t.highlight; as h) {
+    <div class="target__card">
+      <strong><lucide-icon name="trophy" /> {{ h.kind === 'TOURNAMENT' ? 'Khoe thành tích giải đấu' : 'Khoe trận đấu' }}@if (h.title) {: {{ h.title }}}</strong>
+      @if (h.headline) { <span>{{ h.headline }}</span> }
+      @if (sidesText(h.sides)) { <span>{{ sidesText(h.sides) }}</span> }
+      @if (h.subtitle) { <span>{{ h.subtitle }}</span> }
+      @if (statsText(h.stats)) { <span>{{ statsText(h.stats) }}</span> }
+      @if (h.clubName) { <span>CLB {{ h.clubName }}</span> }
+    </div>
+  }
+
+  @if (t.playerCall; as c) {
+    <div class="target__card">
+      <strong><lucide-icon name="megaphone" /> Kèo tìm người@if (c.sport) { · {{ sportLabel(c.sport) }}}@if (c.clubName) { · CLB {{ c.clubName }}}</strong>
+      <span>{{ c.playDate | date:'dd/MM/yyyy' }} · {{ c.startTime.slice(0, 5) }}@if (c.endTime) {–{{ c.endTime.slice(0, 5) }}}@if (c.location) { · {{ c.location }}}</span>
+      <span>{{ c.filled ? 'Đã đủ người' : 'Còn thiếu ' + c.slots + ' người' }}</span>
+      @if (c.skillNote) { <span>Ghi chú: {{ c.skillNote }}</span> }
+    </div>
+  }
+</ng-template>

@@ -68,6 +68,45 @@ export interface ModerationTarget {
   attachmentCount: number;
   postId: string | null;
   createdAt: string | null;
+  /** Ảnh / tệp theo thứ tự hiển thị; `fileName` chỉ có với tệp trong tin nhắn. */
+  attachments?: ModerationAttachment[];
+  sport?: string | null;
+  /** Bài "khoe" trận đấu / giải đấu. */
+  highlight?: ModerationHighlight | null;
+  /** Bài "Tìm người chơi". */
+  playerCall?: ModerationPlayerCall | null;
+  /** Bài gốc khi đây là bài chia sẻ lại (chỉ một cấp). */
+  shared?: ModerationTarget | null;
+}
+
+export interface ModerationAttachment {
+  storageKey: string;
+  type: 'IMAGE' | 'FILE';
+  fileName: string | null;
+}
+
+export interface ModerationHighlight {
+  kind: 'MATCH' | 'TOURNAMENT';
+  title: string | null;
+  headline: string | null;
+  subtitle: string | null;
+  result: string | null;
+  sides: { name: string; score: number | null; winner: boolean }[] | null;
+  stats: { label: string; value: string }[] | null;
+  clubName: string | null;
+}
+
+export interface ModerationPlayerCall {
+  sport: string | null;
+  playFormat: string | null;
+  playDate: string;
+  startTime: string;
+  endTime: string | null;
+  location: string | null;
+  slots: number;
+  skillNote: string | null;
+  clubName: string | null;
+  filled: boolean;
 }
 
 export interface ModerationPageFilter {
