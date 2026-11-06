@@ -77,6 +77,9 @@ export interface OwnerBooking {
   qrCode?: string;
   walkInCustomerName?: string;
   walkInCustomerPhone?: string;
+  /** Do venue-service ghép: tên nhập tại quầy hoặc họ tên || username || email của tài khoản đặt. */
+  customerName?: string;
+  customerPhone?: string;
   matchmakingSessionId?: string;
   holdExpiresAt?: string;
   createdAt: string;

@@ -498,11 +498,11 @@ export class OwnerCheckInComponent implements OnDestroy {
   }
 
   customerName(booking: OwnerBooking): string {
-    return booking.walkInCustomerName?.trim() || `Khách #${booking.playerId?.slice(0, 8).toUpperCase() || 'LẺ'}`;
+    return booking.customerName?.trim() || `Khách #${booking.playerId?.slice(0, 8).toUpperCase() || 'LẺ'}`;
   }
 
   customerPhone(booking: OwnerBooking): string {
-    return booking.walkInCustomerPhone?.trim() || '—';
+    return booking.customerPhone?.trim() || '—';
   }
 
   formatDate(value: string): string {

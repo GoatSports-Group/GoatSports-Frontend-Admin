@@ -200,7 +200,7 @@ export class AdminBookingsComponent implements OnInit {
   }
 
   customerName(booking: OwnerBooking): string {
-    return booking.walkInCustomerName?.trim() || `Khách #${(booking.playerId ?? '').slice(0, 8)}`;
+    return booking.customerName?.trim() || `Khách #${(booking.playerId ?? '').slice(0, 8)}`;
   }
 
   sourceLabel(source: OwnerBooking['source']): string {

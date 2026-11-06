@@ -678,12 +678,12 @@
         <dl class="court-checkin-facts">
           <div>
             <dt>Khách hàng</dt>
-            <dd>{{ result.booking.walkInCustomerName || ('Player ' + result.booking.playerId) }}</dd>
+            <dd>{{ result.booking.customerName || ('Player ' + result.booking.playerId) }}</dd>
           </div>
-          @if (result.booking.walkInCustomerPhone) {
+          @if (result.booking.customerPhone) {
           <div>
             <dt>Số điện thoại</dt>
-            <dd>{{ result.booking.walkInCustomerPhone }}</dd>
+            <dd>{{ result.booking.customerPhone }}</dd>
           </div>
           }
           <div>

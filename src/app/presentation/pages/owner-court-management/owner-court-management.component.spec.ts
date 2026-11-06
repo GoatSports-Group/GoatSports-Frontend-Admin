@@ -252,6 +252,7 @@ describe('OwnerCourtManagementComponent', () => {
       remainingAmount: 100000,
       bookingCode: `BK-${page}`,
       walkInCustomerName: `Khách ${page + 1}`,
+      customerName: `Khách ${page + 1}`,
       createdAt: '2030-05-01T00:00:00Z',
       payments: [],
       allowedTransitions: []

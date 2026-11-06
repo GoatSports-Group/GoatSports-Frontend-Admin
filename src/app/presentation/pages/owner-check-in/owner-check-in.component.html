@@ -357,7 +357,7 @@
       @for (item of history(); track item.checkIn?.checkInId) {
       <button type="button" class="history-row" (click)="openHistoryDetail(item.booking.bookingId)">
         <span class="history-icon"><app-lucide-icon name="circle-check" [size]="19" /></span>
-        <div><strong>{{ item.booking.bookingCode }}</strong><span>{{ item.booking.walkInCustomerName ||
+        <div><strong>{{ item.booking.bookingCode }}</strong><span>{{ item.booking.customerName ||
             item.booking.playerId }}</span></div>
         <div><strong>{{ item.booking.courtName }}</strong><span>{{ time(item.booking.startTime) }}–{{
             time(item.booking.endTime) }}</span></div>

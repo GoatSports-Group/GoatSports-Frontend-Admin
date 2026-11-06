@@ -462,7 +462,7 @@ export class VenueOwnerDashboardComponent {
   }
 
   customerInitial(booking: OwnerBooking): string {
-    return (booking.walkInCustomerName || booking.bookingCode || 'G').trim().charAt(0).toUpperCase();
+    return (booking.customerName || booking.bookingCode || 'G').trim().charAt(0).toUpperCase();
   }
 
   normalizedCourtStatus(court: OwnerVenueCourt): CourtAvailabilityStatus {

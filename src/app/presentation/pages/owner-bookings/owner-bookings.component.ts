@@ -849,10 +849,10 @@ export class OwnerBookingsComponent {
     return this.statuses.find(item => item.value === status)?.label ?? status;
   }
   customerName(booking: OwnerBooking): string {
-    return booking.walkInCustomerName?.trim() || `Khách #${this.shortId(booking.playerId)}`;
+    return booking.customerName?.trim() || `Khách #${this.shortId(booking.playerId)}`;
   }
   customerPhone(booking: OwnerBooking): string {
-    return booking.walkInCustomerPhone?.trim() || '—';
+    return booking.customerPhone?.trim() || '—';
   }
   sourceLabel(source: OwnerBooking['source']): string {
     return source === 'WALK_IN' ? 'Khách tại quầy' : source === 'DIRECT' ? 'Đặt trực tuyến' : 'Ghép trận';

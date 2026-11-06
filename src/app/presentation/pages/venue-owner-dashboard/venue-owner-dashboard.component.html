@@ -202,8 +202,8 @@
         <button type="button" class="booking-row" (click)="openBookingDetail(booking.bookingId)">
           <time><strong>{{ timeValue(booking.startTime) }} - {{ timeValue(booking.endTime) }}</strong><span>{{
               shortDate(booking.playDate) }}</span></time>
-          <span class="customer-cell"><i>{{ customerInitial(booking) }}</i><span><strong>{{ booking.walkInCustomerName
-                || booking.bookingCode }}</strong><small>{{ booking.walkInCustomerPhone || booking.source
+          <span class="customer-cell"><i>{{ customerInitial(booking) }}</i><span><strong>{{ booking.customerName
+                || booking.bookingCode }}</strong><small>{{ booking.customerPhone || booking.source
                 }}</small></span></span>
           <span><strong>{{ booking.courtName }}</strong><small>{{ booking.venueName }}</small></span>
           <span><strong>{{ bookingSourceLabel(booking.source) }}</strong><small>{{ booking.bookingCode }}</small></span>
@@ -345,8 +345,8 @@
         <dl class="booking-detail-facts">
           <div>
             <dt><lucide-icon name="user-round" />Khách hàng</dt>
-            <dd><strong>{{ booking.walkInCustomerName || 'Khách đặt trực tuyến' }}</strong><span>{{
-                booking.walkInCustomerPhone || booking.playerId || 'Không có thông tin liên hệ' }}</span></dd>
+            <dd><strong>{{ booking.customerName || 'Khách đặt trực tuyến' }}</strong><span>{{
+                booking.customerPhone || booking.playerId || 'Không có thông tin liên hệ' }}</span></dd>
           </div>
           <div>
             <dt><lucide-icon name="land-plot" />Cơ sở và sân</dt>

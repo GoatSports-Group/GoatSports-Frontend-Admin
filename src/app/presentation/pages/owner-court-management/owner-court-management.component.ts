@@ -1514,7 +1514,7 @@ export class OwnerCourtManagementComponent implements OnDestroy {
 
   bookingCustomer(booking: OwnerBooking | null): string {
     if (!booking) return '—';
-    return booking.walkInCustomerName || booking.bookingCode;
+    return booking.customerName || booking.bookingCode;
   }
 
   bookingTimelineStatus(booking: OwnerBooking): BookingTimelineStatus {
