@@ -53,6 +53,10 @@ describe('OwnerCheckInComponent', () => {
     history: vi.fn(), lookup: vi.fn(), confirm: vi.fn(), createWalkIn: vi.fn()
   };
   const notify = { success: vi.fn(), error: vi.fn() };
+  const manageBookings = {
+    list: vi.fn(() => of({ items: [], page: 0, pageSize: 20, pages: 0, total: 0 })),
+    detail: vi.fn(), createPayment: vi.fn(), cancelPayment: vi.fn()
+  };
 
   beforeEach(async () => {
     getVenues.execute.mockReset().mockReturnValue(of([venue]));
@@ -66,6 +70,9 @@ describe('OwnerCheckInComponent', () => {
     manageCheckIn.confirm.mockReset().mockReturnValue(of(checkedInResult));
     manageCheckIn.createWalkIn.mockReset().mockReturnValue(of(lookupResult));
     notify.success.mockReset();
+    manageBookings.detail.mockReset();
+    manageBookings.createPayment.mockReset();
+    manageBookings.cancelPayment.mockReset().mockReturnValue(of(undefined));
     notify.error.mockReset();
 
     await TestBed.configureTestingModule({
@@ -78,9 +85,7 @@ describe('OwnerCheckInComponent', () => {
         provideRouter([]),
         { provide: ManageOwnerCheckInUseCase, useValue: manageCheckIn },
         // Lịch sử đơn trong ngày: trống, các test tập trung vào tra cứu và check-in.
-        { provide: ManageOwnerBookingsUseCase, useValue: {
-          list: vi.fn(() => of({ items: [], page: 0, pageSize: 20, pages: 0, total: 0 })), detail: vi.fn()
-        } },
+        { provide: ManageOwnerBookingsUseCase, useValue: manageBookings },
         { provide: NotifyService, useValue: notify }
       ]
     }).compileComponents();
@@ -103,6 +108,47 @@ describe('OwnerCheckInComponent', () => {
     component.lookup();
     expect(component.actionError()).toBeNull();
     expect(component.reconciliation()).toEqual(lookupResult);
+  });
+
+  it('collects the remaining amount in cash, cancelling a pending payOS code first', () => {
+    const pending = {
+      paymentId: 'remaining-pending', purpose: 'BOOKING_REMAINING' as const, amount: 140000, currency: 'VND',
+      status: 'PENDING', createdAt: '2026-08-30T08:00:00'
+    };
+    manageCheckIn.lookup.mockReturnValue(of({ ...lookupResult, booking: { ...booking, payments: [...booking.payments, pending] } }));
+    const component = TestBed.createComponent(OwnerCheckInComponent).componentInstance;
+    component.lookupForm.controls.value.setValue('GS123456');
+    component.lookup();
+
+    component.collectCashAndConfirm();
+
+    expect(manageBookings.cancelPayment).toHaveBeenCalledWith('remaining-pending');
+    expect(manageCheckIn.confirm).toHaveBeenCalledWith(expect.objectContaining({ paymentMode: 'CASH' }));
+    expect(component.reconciliation()).toEqual(checkedInResult);
+  });
+
+  it('checks in automatically once payOS confirms the remaining amount', () => {
+    vi.useFakeTimers();
+    try {
+      manageBookings.createPayment.mockReturnValue(of({
+        bookingId: 'booking-1', paymentId: 'remaining-1', method: 'PAYOS', status: 'PENDING',
+        qrCodeContent: 'data:image/png;base64,AAA'
+      }));
+      manageBookings.detail.mockReturnValue(of({ ...booking, remainingPaymentId: 'remaining-1' }));
+      const component = TestBed.createComponent(OwnerCheckInComponent).componentInstance;
+      component.lookupForm.controls.value.setValue('GS123456');
+      component.lookup();
+
+      component.startRemainingCheckout();
+      expect(component.remainingCheckout()?.qr).toBe('data:image/png;base64,AAA');
+      expect(manageCheckIn.confirm).not.toHaveBeenCalled();
+
+      vi.advanceTimersByTime(1_500);
+      expect(manageCheckIn.confirm).toHaveBeenCalledWith(expect.objectContaining({ paymentMode: 'ONLINE' }));
+      expect(component.remainingCheckout()).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
 });

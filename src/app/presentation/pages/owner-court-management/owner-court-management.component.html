@@ -711,8 +711,8 @@
         @if (result.outstandingAmount > 0 && !result.checkIn) {
         <div class="court-checkin-debt">
           <lucide-icon name="banknote" />
-          <span>Khách còn {{ formatCurrency(result.outstandingAmount) }}. Booking vẫn được check-in và có thể thanh toán
-            sau khi sử dụng sân.</span>
+          <span>Khách còn {{ formatCurrency(result.outstandingAmount) }}, phải thu đủ trước khi check-in. Thu tiền mặt
+            rồi xác nhận bên dưới; khách muốn chuyển khoản thì dùng trang <a routerLink="/admin/check-in">Nhận sân</a>.</span>
         </div>
         }
       </div>
@@ -726,6 +726,7 @@
         </button>
         <button type="button" class="primary-button" (click)="confirmCourtCheckIn()" [disabled]="checkInConfirming()">
           @if (checkInConfirming()) { <span class="mini-spinner"></span> Đang xác nhận... }
+          @else if (result.outstandingAmount > 0) { <lucide-icon name="banknote" /> Đã thu tiền mặt · Check-in }
           @else { <lucide-icon name="user-check" /> Xác nhận check-in }
         </button>
         }

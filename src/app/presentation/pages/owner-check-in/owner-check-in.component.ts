@@ -14,13 +14,17 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { EMPTY, Observable, expand, finalize, reduce, take } from 'rxjs';
+import {
+  EMPTY, Observable, Subject, catchError, concat, expand, filter, finalize, ignoreElements, of, reduce, switchMap, take,
+  takeUntil, timer
+} from 'rxjs';
 import { BrowserQRCodeReader, IScannerControls } from '@zxing/browser';
 import { toDataURL } from 'qrcode';
 import { OwnerBooking, OwnerPayment } from '@application/dto/owner-booking/owner-booking.dto';
 import {
   CheckInMethod,
   OwnerCheckInPage,
+  PaymentCollectionMode,
   OwnerCheckInResult
 } from '@application/dto/owner-check-in/owner-check-in.dto';
 import { OwnerTimeSlot } from '@application/dto/owner-schedule/owner-schedule.dto';
@@ -103,6 +107,10 @@ export class OwnerCheckInComponent implements OnDestroy {
   readonly detailLoading = signal(false);
   readonly detailError = signal<string | null>(null);
   readonly requestedBookingId = signal<string | null>(null);
+  /** Mã payOS thu khoản còn lại ngay tại màn nhận sân; nhận sân tự chạy khi payOS xác nhận. */
+  readonly remainingCheckout = signal<{ paymentId: string; qr: string } | null>(null);
+  readonly startingCheckout = signal(false);
+  private readonly stopCheckoutPolling = new Subject<void>();
 
   // Slot giữ cho giải vẫn AVAILABLE; tournamentId mới cho biết không bán được.
   readonly availableSlots = computed(() => this.slots().filter(slot => slot.status === 'AVAILABLE' && !slot.tournamentId));
@@ -201,7 +209,7 @@ export class OwnerCheckInComponent implements OnDestroy {
     });
   }
 
-  confirm(): void {
+  confirm(paymentMode: PaymentCollectionMode = 'NONE'): void {
     const result = this.reconciliation();
     if (!result || result.checkInEligible === false || this.confirming()) return;
     this.confirming.set(true);
@@ -211,7 +219,7 @@ export class OwnerCheckInComponent implements OnDestroy {
     const checkInRequest = {
       bookingId: result.booking.bookingId,
       method,
-      paymentMode: 'NONE' as const,
+      paymentMode,
       qrCode: method === 'QR_CODE' ? evidence : undefined,
       bookingCode: method === 'BOOKING_CODE' ? evidence : undefined
     };
@@ -220,13 +228,88 @@ export class OwnerCheckInComponent implements OnDestroy {
     ).subscribe({
       next: checkedIn => {
         this.reconciliation.set(checkedIn);
-        this.notify.success('Nhận sân thành công.');
+        this.remainingCheckout.set(null);
+        this.notify.success(paymentMode === 'CASH' ? 'Đã thu tiền mặt và nhận sân thành công.' : 'Nhận sân thành công.');
         this.loadCourtData();
         this.loadTodayBookings();
         this.loadHistory(0);
       },
       error: error => this.actionError.set(this.errorMessage(error, 'Không thể xác nhận nhận sân.'))
     });
+  }
+
+  /** Thu tiền mặt rồi nhận sân. Mã payOS còn treo của khoản này phải hủy trước để không thu hai lần. */
+  collectCashAndConfirm(): void {
+    const result = this.reconciliation();
+    if (!result || this.confirming()) return;
+    const pendingIds = result.booking.payments
+      .filter(payment => payment.purpose === 'BOOKING_REMAINING' && ['CREATED', 'PENDING'].includes(payment.status))
+      .map(payment => payment.paymentId);
+    const current = this.remainingCheckout()?.paymentId;
+    if (current && !pendingIds.includes(current)) pendingIds.push(current);
+    if (!pendingIds.length) {
+      this.confirm('CASH');
+      return;
+    }
+    this.stopCheckoutPolling.next();
+    this.confirming.set(true);
+    concat(...pendingIds.map(id => this.manageBookings.cancelPayment(id))).pipe(
+      ignoreElements(), takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      complete: () => {
+        this.remainingCheckout.set(null);
+        this.confirming.set(false);
+        this.confirm('CASH');
+      },
+      error: error => {
+        this.confirming.set(false);
+        this.actionError.set(this.errorMessage(error, 'Không thể hủy mã payOS đang chờ để chuyển sang tiền mặt.'));
+      }
+    });
+  }
+
+  startRemainingCheckout(): void {
+    const result = this.reconciliation();
+    if (!result || this.startingCheckout() || this.confirming()) return;
+    this.startingCheckout.set(true);
+    this.actionError.set(null);
+    const bookingId = result.booking.bookingId;
+    this.manageBookings.createPayment(bookingId, 'PAYOS').pipe(
+      take(1), takeUntilDestroyed(this.destroyRef), finalize(() => this.startingCheckout.set(false))
+    ).subscribe({
+      next: payment => {
+        if (payment.status === 'SUCCEEDED') {
+          this.confirm('ONLINE');
+          return;
+        }
+        if (!payment.qrCodeContent) {
+          this.actionError.set('Dịch vụ thanh toán không trả mã QR payOS.');
+          return;
+        }
+        this.remainingCheckout.set({ paymentId: payment.paymentId, qr: payment.qrCodeContent });
+        this.pollRemainingCheckout(bookingId);
+      },
+      error: error => this.actionError.set(this.errorMessage(error, 'Không thể tạo mã payOS cho khoản còn lại.'))
+    });
+  }
+
+  private pollRemainingCheckout(bookingId: string): void {
+    this.stopCheckoutPolling.next();
+    timer(1_500, 2_000).pipe(
+      switchMap(() => this.manageBookings.detail(bookingId).pipe(catchError(() => of(null)))),
+      filter((booking): booking is OwnerBooking => booking !== null && this.remainingPaid(booking)),
+      take(1),
+      takeUntil(this.stopCheckoutPolling),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.notify.success('payOS đã xác nhận chuyển khoản.');
+      this.confirm('ONLINE');
+    });
+  }
+
+  private remainingPaid(booking: OwnerBooking): boolean {
+    return booking.remainingAmount <= 0 || !!booking.remainingPaymentId || booking.payments.some(payment =>
+      payment.purpose === 'BOOKING_REMAINING' && payment.status === 'SUCCEEDED');
   }
 
   createWalkIn(): void {
@@ -335,6 +418,8 @@ export class OwnerCheckInComponent implements OnDestroy {
 
   closeReconciliation(): void {
     if (this.confirming()) return;
+    this.stopCheckoutPolling.next();
+    this.remainingCheckout.set(null);
     this.reconciliation.set(null);
     this.actionError.set(null);
   }
@@ -521,6 +606,8 @@ export class OwnerCheckInComponent implements OnDestroy {
   }
 
   private clearResolvedLookup(): void {
+    this.stopCheckoutPolling.next();
+    this.remainingCheckout.set(null);
     this.reconciliation.set(null);
     this.resolvedScope.set(null);
     this.selectedVenueId.set('');

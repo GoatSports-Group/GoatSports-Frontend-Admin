@@ -256,7 +256,7 @@
         <div class="payments">
           <h3><app-lucide-icon name="credit-card" [size]="18" /> Thông tin thanh toán</h3>
           @if (!result.booking.payments.length) {
-          <p class="muted">Đơn đặt sân chưa phát sinh giao dịch thanh toán và vẫn có thể nhận sân.</p>
+          <p class="muted">Đơn đặt sân chưa phát sinh giao dịch thanh toán.</p>
           }
           @for (payment of result.booking.payments; track payment.paymentId) {
           <div class="payment-row">
@@ -287,17 +287,41 @@
         <div class="walkin-payment-note">
           <app-lucide-icon name="banknote" [size]="21" />
           <div>
-            <strong>Còn {{ money(result.outstandingAmount) }} chưa thanh toán</strong>
-            <span>Đơn đặt sân vẫn có thể nhận sân. Khoản tiền này có thể thu ngay hoặc sau khi khách sử dụng sân.</span>
+            <strong>Thu {{ money(result.outstandingAmount) }} còn lại trước khi nhận sân</strong>
+            <span>Khách phải thanh toán đủ phần còn lại bằng tiền mặt hoặc chuyển khoản payOS thì mới nhận sân.</span>
           </div>
         </div>
+        @if (remainingCheckout(); as checkout) {
+        <div class="remaining-checkout" aria-live="polite">
+          <img [src]="checkout.qr" alt="Mã QR payOS thu khoản còn lại" />
+          <span><app-lucide-icon name="loader-2" class="spin" [size]="16" /> Đang chờ payOS xác nhận. Sân tự nhận khi
+            khách chuyển khoản xong.</span>
+        </div>
         }
+        <div class="remaining-actions">
+          <button type="button" class="primary"
+            [disabled]="confirming() || startingCheckout() || result.checkInEligible === false"
+            (click)="collectCashAndConfirm()">
+            @if (confirming()) { <app-lucide-icon name="loader-2" class="spin" [size]="19" /> }
+            @else { <app-lucide-icon name="banknote" [size]="19" /> }
+            {{ confirming() ? 'Đang xử lý…' : 'Đã thu tiền mặt · Nhận sân' }}
+          </button>
+          <button type="button" class="secondary"
+            [disabled]="confirming() || startingCheckout() || !!remainingCheckout() || result.checkInEligible === false"
+            (click)="startRemainingCheckout()">
+            @if (startingCheckout()) { <app-lucide-icon name="loader-2" class="spin" [size]="19" /> }
+            @else { <app-lucide-icon name="qr-code" [size]="19" /> }
+            Chuyển khoản payOS
+          </button>
+        </div>
+        } @else {
         <button type="button" class="primary confirm-button"
           [disabled]="confirming() || result.checkInEligible === false" (click)="confirm()">
           @if (confirming()) { <app-lucide-icon name="loader-2" class="spin" [size]="19" /> }
           @else { <app-lucide-icon name="circle-check" [size]="19" /> }
           {{ confirming() ? 'Đang xử lý…' : 'Xác nhận nhận sân' }}
         </button>
+        }
         }
         }
       </article>

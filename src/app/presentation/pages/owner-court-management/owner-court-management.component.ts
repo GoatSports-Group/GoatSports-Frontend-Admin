@@ -619,7 +619,8 @@ export class OwnerCourtManagementComponent implements OnDestroy {
     this.manageCheckIn.confirm({
       bookingId: result.booking.bookingId,
       method: 'QR_CODE',
-      paymentMode: 'NONE',
+      // Còn tiền thì bắt buộc thu trước khi nhận sân; màn này chỉ thu tiền mặt, payOS nằm ở trang Nhận sân.
+      paymentMode: result.outstandingAmount > 0 ? 'CASH' : 'NONE',
       qrCode: this.scannedCourtQr
     }).pipe(
       take(1),

@@ -885,6 +885,37 @@ button:disabled {
   width: 100%;
 }
 
+.remaining-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.remaining-checkout {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  text-align: center;
+
+  img {
+    width: 220px;
+    max-width: 100%;
+    aspect-ratio: 1;
+  }
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted, inherit);
+    font-size: 13px;
+  }
+}
+
 .history-panel {
   width: 100%;
   box-sizing: border-box;
